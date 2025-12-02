@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메뉴 추천 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .filter-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-group {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .filter-option input[type="checkbox"],
+        .filter-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent-primary);
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            color: var(--text-secondary);
+            flex: 1;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            margin: 2rem 0;
+            display: none;
+        }
+
+        .recommendation-card.show {
+            display: block;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .recommendation-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+
+        .recommendation-name {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendation-category {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .recommendation-description {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .recommend-button {
+            font-size: 1.3rem;
+            padding: 1.25rem 3rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🍽️ 메뉴 추천</h1>
+            <p class="game-description">오늘 뭐 먹을지 고민될 때!</p>
+        </div>
+
+        <div class="game-board">
+            <div class="filter-section">
+                <div class="filter-group">
+                    <div class="filter-title">🍜 종류</div>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <input type="checkbox" id="korean" value="korean" checked>
+                            <label for="korean">한식</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="chinese" value="chinese" checked>
+                            <label for="chinese">중식</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="japanese" value="japanese" checked>
+                            <label for="japanese">일식</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="western" value="western" checked>
+                            <label for="western">양식</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="snack" value="snack" checked>
+                            <label for="snack">분식</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-title">💰 가격대</div>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <input type="radio" name="price" id="price-low" value="low" checked>
+                            <label for="price-low">저렴 (~10,000원)</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="radio" name="price" id="price-mid" value="mid">
+                            <label for="price-mid">보통 (10,000~20,000원)</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="radio" name="price" id="price-high" value="high">
+                            <label for="price-high">고급 (20,000원~)</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="radio" name="price" id="price-any" value="any">
+                            <label for="price-any">상관없음</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-title">🌶️ 맵기</div>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <input type="radio" name="spicy" id="spicy-no" value="no" checked>
+                            <label for="spicy-no">안 매운 것</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="radio" name="spicy" id="spicy-mild" value="mild">
+                            <label for="spicy-mild">약간 매운 것</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="radio" name="spicy" id="spicy-hot" value="hot">
+                            <label for="spicy-hot">매운 것</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="radio" name="spicy" id="spicy-any" value="any">
+                            <label for="spicy-any">상관없음</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-card" id="recommendation-card">
+                <div class="recommendation-icon" id="rec-icon">🍜</div>
+                <div class="recommendation-name" id="rec-name">라면</div>
+                <div class="recommendation-category" id="rec-category">한식 · 저렴</div>
+                <div class="recommendation-description" id="rec-description">간단하고 맛있는 한 끼!</div>
+            </div>
+
+            <div class="controls">
+                <button class="button recommend-button" onclick="getRecommendation()">메뉴 추천받기! 🎲</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const menuDatabase = [
+            // Korean
+            { name: '김치찌개', icon: '🍲', category: 'korean', price: 'low', spicy: 'mild', desc: '한국인의 소울푸드!' },
+            { name: '된장찌개', icon: '🍲', category: 'korean', price: 'low', spicy: 'no', desc: '구수한 맛의 정석' },
+            { name: '삼겹살', icon: '🥓', category: 'korean', price: 'mid', spicy: 'no', desc: '고기 먹고 싶을 때!' },
+            { name: '불고기', icon: '🥩', category: 'korean', price: 'mid', spicy: 'no', desc: '달콤한 한식의 대표' },
+            { name: '비빔밥', icon: '🍚', category: 'korean', price: 'low', spicy: 'mild', desc: '영양 만점 한 그릇' },
+            { name: '냉면', icon: '🍜', category: 'korean', price: 'mid', spicy: 'mild', desc: '시원한 면 요리' },
+            { name: '갈비탕', icon: '🍖', category: 'korean', price: 'high', spicy: 'no', desc: '든든한 보양식' },
+            { name: '떡볶이', icon: '🌶️', category: 'snack', price: 'low', spicy: 'hot', desc: '매콤달콤한 분식' },
+
+            // Chinese
+            { name: '짜장면', icon: '🍜', category: 'chinese', price: 'low', spicy: 'no', desc: '국민 중식 메뉴' },
+            { name: '짬뽕', icon: '🍜', category: 'chinese', price: 'low', spicy: 'hot', desc: '얼큰한 해물 국물' },
+            { name: '탕수육', icon: '🍖', category: 'chinese', price: 'mid', spicy: 'no', desc: '바삭한 튀김 요리' },
+            { name: '마라탕', icon: '🌶️', category: 'chinese', price: 'mid', spicy: 'hot', desc: '중독성 있는 매운맛' },
+            { name: '양장피', icon: '🥗', category: 'chinese', price: 'mid', spicy: 'no', desc: '시원한 중식 샐러드' },
+
+            // Japanese
+            { name: '초밥', icon: '🍣', category: 'japanese', price: 'high', spicy: 'no', desc: '신선한 회의 맛' },
+            { name: '라멘', icon: '🍜', category: 'japanese', price: 'mid', spicy: 'no', desc: '진한 국물의 면 요리' },
+            { name: '돈카츠', icon: '🍛', category: 'japanese', price: 'mid', spicy: 'no', desc: '바삭한 일식 돈까스' },
+            { name: '우동', icon: '🍜', category: 'japanese', price: 'low', spicy: 'no', desc: '담백한 면 요리' },
+            { name: '카레', icon: '🍛', category: 'japanese', price: 'low', spicy: 'mild', desc: '부드러운 일본식 카레' },
+
+            // Western
+            { name: '피자', icon: '🍕', category: 'western', price: 'mid', spicy: 'no', desc: '치즈 가득한 이탈리안' },
+            { name: '파스타', icon: '🍝', category: 'western', price: 'mid', spicy: 'no', desc: '다양한 소스의 면 요리' },
+            { name: '햄버거', icon: '🍔', category: 'western', price: 'low', spicy: 'no', desc: '든든한 패스트푸드' },
+            { name: '스테이크', icon: '🥩', category: 'western', price: 'high', spicy: 'no', desc: '고급 육즙 요리' },
+            { name: '샐러드', icon: '🥗', category: 'western', price: 'mid', spicy: 'no', desc: '건강한 한 끼' },
+
+            // Snack
+            { name: '김밥', icon: '🍙', category: 'snack', price: 'low', spicy: 'no', desc: '간편한 한 끼' },
+            { name: '라면', icon: '🍜', category: 'snack', price: 'low', spicy: 'mild', desc: '빠르고 맛있는 면' },
+            { name: '순대', icon: '🌭', category: 'snack', price: 'low', spicy: 'no', desc: '한국식 소시지' },
+            { name: '튀김', icon: '🍤', category: 'snack', price: 'low', spicy: 'no', desc: '바삭한 분식' },
+        ];
+
+        function getRecommendation() {
+            // Get selected categories
+            const selectedCategories = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+
+            if (selectedCategories.length === 0) {
+                alert('최소 하나의 음식 종류를 선택해주세요!');
+                return;
+            }
+
+            // Get selected price
+            const selectedPrice = document.querySelector('input[name="price"]:checked').value;
+
+            // Get selected spicy level
+            const selectedSpicy = document.querySelector('input[name="spicy"]:checked').value;
+
+            // Filter menus
+            let filteredMenus = menuDatabase.filter(menu => {
+                const categoryMatch = selectedCategories.includes(menu.category);
+                const priceMatch = selectedPrice === 'any' || menu.price === selectedPrice;
+                const spicyMatch = selectedSpicy === 'any' || menu.spicy === selectedSpicy;
+
+                return categoryMatch && priceMatch && spicyMatch;
+            });
+
+            if (filteredMenus.length === 0) {
+                // Relax constraints
+                filteredMenus = menuDatabase.filter(menu =>
+                    selectedCategories.includes(menu.category)
+                );
+            }
+
+            if (filteredMenus.length === 0) {
+                alert('조건에 맞는 메뉴가 없습니다. 필터를 조정해주세요!');
+                return;
+            }
+
+            // Random selection
+            const randomMenu = filteredMenus[Math.floor(Math.random() * filteredMenus.length)];
+
+            // Display recommendation
+            document.getElementById('rec-icon').textContent = randomMenu.icon;
+            document.getElementById('rec-name').textContent = randomMenu.name;
+
+            const categoryNames = {
+                korean: '한식',
+                chinese: '중식',
+                japanese: '일식',
+                western: '양식',
+                snack: '분식'
+            };
+
+            const priceNames = {
+                low: '저렴',
+                mid: '보통',
+                high: '고급'
+            };
+
+            document.getElementById('rec-category').textContent =
+                `${categoryNames[randomMenu.category]} · ${priceNames[randomMenu.price]}`;
+            document.getElementById('rec-description').textContent = randomMenu.desc;
+
+            const card = document.getElementById('recommendation-card');
+            card.classList.remove('show');
+            setTimeout(() => card.classList.add('show'), 10);
+        }
+    </script>
+</body>
+
+</html>

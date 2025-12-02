@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오목 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        #omok-board {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #2a3150, #1f2540);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .cell:hover:not(.occupied) {
+            background: linear-gradient(135deg, #3a4160, #2f3550);
+            border-color: var(--accent-primary);
+            transform: scale(1.05);
+        }
+
+        .cell.occupied {
+            cursor: not-allowed;
+        }
+
+        .cell.black {
+            background: radial-gradient(circle, #1a1a1a, #000);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell.white {
+            background: radial-gradient(circle, #ffffff, #e0e0e0);
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+        }
+
+        .cell.winning {
+            animation: pulse 0.6s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .current-player {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .player-indicator {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+        }
+
+        .player-indicator.black {
+            background: radial-gradient(circle, #1a1a1a, #000);
+        }
+
+        .player-indicator.white {
+            background: radial-gradient(circle, #ffffff, #e0e0e0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">⚫⚪ 오목</h1>
+            <p class="game-description">5개를 먼저 연결하면 승리!</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">현재 차례</span>
+                <div class="current-player">
+                    <div class="player-indicator black" id="player-indicator"></div>
+                    <span id="current-player-text">흑돌</span>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">수</span>
+                <div class="status-value" id="move-count">0</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div id="omok-board"></div>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="resetGame()">새 게임</button>
+            <button class="button button-secondary" onclick="undoMove()">무르기</button>
+        </div>
+    </div>
+
+    <script>
+        const BOARD_SIZE = 15;
+        let board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+        let currentPlayer = 1; // 1: black, 2: white
+        let moveHistory = [];
+        let gameOver = false;
+
+        function initBoard() {
+            const boardElement = document.getElementById('omok-board');
+            boardElement.innerHTML = '';
+
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.onclick = () => makeMove(i, j);
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        function makeMove(row, col) {
+            if (gameOver || board[row][col] !== 0) return;
+
+            board[row][col] = currentPlayer;
+            moveHistory.push({ row, col, player: currentPlayer });
+
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            cell.classList.add('occupied', currentPlayer === 1 ? 'black' : 'white');
+
+            if (checkWin(row, col)) {
+                gameOver = true;
+                const winner = currentPlayer === 1 ? '흑돌' : '백돌';
+                setTimeout(() => alert(`🎉 ${winner} 승리!`), 100);
+                return;
+            }
+
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateUI();
+        }
+
+        function checkWin(row, col) {
+            const directions = [
+                [[0, 1], [0, -1]],   // horizontal
+                [[1, 0], [-1, 0]],   // vertical
+                [[1, 1], [-1, -1]],  // diagonal \
+                [[1, -1], [-1, 1]]   // diagonal /
+            ];
+
+            for (const [dir1, dir2] of directions) {
+                let count = 1;
+                const winningCells = [[row, col]];
+
+                // Check in both directions
+                for (const [dr, dc] of [dir1, dir2]) {
+                    let r = row + dr;
+                    let c = col + dc;
+
+                    while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE &&
+                        board[r][c] === currentPlayer) {
+                        count++;
+                        winningCells.push([r, c]);
+                        r += dr;
+                        c += dc;
+                    }
+                }
+
+                if (count >= 5) {
+                    // Highlight winning cells
+                    winningCells.forEach(([r, c]) => {
+                        const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        cell.classList.add('winning');
+                    });
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function undoMove() {
+            if (moveHistory.length === 0 || gameOver) return;
+
+            const lastMove = moveHistory.pop();
+            board[lastMove.row][lastMove.col] = 0;
+
+            const cell = document.querySelector(`[data-row="${lastMove.row}"][data-col="${lastMove.col}"]`);
+            cell.classList.remove('occupied', 'black', 'white');
+
+            currentPlayer = lastMove.player;
+            updateUI();
+        }
+
+        function resetGame() {
+            board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+            currentPlayer = 1;
+            moveHistory = [];
+            gameOver = false;
+            initBoard();
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('move-count').textContent = moveHistory.length;
+            document.getElementById('current-player-text').textContent = currentPlayer === 1 ? '흑돌' : '백돌';
+            const indicator = document.getElementById('player-indicator');
+            indicator.className = 'player-indicator ' + (currentPlayer === 1 ? 'black' : 'white');
+        }
+
+        // Initialize game
+        initBoard();
+        updateUI();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사다리 타기 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .input-section {
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+            padding: 0;
+        }
+
+        #ladder-canvas {
+            width: 100%;
+            max-width: 600px;
+            height: 500px;
+            margin: 0 auto;
+            display: block;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        .ladder-container {
+            display: none;
+            text-align: center;
+        }
+
+        .ladder-container.active {
+            display: block;
+        }
+
+        .start-positions,
+        .end-positions {
+            display: flex;
+            justify-content: space-around;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .position-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .position-btn:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .position-btn.selected {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-color: var(--accent-primary);
+        }
+
+        .result-display {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: var(--bg-card);
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+        }
+
+        .result-display.show {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .result-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🪜 사다리 타기</h1>
+            <p class="game-description">공정한 랜덤 선택!</p>
+        </div>
+
+        <div class="game-board">
+            <div class="input-section" id="input-section">
+                <div class="input-group">
+                    <label>참가자 (쉼표로 구분)</label>
+                    <input type="text" id="participants-input" placeholder="예: 철수, 영희, 민수, 지영">
+                    <div class="tags-container" id="participants-tags"></div>
+                </div>
+
+                <div class="input-group">
+                    <label>결과 (쉼표로 구분)</label>
+                    <input type="text" id="results-input" placeholder="예: 당첨,꽝, 꽝, 당첨">
+                    <div class="tags-container" id="results-tags"></div>
+                </div>
+
+                <div class="controls">
+                    <button class="button" onclick="generateLadder()">사다리 생성</button>
+                </div>
+            </div>
+
+            <div class="ladder-container" id="ladder-container">
+                <div class="start-positions" id="start-positions"></div>
+                <canvas id="ladder-canvas"></canvas>
+                <div class="end-positions" id="end-positions"></div>
+
+                <div class="result-display" id="result-display">
+                    <div class="result-text">결과:</div>
+                    <div class="result-value" id="result-value"></div>
+                </div>
+
+                <div class="controls">
+                    <button class="button button-secondary" onclick="resetLadder()">다시 설정</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let participants = [];
+        let results = [];
+        let ladderData = [];
+        let animating = false;
+
+        // Input handling
+        document.getElementById('participants-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const value = e.target.value.trim();
+                if (value) {
+                    participants = value.split(',').map(s => s.trim()).filter(s => s);
+                    updateTags('participants');
+                    e.target.value = '';
+                }
+            }
+        });
+
+        document.getElementById('results-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const value = e.target.value.trim();
+                if (value) {
+                    results = value.split(',').map(s => s.trim()).filter(s => s);
+                    updateTags('results');
+                    e.target.value = '';
+                }
+            }
+        });
+
+        function updateTags(type) {
+            const container = document.getElementById(`${type}-tags`);
+            const items = type === 'participants' ? participants : results;
+
+            container.innerHTML = items.map((item, i) => `
+                <div class="tag">
+                    ${item}
+                    <button onclick="removeTag('${type}', ${i})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function removeTag(type, index) {
+            if (type === 'participants') {
+                participants.splice(index, 1);
+                updateTags('participants');
+            } else {
+                results.splice(index, 1);
+                updateTags('results');
+            }
+        }
+
+        function generateLadder() {
+            if (participants.length < 2 || results.length < 2) {
+                alert('참가자와 결과를 각각 2개 이상 입력해주세요!');
+                return;
+            }
+
+            if (participants.length !== results.length) {
+                alert('참가자와 결과의 개수가 같아야 합니다!');
+                return;
+            }
+
+            document.getElementById('input-section').style.display = 'none';
+            document.getElementById('ladder-container').classList.add('active');
+
+            createLadder();
+            drawLadder();
+        }
+
+        function createLadder() {
+            const numLines = participants.length;
+            const numLevels = Math.floor(Math.random() * 5) + 8; // 8-12 levels
+
+            ladderData = Array(numLevels).fill(null).map(() => Array(numLines - 1).fill(false));
+
+            // Randomly add horizontal bars
+            for (let level = 0; level < numLevels; level++) {
+                let lastBar = -2;
+                for (let line = 0; line < numLines - 1; line++) {
+                    if (line > lastBar + 1 && Math.random() < 0.4) {
+                        ladderData[level][line] = true;
+                        lastBar = line;
+                    }
+                }
+            }
+
+            // Create start positions
+            const startContainer = document.getElementById('start-positions');
+            startContainer.innerHTML = participants.map((p, i) => `
+                <button class="position-btn" onclick="startAnimation(${i})">${p}</button>
+            `).join('');
+
+            // Create end positions
+            const endContainer = document.getElementById('end-positions');
+            endContainer.innerHTML = results.map(r => `
+                <div class="position-btn">${r}</div>
+            `).join('');
+        }
+
+        function drawLadder() {
+            const canvas = document.getElementById('ladder-canvas');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = canvas.offsetWidth * dpr;
+            canvas.height = canvas.offsetHeight * dpr;
+            ctx.scale(dpr, dpr);
+
+            const width = canvas.offsetWidth;
+            const height = canvas.offsetHeight;
+            const numLines = participants.length;
+            const numLevels = ladderData.length;
+
+            const spacing = width / (numLines + 1);
+            const levelHeight = height / (numLevels + 1);
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 3;
+
+            // Draw vertical lines
+            for (let i = 0; i < numLines; i++) {
+                ctx.beginPath();
+                ctx.moveTo(spacing * (i + 1), 20);
+                ctx.lineTo(spacing * (i + 1), height - 20);
+                ctx.stroke();
+            }
+
+            // Draw horizontal bars
+            ctx.strokeStyle = '#8b5cf6';
+            for (let level = 0; level < numLevels; level++) {
+                for (let line = 0; line < numLines - 1; line++) {
+                    if (ladderData[level][line]) {
+                        const y = levelHeight * (level + 1);
+                        ctx.beginPath();
+                        ctx.moveTo(spacing * (line + 1), y);
+                        ctx.lineTo(spacing * (line + 2), y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function startAnimation(startIndex) {
+            if (animating) return;
+            animating = true;
+
+            const canvas = document.getElementById('ladder-canvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.offsetWidth;
+            const height = canvas.offsetHeight;
+            const numLines = participants.length;
+            const numLevels = ladderData.length;
+
+            const spacing = width / (numLines + 1);
+            const levelHeight = height / (numLevels + 1);
+
+            let currentLine = startIndex;
+            let currentLevel = 0;
+            let y = 20;
+
+            // Highlight selected start
+            document.querySelectorAll('#start-positions .position-btn').forEach((btn, i) => {
+                btn.classList.toggle('selected', i === startIndex);
+            });
+
+            const animate = () => {
+                if (currentLevel >= numLevels) {
+                    // Animation complete
+                    document.querySelectorAll('#end-positions .position-btn').forEach((btn, i) => {
+                        btn.classList.toggle('selected', i === currentLine);
+                    });
+
+                    const resultDisplay = document.getElementById('result-display');
+                    const resultValue = document.getElementById('result-value');
+                    resultValue.textContent = results[currentLine];
+                    resultDisplay.classList.add('show');
+
+                    animating = false;
+                    return;
+                }
+
+                // Draw current position
+                drawLadder();
+                ctx.fillStyle = '#ec4899';
+                ctx.beginPath();
+                ctx.arc(spacing * (currentLine + 1), y, 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Move down
+                y += 5;
+
+                if (y >= levelHeight * (currentLevel + 1)) {
+                    // Check for horizontal bar
+                    if (currentLine > 0 && ladderData[currentLevel][currentLine - 1]) {
+                        currentLine--;
+                    } else if (currentLine < numLines - 1 && ladderData[currentLevel][currentLine]) {
+                        currentLine++;
+                    }
+                    currentLevel++;
+                }
+
+                requestAnimationFrame(animate);
+            };
+
+            document.getElementById('result-display').classList.remove('show');
+            animate();
+        }
+
+        function resetLadder() {
+            document.getElementById('input-section').style.display = 'block';
+            document.getElementById('ladder-container').classList.remove('active');
+            document.getElementById('result-display').classList.remove('show');
+            animating = false;
+        }
+    </script>
+</body>
+
+</html>

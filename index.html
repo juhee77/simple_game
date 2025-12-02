@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미니게임 천국 - Mini Game Paradise</title>
+    <meta name="description" content="8가지 재미있는 미니게임을 즐겨보세요! 오목, 2048, 지뢰찾기, 사다리타기, 룰렛, 메뉴추천, 할일추천, 스도쿠">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">
+                <span class="title-icon">🎮</span>
+                미니게임 천국
+                <span class="title-subtitle">Mini Game Paradise</span>
+            </h1>
+            <p class="subtitle">8가지 재미있는 게임을 즐겨보세요!</p>
+        </header>
+
+        <main class="games-grid">
+            <a href="games/omok.html" class="game-card" data-game="omok">
+                <div class="game-icon">⚫⚪</div>
+                <h2 class="game-title">오목</h2>
+                <p class="game-description">5개를 먼저 연결하세요</p>
+                <div class="game-badge">전략</div>
+            </a>
+
+            <a href="games/2048.html" class="game-card" data-game="2048">
+                <div class="game-icon">🔢</div>
+                <h2 class="game-title">2048</h2>
+                <p class="game-description">타일을 합쳐 2048을 만드세요</p>
+                <div class="game-badge">퍼즐</div>
+            </a>
+
+            <a href="games/minesweeper.html" class="game-card" data-game="mine">
+                <div class="game-icon">💣</div>
+                <h2 class="game-title">지뢰찾기</h2>
+                <p class="game-description">지뢰를 피해 모든 칸을 열어보세요</p>
+                <div class="game-badge">논리</div>
+            </a>
+
+            <a href="games/ladder.html" class="game-card" data-game="ladder">
+                <div class="game-icon">🪜</div>
+                <h2 class="game-title">사다리 타기</h2>
+                <p class="game-description">랜덤 결정이 필요할 때</p>
+                <div class="game-badge">랜덤</div>
+            </a>
+
+            <a href="games/roulette.html" class="game-card" data-game="roulette">
+                <div class="game-icon">🎰</div>
+                <h2 class="game-title">룰렛</h2>
+                <p class="game-description">행운의 룰렛을 돌려보세요</p>
+                <div class="game-badge">랜덤</div>
+            </a>
+
+            <a href="games/menu.html" class="game-card" data-game="menu">
+                <div class="game-icon">🍽️</div>
+                <h2 class="game-title">메뉴 추천</h2>
+                <p class="game-description">오늘 뭐 먹을지 고민될 때</p>
+                <div class="game-badge">추천</div>
+            </a>
+
+            <a href="games/todo.html" class="game-card" data-game="todo">
+                <div class="game-icon">✅</div>
+                <h2 class="game-title">할일 추천</h2>
+                <p class="game-description">무엇을 할지 결정해드려요</p>
+                <div class="game-badge">추천</div>
+            </a>
+
+            <a href="games/sudoku.html" class="game-card" data-game="sudoku">
+                <div class="game-icon">🔢</div>
+                <h2 class="game-title">스도쿠</h2>
+                <p class="game-description">숫자 퍼즐의 정석</p>
+                <div class="game-badge">퍼즐</div>
+            </a>
+        </main>
+
+        <footer class="footer">
+            <p>Made with ❤️ for fun | © 2024 Mini Game Paradise</p>
+        </footer>
+    </div>
+
+    <script src="scripts/main.js"></script>
+</body>
+</html>

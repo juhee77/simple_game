@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>할일 추천 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .mood-section {
+            margin-bottom: 2rem;
+        }
+
+        .mood-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .mood-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .mood-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mood-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-5px);
+        }
+
+        .mood-card.selected {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-color: var(--accent-primary);
+        }
+
+        .mood-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mood-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .time-section {
+            margin-bottom: 2rem;
+        }
+
+        .time-options {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .time-btn {
+            padding: 0.875rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .time-btn:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .time-btn.selected {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-color: var(--accent-primary);
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            margin: 2rem 0;
+            display: none;
+        }
+
+        .recommendation-card.show {
+            display: block;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .rec-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+
+        .rec-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .rec-description {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .rec-tips {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+        }
+
+        .rec-tips-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .rec-tips-list {
+            text-align: left;
+            list-style: none;
+            padding: 0;
+        }
+
+        .rec-tips-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .rec-tips-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">✅ 할일 추천</h1>
+            <p class="game-description">무엇을 할지 결정해드려요!</p>
+        </div>
+
+        <div class="game-board">
+            <div class="mood-section">
+                <div class="mood-title">지금 기분이 어떠세요?</div>
+                <div class="mood-options">
+                    <div class="mood-card" data-mood="energetic" onclick="selectMood('energetic')">
+                        <div class="mood-icon">⚡</div>
+                        <div class="mood-label">활기찬</div>
+                    </div>
+                    <div class="mood-card" data-mood="tired" onclick="selectMood('tired')">
+                        <div class="mood-icon">😴</div>
+                        <div class="mood-label">피곤한</div>
+                    </div>
+                    <div class="mood-card" data-mood="creative" onclick="selectMood('creative')">
+                        <div class="mood-icon">🎨</div>
+                        <div class="mood-label">창의적인</div>
+                    </div>
+                    <div class="mood-card" data-mood="social" onclick="selectMood('social')">
+                        <div class="mood-icon">👥</div>
+                        <div class="mood-label">사교적인</div>
+                    </div>
+                    <div class="mood-card" data-mood="focused" onclick="selectMood('focused')">
+                        <div class="mood-icon">🎯</div>
+                        <div class="mood-label">집중하고 싶은</div>
+                    </div>
+                    <div class="mood-card" data-mood="relaxed" onclick="selectMood('relaxed')">
+                        <div class="mood-icon">🧘</div>
+                        <div class="mood-label">여유로운</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="time-section">
+                <div class="mood-title">얼마나 시간이 있나요?</div>
+                <div class="time-options">
+                    <button class="time-btn" data-time="short" onclick="selectTime('short')">30분 이하</button>
+                    <button class="time-btn" data-time="medium" onclick="selectTime('medium')">1-2시간</button>
+                    <button class="time-btn" data-time="long" onclick="selectTime('long')">2시간 이상</button>
+                </div>
+            </div>
+
+            <div class="recommendation-card" id="recommendation">
+                <div class="rec-icon" id="rec-icon">✨</div>
+                <div class="rec-title" id="rec-title">추천 활동</div>
+                <div class="rec-description" id="rec-description">설명</div>
+                <div class="rec-tips">
+                    <div class="rec-tips-title">💡 팁</div>
+                    <ul class="rec-tips-list" id="rec-tips"></ul>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="button" onclick="getRecommendation()">추천받기! 🎲</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedMood = null;
+        let selectedTime = null;
+
+        const activities = {
+            energetic: {
+                short: [
+                    { icon: '🏃', title: '가벼운 조깅', desc: '15-20분 정도 동네 한 바퀴 뛰어보세요!', tips: ['스트레칭 먼저 하기', '편한 신발 신기', '물 챙기기'] },
+                    { icon: '🧹', title: '집 청소', desc: '한 공간만 집중적으로 정리해보세요!', tips: ['음악 틀고 하기', '타이머 맞추기', '정리할 곳 미리 정하기'] },
+                    { icon: '💪', title: '홈트레이닝', desc: '간단한 운동으로 몸을 깨워보세요!', tips: ['유튜브 따라하기', '매트 깔기', '물 준비하기'] },
+                ],
+                medium: [
+                    { icon: '🚴', title: '자전거 타기', desc: '근처 공원이나 한강을 달려보세요!', tips: ['안전장비 착용', '경로 미리 정하기', '날씨 확인하기'] },
+                    { icon: '🎮', title: '활동적인 게임', desc: '링피트나 저스트댄스 같은 게임을 해보세요!', tips: ['충분한 공간 확보', '준비운동 하기', '물 자주 마시기'] },
+                    { icon: '🏊', title: '수영', desc: '수영장에서 운동해보세요!', tips: ['수영복 챙기기', '샤워용품 준비', '준비운동 필수'] },
+                ],
+                long: [
+                    { icon: '⛰️', title: '등산', desc: '가까운 산에 올라가보세요!', tips: ['등산화 신기', '간식과 물 챙기기', '날씨 확인', '일찍 출발하기'] },
+                    { icon: '🏃', title: '마라톤 연습', desc: '장거리 러닝에 도전해보세요!', tips: ['경로 계획하기', '에너지바 챙기기', '페이스 조절', '스트레칭 충분히'] },
+                    { icon: '🧗', title: '클라이밍', desc: '암벽등반장에서 도전해보세요!', tips: ['초보자 코스 선택', '안전교육 받기', '편한 옷 입기'] },
+                ]
+            },
+            tired: {
+                short: [
+                    { icon: '😴', title: '낮잠', desc: '20분 정도 짧게 자고 일어나세요!', tips: ['알람 맞추기', '어두운 곳에서', '편한 자세로'] },
+                    { icon: '☕', title: '커피 타임', desc: '좋아하는 음료를 마시며 쉬어보세요!', tips: ['조용한 곳 찾기', '핸드폰 내려놓기', '창밖 보기'] },
+                    { icon: '🎵', title: '음악 감상', desc: '편안한 음악을 들으며 휴식하세요!', tips: ['플레이리스트 준비', '이어폰/헤드폰 사용', '눈 감고 듣기'] },
+                ],
+                medium: [
+                    { icon: '🛁', title: '반신욕', desc: '따뜻한 물에 몸을 담그고 쉬어보세요!', tips: ['수온 38-40도', '책이나 음악 준비', '물 마시기'] },
+                    { icon: '📺', title: '영화/드라마 보기', desc: '가벼운 콘텐츠를 시청하세요!', tips: ['편한 자세로', '간식 준비', '조명 어둡게'] },
+                    { icon: '🧘', title: '명상', desc: '마음을 비우고 휴식을 취하세요!', tips: ['조용한 공간', '편한 자세', '호흡에 집중'] },
+                ],
+                long: [
+                    { icon: '💤', title: '충분한 수면', desc: '푹 자고 일어나세요!', tips: ['알람 끄기', '커튼 치기', '핸드폰 멀리하기', '편한 잠옷'] },
+                    { icon: '🏨', title: '스파/찜질방', desc: '온천이나 찜질방에서 힐링하세요!', tips: ['여유있게 시간 잡기', '수건 챙기기', '물 자주 마시기'] },
+                    { icon: '📚', title: '독서 마라톤', desc: '좋아하는 책을 천천히 읽어보세요!', tips: ['편한 장소', '간식 준비', '핸드폰 무음'] },
+                ]
+            },
+            creative: {
+                short: [
+                    { icon: '✍️', title: '일기 쓰기', desc: '오늘의 생각을 글로 남겨보세요!', tips: ['편한 곳에서', '솔직하게 쓰기', '형식 신경 안 쓰기'] },
+                    { icon: '📸', title: '사진 찍기', desc: '주변의 아름다운 것들을 담아보세요!', tips: ['다양한 각도 시도', '빛 활용하기', '편집 앱 활용'] },
+                    { icon: '🎨', title: '스케치', desc: '간단한 그림을 그려보세요!', tips: ['부담 갖지 않기', '주변 사물 그리기', '색연필 활용'] },
+                ],
+                medium: [
+                    { icon: '🎨', title: '그림 그리기', desc: '본격적으로 작품을 만들어보세요!', tips: ['주제 정하기', '레퍼런스 찾기', '여러 재료 시도'] },
+                    { icon: '🎵', title: '악기 연습', desc: '악기를 배우거나 연습해보세요!', tips: ['기초부터 차근차근', '유튜브 활용', '녹음해서 들어보기'] },
+                    { icon: '✂️', title: '공예/만들기', desc: 'DIY 프로젝트를 시작해보세요!', tips: ['재료 미리 준비', '튜토리얼 찾기', '실패 두려워하지 않기'] },
+                ],
+                long: [
+                    { icon: '📝', title: '소설/시 쓰기', desc: '창작 활동에 몰입해보세요!', tips: ['아이디어 메모', '조용한 환경', '완벽 추구하지 않기', '꾸준히 쓰기'] },
+                    { icon: '🎬', title: '영상 제작', desc: '브이로그나 영상을 만들어보세요!', tips: ['스토리보드 작성', '편집 프로그램 익히기', '음악 선택'] },
+                    { icon: '🎭', title: '프로젝트 기획', desc: '큰 창작 프로젝트를 계획해보세요!', tips: ['목표 설정', '단계별 계획', '리서치 충분히'] },
+                ]
+            },
+            social: {
+                short: [
+                    { icon: '📱', title: '친구에게 연락', desc: '오랜만에 안부 전화해보세요!', tips: ['부담 없이 시작', '관심 표현하기', '약속 잡기'] },
+                    { icon: '☕', title: '카페에서 수다', desc: '가까운 친구와 차 한잔 하세요!', tips: ['조용한 카페 선택', '시간 여유있게', '경청하기'] },
+                    { icon: '🎮', title: '온라인 게임', desc: '친구들과 함께 게임하세요!', tips: ['시간 약속', '보이스챗 활용', '즐겁게 플레이'] },
+                ],
+                medium: [
+                    { icon: '🍽️', title: '함께 식사', desc: '친구들과 맛있는 식사를 하세요!', tips: ['맛집 리서치', '예약하기', '메뉴 미리 보기'] },
+                    { icon: '🎳', title: '볼링/당구', desc: '가벼운 스포츠를 즐겨보세요!', tips: ['편한 옷 입기', '초보자 환영', '점수 신경 안 쓰기'] },
+                    { icon: '🎬', title: '영화 관람', desc: '영화관에서 함께 영화를 보세요!', tips: ['예매하기', '팝콘 준비', '감상 나누기'] },
+                ],
+                long: [
+                    { icon: '🎉', title: '파티/모임', desc: '친구들을 초대해 파티를 열어보세요!', tips: ['날짜 미리 정하기', '음식 준비', '게임 준비', '분위기 만들기'] },
+                    { icon: '🏕️', title: '캠핑', desc: '친구들과 자연에서 시간을 보내세요!', tips: ['장비 체크', '날씨 확인', '음식 준비', '안전 수칙'] },
+                    { icon: '🎤', title: '노래방', desc: '노래방에서 스트레스를 풀어보세요!', tips: ['애창곡 준비', '음료 챙기기', '듀엣 도전'] },
+                ]
+            },
+            focused: {
+                short: [
+                    { icon: '📚', title: '짧은 공부', desc: '25분 집중 공부해보세요! (뽀모도로)', tips: ['타이머 설정', '핸드폰 멀리', '한 가지만 집중'] },
+                    { icon: '📋', title: '할일 정리', desc: '오늘의 계획을 세워보세요!', tips: ['우선순위 정하기', '현실적으로', '체크리스트 만들기'] },
+                    { icon: '💻', title: '코딩 연습', desc: '알고리즘 문제를 풀어보세요!', tips: ['난이도 적절히', '시간 제한', '풀이 복습'] },
+                ],
+                medium: [
+                    { icon: '📖', title: '전문서 읽기', desc: '관심 분야 책을 읽어보세요!', tips: ['메모하며 읽기', '이해 안 되면 다시', '요약하기'] },
+                    { icon: '💼', title: '프로젝트 작업', desc: '진행 중인 프로젝트를 진행하세요!', tips: ['목표 설정', '중간 저장', '휴식 포함'] },
+                    { icon: '🎓', title: '온라인 강의', desc: '새로운 것을 배워보세요!', tips: ['노트 준비', '실습하기', '복습 계획'] },
+                ],
+                long: [
+                    { icon: '📚', title: '심화 학습', desc: '한 주제를 깊이 있게 공부하세요!', tips: ['자료 준비', '환경 조성', '중간 휴식', '정리 노트'] },
+                    { icon: '💻', title: '개발 프로젝트', desc: '사이드 프로젝트를 진행하세요!', tips: ['계획 수립', '버전 관리', '문서화', '테스트'] },
+                    { icon: '📝', title: '논문/보고서 작성', desc: '글쓰기에 집중하세요!', tips: ['아웃라인 작성', '참고자료 정리', '꾸준히 쓰기'] },
+                ]
+            },
+            relaxed: {
+                short: [
+                    { icon: '🌿', title: '산책', desc: '동네를 천천히 걸어보세요!', tips: ['이어폰 빼기', '주변 관찰', '천천히 걷기'] },
+                    { icon: '🍵', title: '차 마시기', desc: '좋아하는 차를 우려 마셔보세요!', tips: ['천천히 음미', '향 즐기기', '조용한 시간'] },
+                    { icon: '🌸', title: '식물 돌보기', desc: '화분에 물을 주고 관찰하세요!', tips: ['물 주기', '잎 닦기', '대화하기'] },
+                ],
+                medium: [
+                    { icon: '🎨', title: '컬러링북', desc: '색칠하며 마음을 안정시키세요!', tips: ['좋아하는 색 선택', '서두르지 않기', '음악 틀기'] },
+                    { icon: '🧩', title: '퍼즐', desc: '퍼즐을 맞추며 집중하세요!', tips: ['편한 자세', '조각 분류', '천천히 진행'] },
+                    { icon: '🎣', title: '낚시', desc: '강이나 바다에서 낚시를 즐기세요!', tips: ['장비 준비', '인내심', '자연 즐기기'] },
+                ],
+                long: [
+                    { icon: '🌳', title: '자연 속 힐링', desc: '공원이나 숲에서 시간을 보내세요!', tips: ['편한 신발', '돗자리', '책 가져가기', '여유롭게'] },
+                    { icon: '🎨', title: '미술관/박물관', desc: '문화생활을 즐겨보세요!', tips: ['사전 조사', '오디오 가이드', '천천히 감상'] },
+                    { icon: '🧘', title: '요가/명상 클래스', desc: '전문 클래스에서 힐링하세요!', tips: ['예약하기', '매트 준비', '편한 옷', '마음 열기'] },
+                ]
+            }
+        };
+
+        function selectMood(mood) {
+            selectedMood = mood;
+            document.querySelectorAll('.mood-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.mood === mood);
+            });
+        }
+
+        function selectTime(time) {
+            selectedTime = time;
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.time === time);
+            });
+        }
+
+        function getRecommendation() {
+            if (!selectedMood || !selectedTime) {
+                alert('기분과 시간을 모두 선택해주세요!');
+                return;
+            }
+
+            const options = activities[selectedMood][selectedTime];
+            const selected = options[Math.floor(Math.random() * options.length)];
+
+            document.getElementById('rec-icon').textContent = selected.icon;
+            document.getElementById('rec-title').textContent = selected.title;
+            document.getElementById('rec-description').textContent = selected.desc;
+
+            const tipsList = document.getElementById('rec-tips');
+            tipsList.innerHTML = selected.tips.map(tip => `<li>${tip}</li>`).join('');
+
+            const card = document.getElementById('recommendation');
+            card.classList.remove('show');
+            setTimeout(() => card.classList.add('show'), 10);
+        }
+    </script>
+</body>
+
+</html>
