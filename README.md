@@ -26,7 +26,7 @@
 ### 로컬에서 실행
 ```bash
 # 저장소 클론
-git clone https://github.com/[your-username]/simple_game.git
+git clone https://github.com/juhee77/simple_game.git
 cd simple_game
 
 # 간단한 HTTP 서버 실행
@@ -36,7 +36,7 @@ python3 -m http.server 8000
 ```
 
 ### GitHub Pages에서 플레이
-[여기를 클릭하여 플레이하세요!](https://[your-username].github.io/simple_game/)
+[여기를 클릭하여 플레이하세요!](https://juhee77.github.io/simple_game/)
 
 ## 🛠️ 기술 스택
 
