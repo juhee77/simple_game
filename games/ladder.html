@@ -41,108 +41,33 @@
             border-color: var(--accent-primary);
         }
 
+        .input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .add-btn {
+            padding: 0.875rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-secondary);
+        }
+
         .tags-container {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
             margin-top: 0.5rem;
-        }
-
-        .tag {
-            padding: 0.5rem 1rem;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .tag button {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 1.2rem;
-            line-height: 1;
-            padding: 0;
-        }
-
-        #ladder-canvas {
-            width: 100%;
-            max-width: 600px;
-            height: 500px;
-            margin: 0 auto;
-            display: block;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-        }
-
-        .ladder-container {
-            display: none;
-            text-align: center;
-        }
-
-        .ladder-container.active {
-            display: block;
-        }
-
-        .start-positions,
-        .end-positions {
-            display: flex;
-            justify-content: space-around;
-            margin: 1rem 0;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .position-btn {
-            padding: 0.75rem 1.5rem;
-            background: var(--bg-card);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .position-btn:hover {
-            border-color: var(--accent-primary);
-            transform: translateY(-2px);
-        }
-
-        .position-btn.selected {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border-color: var(--accent-primary);
-        }
-
-        .result-display {
-            margin-top: 2rem;
-            padding: 2rem;
-            background: var(--bg-card);
-            border-radius: 12px;
-            text-align: center;
-            display: none;
-        }
-
-        .result-display.show {
-            display: block;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        .result-text {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .result-value {
-            font-size: 2rem;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
     </style>
 </head>
@@ -159,13 +84,19 @@
             <div class="input-section" id="input-section">
                 <div class="input-group">
                     <label>참가자 (쉼표로 구분)</label>
-                    <input type="text" id="participants-input" placeholder="예: 철수, 영희, 민수, 지영">
+                    <div class="input-wrapper">
+                        <input type="text" id="participants-input" placeholder="예: 철수, 영희, 민수, 지영">
+                        <button class="add-btn" onclick="processInput('participants')">추가</button>
+                    </div>
                     <div class="tags-container" id="participants-tags"></div>
                 </div>
 
                 <div class="input-group">
                     <label>결과 (쉼표로 구분)</label>
-                    <input type="text" id="results-input" placeholder="예: 당첨,꽝, 꽝, 당첨">
+                    <div class="input-wrapper">
+                        <input type="text" id="results-input" placeholder="예: 당첨,꽝, 꽝, 당첨">
+                        <button class="add-btn" onclick="processInput('results')">추가</button>
+                    </div>
                     <div class="tags-container" id="results-tags"></div>
                 </div>
 
@@ -198,25 +129,32 @@
         let animating = false;
 
         // Input handling
+        function processInput(type) {
+            const inputId = type === 'participants' ? 'participants-input' : 'results-input';
+            const input = document.getElementById(inputId);
+            const value = input.value.trim();
+
+            if (value) {
+                const newItems = value.split(',').map(s => s.trim()).filter(s => s);
+                if (type === 'participants') {
+                    participants = [...participants, ...newItems];
+                } else {
+                    results = [...results, ...newItems];
+                }
+                updateTags(type);
+                input.value = '';
+            }
+        }
+
         document.getElementById('participants-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                const value = e.target.value.trim();
-                if (value) {
-                    participants = value.split(',').map(s => s.trim()).filter(s => s);
-                    updateTags('participants');
-                    e.target.value = '';
-                }
+                processInput('participants');
             }
         });
 
         document.getElementById('results-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                const value = e.target.value.trim();
-                if (value) {
-                    results = value.split(',').map(s => s.trim()).filter(s => s);
-                    updateTags('results');
-                    e.target.value = '';
-                }
+                processInput('results');
             }
         });
 
@@ -243,6 +181,24 @@
         }
 
         function generateLadder() {
+            // Handle pending inputs
+            const pInput = document.getElementById('participants-input');
+            const rInput = document.getElementById('results-input');
+
+            if (pInput.value.trim()) {
+                const newItems = pInput.value.trim().split(',').map(s => s.trim()).filter(s => s);
+                participants = [...participants, ...newItems];
+                updateTags('participants');
+                pInput.value = '';
+            }
+
+            if (rInput.value.trim()) {
+                const newItems = rInput.value.trim().split(',').map(s => s.trim()).filter(s => s);
+                results = [...results, ...newItems];
+                updateTags('results');
+                rInput.value = '';
+            }
+
             if (participants.length < 2 || results.length < 2) {
                 alert('참가자와 결과를 각각 2개 이상 입력해주세요!');
                 return;
