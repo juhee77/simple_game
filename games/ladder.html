@@ -334,12 +334,8 @@
             }
         }
 
-        function startAnimation(startIndex) {
-            if (animating) return;
-            animating = true;
-
+        function calculatePath(startIndex) {
             const canvas = document.getElementById('ladder-canvas');
-            const ctx = canvas.getContext('2d');
             const width = canvas.offsetWidth;
             const height = canvas.offsetHeight;
             const numLines = participants.length;
@@ -349,54 +345,140 @@
             const levelHeight = height / (numLevels + 1);
 
             let currentLine = startIndex;
-            let currentLevel = 0;
-            let y = 20;
+            let path = [];
+
+            // Start point
+            path.push({
+                x: spacing * (currentLine + 1),
+                y: 20
+            });
+
+            for (let level = 0; level < numLevels; level++) {
+                const y = levelHeight * (level + 1);
+
+                // Move down to this level
+                path.push({
+                    x: spacing * (currentLine + 1),
+                    y: y
+                });
+
+                // Check for horizontal bar
+                if (currentLine > 0 && ladderData[level][currentLine - 1]) {
+                    // Move left
+                    currentLine--;
+                    path.push({
+                        x: spacing * (currentLine + 1),
+                        y: y
+                    });
+                } else if (currentLine < numLines - 1 && ladderData[level][currentLine]) {
+                    // Move right
+                    currentLine++;
+                    path.push({
+                        x: spacing * (currentLine + 1),
+                        y: y
+                    });
+                }
+            }
+
+            // Move to bottom
+            path.push({
+                x: spacing * (currentLine + 1),
+                y: height - 20
+            });
+
+            return {
+                path,
+                finalIndex: currentLine
+            };
+        }
+
+        function startAnimation(startIndex) {
+            if (animating) return;
+            animating = true;
 
             // Highlight selected start
             document.querySelectorAll('#start-positions .position-btn').forEach((btn, i) => {
                 btn.classList.toggle('selected', i === startIndex);
             });
 
+            // Clear previous results
+            document.querySelectorAll('#end-positions .position-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.getElementById('result-display').classList.remove('show');
+
+            const {
+                path,
+                finalIndex
+            } = calculatePath(startIndex);
+            const canvas = document.getElementById('ladder-canvas');
+            const ctx = canvas.getContext('2d');
+
+            let currentPointIndex = 0;
+            let progress = 0;
+            const speed = 5; // pixels per frame
+
             const animate = () => {
-                if (currentLevel >= numLevels) {
-                    // Animation complete
-                    document.querySelectorAll('#end-positions .position-btn').forEach((btn, i) => {
-                        btn.classList.toggle('selected', i === currentLine);
-                    });
+                drawLadder();
 
-                    const resultDisplay = document.getElementById('result-display');
-                    const resultValue = document.getElementById('result-value');
-                    resultValue.textContent = results[currentLine];
-                    resultDisplay.classList.add('show');
+                const p1 = path[currentPointIndex];
+                const p2 = path[currentPointIndex + 1];
 
-                    animating = false;
-                    return;
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                progress += speed;
+
+                let currentX, currentY;
+
+                if (progress >= distance) {
+                    currentPointIndex++;
+                    progress = 0; // Reset progress for next segment
+
+                    if (currentPointIndex >= path.length - 1) {
+                        // Finished
+                        currentX = path[path.length - 1].x;
+                        currentY = path[path.length - 1].y;
+
+                        // Draw final dot
+                        ctx.fillStyle = '#ec4899';
+                        ctx.beginPath();
+                        ctx.arc(currentX, currentY, 8, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Show result
+                        document.querySelectorAll('#end-positions .position-btn').forEach((btn, i) => {
+                            btn.classList.toggle('selected', i === finalIndex);
+                        });
+
+                        const resultDisplay = document.getElementById('result-display');
+                        const resultValue = document.getElementById('result-value');
+                        resultValue.textContent = results[finalIndex];
+                        resultDisplay.classList.add('show');
+
+                        animating = false;
+                        return;
+                    }
+
+                    // Start next segment from its beginning (which is p2)
+                    // To be smoother, we could carry over the overshoot, but this is fine.
+                    currentX = p2.x;
+                    currentY = p2.y;
+                } else {
+                    const ratio = progress / distance;
+                    currentX = p1.x + dx * ratio;
+                    currentY = p1.y + dy * ratio;
                 }
 
-                // Draw current position
-                drawLadder();
                 ctx.fillStyle = '#ec4899';
                 ctx.beginPath();
-                ctx.arc(spacing * (currentLine + 1), y, 8, 0, Math.PI * 2);
+                ctx.arc(currentX, currentY, 8, 0, Math.PI * 2);
                 ctx.fill();
-
-                // Move down
-                y += 5;
-
-                if (y >= levelHeight * (currentLevel + 1)) {
-                    // Check for horizontal bar
-                    if (currentLine > 0 && ladderData[currentLevel][currentLine - 1]) {
-                        currentLine--;
-                    } else if (currentLine < numLines - 1 && ladderData[currentLevel][currentLine]) {
-                        currentLine++;
-                    }
-                    currentLevel++;
-                }
 
                 requestAnimationFrame(animate);
             };
 
-            document.getElementById('result-display').classList.remove('show');
             animate();
         }
 

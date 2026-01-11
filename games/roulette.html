@@ -338,8 +338,8 @@
                     const anglePerItem = (Math.PI * 2) / items.length;
 
                     // The pointer is at the top, so we need to find which segment is at the top
-                    // Adjust for the pointer position (top = -π/2)
-                    let adjustedAngle = (Math.PI * 2 - normalizedRotation + Math.PI / 2) % (Math.PI * 2);
+                    // Adjust for the pointer position (top = 3π/2 or -π/2)
+                    let adjustedAngle = (Math.PI * 2 - normalizedRotation + 1.5 * Math.PI) % (Math.PI * 2);
                     const winnerIndex = Math.floor(adjustedAngle / anglePerItem);
 
                     showResult(items[winnerIndex]);
