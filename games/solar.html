@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>태양계 3D - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: auto;
+        }
+
+        .back-button {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .controls-panel {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            pointer-events: auto;
+            max-width: 300px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+        }
+
+        .control-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .planet-info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 30px;
+            color: white;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .planet-info.visible {
+            opacity: 1;
+        }
+
+        .planet-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .planet-desc {
+            margin: 5px 0 0;
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+
+    <div class="ui-layer">
+        <div class="header-controls">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <div class="controls-panel">
+                <h3 style="margin: 0 0 15px 0; font-size: 1.2rem;">설정</h3>
+                <div class="control-group">
+                    <label>공전 속도 (Speed)</label>
+                    <input type="range" id="speed-slider" min="0" max="2" step="0.1" value="0.5">
+                </div>
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="orbit-toggle" checked> 궤도 보기
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="axis-toggle" checked> 자전축 보기
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label style="font-size: 0.8rem; color: #888;">
+                        * 마우스로 드래그하여 회전, 휠로 줌
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="planet-info" class="planet-info">
+            <h2 class="planet-name" id="info-name">Earth</h2>
+            <p class="planet-desc" id="info-desc">The Blue Marble</p>
+        </div>
+    </div>
+
+    <!-- Import Three.js as a module -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Configuration
+        const config = {
+            speed: 0.5,
+            showOrbits: true,
+            showAxis: true
+        };
+
+        // Scene Setup
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+        camera.position.set(0, 200, 400);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x333333);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 2, 1000);
+        scene.add(pointLight);
+
+        // Texture Generator
+        function createTexture(type, color1, color2) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            // Fill background
+            ctx.fillStyle = color1;
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Add noise/details
+            if (type === 'noise') {
+                for (let i = 0; i < 5000; i++) {
+                    const x = Math.random() * 512;
+                    const y = Math.random() * 512;
+                    const r = Math.random() * 2 + 1;
+                    ctx.fillStyle = color2;
+                    ctx.globalAlpha = 0.3;
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (type === 'bands') {
+                for (let i = 0; i < 512; i += 20) {
+                    ctx.fillStyle = Math.random() > 0.5 ? color1 : color2;
+                    ctx.globalAlpha = 0.5;
+                    ctx.fillRect(0, i, 512, 20);
+                }
+                // Blur bands
+                ctx.filter = 'blur(5px)';
+                ctx.drawImage(canvas, 0, 0);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            return texture;
+        }
+
+        // Planet Data (Scaled for visualization)
+        // Sizes are not to scale, distances are not to scale, but relative order is kept.
+        const planetsData = [
+            { name: "Mercury", size: 2.4, distance: 40, speed: 0.04, color: "#A5A5A5", type: "noise", color2: "#5A5A5A", tilt: 0.03 },
+            { name: "Venus", size: 6.0, distance: 60, speed: 0.015, color: "#E3BB76", type: "noise", color2: "#D4A450", tilt: 177 },
+            { name: "Earth", size: 6.3, distance: 90, speed: 0.01, color: "#22A6B3", type: "noise", color2: "#107885", tilt: 23 },
+            { name: "Mars", size: 3.3, distance: 120, speed: 0.008, color: "#EB4D4B", type: "noise", color2: "#C0392B", tilt: 25 },
+            { name: "Jupiter", size: 30, distance: 200, speed: 0.002, color: "#F0932B", type: "bands", color2: "#D35400", tilt: 3 },
+            { name: "Saturn", size: 25, distance: 300, speed: 0.0009, color: "#F1C40F", type: "bands", color2: "#F39C12", tilt: 26, ring: true },
+            { name: "Uranus", size: 10, distance: 400, speed: 0.0004, color: "#7ED6DF", type: "noise", color2: "#22A6B3", tilt: 98 },
+            { name: "Neptune", size: 10, distance: 500, speed: 0.0001, color: "#4834D4", type: "noise", color2: "#30336B", tilt: 28 }
+        ];
+
+        const planets = [];
+        const orbitLines = [];
+        const axes = [];
+
+        // Create Sun
+        const sunGeometry = new THREE.SphereGeometry(20, 32, 32);
+        const sunMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffdd00,
+            map: createTexture('noise', '#FDB813', '#F79F1F')
+        });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        scene.add(sun);
+
+        // Sun Glow
+        const sunGlowGeo = new THREE.SphereGeometry(22, 32, 32);
+        const sunGlowMat = new THREE.MeshBasicMaterial({
+            color: 0xffdd00,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.BackSide
+        });
+        const sunGlow = new THREE.Mesh(sunGlowGeo, sunGlowMat);
+        scene.add(sunGlow);
+
+        // Create Planets
+        planetsData.forEach(data => {
+            const group = new THREE.Group();
+
+            // Planet Mesh
+            const geometry = new THREE.SphereGeometry(data.size, 32, 32);
+            const texture = createTexture(data.type, data.color, data.color2);
+            const material = new THREE.MeshStandardMaterial({
+                map: texture,
+                roughness: 0.7,
+                metalness: 0.1
+            });
+            const planet = new THREE.Mesh(geometry, material);
+
+            // Tilt
+            planet.rotation.z = data.tilt * Math.PI / 180;
+
+            // Axis Line
+            const axisGeo = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, -data.size * 1.5, 0),
+                new THREE.Vector3(0, data.size * 1.5, 0)
+            ]);
+            const axisMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+            const axis = new THREE.Line(axisGeo, axisMat);
+            axis.rotation.z = data.tilt * Math.PI / 180;
+            group.add(axis);
+            axes.push(axis);
+
+            group.add(planet);
+
+            // Ring for Saturn
+            if (data.ring) {
+                const ringGeo = new THREE.RingGeometry(data.size * 1.4, data.size * 2.2, 64);
+                const ringMat = new THREE.MeshBasicMaterial({
+                    color: 0xafa375,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.PI / 2;
+                ring.rotation.y = data.tilt * Math.PI / 180; // Approximate tilt alignment
+                group.add(ring);
+            }
+
+            // Initial Position
+            const angle = Math.random() * Math.PI * 2;
+            group.position.x = Math.cos(angle) * data.distance;
+            group.position.z = Math.sin(angle) * data.distance;
+
+            scene.add(group);
+            planets.push({ mesh: group, planetMesh: planet, data: data, angle: angle });
+
+            // Orbit Line
+            const orbitCurve = new THREE.EllipseCurve(
+                0, 0,
+                data.distance, data.distance,
+                0, 2 * Math.PI,
+                false,
+                0
+            );
+            const points = orbitCurve.getPoints(100);
+            const orbitGeo = new THREE.BufferGeometry().setFromPoints(points);
+            const orbitMat = new THREE.LineBasicMaterial({ color: 0x444444 });
+            const orbit = new THREE.Line(orbitGeo, orbitMat);
+            orbit.rotation.x = Math.PI / 2;
+            scene.add(orbit);
+            orbitLines.push(orbit);
+        });
+
+        // Starfield
+        function createStars() {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 10000; i++) {
+                vertices.push(
+                    THREE.MathUtils.randFloatSpread(2000),
+                    THREE.MathUtils.randFloatSpread(2000),
+                    THREE.MathUtils.randFloatSpread(2000)
+                );
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 1.5 });
+            const stars = new THREE.Points(geometry, material);
+            scene.add(stars);
+        }
+        createStars();
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const speed = config.speed;
+
+            // Rotate Sun
+            sun.rotation.y += 0.002;
+
+            // Move Planets
+            planets.forEach(obj => {
+                // Orbit
+                obj.angle += obj.data.speed * speed;
+                obj.mesh.position.x = Math.cos(obj.angle) * obj.data.distance;
+                obj.mesh.position.z = Math.sin(obj.angle) * obj.data.distance;
+
+                // Self Rotation
+                obj.planetMesh.rotation.y += 0.01 * speed;
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // UI Controls
+        document.getElementById('speed-slider').addEventListener('input', (e) => {
+            config.speed = parseFloat(e.target.value);
+        });
+
+        document.getElementById('orbit-toggle').addEventListener('change', (e) => {
+            config.showOrbits = e.target.checked;
+            orbitLines.forEach(line => line.visible = config.showOrbits);
+        });
+
+        document.getElementById('axis-toggle').addEventListener('change', (e) => {
+            config.showAxis = e.target.checked;
+            axes.forEach(axis => axis.visible = config.showAxis);
+        });
+
+        // Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Raycaster for interaction (showing planet names)
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const infoName = document.getElementById('info-name');
+        const infoDesc = document.getElementById('info-desc');
+        const infoPanel = document.getElementById('planet-info');
+
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+
+            // Check intersections with planets
+            const planetMeshes = planets.map(p => p.planetMesh);
+            const intersects = raycaster.intersectObjects(planetMeshes);
+
+            if (intersects.length > 0) {
+                const object = intersects[0].object;
+                const planetData = planets.find(p => p.planetMesh === object).data;
+
+                infoName.textContent = planetData.name;
+                infoDesc.textContent = `Distance: ${planetData.distance} | Size: ${planetData.size}`;
+                infoPanel.classList.add('visible');
+                document.body.style.cursor = 'pointer';
+            } else {
+                infoPanel.classList.remove('visible');
+                document.body.style.cursor = 'default';
+            }
+        });
+
+    </script>
+</body>
+
+</html>
