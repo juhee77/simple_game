@@ -208,10 +208,10 @@
         controls.dampingFactor = 0.05;
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0x404040, 1.5); // Increased intensity
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Soft white ambient light
         scene.add(ambientLight);
 
-        const pointLight = new THREE.PointLight(0xffffff, 3, 1000); // Increased intensity
+        const pointLight = new THREE.PointLight(0xffffff, 1.5, 1000); // Reduced sun intensity
         scene.add(pointLight);
 
         // Texture Loader
@@ -222,10 +222,34 @@
         const planetsData = [
             { name: "Mercury", size: 2.4, distance: 40, speed: 0.04, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/mercurymap.jpg', tilt: 0.03 },
             { name: "Venus", size: 6.0, distance: 60, speed: 0.015, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/venusmap.jpg', tilt: 177 },
-            { name: "Earth", size: 6.3, distance: 90, speed: 0.01, textureUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', tilt: 23 },
-            { name: "Mars", size: 3.3, distance: 120, speed: 0.008, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/marsmap1k.jpg', tilt: 25 },
-            { name: "Jupiter", size: 30, distance: 200, speed: 0.002, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/jupitermap.jpg', tilt: 3 },
-            { name: "Saturn", size: 25, distance: 300, speed: 0.0009, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/saturnmap.jpg', tilt: 26, ring: true },
+            {
+                name: "Earth", size: 6.3, distance: 90, speed: 0.01, textureUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', tilt: 23,
+                moons: [
+                    { name: "Moon", size: 1.7, distance: 10, speed: 0.02, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/moonmap1k.jpg' }
+                ]
+            },
+            {
+                name: "Mars", size: 3.3, distance: 120, speed: 0.008, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/marsmap1k.jpg', tilt: 25,
+                moons: [
+                    { name: "Phobos", size: 0.5, distance: 5, speed: 0.04, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/moonmap1k.jpg' },
+                    { name: "Deimos", size: 0.3, distance: 7, speed: 0.03, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/moonmap1k.jpg' }
+                ]
+            },
+            {
+                name: "Jupiter", size: 30, distance: 200, speed: 0.002, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/jupitermap.jpg', tilt: 3,
+                moons: [
+                    { name: "Io", size: 2.0, distance: 38, speed: 0.03, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/moonmap1k.jpg' },
+                    { name: "Europa", size: 1.8, distance: 44, speed: 0.025, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/moonmap1k.jpg' },
+                    { name: "Ganymede", size: 3.0, distance: 50, speed: 0.02, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/moonmap1k.jpg' },
+                    { name: "Callisto", size: 2.8, distance: 58, speed: 0.015, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/moonmap1k.jpg' }
+                ]
+            },
+            {
+                name: "Saturn", size: 25, distance: 300, speed: 0.0009, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/saturnmap.jpg', tilt: 26, ring: true,
+                moons: [
+                    { name: "Titan", size: 2.8, distance: 40, speed: 0.02, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/moonmap1k.jpg' }
+                ]
+            },
             { name: "Uranus", size: 10, distance: 400, speed: 0.0004, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/uranusmap.jpg', tilt: 98 },
             { name: "Neptune", size: 10, distance: 500, speed: 0.0001, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/neptunemap.jpg', tilt: 28 }
         ];
@@ -248,7 +272,7 @@
         const sunGlowMat = new THREE.MeshBasicMaterial({
             color: 0xffdd00,
             transparent: true,
-            opacity: 0.3,
+            opacity: 0.2, // Reduced glow opacity
             side: THREE.BackSide
         });
         const sunGlow = new THREE.Mesh(sunGlowGeo, sunGlowMat);
@@ -299,13 +323,35 @@
                 group.add(ring);
             }
 
+            // Moons
+            const moonPivots = [];
+            if (data.moons) {
+                data.moons.forEach(moonData => {
+                    const moonPivot = new THREE.Group();
+                    const moonGeo = new THREE.SphereGeometry(moonData.size, 16, 16);
+                    const moonTex = textureLoader.load(moonData.textureUrl);
+                    const moonMat = new THREE.MeshStandardMaterial({
+                        map: moonTex,
+                        roughness: 0.8,
+                        metalness: 0.1
+                    });
+                    const moon = new THREE.Mesh(moonGeo, moonMat);
+
+                    moon.position.x = moonData.distance;
+                    moonPivot.add(moon);
+                    group.add(moonPivot);
+
+                    moonPivots.push({ pivot: moonPivot, speed: moonData.speed, mesh: moon });
+                });
+            }
+
             // Initial Position
             const angle = Math.random() * Math.PI * 2;
             group.position.x = Math.cos(angle) * data.distance;
             group.position.z = Math.sin(angle) * data.distance;
 
             scene.add(group);
-            planets.push({ mesh: group, planetMesh: planet, data: data, angle: angle });
+            planets.push({ mesh: group, planetMesh: planet, data: data, angle: angle, moonPivots: moonPivots });
 
             // Orbit Line
             const orbitCurve = new THREE.EllipseCurve(
@@ -351,7 +397,15 @@
                 obj.mesh.position.z = Math.sin(obj.angle) * obj.data.distance;
 
                 // Self Rotation
-                obj.planetMesh.rotation.y += 0.02 * speed; // Increased rotation speed
+                obj.planetMesh.rotation.y += 0.02 * speed;
+
+                // Move Moons
+                if (obj.moonPivots) {
+                    obj.moonPivots.forEach(moon => {
+                        moon.pivot.rotation.y += moon.speed * speed;
+                        moon.mesh.rotation.y += 0.01 * speed; // Moon self rotation
+                    });
+                }
             });
 
             controls.update();
