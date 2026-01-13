@@ -214,55 +214,19 @@
         const pointLight = new THREE.PointLight(0xffffff, 2, 1000);
         scene.add(pointLight);
 
-        // Texture Generator
-        function createTexture(type, color1, color2) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 512;
-            const ctx = canvas.getContext('2d');
-
-            // Fill background
-            ctx.fillStyle = color1;
-            ctx.fillRect(0, 0, 512, 512);
-
-            // Add noise/details
-            if (type === 'noise') {
-                for (let i = 0; i < 5000; i++) {
-                    const x = Math.random() * 512;
-                    const y = Math.random() * 512;
-                    const r = Math.random() * 2 + 1;
-                    ctx.fillStyle = color2;
-                    ctx.globalAlpha = 0.3;
-                    ctx.beginPath();
-                    ctx.arc(x, y, r, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            } else if (type === 'bands') {
-                for (let i = 0; i < 512; i += 20) {
-                    ctx.fillStyle = Math.random() > 0.5 ? color1 : color2;
-                    ctx.globalAlpha = 0.5;
-                    ctx.fillRect(0, i, 512, 20);
-                }
-                // Blur bands
-                ctx.filter = 'blur(5px)';
-                ctx.drawImage(canvas, 0, 0);
-            }
-
-            const texture = new THREE.CanvasTexture(canvas);
-            return texture;
-        }
+        // Texture Loader
+        const textureLoader = new THREE.TextureLoader();
 
         // Planet Data (Scaled for visualization)
-        // Sizes are not to scale, distances are not to scale, but relative order is kept.
         const planetsData = [
-            { name: "Mercury", size: 2.4, distance: 40, speed: 0.04, color: "#A5A5A5", type: "noise", color2: "#5A5A5A", tilt: 0.03 },
-            { name: "Venus", size: 6.0, distance: 60, speed: 0.015, color: "#E3BB76", type: "noise", color2: "#D4A450", tilt: 177 },
-            { name: "Earth", size: 6.3, distance: 90, speed: 0.01, color: "#22A6B3", type: "noise", color2: "#107885", tilt: 23 },
-            { name: "Mars", size: 3.3, distance: 120, speed: 0.008, color: "#EB4D4B", type: "noise", color2: "#C0392B", tilt: 25 },
-            { name: "Jupiter", size: 30, distance: 200, speed: 0.002, color: "#F0932B", type: "bands", color2: "#D35400", tilt: 3 },
-            { name: "Saturn", size: 25, distance: 300, speed: 0.0009, color: "#F1C40F", type: "bands", color2: "#F39C12", tilt: 26, ring: true },
-            { name: "Uranus", size: 10, distance: 400, speed: 0.0004, color: "#7ED6DF", type: "noise", color2: "#22A6B3", tilt: 98 },
-            { name: "Neptune", size: 10, distance: 500, speed: 0.0001, color: "#4834D4", type: "noise", color2: "#30336B", tilt: 28 }
+            { name: "Mercury", size: 2.4, distance: 40, speed: 0.04, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/mercurymap.jpg', tilt: 0.03 },
+            { name: "Venus", size: 6.0, distance: 60, speed: 0.015, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/venusmap.jpg', tilt: 177 },
+            { name: "Earth", size: 6.3, distance: 90, speed: 0.01, textureUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg', tilt: 23 },
+            { name: "Mars", size: 3.3, distance: 120, speed: 0.008, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/marsmap1k.jpg', tilt: 25 },
+            { name: "Jupiter", size: 30, distance: 200, speed: 0.002, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/jupitermap.jpg', tilt: 3 },
+            { name: "Saturn", size: 25, distance: 300, speed: 0.0009, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/saturnmap.jpg', tilt: 26, ring: true },
+            { name: "Uranus", size: 10, distance: 400, speed: 0.0004, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/uranusmap.jpg', tilt: 98 },
+            { name: "Neptune", size: 10, distance: 500, speed: 0.0001, textureUrl: 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/neptunemap.jpg', tilt: 28 }
         ];
 
         const planets = [];
@@ -271,9 +235,9 @@
 
         // Create Sun
         const sunGeometry = new THREE.SphereGeometry(20, 32, 32);
+        const sunTexture = textureLoader.load('https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/sunmap.jpg');
         const sunMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffdd00,
-            map: createTexture('noise', '#FDB813', '#F79F1F')
+            map: sunTexture
         });
         const sun = new THREE.Mesh(sunGeometry, sunMaterial);
         scene.add(sun);
@@ -295,7 +259,7 @@
 
             // Planet Mesh
             const geometry = new THREE.SphereGeometry(data.size, 32, 32);
-            const texture = createTexture(data.type, data.color, data.color2);
+            const texture = textureLoader.load(data.textureUrl);
             const material = new THREE.MeshStandardMaterial({
                 map: texture,
                 roughness: 0.7,
@@ -359,23 +323,15 @@
             orbitLines.push(orbit);
         });
 
-        // Starfield
-        function createStars() {
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            for (let i = 0; i < 10000; i++) {
-                vertices.push(
-                    THREE.MathUtils.randFloatSpread(2000),
-                    THREE.MathUtils.randFloatSpread(2000),
-                    THREE.MathUtils.randFloatSpread(2000)
-                );
-            }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 1.5 });
-            const stars = new THREE.Points(geometry, material);
-            scene.add(stars);
-        }
-        createStars();
+        // Starfield Background
+        const starGeometry = new THREE.SphereGeometry(5000, 64, 64);
+        const starTexture = textureLoader.load('https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/galaxy_starfield.png');
+        const starMaterial = new THREE.MeshBasicMaterial({
+            map: starTexture,
+            side: THREE.BackSide
+        });
+        const starMesh = new THREE.Mesh(starGeometry, starMaterial);
+        scene.add(starMesh);
 
         // Animation Loop
         function animate() {
