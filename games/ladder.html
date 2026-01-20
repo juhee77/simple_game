@@ -217,6 +217,7 @@
                 </div>
 
                 <div class="controls">
+                    <button class="button" onclick="showAllResults()">전체 결과 보기</button>
                     <button class="button button-secondary" onclick="resetLadder()">다시 설정</button>
                 </div>
             </div>
@@ -228,6 +229,12 @@
         let results = [];
         let ladderData = [];
         let animating = false;
+        let completedPaths = []; // Store paths: { path: [], color: string }
+        const colors = [
+            '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981',
+            '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef',
+            '#f43f5e', '#e11d48'
+        ];
 
         // Input handling
         function processInput(type) {
@@ -322,6 +329,7 @@
             const numLevels = Math.floor(Math.random() * 5) + 8; // 8-12 levels
 
             ladderData = Array(numLevels).fill(null).map(() => Array(numLines - 1).fill(false));
+            completedPaths = []; // Reset paths
 
             // Randomly add horizontal bars
             for (let level = 0; level < numLevels; level++) {
@@ -365,30 +373,49 @@
             const levelHeight = height / (numLevels + 1);
 
             ctx.clearRect(0, 0, width, height);
+
+            // Draw completed paths first (so they are behind the main lines if we want, or on top. Let's draw on top of grid but below active)
+            // Actually, let's draw grid first.
             ctx.strokeStyle = '#6366f1';
             ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
             // Draw vertical lines
+            ctx.beginPath();
             for (let i = 0; i < numLines; i++) {
-                ctx.beginPath();
                 ctx.moveTo(spacing * (i + 1), 20);
                 ctx.lineTo(spacing * (i + 1), height - 20);
-                ctx.stroke();
             }
+            ctx.stroke();
 
             // Draw horizontal bars
             ctx.strokeStyle = '#8b5cf6';
+            ctx.beginPath();
             for (let level = 0; level < numLevels; level++) {
                 for (let line = 0; line < numLines - 1; line++) {
                     if (ladderData[level][line]) {
                         const y = levelHeight * (level + 1);
-                        ctx.beginPath();
                         ctx.moveTo(spacing * (line + 1), y);
                         ctx.lineTo(spacing * (line + 2), y);
-                        ctx.stroke();
                     }
                 }
             }
+            ctx.stroke();
+
+            // Draw completed paths
+            completedPaths.forEach(item => {
+                ctx.strokeStyle = item.color;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                if (item.path.length > 0) {
+                    ctx.moveTo(item.path[0].x, item.path[0].y);
+                    for (let i = 1; i < item.path.length; i++) {
+                        ctx.lineTo(item.path[i].x, item.path[i].y);
+                    }
+                }
+                ctx.stroke();
+            });
         }
 
         function calculatePath(startIndex) {
@@ -451,6 +478,15 @@
 
         function startAnimation(startIndex) {
             if (animating) return;
+
+            // Check if already completed
+            if (completedPaths.some(p => p.startIndex === startIndex)) {
+                // Just show result if already done
+                const existing = completedPaths.find(p => p.startIndex === startIndex);
+                showResult(existing.finalIndex);
+                return;
+            }
+
             animating = true;
 
             // Highlight selected start
@@ -458,7 +494,7 @@
                 btn.classList.toggle('selected', i === startIndex);
             });
 
-            // Clear previous results
+            // Clear previous results display (but keep paths)
             document.querySelectorAll('#end-positions .position-btn').forEach(btn => {
                 btn.classList.remove('selected');
             });
@@ -468,15 +504,28 @@
                 path,
                 finalIndex
             } = calculatePath(startIndex);
+
+            const color = colors[startIndex % colors.length];
             const canvas = document.getElementById('ladder-canvas');
             const ctx = canvas.getContext('2d');
 
             let currentPointIndex = 0;
             let progress = 0;
-            const speed = 5; // pixels per frame
+            const speed = 8; // Faster speed
 
             const animate = () => {
-                drawLadder();
+                drawLadder(); // Redraws grid + completed paths
+
+                // Draw current animating path
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(path[0].x, path[0].y);
+
+                // Draw full segments
+                for (let i = 0; i < currentPointIndex; i++) {
+                    ctx.lineTo(path[i + 1].x, path[i + 1].y);
+                }
 
                 const p1 = path[currentPointIndex];
                 const p2 = path[currentPointIndex + 1];
@@ -498,28 +547,20 @@
                         currentX = path[path.length - 1].x;
                         currentY = path[path.length - 1].y;
 
+                        // Add to completed paths
+                        completedPaths.push({ path, color, startIndex, finalIndex });
+                        drawLadder(); // Final redraw
+
                         // Draw final dot
-                        ctx.fillStyle = '#ec4899';
+                        ctx.fillStyle = color;
                         ctx.beginPath();
                         ctx.arc(currentX, currentY, 8, 0, Math.PI * 2);
                         ctx.fill();
 
-                        // Show result
-                        document.querySelectorAll('#end-positions .position-btn').forEach((btn, i) => {
-                            btn.classList.toggle('selected', i === finalIndex);
-                        });
-
-                        const resultDisplay = document.getElementById('result-display');
-                        const resultValue = document.getElementById('result-value');
-                        resultValue.textContent = results[finalIndex];
-                        resultDisplay.classList.add('show');
-
+                        showResult(finalIndex);
                         animating = false;
                         return;
                     }
-
-                    // Start next segment from its beginning (which is p2)
-                    // To be smoother, we could carry over the overshoot, but this is fine.
                     currentX = p2.x;
                     currentY = p2.y;
                 } else {
@@ -528,7 +569,12 @@
                     currentY = p1.y + dy * ratio;
                 }
 
-                ctx.fillStyle = '#ec4899';
+                // Draw current partial segment
+                ctx.lineTo(currentX, currentY);
+                ctx.stroke();
+
+                // Draw head dot
+                ctx.fillStyle = color;
                 ctx.beginPath();
                 ctx.arc(currentX, currentY, 8, 0, Math.PI * 2);
                 ctx.fill();
@@ -537,6 +583,57 @@
             };
 
             animate();
+        }
+
+        function showResult(finalIndex) {
+            document.querySelectorAll('#end-positions .position-btn').forEach((btn, i) => {
+                btn.classList.toggle('selected', i === finalIndex);
+            });
+
+            const resultDisplay = document.getElementById('result-display');
+            const resultValue = document.getElementById('result-value');
+            resultValue.textContent = results[finalIndex];
+            resultDisplay.classList.add('show');
+        }
+
+        function showAllResults() {
+            if (animating) return;
+
+            // Clear existing completed paths to avoid duplicates if re-running (though logic below handles it)
+            // actually, let's just complete any that aren't done.
+
+            participants.forEach((_, i) => {
+                if (!completedPaths.some(p => p.startIndex === i)) {
+                    const { path, finalIndex } = calculatePath(i);
+                    const color = colors[i % colors.length];
+                    completedPaths.push({ path, color, startIndex: i, finalIndex });
+                }
+            });
+
+            drawLadder();
+
+            // Show all results in a list or just highlight everything?
+            // Let's show a summary alert or modal, or just let the user see the visual paths.
+            // The user asked to "see all results". Visual paths might be messy if too many.
+            // Let's append a result list to the result display.
+
+            const resultDisplay = document.getElementById('result-display');
+            const resultValue = document.getElementById('result-value');
+
+            let summaryHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; text-align: left;">';
+            completedPaths.sort((a, b) => a.startIndex - b.startIndex).forEach(p => {
+                summaryHtml += `
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.25rem;">
+                        <span style="color: ${p.color}">${participants[p.startIndex]}</span>
+                        <span>→</span>
+                        <span style="font-weight: bold;">${results[p.finalIndex]}</span>
+                    </div>
+                `;
+            });
+            summaryHtml += '</div>';
+
+            resultValue.innerHTML = "전체 결과 확인" + summaryHtml;
+            resultDisplay.classList.add('show');
         }
 
         function resetLadder() {
