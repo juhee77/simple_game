@@ -10,6 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --cute-pink: #ffb7b2;
+            --cute-blue: #a8e6cf;
+            --cute-yellow: #ffdfba;
+            --cute-purple: #e1bee7;
+        }
+
         .game-stats {
             display: flex;
             justify-content: center;
@@ -17,6 +24,10 @@
             margin-bottom: 2rem;
             font-size: 1.2rem;
             color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
         }
 
         .stat-item {
@@ -29,7 +40,7 @@
         .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: var(--accent-primary);
         }
 
         .memory-grid {
@@ -45,7 +56,7 @@
             aspect-ratio: 3/4;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s;
+            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
             cursor: pointer;
         }
 
@@ -54,9 +65,8 @@
         }
 
         .card.matched .card-front {
-            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary));
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 15px var(--accent-primary);
+            filter: brightness(1.1);
+            box-shadow: 0 0 15px var(--cute-yellow);
         }
 
         .card.matched {
@@ -71,28 +81,42 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             user-select: none;
+            overflow: hidden;
         }
 
         .card-back {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            background-color: #ffd1dc;
+            background-image: url('../assets/images/card_back.png');
+            background-size: 150px;
+            background-repeat: repeat;
+            border: 3px solid white;
         }
 
         .card-back::after {
-            content: '?';
+            content: '♥';
             font-size: 2rem;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 183, 178, 0.8);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 4px;
         }
 
         .card-front {
-            background: var(--bg-card);
+            background-color: white;
             transform: rotateY(180deg);
-            border: 2px solid var(--accent-secondary);
+            border: 3px solid var(--cute-blue);
+            background-image: url('../assets/images/characters.png');
+            background-size: 400% 400%;
+            /* 4x4 sprite sheet */
         }
 
         @keyframes pulse {
@@ -117,28 +141,26 @@
         }
 
         .difficulty-btn {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            background: white;
+            border: 2px solid var(--cute-purple);
             color: var(--text-secondary);
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 1.5rem;
             border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: bold;
         }
 
         .difficulty-btn.active {
-            background: var(--accent-primary);
+            background: var(--cute-purple);
             color: white;
-            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(225, 190, 231, 0.5);
         }
 
         @media (max-width: 500px) {
             .memory-grid {
                 gap: 0.5rem;
-            }
-
-            .card-face {
-                font-size: 2rem;
             }
         }
 
@@ -219,7 +241,7 @@
         <div class="game-header">
             <a href="../index.html" class="back-button">← 메인으로</a>
             <h1 class="game-title">🃏 카드 뒤집기</h1>
-            <p class="game-description">숨겨진 카드의 짝을 찾아보세요!</p>
+            <p class="game-description">귀여운 친구들의 짝을 찾아주세요!</p>
         </div>
 
         <div class="game-board">
@@ -251,7 +273,7 @@
 
     <div class="result-modal" id="result-modal">
         <div class="result-content">
-            <h2 class="result-title">🎉 클리어!</h2>
+            <h2 class="result-title">🎉 성공!</h2>
             <div class="result-stats">
                 <div class="result-stat-row">
                     <span>이동 횟수</span>
@@ -267,7 +289,9 @@
     </div>
 
     <script>
-        const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🦄', '🐙', '🦋'];
+        // Use indices for sprite sheet positions (0-15 for a 4x4 grid)
+        const characterIndices = Array.from({ length: 16 }, (_, i) => i);
+
         let cards = [];
         let flippedCards = [];
         let matchedPairs = 0;
@@ -311,22 +335,38 @@
 
             // Create pairs
             const pairCount = currentSize / 2;
-            const gameEmojis = emojis.slice(0, pairCount);
-            cards = [...gameEmojis, ...gameEmojis];
+            // Shuffle indices to pick random characters
+            const shuffledIndices = characterIndices.sort(() => 0.5 - Math.random());
+            const selectedIndices = shuffledIndices.slice(0, pairCount);
 
-            // Shuffle
-            shuffle(cards);
+            const gameCards = [...selectedIndices, ...selectedIndices];
+
+            // Shuffle cards
+            shuffle(gameCards);
 
             // Create DOM elements
-            cards.forEach((emoji, index) => {
+            gameCards.forEach((charIndex, index) => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.dataset.index = index;
-                card.dataset.emoji = emoji;
+                card.dataset.charIndex = charIndex;
+
+                // Calculate background position
+                // Assuming 4 columns in sprite sheet
+                const cols = 4;
+                const row = Math.floor(charIndex / cols);
+                const col = charIndex % cols;
+
+                // background-position % = (index / (total - 1)) * 100
+                // Since we have 4 items, positions are 0%, 33.33%, 66.66%, 100%
+                const posX = col * (100 / (cols - 1));
+                const posY = row * (100 / (cols - 1)); // Assuming 4 rows as well
+
+                const frontStyle = `background-position: ${posX}% ${posY}%`;
 
                 card.innerHTML = `
                     <div class="card-face card-back"></div>
-                    <div class="card-face card-front">${emoji}</div>
+                    <div class="card-face card-front" style="${frontStyle}"></div>
                 `;
 
                 card.addEventListener('click', flipCard);
@@ -359,7 +399,7 @@
 
         function checkForMatch() {
             const [card1, card2] = flippedCards;
-            const match = card1.dataset.emoji === card2.dataset.emoji;
+            const match = card1.dataset.charIndex === card2.dataset.charIndex;
 
             isLocked = true;
 
