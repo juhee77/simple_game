@@ -289,7 +289,7 @@
                 ctx.rotate(startAngle + anglePerItem / 2);
                 ctx.textAlign = 'center';
                 ctx.fillStyle = 'white';
-                ctx.font = `bold ${Math.max(16, 600 / items.length)}px Outfit`;
+                ctx.font = `bold ${Math.min(30, Math.max(14, 400 / items.length))}px Outfit`;
                 ctx.fillText(item, radius * 0.65, 5);
                 ctx.restore();
             });
