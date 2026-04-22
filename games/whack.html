@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>두더지 잡기 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .whack-layout {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .helper-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .whack-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(90px, 1fr));
+            gap: 1rem;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .hole {
+            position: relative;
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.18), rgba(15, 23, 42, 0.95));
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.2);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .hole:hover {
+            transform: translateY(-2px);
+            box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.2), 0 10px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .hole::after {
+            content: '';
+            position: absolute;
+            left: 12%;
+            right: 12%;
+            bottom: 12%;
+            height: 24%;
+            border-radius: 50%;
+            background: rgba(10, 14, 39, 0.95);
+            box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.45);
+        }
+
+        .mole {
+            position: absolute;
+            left: 50%;
+            bottom: 16%;
+            transform: translate(-50%, 80%);
+            width: 55%;
+            height: 55%;
+            border-radius: 50% 50% 44% 44%;
+            background: linear-gradient(180deg, #c084fc, #7c3aed);
+            transition: transform 0.18s ease;
+            box-shadow: inset 0 -10px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .mole::before,
+        .mole::after {
+            content: '';
+            position: absolute;
+            top: 8%;
+            width: 18%;
+            height: 18%;
+            border-radius: 50%;
+            background: #f5d0fe;
+        }
+
+        .mole::before {
+            left: 14%;
+        }
+
+        .mole::after {
+            right: 14%;
+        }
+
+        .mole-face {
+            position: absolute;
+            inset: 0;
+        }
+
+        .mole-face::before,
+        .mole-face::after {
+            content: '';
+            position: absolute;
+            top: 42%;
+            width: 9%;
+            height: 9%;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+        }
+
+        .mole-face::before {
+            left: 32%;
+        }
+
+        .mole-face::after {
+            right: 32%;
+        }
+
+        .nose {
+            position: absolute;
+            left: 50%;
+            top: 52%;
+            width: 16%;
+            height: 12%;
+            border-radius: 999px;
+            background: #fbcfe8;
+            transform: translateX(-50%);
+        }
+
+        .hole.active .mole {
+            transform: translate(-50%, 0);
+        }
+
+        .hole.bonus .mole {
+            background: linear-gradient(180deg, #f59e0b, #ea580c);
+        }
+
+        .hole.hit {
+            animation: whackHit 0.18s ease;
+        }
+
+        .message {
+            text-align: center;
+            min-height: 1.75rem;
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+
+        @keyframes whackHit {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(0.94);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 520px) {
+            .whack-grid {
+                gap: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🔨 두더지 잡기</h1>
+            <p class="game-description">튀어나오는 두더지를 빠르게 눌러 최고 점수를 노리세요!</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">점수</span>
+                <div class="status-value" id="score">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">콤보</span>
+                <div class="status-value" id="combo">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">남은 시간</span>
+                <div class="status-value" id="time">30</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">베스트</span>
+                <div class="status-value" id="best-score">0</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="whack-layout">
+                <div class="helper-card">보라색 두더지는 <strong>1점</strong>, 금색 보너스 두더지는 <strong>3점</strong>입니다. 빗맞추면 콤보가 초기화됩니다.</div>
+                <div class="message" id="message">시작 버튼을 누르면 30초 동안 진행됩니다.</div>
+                <div class="whack-grid" id="whack-grid"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="startGame()">게임 시작</button>
+            <button class="button button-secondary" onclick="resetBoard()">리셋</button>
+        </div>
+    </div>
+
+    <script>
+        const HOLE_COUNT = 9;
+        const GAME_DURATION = 30;
+        const whackGrid = document.getElementById('whack-grid');
+        const scoreElement = document.getElementById('score');
+        const comboElement = document.getElementById('combo');
+        const timeElement = document.getElementById('time');
+        const bestScoreElement = document.getElementById('best-score');
+        const messageElement = document.getElementById('message');
+
+        let score = 0;
+        let combo = 0;
+        let timeLeft = GAME_DURATION;
+        let bestScore = Number(localStorage.getItem('whack-best-score') || 0);
+        let activeHole = -1;
+        let isBonus = false;
+        let isRunning = false;
+        let spawnTimeout = null;
+        let countdownInterval = null;
+
+        function createGrid() {
+            whackGrid.innerHTML = '';
+            for (let index = 0; index < HOLE_COUNT; index++) {
+                const hole = document.createElement('button');
+                hole.className = 'hole';
+                hole.type = 'button';
+                hole.setAttribute('aria-label', `${index + 1}번 구멍`);
+                hole.innerHTML = `
+                    <div class="mole">
+                        <div class="mole-face"></div>
+                        <div class="nose"></div>
+                    </div>
+                `;
+                hole.addEventListener('click', () => whack(index));
+                whackGrid.appendChild(hole);
+            }
+        }
+
+        function updateStats() {
+            scoreElement.textContent = score;
+            comboElement.textContent = combo;
+            timeElement.textContent = timeLeft;
+            bestScoreElement.textContent = bestScore;
+        }
+
+        function clearActiveHole() {
+            const holes = whackGrid.children;
+            if (activeHole >= 0 && holes[activeHole]) {
+                holes[activeHole].classList.remove('active', 'bonus', 'hit');
+            }
+            activeHole = -1;
+            isBonus = false;
+        }
+
+        function spawnMole() {
+            if (!isRunning) {
+                return;
+            }
+
+            clearActiveHole();
+            const nextHole = Math.floor(Math.random() * HOLE_COUNT);
+            const holes = whackGrid.children;
+            activeHole = nextHole;
+            isBonus = Math.random() < 0.18;
+            holes[nextHole].classList.add('active');
+            if (isBonus) {
+                holes[nextHole].classList.add('bonus');
+            }
+
+            const nextDelay = Math.max(360, 760 - (GAME_DURATION - timeLeft) * 14);
+            spawnTimeout = setTimeout(spawnMole, nextDelay);
+        }
+
+        function whack(index) {
+            if (!isRunning) {
+                messageElement.textContent = '먼저 게임을 시작하세요.';
+                return;
+            }
+
+            if (index !== activeHole) {
+                combo = 0;
+                messageElement.textContent = '빗맞췄어요. 콤보 초기화!';
+                updateStats();
+                return;
+            }
+
+            const holes = whackGrid.children;
+            holes[index].classList.add('hit');
+            const gained = isBonus ? 3 : 1;
+            combo += 1;
+            score += gained + Math.floor(combo / 5);
+            messageElement.textContent = isBonus ? '보너스 두더지 적중! +3' : '적중! 계속 이어가세요.';
+            clearActiveHole();
+            updateStats();
+        }
+
+        function startGame() {
+            resetBoard(false);
+            isRunning = true;
+            messageElement.textContent = '시작! 두더지를 최대한 많이 잡아보세요.';
+            spawnMole();
+            countdownInterval = setInterval(() => {
+                timeLeft -= 1;
+                updateStats();
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            isRunning = false;
+            clearTimeout(spawnTimeout);
+            clearInterval(countdownInterval);
+            clearActiveHole();
+
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('whack-best-score', String(bestScore));
+                messageElement.textContent = `게임 종료! 새로운 최고 점수 ${bestScore}점`;
+            } else {
+                messageElement.textContent = `게임 종료! 이번 점수는 ${score}점`;
+            }
+            updateStats();
+        }
+
+        function resetBoard(updateMessage = true) {
+            isRunning = false;
+            clearTimeout(spawnTimeout);
+            clearInterval(countdownInterval);
+            score = 0;
+            combo = 0;
+            timeLeft = GAME_DURATION;
+            clearActiveHole();
+            updateStats();
+            if (updateMessage) {
+                messageElement.textContent = '준비 완료. 시작 버튼을 누르세요.';
+            }
+        }
+
+        createGrid();
+        updateStats();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>벽돌 깨기 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .breakout-layout {
+            display: grid;
+            gap: 1.25rem;
+            justify-items: center;
+        }
+
+        .canvas-shell {
+            width: min(100%, 760px);
+            padding: 1rem;
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(14, 165, 233, 0.18), rgba(15, 23, 42, 0.95));
+            border: 1px solid var(--border-color);
+        }
+
+        #breakout-canvas {
+            width: 100%;
+            display: block;
+            background: radial-gradient(circle at top, #0f172a, #020617);
+            border-radius: 18px;
+            touch-action: none;
+        }
+
+        .breakout-help {
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🧱 벽돌 깨기</h1>
+            <p class="game-description">패들을 움직여 공을 튕기고 모든 벽돌을 부숴보세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">점수</span>
+                <div class="status-value" id="score">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">목숨</span>
+                <div class="status-value" id="lives">3</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">레벨</span>
+                <div class="status-value" id="level">1</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">베스트</span>
+                <div class="status-value" id="best-score">0</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="breakout-layout">
+                <div class="canvas-shell">
+                    <canvas id="breakout-canvas" width="720" height="420"></canvas>
+                </div>
+                <div class="breakout-help" id="status-text">마우스, 터치, 방향키로 패들을 움직일 수 있습니다.</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="startGame()">시작 / 재시작</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('breakout-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+        const levelElement = document.getElementById('level');
+        const bestScoreElement = document.getElementById('best-score');
+        const statusText = document.getElementById('status-text');
+
+        const BRICK_COLUMNS = 7;
+        const BRICK_ROWS_BASE = 4;
+        const BRICK_WIDTH = 84;
+        const BRICK_HEIGHT = 22;
+        const BRICK_PADDING = 12;
+        const BRICK_OFFSET_TOP = 70;
+        const BRICK_OFFSET_LEFT = 30;
+
+        let paddle;
+        let ball;
+        let bricks = [];
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let bestScore = Number(localStorage.getItem('breakout-best-score') || 0);
+        let animationFrame = null;
+        let isRunning = false;
+
+        function updateStats() {
+            scoreElement.textContent = score;
+            livesElement.textContent = lives;
+            levelElement.textContent = level;
+            bestScoreElement.textContent = bestScore;
+        }
+
+        function resetPaddleAndBall() {
+            paddle = {
+                width: 120,
+                height: 14,
+                x: canvas.width / 2 - 60,
+                speed: 26,
+                moveLeft: false,
+                moveRight: false
+            };
+
+            const speedBoost = (level - 1) * 0.45;
+            ball = {
+                x: canvas.width / 2,
+                y: canvas.height - 56,
+                radius: 9,
+                dx: 3.6 + speedBoost,
+                dy: -4.2 - speedBoost
+            };
+        }
+
+        function buildBricks() {
+            bricks = [];
+            const rows = BRICK_ROWS_BASE + Math.min(2, level - 1);
+            for (let row = 0; row < rows; row++) {
+                for (let column = 0; column < BRICK_COLUMNS; column++) {
+                    bricks.push({
+                        x: BRICK_OFFSET_LEFT + column * (BRICK_WIDTH + BRICK_PADDING),
+                        y: BRICK_OFFSET_TOP + row * (BRICK_HEIGHT + BRICK_PADDING),
+                        status: 1,
+                        color: `hsl(${(row * 60 + column * 16) % 360}deg 90% 62%)`
+                    });
+                }
+            }
+        }
+
+        function resetGame() {
+            score = 0;
+            lives = 3;
+            level = 1;
+            buildBricks();
+            resetPaddleAndBall();
+            updateStats();
+            draw();
+        }
+
+        function startGame() {
+            cancelAnimationFrame(animationFrame);
+            resetGame();
+            isRunning = true;
+            statusText.textContent = '진행 중. 모든 벽돌을 깨면 다음 레벨로 넘어갑니다.';
+            loop();
+        }
+
+        function movePaddleTo(clientX) {
+            const rect = canvas.getBoundingClientRect();
+            const relativeX = ((clientX - rect.left) / rect.width) * canvas.width;
+            paddle.x = Math.max(0, Math.min(canvas.width - paddle.width, relativeX - paddle.width / 2));
+        }
+
+        function drawRoundedRect(x, y, width, height, radius, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(x, y, width, height, radius);
+            ctx.fill();
+        }
+
+        function drawBricks() {
+            bricks.forEach((brick) => {
+                if (!brick.status) {
+                    return;
+                }
+                drawRoundedRect(brick.x, brick.y, BRICK_WIDTH, BRICK_HEIGHT, 8, brick.color);
+            });
+        }
+
+        function drawPaddle() {
+            drawRoundedRect(paddle.x, canvas.height - 26, paddle.width, paddle.height, 999, '#38bdf8');
+        }
+
+        function drawBall() {
+            ctx.beginPath();
+            ctx.fillStyle = '#f8fafc';
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#0f172a');
+            gradient.addColorStop(1, '#020617');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawOverlay(message) {
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.55)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '700 30px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+        }
+
+        function draw() {
+            drawBackground();
+            drawBricks();
+            drawPaddle();
+            drawBall();
+
+            if (!isRunning) {
+                drawOverlay('시작 버튼을 누르세요');
+            }
+        }
+
+        function reflectFromPaddle() {
+            if (ball.y + ball.radius < canvas.height - 26 || ball.y + ball.radius > canvas.height - 12) {
+                return;
+            }
+
+            const withinPaddle = ball.x > paddle.x && ball.x < paddle.x + paddle.width;
+            if (!withinPaddle || ball.dy <= 0) {
+                return;
+            }
+
+            const hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+            ball.dx = hitPoint * 5.2;
+            ball.dy = -Math.abs(ball.dy);
+        }
+
+        function reflectFromBricks() {
+            let remaining = 0;
+
+            bricks.forEach((brick) => {
+                if (!brick.status) {
+                    return;
+                }
+
+                remaining += 1;
+                const hitX = ball.x > brick.x && ball.x < brick.x + BRICK_WIDTH;
+                const hitY = ball.y - ball.radius < brick.y + BRICK_HEIGHT && ball.y + ball.radius > brick.y;
+
+                if (hitX && hitY) {
+                    brick.status = 0;
+                    score += 10;
+                    ball.dy *= -1;
+                    updateStats();
+                }
+            });
+
+            const uncleared = bricks.some(brick => brick.status);
+            if (!uncleared) {
+                level += 1;
+                buildBricks();
+                resetPaddleAndBall();
+                updateStats();
+                statusText.textContent = `레벨 ${level} 시작`;
+            }
+        }
+
+        function loseLife() {
+            lives -= 1;
+            updateStats();
+
+            if (lives <= 0) {
+                gameOver();
+                return;
+            }
+
+            resetPaddleAndBall();
+            statusText.textContent = `실수! 남은 목숨 ${lives}`;
+        }
+
+        function gameOver() {
+            isRunning = false;
+            cancelAnimationFrame(animationFrame);
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('breakout-best-score', String(bestScore));
+            }
+            updateStats();
+            drawBackground();
+            drawBricks();
+            drawPaddle();
+            drawBall();
+            drawOverlay('게임 오버');
+            statusText.textContent = `게임 오버. 점수 ${score}점`;
+        }
+
+        function update() {
+            if (!isRunning) {
+                return;
+            }
+
+            if (paddle.moveLeft) {
+                paddle.x = Math.max(0, paddle.x - paddle.speed);
+            }
+            if (paddle.moveRight) {
+                paddle.x = Math.min(canvas.width - paddle.width, paddle.x + paddle.speed);
+            }
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx *= -1;
+            }
+            if (ball.y - ball.radius < 0) {
+                ball.dy *= -1;
+            }
+            if (ball.y - ball.radius > canvas.height) {
+                loseLife();
+            }
+
+            reflectFromPaddle();
+            reflectFromBricks();
+        }
+
+        function loop() {
+            update();
+            drawBackground();
+            drawBricks();
+            drawPaddle();
+            drawBall();
+            if (isRunning) {
+                animationFrame = requestAnimationFrame(loop);
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') paddle.moveLeft = true;
+            if (event.key === 'ArrowRight') paddle.moveRight = true;
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.key === 'ArrowLeft') paddle.moveLeft = false;
+            if (event.key === 'ArrowRight') paddle.moveRight = false;
+        });
+
+        canvas.addEventListener('mousemove', (event) => movePaddleTo(event.clientX));
+        canvas.addEventListener('touchmove', (event) => {
+            movePaddleTo(event.touches[0].clientX);
+        }, { passive: true });
+
+        resetGame();
+    </script>
+</body>
+
+</html>

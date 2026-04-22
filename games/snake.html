@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스네이크 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .snake-layout {
+            display: grid;
+            gap: 1.25rem;
+            justify-items: center;
+        }
+
+        .snake-wrap {
+            width: min(100%, 460px);
+            background: radial-gradient(circle at top, rgba(34, 197, 94, 0.16), rgba(15, 23, 42, 0.95));
+            padding: 1rem;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        #snake-canvas {
+            width: 100%;
+            aspect-ratio: 1;
+            display: block;
+            background: #020617;
+            border-radius: 18px;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+            touch-action: none;
+        }
+
+        .snake-help {
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .direction-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 64px);
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .direction-pad .button {
+            width: 64px;
+            height: 64px;
+            padding: 0;
+            font-size: 1.5rem;
+        }
+
+        .direction-pad .spacer {
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🐍 스네이크</h1>
+            <p class="game-description">먹이를 먹으며 몸집을 키우고 벽과 몸을 피해 오래 살아남으세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">점수</span>
+                <div class="status-value" id="score">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">베스트</span>
+                <div class="status-value" id="best-score">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">속도</span>
+                <div class="status-value" id="speed-label">1단계</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="snake-layout">
+                <div class="snake-wrap">
+                    <canvas id="snake-canvas" width="432" height="432"></canvas>
+                </div>
+                <div class="snake-help" id="status-text">방향키, WASD, 스와이프 또는 버튼으로 방향을 바꿀 수 있습니다.</div>
+                <div class="direction-pad">
+                    <div class="spacer"></div>
+                    <button class="button" onclick="setDirection('up')" aria-label="위">↑</button>
+                    <div class="spacer"></div>
+                    <button class="button" onclick="setDirection('left')" aria-label="왼쪽">←</button>
+                    <button class="button" onclick="setDirection('down')" aria-label="아래">↓</button>
+                    <button class="button" onclick="setDirection('right')" aria-label="오른쪽">→</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="startGame()">시작 / 재시작</button>
+            <button class="button button-secondary" onclick="togglePause()">일시정지</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('snake-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const bestScoreElement = document.getElementById('best-score');
+        const speedLabel = document.getElementById('speed-label');
+        const statusText = document.getElementById('status-text');
+
+        const GRID_SIZE = 18;
+        const CELL_SIZE = canvas.width / GRID_SIZE;
+        const DIRECTIONS = {
+            up: { x: 0, y: -1 },
+            down: { x: 0, y: 1 },
+            left: { x: -1, y: 0 },
+            right: { x: 1, y: 0 }
+        };
+
+        let snake = [];
+        let food = { x: 0, y: 0 };
+        let direction = 'right';
+        let nextDirection = 'right';
+        let score = 0;
+        let bestScore = Number(localStorage.getItem('snake-best-score') || 0);
+        let gameInterval = null;
+        let isRunning = false;
+        let isPaused = false;
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        function updateStats() {
+            scoreElement.textContent = score;
+            bestScoreElement.textContent = bestScore;
+            speedLabel.textContent = `${Math.min(10, Math.floor(score / 4) + 1)}단계`;
+        }
+
+        function drawCell(x, y, color, radius = 8) {
+            const padding = 2;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(
+                x * CELL_SIZE + padding,
+                y * CELL_SIZE + padding,
+                CELL_SIZE - padding * 2,
+                CELL_SIZE - padding * 2,
+                radius
+            );
+            ctx.fill();
+        }
+
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    ctx.fillStyle = (x + y) % 2 === 0 ? 'rgba(30, 41, 59, 0.85)' : 'rgba(15, 23, 42, 0.85)';
+                    ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+
+            snake.forEach((segment, index) => {
+                drawCell(segment.x, segment.y, index === 0 ? '#34d399' : '#22c55e', index === 0 ? 10 : 8);
+            });
+            drawCell(food.x, food.y, '#f97316', 12);
+
+            if (!isRunning) {
+                drawOverlay(isPaused ? '일시정지' : '시작 버튼을 누르세요');
+            }
+        }
+
+        function drawOverlay(message) {
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.6)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '700 28px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+        }
+
+        function randomFood() {
+            let position;
+            do {
+                position = {
+                    x: Math.floor(Math.random() * GRID_SIZE),
+                    y: Math.floor(Math.random() * GRID_SIZE)
+                };
+            } while (snake.some(segment => segment.x === position.x && segment.y === position.y));
+            food = position;
+        }
+
+        function resetGame() {
+            snake = [
+                { x: 4, y: 9 },
+                { x: 3, y: 9 },
+                { x: 2, y: 9 }
+            ];
+            direction = 'right';
+            nextDirection = 'right';
+            score = 0;
+            isPaused = false;
+            randomFood();
+            updateStats();
+            drawBoard();
+        }
+
+        function speedForScore() {
+            return Math.max(80, 190 - Math.floor(score / 2) * 8);
+        }
+
+        function startLoop() {
+            clearInterval(gameInterval);
+            gameInterval = setInterval(gameTick, speedForScore());
+        }
+
+        function startGame() {
+            resetGame();
+            isRunning = true;
+            statusText.textContent = '진행 중. 먹이를 먹을수록 속도가 빨라집니다.';
+            startLoop();
+        }
+
+        function setDirection(next) {
+            const opposite = {
+                up: 'down',
+                down: 'up',
+                left: 'right',
+                right: 'left'
+            };
+
+            if (opposite[direction] === next) {
+                return;
+            }
+            nextDirection = next;
+        }
+
+        function gameTick() {
+            if (!isRunning || isPaused) {
+                return;
+            }
+
+            direction = nextDirection;
+            const head = snake[0];
+            const movement = DIRECTIONS[direction];
+            const nextHead = {
+                x: head.x + movement.x,
+                y: head.y + movement.y
+            };
+
+            const hitWall = nextHead.x < 0 || nextHead.x >= GRID_SIZE || nextHead.y < 0 || nextHead.y >= GRID_SIZE;
+            const hitSelf = snake.some(segment => segment.x === nextHead.x && segment.y === nextHead.y);
+
+            if (hitWall || hitSelf) {
+                gameOver();
+                return;
+            }
+
+            snake.unshift(nextHead);
+            if (nextHead.x === food.x && nextHead.y === food.y) {
+                score += 1;
+                randomFood();
+                updateStats();
+                startLoop();
+            } else {
+                snake.pop();
+            }
+
+            drawBoard();
+        }
+
+        function gameOver() {
+            isRunning = false;
+            clearInterval(gameInterval);
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('snake-best-score', String(bestScore));
+            }
+            updateStats();
+            statusText.textContent = `게임 오버. 점수 ${score}점`;
+            drawBoard();
+            drawOverlay('게임 오버');
+        }
+
+        function togglePause() {
+            if (!isRunning) {
+                return;
+            }
+            isPaused = !isPaused;
+            statusText.textContent = isPaused ? '일시정지 중입니다.' : '다시 시작했습니다.';
+            drawBoard();
+        }
+
+        document.addEventListener('keydown', (event) => {
+            const keyMap = {
+                ArrowUp: 'up',
+                ArrowDown: 'down',
+                ArrowLeft: 'left',
+                ArrowRight: 'right',
+                w: 'up',
+                s: 'down',
+                a: 'left',
+                d: 'right'
+            };
+
+            const next = keyMap[event.key];
+            if (next) {
+                event.preventDefault();
+                setDirection(next);
+            }
+        });
+
+        canvas.addEventListener('touchstart', (event) => {
+            const touch = event.changedTouches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        }, { passive: true });
+
+        canvas.addEventListener('touchend', (event) => {
+            const touch = event.changedTouches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                setDirection(deltaX > 0 ? 'right' : 'left');
+            } else if (Math.abs(deltaY) > 10) {
+                setDirection(deltaY > 0 ? 'down' : 'up');
+            }
+        }, { passive: true });
+
+        updateStats();
+        drawBoard();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>색상 혼란 테스트 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .stroop-layout {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .rule-card,
+        .word-card {
+            border-radius: 24px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .rule-card {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .word-card {
+            background: radial-gradient(circle at top, rgba(244, 63, 94, 0.14), rgba(15, 23, 42, 0.96));
+            min-height: 240px;
+            display: grid;
+            place-items: center;
+        }
+
+        .stroop-word {
+            font-size: clamp(2.8rem, 10vw, 5rem);
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+
+        .question-text {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .answer-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .answer-button {
+            padding: 1.2rem 1rem;
+            border-radius: 18px;
+            border: 1px solid transparent;
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .answer-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .feedback {
+            min-height: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🎨 색상 혼란 테스트</h1>
+            <p class="game-description">단어의 뜻이 아니라 글자 색을 골라야 합니다.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">점수</span>
+                <div class="status-value" id="score">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">연속 정답</span>
+                <div class="status-value" id="streak">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">남은 시간</span>
+                <div class="status-value" id="time">45</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">베스트</span>
+                <div class="status-value" id="best-score">0</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="stroop-layout">
+                <div class="rule-card">아래에 보이는 <strong>글자의 색상</strong>을 선택하세요. 단어 뜻에 속으면 틀립니다.</div>
+                <div class="word-card">
+                    <div>
+                        <div class="question-text">지금 보이는 글자 색은?</div>
+                        <div class="stroop-word" id="stroop-word">준비</div>
+                    </div>
+                </div>
+                <div class="feedback" id="feedback">시작 버튼을 누르면 45초 동안 진행됩니다.</div>
+                <div class="answer-grid" id="answer-grid"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="startGame()">게임 시작</button>
+            <button class="button button-secondary" onclick="resetGame()">리셋</button>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = [
+            { key: 'red', label: '빨강', value: '#ef4444' },
+            { key: 'blue', label: '파랑', value: '#3b82f6' },
+            { key: 'green', label: '초록', value: '#10b981' },
+            { key: 'yellow', label: '노랑', value: '#eab308' }
+        ];
+
+        const scoreElement = document.getElementById('score');
+        const streakElement = document.getElementById('streak');
+        const timeElement = document.getElementById('time');
+        const bestScoreElement = document.getElementById('best-score');
+        const stroopWord = document.getElementById('stroop-word');
+        const feedbackElement = document.getElementById('feedback');
+        const answerGrid = document.getElementById('answer-grid');
+
+        let score = 0;
+        let streak = 0;
+        let timeLeft = 45;
+        let bestScore = Number(localStorage.getItem('stroop-best-score') || 0);
+        let currentAnswer = '';
+        let isRunning = false;
+        let timer = null;
+
+        function updateStats() {
+            scoreElement.textContent = score;
+            streakElement.textContent = streak;
+            timeElement.textContent = timeLeft;
+            bestScoreElement.textContent = bestScore;
+        }
+
+        function buildAnswerButtons() {
+            answerGrid.innerHTML = '';
+            COLORS.forEach((color) => {
+                const button = document.createElement('button');
+                button.className = 'answer-button';
+                button.type = 'button';
+                button.textContent = color.label;
+                button.style.background = `linear-gradient(135deg, ${color.value}, rgba(15, 23, 42, 0.92))`;
+                button.addEventListener('click', () => submitAnswer(color.key));
+                answerGrid.appendChild(button);
+            });
+        }
+
+        function nextQuestion() {
+            const word = COLORS[Math.floor(Math.random() * COLORS.length)];
+            let ink = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+            while (ink.key === word.key) {
+                ink = COLORS[Math.floor(Math.random() * COLORS.length)];
+            }
+
+            currentAnswer = ink.key;
+            stroopWord.textContent = word.label;
+            stroopWord.style.color = ink.value;
+        }
+
+        function submitAnswer(answer) {
+            if (!isRunning) {
+                feedbackElement.textContent = '먼저 게임을 시작하세요.';
+                return;
+            }
+
+            if (answer === currentAnswer) {
+                streak += 1;
+                score += 10 + Math.floor(streak / 3) * 2;
+                feedbackElement.textContent = '정답! 색을 제대로 봤습니다.';
+            } else {
+                streak = 0;
+                score = Math.max(0, score - 4);
+                feedbackElement.textContent = '오답! 단어 뜻에 속지 마세요.';
+            }
+
+            updateStats();
+            nextQuestion();
+        }
+
+        function startGame() {
+            resetGame(false);
+            isRunning = true;
+            feedbackElement.textContent = '시작! 글자 색만 보고 빠르게 고르세요.';
+            nextQuestion();
+            timer = setInterval(() => {
+                timeLeft -= 1;
+                updateStats();
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            isRunning = false;
+            clearInterval(timer);
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('stroop-best-score', String(bestScore));
+                feedbackElement.textContent = `시간 종료! 새로운 최고 점수 ${bestScore}점`;
+            } else {
+                feedbackElement.textContent = `시간 종료! 이번 점수는 ${score}점`;
+            }
+            updateStats();
+        }
+
+        function resetGame(showMessage = true) {
+            isRunning = false;
+            clearInterval(timer);
+            score = 0;
+            streak = 0;
+            timeLeft = 45;
+            stroopWord.textContent = '준비';
+            stroopWord.style.color = '#f8fafc';
+            if (showMessage) {
+                feedbackElement.textContent = '준비 완료. 시작 버튼을 누르세요.';
+            }
+            updateStats();
+        }
+
+        buildAnswerButtons();
+        updateStats();
+    </script>
+</body>
+
+</html>
