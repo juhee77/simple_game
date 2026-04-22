@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>네온 터널 러너 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .neon-layout {
+            display: grid;
+            gap: 1.25rem;
+            justify-items: center;
+        }
+
+        .canvas-shell {
+            width: min(100%, 760px);
+            padding: 1rem;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            background: radial-gradient(circle at top, rgba(236, 72, 153, 0.14), rgba(15, 23, 42, 0.96));
+        }
+
+        #neon-canvas {
+            width: 100%;
+            display: block;
+            background: linear-gradient(180deg, #020617 0%, #050816 45%, #0f172a 100%);
+            border-radius: 18px;
+            touch-action: none;
+        }
+
+        .help-text {
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .lane-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🌌 네온 터널 러너</h1>
+            <p class="game-description">좌우로 차선을 바꾸며 터널 장애물을 피하세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">거리</span>
+                <div class="status-value" id="distance">0m</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">실드</span>
+                <div class="status-value" id="shields">3</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">속도</span>
+                <div class="status-value" id="speed-label">1단계</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">베스트</span>
+                <div class="status-value" id="best-distance">0m</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="neon-layout">
+                <div class="canvas-shell">
+                    <canvas id="neon-canvas" width="720" height="420"></canvas>
+                </div>
+                <div class="help-text" id="status-text">방향키, 좌우 버튼, 스와이프로 차선을 변경할 수 있습니다.</div>
+                <div class="lane-buttons">
+                    <button class="button" onclick="shiftLane(-1)">← 왼쪽</button>
+                    <button class="button" onclick="shiftLane(1)">오른쪽 →</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="startGame()">시작 / 재시작</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('neon-canvas');
+        const ctx = canvas.getContext('2d');
+        const distanceElement = document.getElementById('distance');
+        const shieldsElement = document.getElementById('shields');
+        const speedLabel = document.getElementById('speed-label');
+        const bestDistanceElement = document.getElementById('best-distance');
+        const statusText = document.getElementById('status-text');
+
+        const laneOffsets = [-1, 0, 1];
+        const stars = Array.from({ length: 80 }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            speed: 0.3 + Math.random() * 1.4
+        }));
+
+        let lane = 0;
+        let obstacles = [];
+        let shields = 3;
+        let distance = 0;
+        let bestDistance = Number(localStorage.getItem('neon-best-distance') || 0);
+        let running = false;
+        let animationFrame = null;
+        let lastFrame = 0;
+        let spawnCooldown = 0;
+        let touchStartX = 0;
+
+        function updateStats() {
+            distanceElement.textContent = `${Math.floor(distance)}m`;
+            shieldsElement.textContent = shields;
+            speedLabel.textContent = `${Math.min(9, Math.floor(distance / 180) + 1)}단계`;
+            bestDistanceElement.textContent = `${bestDistance}m`;
+        }
+
+        function shiftLane(delta) {
+            lane = Math.max(-1, Math.min(1, lane + delta));
+        }
+
+        function spawnObstacle() {
+            obstacles.push({
+                lane: laneOffsets[Math.floor(Math.random() * laneOffsets.length)],
+                depth: 1.15,
+                hue: 180 + Math.random() * 160,
+                hit: false
+            });
+        }
+
+        function resetGame() {
+            lane = 0;
+            obstacles = [];
+            shields = 3;
+            distance = 0;
+            spawnCooldown = 0.9;
+            lastFrame = 0;
+            updateStats();
+            drawScene(0);
+        }
+
+        function startGame() {
+            cancelAnimationFrame(animationFrame);
+            resetGame();
+            running = true;
+            statusText.textContent = '가속 중. 같은 차선의 장애물을 피하세요.';
+            animationFrame = requestAnimationFrame(loop);
+        }
+
+        function drawStars(speedFactor) {
+            stars.forEach((star) => {
+                star.y += star.speed * speedFactor;
+                if (star.y > canvas.height) {
+                    star.y = -4;
+                    star.x = Math.random() * canvas.width;
+                }
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.fillRect(star.x, star.y, 2, 2);
+            });
+        }
+
+        function perspectiveY(depth) {
+            return canvas.height * 0.22 + (1 - depth) * canvas.height * 0.62;
+        }
+
+        function perspectiveScale(depth) {
+            return 0.25 + (1 - depth) * 1.35;
+        }
+
+        function drawTunnel(time) {
+            const horizonX = canvas.width / 2 + Math.sin(time * 0.0012) * 18;
+            for (let depth = 1; depth >= 0.1; depth -= 0.08) {
+                const scale = perspectiveScale(depth);
+                const width = canvas.width * 0.56 * scale;
+                const height = canvas.height * 0.16 * scale;
+                const y = perspectiveY(depth);
+
+                ctx.strokeStyle = `hsla(${280 + depth * 100}, 100%, 65%, ${0.12 + (1 - depth) * 0.2})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.ellipse(horizonX, y, width, height, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.22)';
+            for (const laneOffset of laneOffsets) {
+                ctx.beginPath();
+                ctx.moveTo(horizonX + laneOffset * 24, canvas.height * 0.24);
+                ctx.lineTo(canvas.width / 2 + laneOffset * 180, canvas.height * 0.95);
+                ctx.stroke();
+            }
+        }
+
+        function drawObstacle(obstacle) {
+            const scale = perspectiveScale(obstacle.depth);
+            const y = perspectiveY(obstacle.depth);
+            const x = canvas.width / 2 + obstacle.lane * (72 + (1 - obstacle.depth) * 104);
+            const width = 32 * scale;
+            const height = 18 * scale;
+
+            ctx.save();
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = `hsl(${obstacle.hue} 100% 60%)`;
+            ctx.fillStyle = `hsla(${obstacle.hue}, 100%, 60%, 0.95)`;
+            ctx.beginPath();
+            ctx.moveTo(x - width, y);
+            ctx.lineTo(x, y - height);
+            ctx.lineTo(x + width, y);
+            ctx.lineTo(x, y + height);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawShip() {
+            const x = canvas.width / 2 + lane * 180;
+            const y = canvas.height - 56;
+
+            ctx.save();
+            ctx.shadowBlur = 28;
+            ctx.shadowColor = '#22d3ee';
+            ctx.fillStyle = '#e879f9';
+            ctx.beginPath();
+            ctx.moveTo(x, y - 24);
+            ctx.lineTo(x + 18, y + 18);
+            ctx.lineTo(x, y + 8);
+            ctx.lineTo(x - 18, y + 18);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#22d3ee';
+            ctx.fillRect(x - 4, y + 18, 8, 16);
+            ctx.restore();
+        }
+
+        function drawOverlay(message) {
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.52)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '700 28px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+        }
+
+        function drawScene(time) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#030712');
+            gradient.addColorStop(0.6, '#111827');
+            gradient.addColorStop(1, '#0f172a');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawStars(1 + distance * 0.004);
+            drawTunnel(time);
+            obstacles.forEach(drawObstacle);
+            drawShip();
+
+            if (!running) {
+                drawOverlay('시작 버튼을 누르세요');
+            }
+        }
+
+        function loop(timestamp) {
+            if (!running) {
+                return;
+            }
+
+            if (!lastFrame) {
+                lastFrame = timestamp;
+            }
+            const delta = Math.min(0.032, (timestamp - lastFrame) / 1000);
+            lastFrame = timestamp;
+
+            const speed = 0.55 + distance * 0.0008;
+            distance += delta * 70 * (1 + speed * 0.18);
+            spawnCooldown -= delta;
+
+            if (spawnCooldown <= 0) {
+                spawnObstacle();
+                spawnCooldown = Math.max(0.32, 0.9 - distance * 0.001);
+            }
+
+            obstacles.forEach((obstacle) => {
+                obstacle.depth -= delta * (0.85 + speed * 0.16);
+                if (!obstacle.hit && obstacle.depth < 0.14 && obstacle.lane === lane) {
+                    obstacle.hit = true;
+                    shields -= 1;
+                    statusText.textContent = `충돌! 남은 실드 ${shields}`;
+                    if (navigator.vibrate) {
+                        navigator.vibrate([30, 20, 30]);
+                    }
+                }
+            });
+
+            obstacles = obstacles.filter((obstacle) => obstacle.depth > -0.05);
+
+            if (shields <= 0) {
+                endGame();
+                return;
+            }
+
+            updateStats();
+            drawScene(timestamp);
+            animationFrame = requestAnimationFrame(loop);
+        }
+
+        function endGame() {
+            running = false;
+            cancelAnimationFrame(animationFrame);
+            const roundedDistance = Math.floor(distance);
+            if (roundedDistance > bestDistance) {
+                bestDistance = roundedDistance;
+                localStorage.setItem('neon-best-distance', String(bestDistance));
+            }
+            updateStats();
+            drawScene(performance.now());
+            drawOverlay('게임 오버');
+            statusText.textContent = `종료. 최종 거리 ${roundedDistance}m`;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
+                shiftLane(-1);
+            } else if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') {
+                shiftLane(1);
+            }
+        });
+
+        canvas.addEventListener('touchstart', (event) => {
+            touchStartX = event.changedTouches[0].clientX;
+        }, { passive: true });
+
+        canvas.addEventListener('touchend', (event) => {
+            const deltaX = event.changedTouches[0].clientX - touchStartX;
+            if (Math.abs(deltaX) < 24) {
+                return;
+            }
+            shiftLane(deltaX > 0 ? 1 : -1);
+        }, { passive: true });
+
+        updateStats();
+        drawScene(0);
+    </script>
+</body>
+
+</html>

@@ -34,6 +34,7 @@
             font-weight: 700;
             transition: all 0.15s ease;
             user-select: none;
+            touch-action: manipulation;
         }
 
         .mine-cell:hover:not(.revealed):not(.flagged) {
@@ -113,6 +114,12 @@
         .difficulty-btn:hover {
             border-color: var(--accent-primary);
         }
+
+        .mine-cell.long-pressing {
+            transform: scale(0.92);
+            border-color: #f43f5e;
+            box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
+        }
     </style>
 </head>
 
@@ -125,9 +132,9 @@
         </div>
 
         <div class="difficulty-selector">
-            <button class="difficulty-btn active" onclick="setDifficulty('easy')">쉬움 (10x10, 10개)</button>
-            <button class="difficulty-btn" onclick="setDifficulty('medium')">보통 (12x12, 20개)</button>
-            <button class="difficulty-btn" onclick="setDifficulty('hard')">어려움 (15x15, 35개)</button>
+            <button class="difficulty-btn active" onclick="setDifficulty('easy', this)">쉬움 (10x10, 10개)</button>
+            <button class="difficulty-btn" onclick="setDifficulty('medium', this)">보통 (12x12, 20개)</button>
+            <button class="difficulty-btn" onclick="setDifficulty('hard', this)">어려움 (15x15, 35개)</button>
         </div>
 
         <div class="status-bar">
@@ -150,11 +157,13 @@
         </div>
 
         <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
-            좌클릭: 열기 | 우클릭: 깃발
+            탭/좌클릭: 열기 | 우클릭/모바일 꾹 누르기: 깃발
         </div>
     </div>
 
     <script>
+        const LONG_PRESS_DURATION = 380;
+
         let ROWS = 10;
         let COLS = 10;
         let MINES = 10;
@@ -165,6 +174,9 @@
         let gameStarted = false;
         let timer = 0;
         let timerInterval;
+        let longPressTimer = null;
+        let longPressKey = null;
+        let suppressClickKey = null;
 
         const difficulties = {
             easy: { rows: 10, cols: 10, mines: 10 },
@@ -172,14 +184,35 @@
             hard: { rows: 15, cols: 15, mines: 35 }
         };
 
-        function setDifficulty(level) {
+        function cellKey(row, col) {
+            return `${row}-${col}`;
+        }
+
+        function clearLongPressState(cell = null) {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+
+            if (cell) {
+                cell.classList.remove('long-pressing');
+            } else {
+                document.querySelectorAll('.mine-cell.long-pressing').forEach((pressedCell) => {
+                    pressedCell.classList.remove('long-pressing');
+                });
+            }
+
+            longPressKey = null;
+        }
+
+        function setDifficulty(level, button) {
             const config = difficulties[level];
             ROWS = config.rows;
             COLS = config.cols;
             MINES = config.mines;
 
             document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            button.classList.add('active');
 
             resetGame();
         }
@@ -192,6 +225,8 @@
             gameStarted = false;
             timer = 0;
             clearInterval(timerInterval);
+            clearLongPressState();
+            suppressClickKey = null;
 
             // Place mines
             let minesPlaced = 0;
@@ -243,15 +278,51 @@
                     cell.dataset.row = i;
                     cell.dataset.col = j;
 
-                    cell.addEventListener('click', () => revealCell(i, j));
+                    cell.addEventListener('click', () => {
+                        const key = cellKey(i, j);
+                        if (suppressClickKey === key) {
+                            suppressClickKey = null;
+                            return;
+                        }
+                        revealCell(i, j);
+                    });
                     cell.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         toggleFlag(i, j);
                     });
+                    cell.addEventListener('pointerdown', (e) => handlePointerDown(e, i, j));
+                    cell.addEventListener('pointerup', (e) => clearLongPressState(e.currentTarget));
+                    cell.addEventListener('pointerleave', (e) => clearLongPressState(e.currentTarget));
+                    cell.addEventListener('pointercancel', (e) => clearLongPressState(e.currentTarget));
 
                     boardElement.appendChild(cell);
                 }
             }
+        }
+
+        function handlePointerDown(event, row, col) {
+            if (event.pointerType !== 'touch' || gameOver || revealed[row][col]) {
+                return;
+            }
+
+            const key = cellKey(row, col);
+            const cell = event.currentTarget;
+            longPressKey = key;
+            cell.classList.add('long-pressing');
+
+            longPressTimer = setTimeout(() => {
+                if (longPressKey !== key) {
+                    return;
+                }
+
+                toggleFlag(row, col);
+                suppressClickKey = key;
+                cell.classList.remove('long-pressing');
+                if (navigator.vibrate) {
+                    navigator.vibrate(24);
+                }
+                clearLongPressState();
+            }, LONG_PRESS_DURATION);
         }
 
         function revealCell(row, col) {

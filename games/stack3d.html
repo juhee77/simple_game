@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>큐브 스택 3D - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .stack-layout {
+            display: grid;
+            gap: 1.25rem;
+            justify-items: center;
+        }
+
+        .canvas-shell {
+            width: min(100%, 760px);
+            padding: 1rem;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            background: radial-gradient(circle at top, rgba(139, 92, 246, 0.16), rgba(15, 23, 42, 0.95));
+        }
+
+        #stack-canvas {
+            width: 100%;
+            display: block;
+            background: linear-gradient(180deg, #020617 0%, #111827 100%);
+            border-radius: 18px;
+            touch-action: manipulation;
+        }
+
+        .help-text {
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🧊 큐브 스택 3D</h1>
+            <p class="game-description">움직이는 블록을 정확히 쌓아 가장 높은 탑을 만들어보세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">높이</span>
+                <div class="status-value" id="height">0층</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">정밀 콤보</span>
+                <div class="status-value" id="combo">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">블록 크기</span>
+                <div class="status-value" id="size">100%</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">베스트</span>
+                <div class="status-value" id="best-height">0층</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="stack-layout">
+                <div class="canvas-shell">
+                    <canvas id="stack-canvas" width="720" height="460"></canvas>
+                </div>
+                <div class="help-text" id="status-text">스페이스, 엔터, 클릭 또는 터치로 블록을 떨어뜨리세요.</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="startGame()">시작 / 재시작</button>
+            <button class="button button-secondary" onclick="placeBlock()">지금 놓기</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('stack-canvas');
+        const ctx = canvas.getContext('2d');
+        const heightElement = document.getElementById('height');
+        const comboElement = document.getElementById('combo');
+        const sizeElement = document.getElementById('size');
+        const bestHeightElement = document.getElementById('best-height');
+        const statusText = document.getElementById('status-text');
+
+        const BLOCK_HEIGHT = 22;
+        const MOVE_RANGE = 130;
+
+        let tower = [];
+        let activeBlock = null;
+        let combo = 0;
+        let bestHeight = Number(localStorage.getItem('stack-best-height') || 0);
+        let running = false;
+        let animationFrame = null;
+        let lastFrame = 0;
+        let time = 0;
+
+        function isoPoint(x, z, y, cameraOffset) {
+            return {
+                x: canvas.width / 2 + (x - z) * 1.1,
+                y: canvas.height - 80 - ((x + z) * 0.45 + y - cameraOffset)
+            };
+        }
+
+        function currentHeight() {
+            return Math.max(0, tower.length - 1);
+        }
+
+        function updateStats() {
+            const topBlock = tower[tower.length - 1];
+            const sizeRatio = topBlock ? Math.round((Math.max(topBlock.w, topBlock.d) / 100) * 100) : 100;
+            heightElement.textContent = `${currentHeight()}층`;
+            comboElement.textContent = combo;
+            sizeElement.textContent = `${sizeRatio}%`;
+            bestHeightElement.textContent = `${bestHeight}층`;
+        }
+
+        function generateActiveBlock() {
+            const base = tower[tower.length - 1];
+            const axis = tower.length % 2 === 1 ? 'x' : 'z';
+            activeBlock = {
+                x: base.x,
+                z: base.z,
+                w: base.w,
+                d: base.d,
+                level: tower.length,
+                axis,
+                offset: -MOVE_RANGE,
+                direction: 1,
+                colorHue: (tower.length * 34) % 360
+            };
+        }
+
+        function resetGame() {
+            tower = [{
+                x: 0,
+                z: 0,
+                w: 100,
+                d: 100,
+                level: 0,
+                colorHue: 220
+            }];
+            combo = 0;
+            time = 0;
+            generateActiveBlock();
+            updateStats();
+            drawScene();
+        }
+
+        function startGame() {
+            cancelAnimationFrame(animationFrame);
+            resetGame();
+            running = true;
+            statusText.textContent = '진행 중. 중심에 최대한 정확히 맞추세요.';
+            lastFrame = 0;
+            animationFrame = requestAnimationFrame(loop);
+        }
+
+        function trimBlock(overlapStart, overlapEnd) {
+            const base = tower[tower.length - 1];
+            if (activeBlock.axis === 'x') {
+                activeBlock.x = overlapStart;
+                activeBlock.w = overlapEnd - overlapStart;
+                activeBlock.z = base.z;
+                activeBlock.d = base.d;
+            } else {
+                activeBlock.z = overlapStart;
+                activeBlock.d = overlapEnd - overlapStart;
+                activeBlock.x = base.x;
+                activeBlock.w = base.w;
+            }
+        }
+
+        function placeBlock() {
+            if (!running || !activeBlock) {
+                return;
+            }
+
+            const base = tower[tower.length - 1];
+            const activeStart = activeBlock.axis === 'x' ? activeBlock.x : activeBlock.z;
+            const activeEnd = activeStart + (activeBlock.axis === 'x' ? activeBlock.w : activeBlock.d);
+            const baseStart = activeBlock.axis === 'x' ? base.x : base.z;
+            const baseEnd = baseStart + (activeBlock.axis === 'x' ? base.w : base.d);
+
+            const overlapStart = Math.max(activeStart, baseStart);
+            const overlapEnd = Math.min(activeEnd, baseEnd);
+
+            if (overlapEnd <= overlapStart) {
+                endGame();
+                return;
+            }
+
+            const movementError = Math.abs((activeStart + activeEnd) / 2 - (baseStart + baseEnd) / 2);
+            combo = movementError < 4 ? combo + 1 : 0;
+
+            trimBlock(overlapStart, overlapEnd);
+            tower.push({
+                x: activeBlock.x,
+                z: activeBlock.z,
+                w: activeBlock.w,
+                d: activeBlock.d,
+                level: activeBlock.level,
+                colorHue: activeBlock.colorHue
+            });
+
+            if (currentHeight() > bestHeight) {
+                bestHeight = currentHeight();
+                localStorage.setItem('stack-best-height', String(bestHeight));
+            }
+
+            updateStats();
+            statusText.textContent = movementError < 4 ? '완벽! 정밀 콤보 증가' : '좋아요. 계속 쌓아보세요.';
+            generateActiveBlock();
+        }
+
+        function drawBlock(block, cameraOffset, highlight = false) {
+            const y0 = block.level * BLOCK_HEIGHT;
+            const y1 = y0 + BLOCK_HEIGHT;
+            const topA = isoPoint(block.x, block.z, y1, cameraOffset);
+            const topB = isoPoint(block.x + block.w, block.z, y1, cameraOffset);
+            const topC = isoPoint(block.x + block.w, block.z + block.d, y1, cameraOffset);
+            const topD = isoPoint(block.x, block.z + block.d, y1, cameraOffset);
+            const bottomB = isoPoint(block.x + block.w, block.z, y0, cameraOffset);
+            const bottomC = isoPoint(block.x + block.w, block.z + block.d, y0, cameraOffset);
+            const bottomD = isoPoint(block.x, block.z + block.d, y0, cameraOffset);
+
+            const topColor = `hsl(${block.colorHue} 90% ${highlight ? 74 : 62}%)`;
+            const leftColor = `hsl(${block.colorHue} 70% 42%)`;
+            const rightColor = `hsl(${block.colorHue} 74% 32%)`;
+
+            ctx.beginPath();
+            ctx.moveTo(topA.x, topA.y);
+            ctx.lineTo(topB.x, topB.y);
+            ctx.lineTo(topC.x, topC.y);
+            ctx.lineTo(topD.x, topD.y);
+            ctx.closePath();
+            ctx.fillStyle = topColor;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(topD.x, topD.y);
+            ctx.lineTo(topC.x, topC.y);
+            ctx.lineTo(bottomC.x, bottomC.y);
+            ctx.lineTo(bottomD.x, bottomD.y);
+            ctx.closePath();
+            ctx.fillStyle = leftColor;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(topB.x, topB.y);
+            ctx.lineTo(topC.x, topC.y);
+            ctx.lineTo(bottomC.x, bottomC.y);
+            ctx.lineTo(bottomB.x, bottomB.y);
+            ctx.closePath();
+            ctx.fillStyle = rightColor;
+            ctx.fill();
+        }
+
+        function update(delta) {
+            if (!running || !activeBlock) {
+                return;
+            }
+
+            time += delta;
+            const speed = 90 + Math.min(180, currentHeight() * 7);
+            activeBlock.offset += activeBlock.direction * speed * delta;
+
+            if (Math.abs(activeBlock.offset) > MOVE_RANGE) {
+                activeBlock.offset = Math.sign(activeBlock.offset) * MOVE_RANGE;
+                activeBlock.direction *= -1;
+            }
+
+            const base = tower[tower.length - 1];
+            if (activeBlock.axis === 'x') {
+                activeBlock.x = base.x + activeBlock.offset;
+                activeBlock.z = base.z;
+            } else {
+                activeBlock.z = base.z + activeBlock.offset;
+                activeBlock.x = base.x;
+            }
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#0f172a');
+            gradient.addColorStop(1, '#020617');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const cameraOffset = Math.max(0, (tower.length - 7) * BLOCK_HEIGHT);
+
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.08)';
+            for (let i = 0; i < 8; i++) {
+                const point = isoPoint(-120, i * 30, 0, cameraOffset);
+                ctx.fillRect(0, point.y, canvas.width, 1);
+            }
+
+            tower.forEach((block) => drawBlock(block, cameraOffset));
+            if (activeBlock) {
+                drawBlock(activeBlock, cameraOffset, true);
+            }
+
+            if (!running) {
+                ctx.fillStyle = 'rgba(2, 6, 23, 0.46)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = '700 28px Outfit';
+                ctx.textAlign = 'center';
+                ctx.fillText('시작 버튼을 누르세요', canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        function loop(timestamp) {
+            if (!running) {
+                return;
+            }
+
+            if (!lastFrame) {
+                lastFrame = timestamp;
+            }
+            const delta = Math.min(0.032, (timestamp - lastFrame) / 1000);
+            lastFrame = timestamp;
+
+            update(delta);
+            drawScene();
+            animationFrame = requestAnimationFrame(loop);
+        }
+
+        function endGame() {
+            running = false;
+            cancelAnimationFrame(animationFrame);
+            updateStats();
+            drawScene();
+            statusText.textContent = `게임 오버. 최종 높이 ${currentHeight()}층`;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' || event.code === 'Enter') {
+                event.preventDefault();
+                placeBlock();
+            }
+        });
+
+        canvas.addEventListener('click', () => placeBlock());
+        canvas.addEventListener('touchstart', (event) => {
+            event.preventDefault();
+            placeBlock();
+        }, { passive: false });
+
+        updateStats();
+        drawScene();
+    </script>
+</body>
+
+</html>

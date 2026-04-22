@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>플라즈마 드리프트 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .plasma-layout {
+            display: grid;
+            gap: 1.25rem;
+            justify-items: center;
+        }
+
+        .canvas-shell {
+            width: min(100%, 760px);
+            padding: 1rem;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            background: radial-gradient(circle at top, rgba(34, 211, 238, 0.12), rgba(15, 23, 42, 0.95));
+        }
+
+        #plasma-canvas {
+            width: 100%;
+            display: block;
+            background: linear-gradient(180deg, #020617, #07111f);
+            border-radius: 18px;
+            touch-action: none;
+        }
+
+        .help-text {
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .direction-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 64px);
+            gap: 0.75rem;
+        }
+
+        .direction-pad .button {
+            width: 64px;
+            height: 64px;
+            padding: 0;
+            font-size: 1.5rem;
+        }
+
+        .spacer {
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">⚛️ 플라즈마 드리프트</h1>
+            <p class="game-description">에너지 조각을 모으며 운석 파편을 피해서 오래 살아남으세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">생존 시간</span>
+                <div class="status-value" id="time">0초</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">에너지</span>
+                <div class="status-value" id="energy">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">실드</span>
+                <div class="status-value" id="hp">3</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">베스트</span>
+                <div class="status-value" id="best">0초</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="plasma-layout">
+                <div class="canvas-shell">
+                    <canvas id="plasma-canvas" width="720" height="420"></canvas>
+                </div>
+                <div class="help-text" id="status-text">방향키, WASD, 터치 패드로 이동할 수 있습니다.</div>
+                <div class="direction-pad">
+                    <div class="spacer"></div>
+                    <button class="button" onpointerdown="setControl('up', true)" onpointerup="setControl('up', false)" onpointerleave="setControl('up', false)">↑</button>
+                    <div class="spacer"></div>
+                    <button class="button" onpointerdown="setControl('left', true)" onpointerup="setControl('left', false)" onpointerleave="setControl('left', false)">←</button>
+                    <button class="button" onpointerdown="setControl('down', true)" onpointerup="setControl('down', false)" onpointerleave="setControl('down', false)">↓</button>
+                    <button class="button" onpointerdown="setControl('right', true)" onpointerup="setControl('right', false)" onpointerleave="setControl('right', false)">→</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="startGame()">시작 / 재시작</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('plasma-canvas');
+        const ctx = canvas.getContext('2d');
+        const timeElement = document.getElementById('time');
+        const energyElement = document.getElementById('energy');
+        const hpElement = document.getElementById('hp');
+        const bestElement = document.getElementById('best');
+        const statusText = document.getElementById('status-text');
+
+        const controls = { up: false, down: false, left: false, right: false };
+        const stars = Array.from({ length: 100 }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            speed: 0.5 + Math.random() * 1.8
+        }));
+
+        let player;
+        let asteroids = [];
+        let crystals = [];
+        let particles = [];
+        let hp = 3;
+        let energy = 0;
+        let survivalTime = 0;
+        let bestTime = Number(localStorage.getItem('plasma-best-time') || 0);
+        let running = false;
+        let lastFrame = 0;
+        let animationFrame = null;
+        let asteroidCooldown = 0;
+        let crystalCooldown = 0;
+
+        function setControl(direction, value) {
+            controls[direction] = value;
+        }
+
+        function updateStats() {
+            timeElement.textContent = `${Math.floor(survivalTime)}초`;
+            energyElement.textContent = energy;
+            hpElement.textContent = hp;
+            bestElement.textContent = `${bestTime}초`;
+        }
+
+        function resetGame() {
+            player = {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                vx: 0,
+                vy: 0,
+                radius: 14,
+                hitCooldown: 0
+            };
+            asteroids = [];
+            crystals = [];
+            particles = [];
+            hp = 3;
+            energy = 0;
+            survivalTime = 0;
+            asteroidCooldown = 0.4;
+            crystalCooldown = 1.8;
+            lastFrame = 0;
+            updateStats();
+            drawScene();
+        }
+
+        function startGame() {
+            cancelAnimationFrame(animationFrame);
+            resetGame();
+            running = true;
+            statusText.textContent = '진행 중. 파편을 피하고 에너지 조각을 모으세요.';
+            animationFrame = requestAnimationFrame(loop);
+        }
+
+        function spawnAsteroid() {
+            const side = Math.floor(Math.random() * 4);
+            let x;
+            let y;
+
+            if (side === 0) {
+                x = Math.random() * canvas.width;
+                y = -24;
+            } else if (side === 1) {
+                x = canvas.width + 24;
+                y = Math.random() * canvas.height;
+            } else if (side === 2) {
+                x = Math.random() * canvas.width;
+                y = canvas.height + 24;
+            } else {
+                x = -24;
+                y = Math.random() * canvas.height;
+            }
+
+            const angle = Math.atan2(player.y - y, player.x - x) + (Math.random() - 0.5) * 0.5;
+            const speed = 70 + Math.random() * 80 + survivalTime * 1.8;
+            asteroids.push({
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                radius: 12 + Math.random() * 12,
+                rotation: Math.random() * Math.PI * 2,
+                spin: (Math.random() - 0.5) * 2
+            });
+        }
+
+        function spawnCrystal() {
+            crystals.push({
+                x: 50 + Math.random() * (canvas.width - 100),
+                y: 50 + Math.random() * (canvas.height - 100),
+                radius: 10,
+                pulse: Math.random() * Math.PI * 2
+            });
+        }
+
+        function emitHitParticles(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x,
+                    y,
+                    vx: (Math.random() - 0.5) * 140,
+                    vy: (Math.random() - 0.5) * 140,
+                    life: 0.6 + Math.random() * 0.3,
+                    color
+                });
+            }
+        }
+
+        function update(delta) {
+            if (!running) {
+                return;
+            }
+
+            survivalTime += delta;
+            asteroidCooldown -= delta;
+            crystalCooldown -= delta;
+
+            if (asteroidCooldown <= 0) {
+                spawnAsteroid();
+                asteroidCooldown = Math.max(0.22, 0.8 - survivalTime * 0.01);
+            }
+
+            if (crystalCooldown <= 0) {
+                spawnCrystal();
+                crystalCooldown = 2.2;
+            }
+
+            const thrust = 220;
+            if (controls.up) player.vy -= thrust * delta;
+            if (controls.down) player.vy += thrust * delta;
+            if (controls.left) player.vx -= thrust * delta;
+            if (controls.right) player.vx += thrust * delta;
+
+            player.vx *= 0.985;
+            player.vy *= 0.985;
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x + player.vx * delta));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y + player.vy * delta));
+            player.hitCooldown = Math.max(0, player.hitCooldown - delta);
+
+            asteroids.forEach((asteroid) => {
+                asteroid.x += asteroid.vx * delta;
+                asteroid.y += asteroid.vy * delta;
+                asteroid.rotation += asteroid.spin * delta;
+
+                const dx = asteroid.x - player.x;
+                const dy = asteroid.y - player.y;
+                const distance = Math.hypot(dx, dy);
+
+                if (distance < asteroid.radius + player.radius && player.hitCooldown <= 0) {
+                    hp -= 1;
+                    player.hitCooldown = 0.8;
+                    emitHitParticles(player.x, player.y, '#f43f5e');
+                    statusText.textContent = `충돌! 남은 실드 ${hp}`;
+                    if (navigator.vibrate) {
+                        navigator.vibrate([25, 15, 25]);
+                    }
+                }
+            });
+
+            crystals.forEach((crystal) => {
+                crystal.pulse += delta * 4;
+                const dx = crystal.x - player.x;
+                const dy = crystal.y - player.y;
+                if (Math.hypot(dx, dy) < crystal.radius + player.radius) {
+                    energy += 1;
+                    emitHitParticles(crystal.x, crystal.y, '#22d3ee');
+                    crystal.collected = true;
+                }
+            });
+
+            particles.forEach((particle) => {
+                particle.x += particle.vx * delta;
+                particle.y += particle.vy * delta;
+                particle.life -= delta;
+            });
+
+            asteroids = asteroids.filter((asteroid) =>
+                asteroid.x > -80 &&
+                asteroid.x < canvas.width + 80 &&
+                asteroid.y > -80 &&
+                asteroid.y < canvas.height + 80
+            );
+            crystals = crystals.filter((crystal) => !crystal.collected);
+            particles = particles.filter((particle) => particle.life > 0);
+
+            if (hp <= 0) {
+                endGame();
+            }
+
+            updateStats();
+        }
+
+        function drawShip() {
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(Math.atan2(player.vy, player.vx) || 0);
+            ctx.globalAlpha = player.hitCooldown > 0 ? 0.6 : 1;
+            ctx.shadowBlur = 24;
+            ctx.shadowColor = '#22d3ee';
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.moveTo(18, 0);
+            ctx.lineTo(-12, -10);
+            ctx.lineTo(-4, 0);
+            ctx.lineTo(-12, 10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#22d3ee';
+            ctx.fillRect(-16, -4, 10, 8);
+            ctx.restore();
+        }
+
+        function drawAsteroids() {
+            asteroids.forEach((asteroid) => {
+                ctx.save();
+                ctx.translate(asteroid.x, asteroid.y);
+                ctx.rotate(asteroid.rotation);
+                ctx.fillStyle = '#7c3aed';
+                ctx.beginPath();
+                for (let i = 0; i < 7; i++) {
+                    const angle = (Math.PI * 2 * i) / 7;
+                    const radius = asteroid.radius * (0.78 + (i % 2) * 0.24);
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius;
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function drawCrystals() {
+            crystals.forEach((crystal) => {
+                const pulse = 1 + Math.sin(crystal.pulse) * 0.2;
+                ctx.save();
+                ctx.translate(crystal.x, crystal.y);
+                ctx.scale(pulse, pulse);
+                ctx.shadowBlur = 24;
+                ctx.shadowColor = '#22d3ee';
+                ctx.fillStyle = '#67e8f9';
+                ctx.beginPath();
+                ctx.moveTo(0, -crystal.radius);
+                ctx.lineTo(crystal.radius * 0.7, 0);
+                ctx.lineTo(0, crystal.radius);
+                ctx.lineTo(-crystal.radius * 0.7, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function drawParticles() {
+            particles.forEach((particle) => {
+                ctx.globalAlpha = Math.max(0, particle.life);
+                ctx.fillStyle = particle.color;
+                ctx.fillRect(particle.x, particle.y, 3, 3);
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function drawStars() {
+            stars.forEach((star) => {
+                star.y += star.speed;
+                if (star.y > canvas.height) {
+                    star.y = -2;
+                    star.x = Math.random() * canvas.width;
+                }
+                ctx.fillStyle = 'rgba(255,255,255,0.65)';
+                ctx.fillRect(star.x, star.y, 2, 2);
+            });
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const gradient = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 20, canvas.width / 2, canvas.height / 2, canvas.width / 1.1);
+            gradient.addColorStop(0, '#0b1220');
+            gradient.addColorStop(1, '#020617');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawStars();
+
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.12)';
+            for (let i = 0; i < 6; i++) {
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, canvas.height / 2, 40 + i * 48, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            drawCrystals();
+            drawAsteroids();
+            drawShip();
+            drawParticles();
+
+            if (!running) {
+                ctx.fillStyle = 'rgba(2, 6, 23, 0.48)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = '700 28px Outfit';
+                ctx.textAlign = 'center';
+                ctx.fillText('시작 버튼을 누르세요', canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        function loop(timestamp) {
+            if (!running) {
+                return;
+            }
+
+            if (!lastFrame) {
+                lastFrame = timestamp;
+            }
+            const delta = Math.min(0.032, (timestamp - lastFrame) / 1000);
+            lastFrame = timestamp;
+
+            update(delta);
+            drawScene();
+
+            if (running) {
+                animationFrame = requestAnimationFrame(loop);
+            }
+        }
+
+        function endGame() {
+            running = false;
+            cancelAnimationFrame(animationFrame);
+            const roundedTime = Math.floor(survivalTime);
+            if (roundedTime > bestTime) {
+                bestTime = roundedTime;
+                localStorage.setItem('plasma-best-time', String(bestTime));
+            }
+            updateStats();
+            drawScene();
+            statusText.textContent = `종료. ${roundedTime}초 생존, 에너지 ${energy}개`;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toLowerCase();
+            if (key === 'arrowup' || key === 'w') controls.up = true;
+            if (key === 'arrowdown' || key === 's') controls.down = true;
+            if (key === 'arrowleft' || key === 'a') controls.left = true;
+            if (key === 'arrowright' || key === 'd') controls.right = true;
+        });
+
+        document.addEventListener('keyup', (event) => {
+            const key = event.key.toLowerCase();
+            if (key === 'arrowup' || key === 'w') controls.up = false;
+            if (key === 'arrowdown' || key === 's') controls.down = false;
+            if (key === 'arrowleft' || key === 'a') controls.left = false;
+            if (key === 'arrowright' || key === 'd') controls.right = false;
+        });
+
+        updateStats();
+        drawScene();
+    </script>
+</body>
+
+</html>
