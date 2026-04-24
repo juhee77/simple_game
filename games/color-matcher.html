@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>네온 색상 감각 대결 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+h1{font-size:2rem;margin:40px 0 10px;background:linear-gradient(135deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.target-box{width:200px;height:200px;border-radius:24px;margin:20px auto;border:3px solid rgba(255,255,255,.2);box-shadow:0 0 30px rgba(0,0,0,.5)}
+.sliders{width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;margin:20px 0}
+.slider-row{display:flex;align-items:center;gap:10px}
+.slider-row label{width:30px;font-weight:700;font-size:1.2rem}
+.slider-row input[type=range]{flex:1;height:8px;-webkit-appearance:none;background:rgba(255,255,255,.1);border-radius:4px;outline:none}
+.slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;cursor:pointer}
+#r-slider::-webkit-slider-thumb{background:#ff4757}
+#g-slider::-webkit-slider-thumb{background:#2ed573}
+#b-slider::-webkit-slider-thumb{background:#1e90ff}
+.slider-row span{width:40px;text-align:right;font-weight:600}
+.guess-box{width:200px;height:200px;border-radius:24px;margin:20px auto;border:3px solid rgba(255,255,255,.2)}
+.submit-btn{background:linear-gradient(135deg,#8b5cf6,#ec4899);border:none;color:#fff;padding:16px 60px;font-size:1.3rem;font-weight:700;border-radius:50px;cursor:pointer;margin:15px 0;transition:transform .3s}
+.submit-btn:hover{transform:scale(1.05)}
+.result{display:none;text-align:center;margin:20px 0;padding:30px;background:rgba(255,255,255,.05);border-radius:20px;border:1px solid rgba(255,255,255,.1)}
+.result .score{font-size:4rem;font-weight:900}
+.result .detail{color:#94a3b8;margin-top:10px}
+.compare{display:flex;gap:20px;justify-content:center;margin:20px 0}
+.compare div{text-align:center}
+.compare .box{width:100px;height:100px;border-radius:16px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<h1>🎨 네온 색상 감각 대결</h1>
+<p style="color:#94a3b8;margin-bottom:10px">목표 색상과 최대한 같은 색을 만드세요!</p>
+<div class="target-box" id="target"></div>
+<div class="sliders">
+<div class="slider-row"><label>R</label><input type="range" id="r-slider" min="0" max="255" value="128"><span id="r-val">128</span></div>
+<div class="slider-row"><label>G</label><input type="range" id="g-slider" min="0" max="255" value="128"><span id="g-val">128</span></div>
+<div class="slider-row"><label>B</label><input type="range" id="b-slider" min="0" max="255" value="128"><span id="b-val">128</span></div>
+</div>
+<div class="guess-box" id="guess"></div>
+<button class="submit-btn" id="submit">제출하기</button>
+<div class="result" id="result">
+<div class="compare"><div><div class="box" id="cmp-target"></div>목표</div><div><div class="box" id="cmp-guess"></div>나의 선택</div></div>
+<div class="score" id="score-text"></div>
+<div class="detail" id="detail-text"></div>
+<button class="submit-btn" onclick="newRound()">다시 도전</button>
+</div>
+<script>
+let tr,tg,tb;
+function newRound(){
+tr=Math.floor(Math.random()*256);tg=Math.floor(Math.random()*256);tb=Math.floor(Math.random()*256);
+document.getElementById('target').style.background=`rgb(${tr},${tg},${tb})`;
+document.getElementById('result').style.display='none';
+document.getElementById('submit').style.display='block';
+document.querySelectorAll('.sliders,.guess-box,.target-box,p').forEach(e=>e.style.display='');
+[document.getElementById('r-slider'),document.getElementById('g-slider'),document.getElementById('b-slider')].forEach(s=>{s.value=128});
+updateGuess();
+}
+function updateGuess(){
+const r=document.getElementById('r-slider').value,g=document.getElementById('g-slider').value,b=document.getElementById('b-slider').value;
+document.getElementById('r-val').textContent=r;document.getElementById('g-val').textContent=g;document.getElementById('b-val').textContent=b;
+document.getElementById('guess').style.background=`rgb(${r},${g},${b})`;
+}
+document.querySelectorAll('input[type=range]').forEach(s=>s.addEventListener('input',updateGuess));
+document.getElementById('submit').addEventListener('click',()=>{
+const r=+document.getElementById('r-slider').value,g=+document.getElementById('g-slider').value,b=+document.getElementById('b-slider').value;
+const diff=Math.sqrt((r-tr)**2+(g-tg)**2+(b-tb)**2);
+const maxDiff=Math.sqrt(255**2*3);
+const score=Math.round((1-diff/maxDiff)*100);
+document.getElementById('cmp-target').style.background=`rgb(${tr},${tg},${tb})`;
+document.getElementById('cmp-guess').style.background=`rgb(${r},${g},${b})`;
+document.getElementById('score-text').textContent=score+'점';
+document.getElementById('score-text').style.color=score>80?'#2ed573':score>50?'#ffa502':'#ff4757';
+document.getElementById('detail-text').textContent=`차이: R${Math.abs(r-tr)} G${Math.abs(g-tg)} B${Math.abs(b-tb)}`;
+document.getElementById('result').style.display='block';
+document.getElementById('submit').style.display='none';
+document.querySelectorAll('.sliders,.guess-box,.target-box,p').forEach(e=>e.style.display='none');
+});
+newRound();
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

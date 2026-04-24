@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>네온 폭탄 돌리기 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+.bomb{font-size:8rem;animation:pulse 0.5s infinite alternate;transition:all .3s}
+@keyframes pulse{0%{transform:scale(1)}100%{transform:scale(1.1)}}
+.bomb.fast{animation-duration:0.15s}
+.bomb.exploded{font-size:12rem;animation:explode .5s forwards}
+@keyframes explode{0%{transform:scale(1)}50%{transform:scale(2)}100%{transform:scale(3);opacity:0}}
+.quiz{font-size:1.8rem;font-weight:800;margin:20px 0;min-height:60px;text-align:center}
+input{padding:14px 20px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.15);border-radius:16px;color:#fff;font-size:1.3rem;font-family:inherit;text-align:center;width:200px;outline:none}
+input:focus{border-color:#ef4444}
+.btn{background:linear-gradient(135deg,#ef4444,#f97316);border:none;color:#fff;padding:14px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
+.hint{color:#64748b;font-size:.85rem;margin-top:15px}
+.exploded-screen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(239,68,68,.9);flex-direction:column;align-items:center;justify-content:center;z-index:50}
+.exploded-screen h2{font-size:3rem;font-weight:900}
+.timer-text{color:#fbbf24;font-size:1rem;font-weight:600;margin:5px 0}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<div class="setup" id="setup" style="text-align:center">
+<div class="bomb">💣</div>
+<p style="color:#94a3b8;margin:15px 0">참가자 수를 입력하세요 (2~30명)</p>
+<input id="player-count" type="number" placeholder="참가자 수" min="2" max="30" value="4" style="width:80%;margin-bottom:20px">
+<br><button class="btn" onclick="startGame()">폭탄 가동!</button>
+</div>
+<div id="game" style="text-align:center;display:none">
+<div class="player-label" id="player-label" style="font-size:1.5rem;font-weight:800;color:#ef4444;margin-bottom:10px">플레이어 1</div>
+<div class="bomb" id="bomb">💣</div>
+<div class="timer-text" id="timer-text">틱... 탁...</div>
+<div class="quiz" id="quiz"></div>
+<input id="answer" placeholder="정답 입력" onkeydown="if(event.key==='Enter' && !event.isComposing)submit()">
+<br><button class="btn" id="submit-btn" onclick="submit()">제출 & 넘기기!</button>
+<div class="hint">정답을 맞추고 옆 사람에게 폰을 넘기세요!</div>
+</div>
+<div class="exploded-screen" id="exploded">
+<h2>💥 펑! 폭발!</h2>
+<p style="font-size:1.5rem;margin:15px 0" id="loser-text"></p>
+<button class="btn" onclick="location.reload()" style="background:white;color:black">다시 시작</button>
+</div>
+<script>
+let totalPlayers=4,currentPlayer=1,timeLeft,timer,quizzes=[],currentQ=0;
+const categories=[
+{q:'수도가 서울인 나라는?',a:'한국'},
+{q:'1+1=?',a:'2'},{q:'바나나의 색은?',a:'노란색'},
+{q:'물의 화학식은?',a:'h2o'},{q:'지구에서 가장 큰 대양은?',a:'태평양'},
+{q:'무지개 색깔 수는?',a:'7'},{q:'피자의 나라는?',a:'이탈리아'},
+{q:'해가 뜨는 방향은?',a:'동쪽'},{q:'일주일은 몇 일?',a:'7'},
+{q:'DNA의 풀네임 중 D는?',a:'deoxyribo'},{q:'산소의 기호는?',a:'o'},
+{q:'겨울 다음 계절은?',a:'봄'},{q:'삼각형의 내각의 합은?',a:'180'},
+{q:'커피의 원산지 대륙은?',a:'아프리카'},{q:'인간의 치아 수는?',a:'32'},
+{q:'태양에서 가장 가까운 행성은?',a:'수성'},{q:'조선의 첫 번째 왕은?',a:'이성계'},
+{q:'한글을 창제한 왕은?',a:'세종대왕'},{q:'지구의 유일한 위성은?',a:'달'},
+{q:'대한민국의 국화는?',a:'무궁화'},{q:'전화기를 발명한 사람은?',a:'벨'},
+{q:'일본의 수도는?',a:'도쿄'},{q:'영국의 수도는?',a:'런던'},
+{q:'프랑스의 수도는?',a:'파리'},{q:'삼각형의 변의 개수는?',a:'3'},
+{q:'사각형 내각의 합은?',a:'360'},{q:'초콜릿의 주원료는?',a:'카카오'},
+{q:'꿀벌이 만드는 달콤한 액체는?',a:'꿀'},{q:'우리나라 국보 1호는?',a:'숭례문'},
+{q:'세계에서 가장 높은 산은?',a:'에베레스트'},{q:'가장 가벼운 원소 기호는?',a:'h'},
+{q:'올림픽은 몇 년마다 열리나?',a:'4'},{q:'축구 경기 시간은(분)?',a:'90'},
+{q:'야구의 한 팀 인원수는?',a:'9'},{q:'비행기를 발명한 형제는?',a:'라이트 형제'},
+{q:'거미의 다리 개수는?',a:'8'},{q:'개미의 다리 개수는?',a:'6'},
+{q:'미국의 수도는?',a:'워싱턴'},{q:'러시아의 수도는?',a:'모스크바'},
+{q:'중국의 수도는?',a:'베이징'},{q:'독일의 수도는?',a:'베를린'},
+{q:'강아지의 발가락 총 개수는?',a:'20'},{q:'북극곰의 피부색은?',a:'검은색'},
+{q:'판다의 주식은?',a:'대나무'},{q:'펭귄이 사는 대륙은?',a:'남극'}
+];
+let hintTimeout, canSkip = false;
+
+function startGame(){
+    totalPlayers = Math.min(30, Math.max(2, +document.getElementById('player-count').value || 4));
+    currentPlayer = 1;
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    init();
+}
+function init(){
+timeLeft=20+Math.floor(Math.random()*20); // 20~40s
+quizzes=[...categories].sort(()=>Math.random()-.5);
+currentQ=0;showQuiz();
+const bomb=document.getElementById('bomb');
+if(timer) clearInterval(timer);
+timer=setInterval(()=>{
+timeLeft-=0.1;
+if(timeLeft<5)bomb.classList.add('fast');
+document.getElementById('timer-text').textContent=timeLeft>3?'틱... 탁...':'⚠️ 곧 터집니다!';
+if(timeLeft<=0){clearInterval(timer);explode()}
+},100);
+}
+function showQuiz(){
+if(currentQ>=quizzes.length)currentQ=0;
+canSkip = false;
+document.getElementById('quiz').textContent=quizzes[currentQ].q;
+document.getElementById('player-label').textContent=`플레이어 ${currentPlayer}`;
+document.getElementById('answer').value='';
+document.getElementById('answer').placeholder='정답 입력';
+document.getElementById('submit-btn').textContent='제출 & 넘기기!';
+document.getElementById('answer').focus();
+
+clearTimeout(hintTimeout);
+hintTimeout = setTimeout(() => {
+    canSkip = true;
+    const correct = quizzes[currentQ].a;
+    document.getElementById('answer').placeholder = `정답: ${correct}`;
+    document.getElementById('submit-btn').textContent = `몰라요! (정답: ${correct})`;
+}, 3000);
+}
+function submit(){
+    const input = document.getElementById('answer');
+    const ans = input.value.trim().toLowerCase();
+    const correct = quizzes[currentQ].a.toLowerCase();
+    
+    if(ans === correct || (canSkip && ans === '')) {
+        currentPlayer = (currentPlayer % totalPlayers) + 1;
+        currentQ++;
+        showQuiz();
+        input.style.borderColor = '#2ed573';
+        setTimeout(() => input.style.borderColor = '', 300);
+    } else if (canSkip && ans !== '') {
+        // Even if hint is shown, if they type something wrong, check it
+        if(ans === correct) {
+            currentPlayer = (currentPlayer % totalPlayers) + 1;
+            currentQ++;
+            showQuiz();
+        } else {
+            shake();
+        }
+    } else {
+        shake();
+    }
+}
+function shake() {
+    const input = document.getElementById('answer');
+    const game = document.getElementById('game');
+    game.style.animation = 'none';
+    void game.offsetWidth;
+    game.style.animation = 'pulse 0.1s 3';
+    input.style.borderColor = '#ff4757';
+    setTimeout(() => input.style.borderColor = '', 500);
+}
+function explode(){
+clearTimeout(hintTimeout);
+document.getElementById('bomb').classList.add('exploded');
+document.getElementById('loser-text').textContent = `플레이어 ${currentPlayer} 벌칙!`;
+setTimeout(()=>{document.getElementById('exploded').style.display='flex'},500);
+}
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

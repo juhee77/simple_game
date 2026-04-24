@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3D 키네틱 파티클 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050816;
+            touch-action: none;
+            padding: 0;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: auto;
+        }
+
+        .back-button {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            margin-bottom: 0; /* Override common style */
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .settings-panel {
+            background: rgba(10, 14, 39, 0.7);
+            backdrop-filter: blur(15px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: white;
+            pointer-events: auto;
+            width: 260px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .settings-panel.hidden {
+            transform: translateX(110%);
+            opacity: 0;
+        }
+
+        .settings-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            z-index: 11;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-primary);
+        }
+
+        .theme-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .theme-btn {
+            height: 30px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-btn.active {
+            border: 2px solid white;
+        }
+
+        .instruction {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            text-align: center;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .settings-panel {
+                width: 220px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+
+    <div class="ui-overlay">
+        <div class="header-controls">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            
+            <div class="settings-toggle" id="settings-toggle">⚙️</div>
+            
+            <div class="settings-panel" id="settings-panel">
+                <h3 style="margin: 0 0 15px 0; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">시뮬레이션 설정</h3>
+                
+                <div class="control-group">
+                    <label>입자 크기 <span id="size-val">1.0</span></label>
+                    <input type="range" id="size-slider" min="0.5" max="4" step="0.1" value="1.5">
+                </div>
+
+                <div class="control-group">
+                    <label>반응 강도 <span id="force-val">1.0</span></label>
+                    <input type="range" id="force-slider" min="0.1" max="3" step="0.1" value="1.0">
+                </div>
+
+                <div class="control-group">
+                    <label>감쇠 속도 (Damping) <span id="damping-val">0.95</span></label>
+                    <input type="range" id="damping-slider" min="0.8" max="0.99" step="0.01" value="0.95">
+                </div>
+
+                <div class="control-group">
+                    <label>테마 선택</label>
+                    <div class="theme-buttons">
+                        <div class="theme-btn active" style="background: linear-gradient(to right, #6366f1, #ec4899);" data-colors="#6366f1,#8b5cf6,#ec4899"></div>
+                        <div class="theme-btn" style="background: linear-gradient(to right, #00f2fe, #4facfe);" data-colors="#00f2fe,#4facfe,#2575fc"></div>
+                        <div class="theme-btn" style="background: linear-gradient(to right, #f83600, #f9d423);" data-colors="#f83600,#f9d423,#fe8c00"></div>
+                    </div>
+                </div>
+
+                <button class="button" id="reset-btn" style="width: 100%; margin-top: 10px; padding: 10px; font-size: 0.9rem;">입자 초기화</button>
+            </div>
+        </div>
+
+        <div class="instruction">
+            화면을 드래그하여 입자의 흐름을 느껴보세요
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- Config & State ---
+        const config = {
+            particleCount: window.innerWidth < 768 ? 20000 : 40000,
+            particleSize: 1.5,
+            force: 1.0,
+            damping: 0.95,
+            colors: ['#6366f1', '#8b5cf6', '#ec4899'],
+            mouseRadius: 150
+        };
+
+        const mouse = new THREE.Vector3(-1000, -1000, 0);
+        const targetMouse = new THREE.Vector3(-1000, -1000, 0);
+
+        // --- Setup ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        camera.position.z = 500;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // --- Particles ---
+        let geometry, material, points;
+        let positions, velocities, originals, colors;
+
+        function initParticles() {
+            if (points) {
+                scene.remove(points);
+                geometry.dispose();
+                material.dispose();
+            }
+
+            geometry = new THREE.BufferGeometry();
+            positions = new Float32Array(config.particleCount * 3);
+            velocities = new Float32Array(config.particleCount * 3);
+            originals = new Float32Array(config.particleCount * 3);
+            colors = new Float32Array(config.particleCount * 3);
+
+            const colorHelper = new THREE.Color();
+            const width = window.innerWidth * 0.8;
+            const height = window.innerHeight * 0.8;
+
+            for (let i = 0; i < config.particleCount; i++) {
+                const x = (Math.random() - 0.5) * width;
+                const y = (Math.random() - 0.5) * height;
+                const z = (Math.random() - 0.5) * 100;
+
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+
+                originals[i * 3] = x;
+                originals[i * 3 + 1] = y;
+                originals[i * 3 + 2] = z;
+
+                velocities[i * 3] = 0;
+                velocities[i * 3 + 1] = 0;
+                velocities[i * 3 + 2] = 0;
+
+                // Random color from theme
+                const themeColor = config.colors[Math.floor(Math.random() * config.colors.length)];
+                colorHelper.set(themeColor);
+                colors[i * 3] = colorHelper.r;
+                colors[i * 3 + 1] = colorHelper.g;
+                colors[i * 3 + 2] = colorHelper.b;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            material = new THREE.PointsMaterial({
+                size: config.particleSize,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true
+            });
+
+            points = new THREE.Points(geometry, material);
+            scene.add(points);
+        }
+
+        initParticles();
+
+        // --- Interaction ---
+        function updatePointer(e) {
+            const x = (e.clientX - window.innerWidth / 2);
+            const y = -(e.clientY - window.innerHeight / 2);
+            targetMouse.set(x, y, 0);
+        }
+
+        window.addEventListener('pointermove', updatePointer);
+        window.addEventListener('pointerdown', updatePointer);
+        window.addEventListener('pointerleave', () => {
+            targetMouse.set(-2000, -2000, 0);
+        });
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Smooth mouse
+            mouse.lerp(targetMouse, 0.1);
+
+            const posAttr = geometry.attributes.position;
+            const posArray = posAttr.array;
+
+            const f = config.force * 0.5;
+            const d = config.damping;
+            const rSq = config.mouseRadius * config.mouseRadius;
+
+            for (let i = 0; i < config.particleCount; i++) {
+                const i3 = i * 3;
+                
+                let x = posArray[i3];
+                let y = posArray[i3 + 1];
+                let z = posArray[i3 + 2];
+
+                let vx = velocities[i3];
+                let vy = velocities[i3 + 1];
+                let vz = velocities[i3 + 2];
+
+                // Force from pointer
+                const dx = x - mouse.x;
+                const dy = y - mouse.y;
+                const dz = z - mouse.z;
+                const distSq = dx * dx + dy * dy + dz * dz;
+
+                if (distSq < rSq) {
+                    const dist = Math.sqrt(distSq);
+                    const force = (1.0 - dist / config.mouseRadius) * f * 20;
+                    vx += dx / dist * force;
+                    vy += dy / dist * force;
+                }
+
+                // Return to original position
+                const ox = originals[i3];
+                const oy = originals[i3 + 1];
+                const oz = originals[i3 + 2];
+
+                vx += (ox - x) * 0.03;
+                vy += (oy - y) * 0.03;
+                vz += (oz - z) * 0.03;
+
+                // Update velocity & position
+                vx *= d;
+                vy *= d;
+                vz *= d;
+
+                x += vx;
+                y += vy;
+                z += vz;
+
+                posArray[i3] = x;
+                posArray[i3 + 1] = y;
+                posArray[i3 + 2] = z;
+
+                velocities[i3] = vx;
+                velocities[i3 + 1] = vy;
+                velocities[i3 + 2] = vz;
+            }
+
+            posAttr.needsUpdate = true;
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // --- UI Events ---
+        const panel = document.getElementById('settings-panel');
+        document.getElementById('settings-toggle').addEventListener('click', () => {
+            panel.classList.toggle('hidden');
+        });
+
+        document.getElementById('size-slider').addEventListener('input', (e) => {
+            config.particleSize = parseFloat(e.target.value);
+            material.size = config.particleSize;
+            document.getElementById('size-val').textContent = e.target.value;
+        });
+
+        document.getElementById('force-slider').addEventListener('input', (e) => {
+            config.force = parseFloat(e.target.value);
+            document.getElementById('force-val').textContent = e.target.value;
+        });
+
+        document.getElementById('damping-slider').addEventListener('input', (e) => {
+            config.damping = parseFloat(e.target.value);
+            document.getElementById('damping-val').textContent = e.target.value;
+        });
+
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                config.colors = btn.dataset.colors.split(',');
+                initParticles();
+            });
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', initParticles);
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            // Optional: re-init if screen changes significantly
+            if (Math.abs(config.particleCount - (window.innerWidth < 768 ? 20000 : 40000)) > 5000) {
+                config.particleCount = window.innerWidth < 768 ? 20000 : 40000;
+                initParticles();
+            }
+        });
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>

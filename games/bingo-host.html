@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>빙고 넘버 마스터 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+h1{font-size:1.8rem;margin:40px 0 10px;background:linear-gradient(135deg,#f97316,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tabs{display:flex;gap:10px;margin:15px 0}
+.tab{padding:10px 24px;border-radius:30px;cursor:pointer;font-weight:600;border:2px solid rgba(255,255,255,.1);background:none;color:#94a3b8;transition:all .3s}
+.tab.active{background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;border-color:transparent}
+.panel{display:none;width:90%;max-width:500px}
+.panel.active{display:block}
+.called-num{font-size:6rem;font-weight:900;text-align:center;text-shadow:0 0 40px rgba(249,115,22,.5);margin:20px 0}
+.called-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:15px 0}
+.called-tag{padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:600}
+.called-tag.active{background:rgba(249,115,22,.3);color:#f97316}
+.called-tag.used{background:rgba(255,255,255,.05);color:#64748b}
+.btn{background:linear-gradient(135deg,#f97316,#ef4444);border:none;color:#fff;padding:16px 50px;font-size:1.3rem;font-weight:700;border-radius:50px;cursor:pointer;margin:15px;display:block;margin-left:auto;margin-right:auto}
+.bingo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:20px 0}
+.bingo-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:12px;font-size:1.4rem;font-weight:700;cursor:pointer;transition:all .3s}
+.bingo-cell.marked{background:linear-gradient(135deg,rgba(249,115,22,.4),rgba(239,68,68,.4));border-color:#f97316}
+.bingo-cell.free{background:rgba(249,115,22,.2);border-color:#f97316;color:#f97316}
+.bingo-count{text-align:center;font-size:1.5rem;font-weight:800;color:#f97316;margin:10px 0}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<h1>🎱 빙고 넘버 마스터</h1>
+<div class="tabs">
+<button class="tab active" onclick="switchTab('host')">호스트 (번호 뽑기)</button>
+<button class="tab" onclick="switchTab('player')">플레이어 (빙고판)</button>
+</div>
+<div class="panel active" id="host-panel">
+<div class="called-num" id="called-num">?</div>
+<button class="btn" id="draw-btn" onclick="drawNumber()">번호 뽑기!</button>
+<p style="text-align:center;color:#94a3b8;margin:10px 0">뽑힌 번호 목록</p>
+<div class="called-list" id="called-list"></div>
+</div>
+<div class="panel" id="player-panel">
+<div class="bingo-count">빙고: <span id="bingo-count">0</span>줄</div>
+<div class="bingo-grid" id="bingo-grid"></div>
+<button class="btn" onclick="generateBoard()" style="background:rgba(255,255,255,.1)">새 빙고판</button>
+</div>
+<script>
+let calledNumbers=[],board=[],marked=Array(25).fill(false);marked[12]=true;
+function switchTab(t){document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',i===(t==='host'?0:1))});document.querySelectorAll('.panel').forEach((el,i)=>{el.classList.toggle('active',i===(t==='host'?0:1))})}
+function drawNumber(){
+if(calledNumbers.length>=75)return;
+let n;do{n=Math.floor(Math.random()*75)+1}while(calledNumbers.includes(n));
+calledNumbers.push(n);
+document.getElementById('called-num').textContent=n;
+document.getElementById('called-num').style.animation='none';void document.getElementById('called-num').offsetWidth;document.getElementById('called-num').style.animation='';
+renderCalled();
+}
+function renderCalled(){
+document.getElementById('called-list').innerHTML=calledNumbers.map(n=>`<span class="called-tag active">${n}</span>`).join('');
+}
+function generateBoard(){
+const nums=[];for(let i=1;i<=75;i++)nums.push(i);
+nums.sort(()=>Math.random()-.5);
+board=nums.slice(0,25);board[12]=0;
+marked=Array(25).fill(false);marked[12]=true;
+renderBoard();
+}
+function renderBoard(){
+const grid=document.getElementById('bingo-grid');
+grid.innerHTML=board.map((n,i)=>{
+if(i===12)return`<div class="bingo-cell free">FREE</div>`;
+return`<div class="bingo-cell ${marked[i]?'marked':''}" onclick="toggleCell(${i})">${n}</div>`;
+}).join('');
+countBingo();
+}
+function toggleCell(i){marked[i]=!marked[i];renderBoard()}
+function countBingo(){
+const lines=[[0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],[0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],[0,6,12,18,24],[4,8,12,16,20]];
+let cnt=0;lines.forEach(l=>{if(l.every(i=>marked[i]))cnt++});
+document.getElementById('bingo-count').textContent=cnt;
+}
+generateBoard();
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

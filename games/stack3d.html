@@ -344,7 +344,7 @@
         }
 
         document.addEventListener('keydown', (event) => {
-            if (event.code === 'Space' || event.code === 'Enter') {
+            if (event.code === 'Space' || (event.code === 'Enter' && !event.isComposing)) {
                 event.preventDefault();
                 placeBlock();
             }
@@ -359,6 +359,7 @@
         updateStats();
         drawScene();
     </script>
+    <script src="../scripts/game-common.js"></script>
 </body>
 
 </html>

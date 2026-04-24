@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>블라인드 메모리 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#14b8a6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.screen{display:none;text-align:center;width:90%;max-width:500px}
+.screen.active{display:block}
+.btn{background:linear-gradient(135deg,#14b8a6,#06b6d4);border:none;color:#fff;padding:14px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
+.word-display{font-size:3rem;font-weight:900;padding:40px;background:rgba(255,255,255,.05);border-radius:24px;border:2px solid rgba(20,184,166,.3);margin:20px 0}
+canvas{width:100%;border-radius:20px;border:2px solid rgba(255,255,255,.1);background:#1e293b;touch-action:none}
+.toggle-blind{background:#e11d48;border:none;color:#fff;padding:12px 30px;font-size:1rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<h1>🙈 블라인드 메모리</h1>
+<div class="screen active" id="start-screen">
+<p style="color:#94a3b8;margin:20px 0">제시어를 보여드립니다. 설명을 듣는 사람은<br>화면을 보지 않고 손가락 감각만으로 그립니다!</p>
+<button class="btn" onclick="newRound()">제시어 뽑기!</button>
+</div>
+<div class="screen" id="word-screen">
+<p style="color:#94a3b8;margin-bottom:10px">이 단어를 설명해주세요!</p>
+<div class="word-display" id="the-word"></div>
+<button class="btn" onclick="startDraw()">그리기 시작!</button>
+</div>
+<div class="screen" id="draw-screen">
+<p style="color:#94a3b8;margin-bottom:10px" id="draw-hint">화면을 보지 마세요! 설명만 듣고 그려보세요!</p>
+<canvas id="canvas" width="500" height="500"></canvas>
+<div style="margin-top:15px">
+<button class="toggle-blind" id="blind-btn" onclick="toggleBlind()">👁️ 공개하기</button>
+<button class="btn" onclick="newRound()">다음 라운드</button>
+</div>
+</div>
+<script>
+const words=['햄버거','고양이','비행기','해바라기','눈사람','자전거','피자','로봇','공룡','무지개','우산','선글라스','케이크','기타','별','달','구름','나비','자동차','커피잔','집','나무','물고기','카메라','시계'];
+let drawing=false,lastX=0,lastY=0,isBlind=true;
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+function newRound(){
+hideAll();document.getElementById('word-screen').classList.add('active');
+document.getElementById('the-word').textContent=words[Math.floor(Math.random()*words.length)];
+}
+function startDraw(){
+hideAll();document.getElementById('draw-screen').classList.add('active');
+ctx.fillStyle='#1e293b';ctx.fillRect(0,0,500,500);isBlind=true;
+canvas.style.filter='blur(20px)';
+document.getElementById('blind-btn').textContent='👁️ 공개하기';
+document.getElementById('draw-hint').textContent='화면을 보지 마세요! 설명만 듣고 그려보세요!';
+}
+function toggleBlind(){
+isBlind=!isBlind;canvas.style.filter=isBlind?'blur(20px)':'none';
+document.getElementById('blind-btn').textContent=isBlind?'👁️ 공개하기':'🙈 다시 가리기';
+document.getElementById('draw-hint').textContent=isBlind?'화면을 보지 마세요!':'짜잔! 결과를 확인하세요!';
+}
+function hideAll(){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'))}
+canvas.addEventListener('pointerdown',e=>{drawing=true;const r=canvas.getBoundingClientRect();const s=500/r.width;lastX=(e.clientX-r.left)*s;lastY=(e.clientY-r.top)*s});
+canvas.addEventListener('pointermove',e=>{
+if(!drawing)return;const r=canvas.getBoundingClientRect();const s=500/r.width;
+const x=(e.clientX-r.left)*s,y=(e.clientY-r.top)*s;
+ctx.strokeStyle='#06b6d4';ctx.lineWidth=4;ctx.lineCap='round';
+ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();
+lastX=x;lastY=y;
+});
+canvas.addEventListener('pointerup',()=>drawing=false);
+canvas.addEventListener('pointerleave',()=>drawing=false);
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

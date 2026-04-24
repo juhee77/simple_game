@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>네온 럭키 드로우 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-primary: #8b5cf6;
+            --neon-secondary: #ec4899;
+            --bg-dark: #0f172a;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .input-area {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            color: white;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            border-color: var(--neon-primary);
+        }
+
+        .draw-btn {
+            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+            border: none;
+            color: white;
+            padding: 1rem 3rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .draw-btn:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+        }
+
+        .draw-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .slot-machine {
+            height: 120px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+            border: 2px solid var(--neon-primary);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slot-container {
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.1s linear;
+        }
+
+        .slot-item {
+            font-size: 2.5rem;
+            font-weight: 800;
+            height: 120px;
+            line-height: 120px;
+            color: white;
+            text-shadow: 0 0 10px var(--neon-primary);
+        }
+
+        #result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            color: var(--neon-secondary);
+            margin-bottom: 1rem;
+            letter-spacing: 2px;
+        }
+
+        .winner-name {
+            font-size: 5rem;
+            font-weight: 900;
+            margin-bottom: 2rem;
+            animation: winnerPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 0 0 40px var(--neon-primary);
+        }
+
+        @keyframes winnerPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 101;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="particles" id="particles"></div>
+    <a href="../index.html" class="back-button" style="position: absolute; top: 20px; left: 20px; z-index: 20;">← 메인</a>
+
+    <div class="container" id="main-container">
+        <h1 class="title">네온 럭키 드로우</h1>
+        
+        <div class="input-area" id="input-area">
+            <p style="margin-bottom: 10px; color: #94a3b8;">추첨할 명단을 입력하세요 (줄바꿈 구분)</p>
+            <textarea id="name-input" placeholder="김철수&#10;이영희&#10;홍길동..."></textarea>
+        </div>
+
+        <button class="draw-btn" id="start-draw">추첨 시작!</button>
+        
+        <div class="slot-machine" id="slot-machine">
+            <div class="slot-container" id="slot-container"></div>
+        </div>
+    </div>
+
+    <div id="result-overlay">
+        <div class="result-title">CONGRATULATIONS!</div>
+        <div class="winner-name" id="winner-name">WINNER</div>
+        <button class="draw-btn" style="width: auto;" onclick="closeResult()">다시 하기</button>
+    </div>
+
+    <canvas id="confetti"></canvas>
+
+    <script>
+        const nameInput = document.getElementById('name-input');
+        const startBtn = document.getElementById('start-draw');
+        const inputArea = document.getElementById('input-area');
+        const slotMachine = document.getElementById('slot-machine');
+        const slotContainer = document.getElementById('slot-container');
+        const resultOverlay = document.getElementById('result-overlay');
+        const winnerNameEl = document.getElementById('winner-name');
+        const confettiCanvas = document.getElementById('confetti');
+        const confettiCtx = confettiCanvas.getContext('2d');
+
+        let names = [];
+        let isDrawing = false;
+
+        startBtn.addEventListener('click', () => {
+            names = nameInput.value.split('\n').map(n => n.trim()).filter(n => n !== '');
+            if (names.length < 2) {
+                alert('최소 2명 이상의 이름을 입력해주세요!');
+                return;
+            }
+
+            // Shuffle names for better randomness
+            for (let i = names.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [names[i], names[j]] = [names[j], names[i]];
+            }
+
+            startDraw();
+        });
+
+        function startDraw() {
+            isDrawing = true;
+            startBtn.style.display = 'none';
+            inputArea.style.display = 'none';
+            slotMachine.style.display = 'flex';
+
+            // Prepare slot items
+            slotContainer.innerHTML = '';
+            const totalItems = 50;
+            const winnerIndex = Math.floor(Math.random() * names.length);
+            const winnerName = names[winnerIndex];
+
+            for (let i = 0; i < totalItems; i++) {
+                const div = document.createElement('div');
+                div.className = 'slot-item';
+                div.textContent = names[i % names.length];
+                if (i === totalItems - 1) div.textContent = winnerName;
+                slotContainer.appendChild(div);
+            }
+
+            // Animation
+            const itemHeight = 120;
+            const totalScroll = (totalItems - 1) * itemHeight;
+            let currentScroll = 0;
+            let speed = 40;
+            let startTime = null;
+            const duration = 3000;
+
+            function animate(time) {
+                if (!startTime) startTime = time;
+                const elapsed = time - startTime;
+                const progress = elapsed / duration;
+
+                // Easing (easeOutCubic)
+                const easedProgress = 1 - Math.pow(1 - progress, 3);
+                currentScroll = totalScroll * easedProgress;
+
+                slotContainer.style.transform = `translateY(-${currentScroll}px)`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    setTimeout(() => showResult(winnerName), 500);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function showResult(winner) {
+            winnerNameEl.textContent = winner;
+            resultOverlay.style.display = 'flex';
+            startConfetti();
+        }
+
+        function closeResult() {
+            resultOverlay.style.display = 'none';
+            slotMachine.style.display = 'none';
+            startBtn.style.display = 'block';
+            inputArea.style.display = 'block';
+            stopConfetti();
+            isDrawing = false;
+        }
+
+        // Confetti Logic
+        let particles = [];
+        function startConfetti() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: Math.random() * confettiCanvas.width,
+                    y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+                    vx: Math.random() * 4 - 2,
+                    vy: Math.random() * 5 + 5,
+                    size: Math.random() * 8 + 4,
+                    color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+                    rotation: Math.random() * 360
+                });
+            }
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            if (resultOverlay.style.display === 'none') return;
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rotation += 5;
+                if (p.y > confettiCanvas.height) p.y = -20;
+                
+                confettiCtx.save();
+                confettiCtx.translate(p.x, p.y);
+                confettiCtx.rotate(p.rotation * Math.PI / 180);
+                confettiCtx.fillStyle = p.color;
+                confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                confettiCtx.restore();
+            });
+            requestAnimationFrame(animateConfetti);
+        }
+
+        function stopConfetti() {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        }
+
+        window.addEventListener('resize', () => {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        });
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>

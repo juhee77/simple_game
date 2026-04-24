@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>네온 밸런스 볼 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;height:100vh;overflow:hidden;touch-action:none}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+.hud{position:absolute;top:20px;right:20px;text-align:right;z-index:10}
+.hud .time{font-size:2rem;font-weight:800}
+canvas{width:100%;height:100vh;display:block}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+.overlay h2{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,#06b6d4,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.overlay .big{font-size:4rem;font-weight:900;margin:10px 0}
+.btn{background:linear-gradient(135deg,#06b6d4,#8b5cf6);border:none;color:#fff;padding:16px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:20px}
+.hint{color:#64748b;font-size:.85rem;text-align:center;position:absolute;bottom:20px;width:100%}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<div class="hud"><div class="time" id="timer">0.0s</div></div>
+<canvas id="c"></canvas>
+<div class="overlay" id="start-screen">
+<h2>네온 밸런스 볼</h2>
+<p style="color:#94a3b8;margin:15px 0">폰을 기울여 공을 구멍에 넣으세요!</p>
+<button class="btn" onclick="startGame()">시작!</button>
+</div>
+<div class="overlay" id="win-screen" style="display:none">
+<h2>클리어! 🎉</h2>
+<div class="big" id="final-time">0.0s</div>
+<button class="btn" onclick="startGame()">다시 도전</button>
+</div>
+<div class="hint">자이로 센서가 없으면 터치로 공을 드래그하세요</div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let W,H,ball,hole,walls,startTime,elapsed=0,running=false,tiltX=0,tiltY=0,touchDrag=false,touchStart={x:0,y:0};
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+window.addEventListener('resize',resize);resize();
+function generateMaze(){
+walls=[];const s=40,cols=Math.floor(W/s),rows=Math.floor(H/s);
+for(let i=0;i<15;i++){
+const horizontal=Math.random()>.5;
+const x=Math.floor(Math.random()*(cols-3))*s+s;
+const y=Math.floor(Math.random()*(rows-3))*s+s*2;
+const len=(2+Math.floor(Math.random()*4))*s;
+if(horizontal)walls.push({x,y,w:len,h:8});
+else walls.push({x,y,w:8,h:len});
+}
+}
+function startGame(){
+document.getElementById('start-screen').style.display='none';
+document.getElementById('win-screen').style.display='none';
+generateMaze();
+ball={x:60,y:120,vx:0,vy:0,r:12};
+hole={x:W-80,y:H-120,r:18};
+startTime=Date.now();running=true;
+if(window.DeviceOrientationEvent){
+window.addEventListener('deviceorientation',onOrient);
+if(typeof DeviceOrientationEvent.requestPermission==='function')DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')window.addEventListener('deviceorientation',onOrient)});
+}
+loop();
+}
+function onOrient(e){tiltX=(e.gamma||0)/30;tiltY=(e.beta||0)/30}
+canvas.addEventListener('pointerdown',e=>{touchDrag=true;touchStart={x:e.clientX,y:e.clientY}});
+canvas.addEventListener('pointermove',e=>{if(!touchDrag)return;tiltX=(e.clientX-touchStart.x)/80;tiltY=(e.clientY-touchStart.y)/80});
+canvas.addEventListener('pointerup',()=>{touchDrag=false;tiltX=0;tiltY=0});
+function loop(){
+if(!running)return;
+elapsed=(Date.now()-startTime)/1000;
+document.getElementById('timer').textContent=elapsed.toFixed(1)+'s';
+ball.vx+=tiltX*0.5;ball.vy+=tiltY*0.5;
+ball.vx*=0.95;ball.vy*=0.95;
+ball.x+=ball.vx;ball.y+=ball.vy;
+if(ball.x<ball.r){ball.x=ball.r;ball.vx*=-0.5}
+if(ball.x>W-ball.r){ball.x=W-ball.r;ball.vx*=-0.5}
+if(ball.y<ball.r){ball.y=ball.r;ball.vy*=-0.5}
+if(ball.y>H-ball.r){ball.y=H-ball.r;ball.vy*=-0.5}
+walls.forEach(w=>{
+if(ball.x+ball.r>w.x&&ball.x-ball.r<w.x+w.w&&ball.y+ball.r>w.y&&ball.y-ball.r<w.y+w.h){
+const overlapX=Math.min(ball.x+ball.r-w.x,w.x+w.w-(ball.x-ball.r));
+const overlapY=Math.min(ball.y+ball.r-w.y,w.y+w.h-(ball.y-ball.r));
+if(overlapX<overlapY){if(ball.x<w.x+w.w/2){ball.x=w.x-ball.r;ball.vx*=-0.5}else{ball.x=w.x+w.w+ball.r;ball.vx*=-0.5}}
+else{if(ball.y<w.y+w.h/2){ball.y=w.y-ball.r;ball.vy*=-0.5}else{ball.y=w.y+w.h+ball.r;ball.vy*=-0.5}}
+}});
+const dist=Math.hypot(ball.x-hole.x,ball.y-hole.y);
+if(dist<hole.r){running=false;document.getElementById('win-screen').style.display='flex';document.getElementById('final-time').textContent=elapsed.toFixed(1)+'s';return}
+draw();requestAnimationFrame(loop);
+}
+function draw(){
+ctx.fillStyle='#0f172a';ctx.fillRect(0,0,W,H);
+ctx.fillStyle='rgba(6,182,212,0.15)';for(let i=0;i<W;i+=40){ctx.fillRect(i,0,1,H)}for(let i=0;i<H;i+=40){ctx.fillRect(0,i,W,1)}
+walls.forEach(w=>{ctx.fillStyle='rgba(139,92,246,0.6)';ctx.fillRect(w.x,w.y,w.w,w.h);ctx.shadowColor='#8b5cf6';ctx.shadowBlur=10;ctx.fillRect(w.x,w.y,w.w,w.h);ctx.shadowBlur=0});
+ctx.beginPath();ctx.arc(hole.x,hole.y,hole.r,0,Math.PI*2);ctx.fillStyle='#2ed573';ctx.shadowColor='#2ed573';ctx.shadowBlur=20;ctx.fill();ctx.shadowBlur=0;
+ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);const g=ctx.createRadialGradient(ball.x-3,ball.y-3,2,ball.x,ball.y,ball.r);g.addColorStop(0,'#fff');g.addColorStop(1,'#06b6d4');ctx.fillStyle=g;ctx.shadowColor='#06b6d4';ctx.shadowBlur=15;ctx.fill();ctx.shadowBlur=0;
+}
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

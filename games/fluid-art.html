@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>집단 유체 예술 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;overflow:hidden;touch-action:none}
+canvas{width:100%;height:100vh;display:block}
+.ui{position:fixed;top:20px;left:0;width:100%;display:flex;justify-content:space-between;padding:0 20px;pointer-events:none;z-index:10}
+.ui>*{pointer-events:auto}
+.palette{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:12px;background:rgba(0,0,0,.5);padding:10px 20px;border-radius:30px;backdrop-filter:blur(10px);z-index:10}
+.color-dot{width:36px;height:36px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .3s}
+.color-dot.active{border-color:#fff;transform:scale(1.2)}
+.size-slider{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:10;background:rgba(0,0,0,.5);padding:8px 20px;border-radius:20px;backdrop-filter:blur(10px)}
+.size-slider input{width:150px}
+.btn-clear{position:fixed;bottom:30px;right:20px;background:rgba(255,255,255,.1);border:none;color:#fff;padding:10px 20px;border-radius:20px;cursor:pointer;font-family:inherit;font-weight:600;z-index:10}
+</style>
+</head>
+<body>
+<div class="ui">
+<a href="../index.html" class="back-button" style="z-index:10">← 메인</a>
+</div>
+<canvas id="c"></canvas>
+<div class="palette" id="palette"></div>
+<div class="size-slider"><input type="range" id="brush-size" min="5" max="80" value="30"></div>
+<button class="btn-clear" onclick="clearCanvas()">🗑️ 초기화</button>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let W,H,drawing=false,currentColor='#ec4899',brushSize=30,lastX=0,lastY=0;
+const colors=['#ff4757','#ff6b81','#ec4899','#8b5cf6','#6366f1','#3b82f6','#06b6d4','#14b8a6','#10b981','#22c55e','#84cc16','#eab308','#f97316','#ef4444','#f472b6','#a78bfa'];
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;ctx.fillStyle='#0f172a';ctx.fillRect(0,0,W,H)}
+window.addEventListener('resize',resize);resize();
+const palette=document.getElementById('palette');
+colors.forEach((c,i)=>{const d=document.createElement('div');d.className='color-dot'+(i===2?' active':'');d.style.background=c;d.onclick=()=>{currentColor=c;document.querySelectorAll('.color-dot').forEach(e=>e.classList.remove('active'));d.classList.add('active')};palette.appendChild(d)});
+document.getElementById('brush-size').addEventListener('input',e=>{brushSize=+e.target.value});
+function getPos(e){const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}}
+canvas.addEventListener('pointerdown',e=>{drawing=true;const p=getPos(e);lastX=p.x;lastY=p.y;drawDot(p.x,p.y)});
+canvas.addEventListener('pointermove',e=>{if(!drawing)return;const p=getPos(e);drawLine(lastX,lastY,p.x,p.y);lastX=p.x;lastY=p.y});
+canvas.addEventListener('pointerup',()=>drawing=false);
+canvas.addEventListener('pointerleave',()=>drawing=false);
+function drawDot(x,y){
+ctx.beginPath();ctx.arc(x,y,brushSize/2,0,Math.PI*2);
+const g=ctx.createRadialGradient(x,y,0,x,y,brushSize/2);
+g.addColorStop(0,currentColor);g.addColorStop(1,currentColor+'00');
+ctx.fillStyle=g;ctx.globalCompositeOperation='lighter';ctx.fill();ctx.globalCompositeOperation='source-over';
+}
+function drawLine(x1,y1,x2,y2){
+const dist=Math.hypot(x2-x1,y2-y1);const step=Math.max(2,brushSize/6);
+for(let i=0;i<dist;i+=step){const t=i/dist;drawDot(x1+(x2-x1)*t,y1+(y2-y1)*t)}
+}
+function clearCanvas(){ctx.fillStyle='#0f172a';ctx.fillRect(0,0,W,H)}
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

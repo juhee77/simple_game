@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>듀오 반응속도 대결 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --p1-color: #ff4757;
+            --p2-color: #1e90ff;
+            --ready-color: #2ed573;
+            --wait-color: #ffa502;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0d1117;
+            font-family: 'Outfit', sans-serif;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .player-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            position: relative;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .player-zone.p1-default {
+            background-color: rgba(255, 71, 87, 0.1);
+        }
+
+        #p1-zone {
+            transform: rotate(180deg);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .player-zone.p2-default {
+            background-color: rgba(30, 144, 255, 0.1);
+        }
+
+        #p2-zone {
+            /* p2 specific styles if any */
+        }
+
+        .player-zone.waiting { background-color: var(--wait-color) !important; }
+        .player-zone.ready { background-color: var(--ready-color) !important; }
+        .player-zone.too-early { background-color: #e84118 !important; animation: shake 0.5s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(180deg); }
+            25% { transform: translateX(-10px) rotate(180deg); }
+            75% { transform: translateX(10px) rotate(180deg); }
+        }
+
+        #p2-zone.too-early { animation: shakeP2 0.5s; }
+        @keyframes shakeP2 {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .status-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .score-board {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 3rem;
+            opacity: 0.3;
+            font-weight: 900;
+        }
+
+        .center-bar {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: white;
+            z-index: 10;
+            transform: translateY(-50%);
+            box-shadow: 0 0 15px white;
+        }
+
+        #reset-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            padding: 1rem 2rem;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 0 30px rgba(255,255,255,0.5);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            z-index: 20;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="p1-zone" class="player-zone p1-default">
+        <div class="score-board" id="p1-score">0</div>
+        <div class="status-text" id="p1-status">준비되면 터치!</div>
+    </div>
+
+    <div class="center-bar"></div>
+    <a href="../index.html" class="back-btn">←</a>
+    <button id="reset-btn">다시 시작</button>
+
+    <div id="p2-zone" class="player-zone p2-default">
+        <div class="score-board" id="p2-score">0</div>
+        <div class="status-text" id="p2-status">준비되면 터치!</div>
+    </div>
+
+    <script>
+        const p1Zone = document.getElementById('p1-zone');
+        const p2Zone = document.getElementById('p2-zone');
+        const p1Status = document.getElementById('p1-status');
+        const p2Status = document.getElementById('p2-status');
+        const p1ScoreEl = document.getElementById('p1-score');
+        const p2ScoreEl = document.getElementById('p2-score');
+        const resetBtn = document.getElementById('reset-btn');
+
+        let p1Wins = 0;
+        let p2Wins = 0;
+        let gameState = 'init'; // init, waiting, ready, finished
+        let startTime = null;
+        let timer = null;
+
+        function startWait() {
+            gameState = 'waiting';
+            p1Status.textContent = '초록색이 되면 터치!';
+            p2Status.textContent = '초록색이 되면 터치!';
+            p1Zone.className = 'player-zone waiting';
+            p2Zone.className = 'player-zone waiting';
+            resetBtn.style.display = 'none';
+
+            const delay = 2000 + Math.random() * 3000;
+            timer = setTimeout(() => {
+                gameState = 'ready';
+                p1Zone.className = 'player-zone ready';
+                p2Zone.className = 'player-zone ready';
+                startTime = Date.now();
+            }, delay);
+        }
+
+        function handleTouch(player) {
+            if (gameState === 'init') {
+                startWait();
+                return;
+            }
+
+            if (gameState === 'waiting') {
+                // Too Early
+                clearTimeout(timer);
+                gameState = 'finished';
+                if (player === 1) {
+                    p1Wins--; // Penalty
+                    p1Zone.className = 'player-zone too-early';
+                    p1Status.textContent = '너무 빨랐어! (-1점)';
+                    p2Status.textContent = '상대가 서둘렀어!';
+                } else {
+                    p2Wins--;
+                    p2Zone.className = 'player-zone too-early';
+                    p2Status.textContent = '너무 빨랐어! (-1점)';
+                    p1Status.textContent = '상대가 서둘렀어!';
+                }
+                updateScores();
+                resetBtn.style.display = 'block';
+                return;
+            }
+
+            if (gameState === 'ready') {
+                const reactionTime = Date.now() - startTime;
+                gameState = 'finished';
+                if (player === 1) {
+                    p1Wins++;
+                    p1Status.textContent = `${reactionTime}ms! 승리!`;
+                    p2Status.textContent = '패배..';
+                } else {
+                    p2Wins++;
+                    p2Status.textContent = `${reactionTime}ms! 승리!`;
+                    p1Status.textContent = '패배..';
+                }
+                updateScores();
+                resetBtn.style.display = 'block';
+            }
+        }
+
+        function updateScores() {
+            p1ScoreEl.textContent = p1Wins;
+            p2ScoreEl.textContent = p2Wins;
+        }
+
+        p1Zone.addEventListener('pointerdown', (e) => { e.preventDefault(); handleTouch(1); });
+        p2Zone.addEventListener('pointerdown', (e) => { e.preventDefault(); handleTouch(2); });
+
+        resetBtn.addEventListener('click', () => {
+            gameState = 'init';
+            p1Status.textContent = '준비되면 터치!';
+            p2Status.textContent = '준비되면 터치!';
+            p1Zone.className = 'player-zone p1-default';
+            p2Zone.className = 'player-zone p2-default';
+            resetBtn.style.display = 'none';
+        });
+
+        // Prevent context menu
+        window.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>네온 럭키 박스 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.info{color:#94a3b8;margin:10px 0;text-align:center}
+.player-label{font-size:1.5rem;font-weight:800;color:#fbbf24;margin:10px 0}
+.box-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;width:90%;max-width:400px;margin:20px 0}
+.box{aspect-ratio:1;border-radius:16px;background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(245,158,11,.15));border:2px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:2.5rem;cursor:pointer;transition:all .4s cubic-bezier(.175,.885,.32,1.275)}
+.box:hover{transform:scale(1.05);border-color:#fbbf24;box-shadow:0 0 20px rgba(251,191,36,.3)}
+.box.opened{cursor:default;transform:scale(1)}
+.box.opened:hover{transform:scale(1)}
+.box.safe{background:rgba(46,213,115,.1);border-color:#2ed573}
+.box.bomb{background:rgba(255,71,87,.2);border-color:#ff4757;animation:shakeBox .5s}
+@keyframes shakeBox{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
+.btn{background:linear-gradient(135deg,#f59e0b,#ef4444);border:none;color:#fff;padding:14px 40px;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;margin:15px}
+.result-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;z-index:50;text-align:center}
+.result-overlay.win{background:rgba(46,213,115,.9)}
+.result-overlay.lose{background:rgba(255,71,87,.9)}
+.result-overlay h2{font-size:3rem;font-weight:900}
+.result-overlay .emoji{font-size:6rem;margin:15px 0}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<h1>🎁 네온 럭키 박스</h1>
+<div class="info">돌아가며 상자 하나를 열어보세요! 꽝이 나오면 벌칙!</div>
+<div class="player-label" id="player-label">플레이어 1</div>
+<div class="box-grid" id="box-grid"></div>
+<div class="result-overlay" id="result-overlay">
+<div class="emoji" id="result-emoji"></div>
+<h2 id="result-text"></h2>
+<p style="font-size:1.3rem;margin:15px 0" id="result-detail"></p>
+<button class="btn" onclick="resetGame()" style="background:white;color:black">다시 하기</button>
+</div>
+<script>
+let boxes=[],bombIndex=-1,player=1,opened=0;
+function initGame(){
+const total=10;
+bombIndex=Math.floor(Math.random()*total);
+boxes=Array(total).fill('hidden');opened=0;player=1;
+document.getElementById('player-label').textContent='플레이어 1';
+const grid=document.getElementById('box-grid');
+grid.innerHTML=boxes.map((_,i)=>`<div class="box" data-i="${i}" onclick="openBox(${i})">🎁</div>`).join('');
+}
+function openBox(i){
+if(boxes[i]!=='hidden')return;
+const el=document.querySelector(`[data-i="${i}"]`);
+if(i===bombIndex){
+boxes[i]='bomb';el.className='box opened bomb';el.textContent='💥';
+setTimeout(()=>{
+const overlay=document.getElementById('result-overlay');
+overlay.className='result-overlay lose';overlay.style.display='flex';
+document.getElementById('result-emoji').textContent='💥';
+document.getElementById('result-text').textContent='펑! 꽝!';
+document.getElementById('result-detail').textContent=`플레이어 ${player}이(가) 벌칙!`;
+},500);
+}else{
+boxes[i]='safe';el.className='box opened safe';
+const prizes=['🌟','💎','🎉','✨','🏆','💰','🎊','🍀','👑'];
+el.textContent=prizes[Math.floor(Math.random()*prizes.length)];
+opened++;
+if(opened===boxes.length-1){
+setTimeout(()=>{
+const overlay=document.getElementById('result-overlay');
+overlay.className='result-overlay win';overlay.style.display='flex';
+document.getElementById('result-emoji').textContent='🎉';
+document.getElementById('result-text').textContent='모두 안전!';
+document.getElementById('result-detail').textContent='아무도 벌칙을 받지 않았습니다!';
+},500);
+return;
+}
+player++;document.getElementById('player-label').textContent=`플레이어 ${player}`;
+}
+}
+function resetGame(){
+document.getElementById('result-overlay').style.display='none';
+initGame();
+}
+initGame();
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>기억의 블록 쌓기 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.info{color:#94a3b8;margin:10px 0;font-size:.9rem}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:90%;max-width:400px;margin:20px 0}
+.cell{aspect-ratio:1;border-radius:12px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800}
+.cell.placed{border-color:transparent}
+.cell.highlight{animation:glow 1s infinite alternate}
+@keyframes glow{from{box-shadow:0 0 5px currentColor}to{box-shadow:0 0 20px currentColor}}
+.btn{background:linear-gradient(135deg,#8b5cf6,#3b82f6);border:none;color:#fff;padding:14px 40px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px}
+.palette{display:flex;gap:10px;margin:15px 0;flex-wrap:wrap;justify-content:center}
+.color-pick{width:40px;height:40px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .3s}
+.color-pick.active{border-color:white;transform:scale(1.2)}
+.phase-text{font-size:1.5rem;font-weight:800;margin:10px 0}
+.player-label{color:#a78bfa;font-weight:700}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<h1>🧱 기억의 블록 쌓기</h1>
+<div id="setup" style="text-align:center">
+    <div class="grid" style="margin:20px auto;max-width:200px">
+        <div class="cell placed" style="background:#8b5cf6">■</div><div class="cell"></div>
+        <div class="cell"></div><div class="cell placed" style="background:#3b82f6">■</div>
+    </div>
+    <p style="color:#94a3b8;margin:15px 0">참가자 수를 입력하세요 (2~30명)</p>
+    <input id="player-count" type="number" value="4" min="2" max="30" style="padding:15px;border-radius:15px;border:2px solid #8b5cf6;background:rgba(255,255,255,0.05);color:white;width:200px;text-align:center;font-size:1.2rem;outline:none">
+    <br><button class="btn" onclick="startGame()">기억의 블럭 시작!</button>
+</div>
+<div id="game" style="display:none">
+<div class="phase-text" id="phase">기억 단계</div>
+<div class="info" id="info">이전 블록의 위치와 색을 기억한 뒤 새 블록 1개를 추가하세요!</div>
+<div class="player-label" id="player-label">플레이어 1</div>
+<div class="grid" id="grid"></div>
+<div class="palette" id="palette" style="display:none"></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+<button class="btn" id="memorize-btn" onclick="endMemorize()">기억했어요!</button>
+<button class="btn" id="place-btn" onclick="placeBlock()" style="display:none">블록 배치 완료!</button>
+</div>
+</div>
+<script>
+const colors=['#ff4757','#1e90ff','#2ed573','#ffa502','#8b5cf6','#ec4899'];
+let totalPlayers=4,grid=Array(25).fill(null),player=1,selectedColor=colors[0],previewBlock=null,phase='memorize';
+
+function startGame(){
+    totalPlayers = Math.min(30, Math.max(2, +document.getElementById('player-count').value || 4));
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    render();
+}
+
+function render(){
+    const g=document.getElementById('grid');
+    g.innerHTML=grid.map((c,i)=>{
+        // Memorize phase: show all
+        if(phase === 'memorize') {
+            if(c) return `<div class="cell placed" style="background:${c};color:${c}" data-i="${i}">■</div>`;
+            return `<div class="cell" data-i="${i}"></div>`;
+        }
+        // Place phase: hide grid, show only preview
+        if(previewBlock && previewBlock.index === i) {
+            return `<div class="cell placed" style="background:${previewBlock.color};color:${previewBlock.color}" data-i="${i}" onclick="cellClick(${i})">■</div>`;
+        }
+        return `<div class="cell" data-i="${i}" onclick="cellClick(${i})"></div>`;
+    }).join('');
+}
+
+function renderPalette(){
+    document.getElementById('palette').innerHTML=colors.map(c=>`<div class="color-pick ${c===selectedColor?'active':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`).join('');
+}
+
+function selectColor(c) {
+    selectedColor = c;
+    if(previewBlock) previewBlock.color = c;
+    renderPalette();
+    render();
+}
+
+function cellClick(i){
+    if(phase!=='place') return;
+    if(grid[i]) {
+        alert('이미 블록이 있는 자리입니다! 다른 곳을 선택하세요.');
+        return;
+    }
+    previewBlock = {index: i, color: selectedColor};
+    render();
+}
+
+function endMemorize(){
+    phase='place';
+    previewBlock = null;
+    document.getElementById('phase').textContent='배치 단계';
+    document.getElementById('info').textContent='기억을 되살려 빈 칸에 새 블록 1개를 추가하세요!';
+    document.getElementById('palette').style.display='flex';
+    document.getElementById('memorize-btn').style.display='none';
+    document.getElementById('place-btn').style.display='';
+    render();
+    renderPalette();
+}
+
+function placeBlock(){
+    if(!previewBlock) {
+        alert('새로운 블록의 위치를 선택해주세요!');
+        return;
+    }
+    grid[previewBlock.index] = previewBlock.color;
+    previewBlock = null;
+    phase='memorize';
+    player++;
+    document.getElementById('player-label').textContent=`플레이어 ${player}`;
+    document.getElementById('phase').textContent='기억 단계';
+    document.getElementById('info').textContent='이전 블록들의 위치를 기억하고 다음 사람에게 넘기세요!';
+    document.getElementById('palette').style.display='none';
+    document.getElementById('memorize-btn').style.display='';
+    document.getElementById('place-btn').style.display='none';
+    render();
+}
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

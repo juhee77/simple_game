@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>네온 리듬 배틀 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;height:100vh;overflow:hidden;touch-action:none}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+h1{font-size:1.8rem;margin-top:50px;background:linear-gradient(135deg,#f97316,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.score-bar{display:flex;gap:30px;margin:20px 0;font-size:1.5rem;font-weight:800}
+.beat-track{flex:1;width:100%;display:flex;align-items:center;justify-content:center;position:relative}
+.ring{width:200px;height:200px;border-radius:50%;border:6px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;position:relative;transition:border-color .1s}
+.ring.hit{border-color:#2ed573;box-shadow:0 0 40px rgba(46,213,115,.5)}
+.ring.miss{border-color:#ff4757;box-shadow:0 0 40px rgba(255,71,87,.5)}
+.beat-dot{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ec4899);position:absolute;transform:scale(0);transition:transform .15s}
+.beat-dot.active{transform:scale(1)}
+.tap-zone{width:100%;padding:60px 0;text-align:center;cursor:pointer;font-size:1.5rem;color:#94a3b8;font-weight:600}
+.progress{width:80%;height:6px;background:rgba(255,255,255,.1);border-radius:3px;margin:10px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,#f97316,#ec4899);border-radius:3px;transition:width .1s}
+.result-screen{display:none;text-align:center;padding:40px}
+.result-screen .big{font-size:5rem;font-weight:900}
+.btn{background:linear-gradient(135deg,#f97316,#ec4899);border:none;color:#fff;padding:16px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:20px 0}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<h1>🥁 네온 리듬 배틀</h1>
+<div class="score-bar"><span>점수: <span id="score">0</span></span><span>콤보: <span id="combo">0</span></span></div>
+<div class="progress"><div class="progress-fill" id="progress"></div></div>
+<div class="beat-track">
+<div class="ring" id="ring"><div class="beat-dot" id="dot"></div><span style="font-size:3rem;pointer-events:none">🎵</span></div>
+</div>
+<div class="tap-zone" id="tap">화면을 탭하세요!</div>
+<div class="result-screen" id="result">
+<p style="color:#94a3b8;margin-bottom:10px">최종 점수</p>
+<div class="big" id="final-score">0</div>
+<p id="grade" style="font-size:2rem;margin:10px 0"></p>
+<p id="stats" style="color:#94a3b8"></p>
+<button class="btn" onclick="startGame()">다시 도전</button>
+</div>
+<script>
+let score=0,combo=0,maxCombo=0,perfect=0,good=0,miss=0,beatIndex=0,beats=[],gameActive=false,audioCtx;
+const bpm=120,beatInterval=60000/bpm,totalBeats=32;
+function startGame(){
+document.getElementById('result').style.display='none';
+document.querySelectorAll('.beat-track,.tap-zone,.score-bar,.progress').forEach(e=>e.style.display='');
+score=0;combo=0;maxCombo=0;perfect=0;good=0;miss=0;beatIndex=0;
+document.getElementById('score').textContent=0;document.getElementById('combo').textContent=0;
+beats=[];for(let i=0;i<totalBeats;i++)beats.push(Date.now()+2000+i*beatInterval);
+gameActive=true;audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+requestAnimationFrame(gameLoop);
+}
+function playClick(){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.frequency.value=800;g.gain.value=0.1;o.start();g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.1);o.stop(audioCtx.currentTime+0.1)}
+function gameLoop(){
+if(!gameActive)return;
+const now=Date.now();
+const progress=(beatIndex/totalBeats)*100;
+document.getElementById('progress').style.width=progress+'%';
+// Show upcoming beat
+const ring=document.getElementById('ring'),dot=document.getElementById('dot');
+if(beatIndex<totalBeats){
+const diff=beats[beatIndex]-now;
+if(diff<500&&diff>-300){dot.classList.add('active');const s=Math.max(0.5,Math.min(2,1+diff/500));dot.style.transform=`scale(${s})`}
+else{dot.classList.remove('active')}
+if(diff<-300){miss++;combo=0;document.getElementById('combo').textContent=combo;beatIndex++;ring.className='ring miss';setTimeout(()=>ring.className='ring',200)}
+}
+if(beatIndex>=totalBeats){endGame();return}
+requestAnimationFrame(gameLoop);
+}
+document.getElementById('tap').addEventListener('pointerdown',e=>{
+e.preventDefault();
+if(!gameActive){startGame();return}
+if(beatIndex>=totalBeats)return;
+const now=Date.now(),diff=Math.abs(beats[beatIndex]-now),ring=document.getElementById('ring');
+playClick();
+if(diff<80){perfect++;score+=100;combo++;ring.className='ring hit'}
+else if(diff<200){good++;score+=50;combo++;ring.className='ring hit'}
+else{miss++;combo=0;ring.className='ring miss'}
+maxCombo=Math.max(maxCombo,combo);
+document.getElementById('score').textContent=score;document.getElementById('combo').textContent=combo;
+beatIndex++;setTimeout(()=>ring.className='ring',200);
+});
+function endGame(){
+gameActive=false;
+document.querySelectorAll('.beat-track,.tap-zone,.score-bar,.progress').forEach(e=>e.style.display='none');
+document.getElementById('result').style.display='block';
+document.getElementById('final-score').textContent=score;
+const pct=score/(totalBeats*100)*100;
+document.getElementById('grade').textContent=pct>90?'S랭크! 🌟':pct>70?'A랭크 👏':pct>50?'B랭크 👍':'C랭크 💪';
+document.getElementById('stats').textContent=`Perfect: ${perfect} | Good: ${good} | Miss: ${miss} | 최대콤보: ${maxCombo}`;
+}
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

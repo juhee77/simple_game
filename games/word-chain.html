@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>단어 연상 릴레이 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.chain{width:90%;max-width:500px;margin:20px 0;display:flex;flex-direction:column;gap:12px;max-height:50vh;overflow-y:auto;padding:10px}
+.word-bubble{padding:12px 24px;border-radius:20px;font-size:1.2rem;font-weight:700;display:inline-block;max-width:80%;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.input-area{display:flex;gap:10px;width:90%;max-width:500px;margin:15px 0}
+.input-area input{flex:1;padding:14px 20px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.15);border-radius:50px;color:#fff;font-size:1.1rem;font-family:inherit;outline:none}
+.input-area input:focus{border-color:#10b981}
+.input-area button{background:linear-gradient(135deg,#10b981,#06b6d4);border:none;color:#fff;padding:14px 24px;border-radius:50px;font-weight:700;cursor:pointer;font-family:inherit;font-size:1rem}
+.player-label{font-size:1.3rem;font-weight:700;color:#2dd4bf}
+.btn{background:linear-gradient(135deg,#10b981,#06b6d4);border:none;color:#fff;padding:14px 40px;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
+.result{display:none;width:90%;max-width:500px;text-align:center}
+.result h2{font-size:2rem;margin:20px 0}
+.full-chain{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px 0}
+.full-chain span{padding:8px 16px;border-radius:16px;background:rgba(255,255,255,.05);font-weight:600}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<h1>💬 단어 연상 릴레이</h1>
+<div class="player-label" id="player-label">플레이어 1</div>
+<div class="chain" id="chain"></div>
+<div class="input-area" id="input-area">
+<input id="word-input" placeholder="연상되는 단어 입력" onkeydown="if(event.key==='Enter' && !event.isComposing)addWord()">
+<button onclick="addWord()">입력!</button>
+</div>
+<button class="btn" onclick="showResult()">결과 보기</button>
+<div class="result" id="result">
+<h2>📝 전체 연상 흐름</h2>
+<div class="full-chain" id="full-chain"></div>
+<p style="color:#94a3b8;margin:15px 0" id="stats"></p>
+<button class="btn" onclick="location.reload()">다시 하기</button>
+</div>
+<script>
+const colors=['#ff4757','#1e90ff','#2ed573','#ffa502','#8b5cf6','#ec4899','#06b6d4','#14b8a6'];
+let words=[],player=1;
+const startWords=['사랑','바다','커피','꿈','음악','여름','별','책'];
+const firstWord=startWords[Math.floor(Math.random()*startWords.length)];
+words.push(firstWord);
+renderChain();
+function addWord(){
+const input=document.getElementById('word-input'),w=input.value.trim();
+if(!w)return;words.push(w);player++;
+document.getElementById('player-label').textContent=`플레이어 ${player}`;
+input.value='';renderChain();input.focus();
+}
+function renderChain(){
+const chain=document.getElementById('chain');
+chain.innerHTML=words.map((w,i)=>{
+const align=i%2===0?'align-self:flex-start':'align-self:flex-end';
+return`<div class="word-bubble" style="background:${colors[i%colors.length]}20;color:${colors[i%colors.length]};border:1px solid ${colors[i%colors.length]}40;${align}">${i===0?'🌟 ':''}${w}</div>`;
+}).join('');
+chain.scrollTop=chain.scrollHeight;
+}
+function showResult(){
+document.getElementById('input-area').style.display='none';
+document.querySelector('.btn').style.display='none';
+document.getElementById('player-label').style.display='none';
+document.getElementById('result').style.display='block';
+document.getElementById('full-chain').innerHTML=words.map((w,i)=>`<span style="color:${colors[i%colors.length]}">${w}${i<words.length-1?' →':''}</span>`).join('');
+document.getElementById('stats').textContent=`총 ${words.length}개 단어, ${player-1}명 참여`;
+}
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

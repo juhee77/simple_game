@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>네온 흔들기 대결 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+h1{font-size:1.8rem;background:linear-gradient(135deg,#f97316,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.count{font-size:8rem;font-weight:900;text-shadow:0 0 40px rgba(249,115,22,.5);transition:transform .05s}
+.count.shake{animation:shakeAnim .1s}
+@keyframes shakeAnim{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
+.timer{font-size:2rem;color:#94a3b8;margin:10px 0}
+.bar{width:80%;height:12px;background:rgba(255,255,255,.1);border-radius:6px;margin:15px 0}
+.bar-fill{height:100%;background:linear-gradient(90deg,#f97316,#fbbf24);border-radius:6px;transition:width .1s}
+.btn{background:linear-gradient(135deg,#f97316,#fbbf24);border:none;color:#fff;padding:16px 50px;font-size:1.3rem;font-weight:700;border-radius:50px;cursor:pointer;margin:20px}
+.result{display:none;text-align:center}
+.result .big{font-size:5rem;font-weight:900;color:#fbbf24}
+.hint{color:#64748b;font-size:.9rem;margin-top:10px}
+.alt-tap{width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,rgba(249,115,22,.2),rgba(251,191,36,.2));border:3px solid rgba(249,115,22,.3);display:none;align-items:center;justify-content:center;font-size:1.2rem;color:#94a3b8;cursor:pointer;margin:20px 0}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<h1>📱 네온 흔들기 대결</h1>
+<div id="game" style="text-align:center">
+<div class="timer" id="timer">30초</div>
+<div class="count" id="count">0</div>
+<div class="bar"><div class="bar-fill" id="bar"></div></div>
+<div class="alt-tap" id="alt-tap">탭하세요!<br>(흔들기 불가 시)</div>
+<button class="btn" id="start-btn">시작!</button>
+<div class="hint">폰을 힘차게 흔드세요! (또는 화면을 빠르게 탭)</div>
+</div>
+<div class="result" id="result">
+<p style="color:#94a3b8">최종 기록</p>
+<div class="big" id="final">0회</div>
+<p id="grade" style="font-size:2rem;margin:10px 0"></p>
+<button class="btn" onclick="reset()">다시 도전</button>
+</div>
+<script>
+let shakeCount=0,timeLeft=30,interval,active=false,lastAcc={x:0,y:0,z:0},threshold=15;
+const countEl=document.getElementById('count'),timerEl=document.getElementById('timer'),barEl=document.getElementById('bar'),altTap=document.getElementById('alt-tap');
+document.getElementById('start-btn').addEventListener('click',start);
+function start(){
+active=true;shakeCount=0;timeLeft=30;
+document.getElementById('start-btn').style.display='none';
+altTap.style.display='flex';
+if(window.DeviceMotionEvent){
+window.addEventListener('devicemotion',onMotion);
+if(typeof DeviceMotionEvent.requestPermission==='function'){
+DeviceMotionEvent.requestPermission().then(r=>{if(r==='granted')window.addEventListener('devicemotion',onMotion)});
+}
+}
+interval=setInterval(()=>{
+timeLeft--;timerEl.textContent=timeLeft+'초';barEl.style.width=(timeLeft/30*100)+'%';
+if(timeLeft<=0){clearInterval(interval);active=false;showResult()}
+},1000);
+}
+function onMotion(e){
+if(!active)return;
+const a=e.accelerationIncludingGravity;if(!a)return;
+const d=Math.abs(a.x-lastAcc.x)+Math.abs(a.y-lastAcc.y)+Math.abs(a.z-lastAcc.z);
+lastAcc={x:a.x,y:a.y,z:a.z};
+if(d>threshold){shakeCount++;countEl.textContent=shakeCount;countEl.classList.add('shake');setTimeout(()=>countEl.classList.remove('shake'),100)}
+}
+altTap.addEventListener('pointerdown',e=>{
+e.preventDefault();if(!active)return;
+shakeCount++;countEl.textContent=shakeCount;countEl.classList.add('shake');setTimeout(()=>countEl.classList.remove('shake'),100);
+});
+function showResult(){
+document.getElementById('game').style.display='none';
+document.getElementById('result').style.display='block';
+document.getElementById('final').textContent=shakeCount+'회';
+const g=shakeCount>200?'🔥 미친 속도!':shakeCount>100?'💪 대단해요!':shakeCount>50?'👍 괜찮아요!':'😅 더 흔들어!';
+document.getElementById('grade').textContent=g;
+}
+function reset(){document.getElementById('game').style.display='';document.getElementById('result').style.display='none';document.getElementById('start-btn').style.display='';altTap.style.display='none';countEl.textContent='0';timerEl.textContent='30초';barEl.style.width='100%'}
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>

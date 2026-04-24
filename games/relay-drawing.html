@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>5초 릴레이 드로잉 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.back{position:absolute;top:20px;left:20px;z-index:10}
+h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#f97316,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.setup{text-align:center;width:90%;max-width:400px}
+.setup input{width:80%;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1rem;font-family:inherit;margin:15px 0}
+.btn{background:linear-gradient(135deg,#f97316,#ec4899);border:none;color:#fff;padding:14px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
+.draw-area{display:none;width:100%;max-width:500px;text-align:center}
+.timer-bar{width:100%;height:8px;background:rgba(255,255,255,.1);border-radius:4px;margin:10px 0}
+.timer-fill{height:100%;background:linear-gradient(90deg,#f97316,#ec4899);border-radius:4px;transition:width .1s linear}
+.player-name{font-size:1.5rem;font-weight:800;margin:5px 0}
+canvas{width:100%;border-radius:20px;border:2px solid rgba(255,255,255,.1);background:white;touch-action:none}
+.pass-screen{display:none;text-align:center;width:90%;max-width:400px}
+.pass-screen h2{font-size:2rem;margin:20px 0}
+.gallery{display:none;width:90%;max-width:500px;text-align:center}
+.gallery img{width:100%;border-radius:20px;margin:10px 0}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back back-button">← 메인</a>
+<h1>✏️ 5초 릴레이 드로잉</h1>
+<div class="setup" id="setup">
+<p style="color:#94a3b8;margin:15px 0">참가자 수를 입력하세요</p>
+<input id="player-count" type="number" placeholder="참가자 수 (2~30)" min="2" max="30" value="4">
+<br><button class="btn" onclick="startGame()">시작!</button>
+</div>
+<div class="draw-area" id="draw-area">
+<div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+<div class="player-name" id="player-name"></div>
+<canvas id="canvas" width="500" height="500"></canvas>
+</div>
+<div class="pass-screen" id="pass-screen">
+<h2>📱 다음 사람에게 넘기세요!</h2>
+<p style="color:#94a3b8" id="next-player"></p>
+<button class="btn" onclick="nextTurn()">준비 완료!</button>
+</div>
+<div class="gallery" id="gallery">
+<h2 style="font-size:2rem;margin:20px 0">🎨 완성된 작품!</h2>
+<canvas id="gallery-canvas" width="500" height="500" style="width:100%;border-radius:20px"></canvas>
+<button class="btn" onclick="location.reload()">다시 하기</button>
+</div>
+<script>
+let total=4,current=0,timer=null,drawing=false,lastX=0,lastY=0;
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+const colors=['#ff4757','#1e90ff','#2ed573','#ffa502','#8b5cf6','#ec4899','#00cec9','#fd79a8','#e17055','#636e72','#fbc531','#4cd137','#487eb0','#0097e6','#8c7ae6','#e84118','#7f8c8d','#2c3e50','#27ae60','#2980b9','#8e44ad','#f39c12','#d35400','#c0392b','#bdc3c7','#7f8c8d','#bdc3c7','#16a085','#27ae60','#2980b9'];
+function startGame(){
+total=Math.min(30,Math.max(2,+document.getElementById('player-count').value||4));current=0;
+document.getElementById('setup').style.display='none';
+ctx.fillStyle='white';ctx.fillRect(0,0,500,500);
+showPass();
+}
+function showPass(){
+document.getElementById('draw-area').style.display='none';
+document.getElementById('pass-screen').style.display='block';
+document.getElementById('next-player').textContent=`플레이어 ${current+1}의 차례입니다`;
+}
+function nextTurn(){
+document.getElementById('pass-screen').style.display='none';
+document.getElementById('draw-area').style.display='block';
+document.getElementById('player-name').textContent=`플레이어 ${current+1}`;
+document.getElementById('player-name').style.color=colors[current%colors.length];
+let timeLeft=5;document.getElementById('timer-fill').style.width='100%';
+timer=setInterval(()=>{
+timeLeft-=0.05;
+document.getElementById('timer-fill').style.width=(timeLeft/5*100)+'%';
+if(timeLeft<=0){clearInterval(timer);endTurn()}
+},50);
+}
+function endTurn(){
+current++;
+if(current>=total){showGallery();return}
+showPass();
+}
+function showGallery(){
+document.getElementById('draw-area').style.display='none';
+document.getElementById('gallery').style.display='block';
+const gc=document.getElementById('gallery-canvas').getContext('2d');
+gc.drawImage(canvas,0,0);
+}
+canvas.addEventListener('pointerdown',e=>{drawing=true;const r=canvas.getBoundingClientRect();const s=500/r.width;lastX=(e.clientX-r.left)*s;lastY=(e.clientY-r.top)*s});
+canvas.addEventListener('pointermove',e=>{
+if(!drawing)return;const r=canvas.getBoundingClientRect();const s=500/r.width;
+const x=(e.clientX-r.left)*s,y=(e.clientY-r.top)*s;
+ctx.strokeStyle=colors[current%colors.length];ctx.lineWidth=4;ctx.lineCap='round';
+ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();
+lastX=x;lastY=y;
+});
+canvas.addEventListener('pointerup',()=>drawing=false);
+canvas.addEventListener('pointerleave',()=>drawing=false);
+</script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>
