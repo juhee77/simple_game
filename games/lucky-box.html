@@ -8,7 +8,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
 .back{position:absolute;top:20px;left:20px;z-index:10}
-h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .info{color:#94a3b8;margin:10px 0;text-align:center}
 .player-label{font-size:1.5rem;font-weight:800;color:#fbbf24;margin:10px 0}
 .box-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;width:90%;max-width:400px;margin:20px 0}
@@ -30,54 +30,80 @@ h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#f59e0b,
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
 <h1>🎁 네온 럭키 박스</h1>
+<div id="setup" style="text-align:center;width:90%;max-width:400px;margin-top:40px">
+    <div style="font-size:4rem;margin-bottom:20px">🎁</div>
+    <p style="color:#94a3b8;margin:15px 0">친구들과 함께 상자를 하나씩 열어보세요!</p>
+    <div style="margin-bottom:20px">
+        <label style="display:block;color:#64748b;font-size:0.8rem;margin-bottom:5px">참가자 수 (2~30명)</label>
+        <input id="player-count" type="number" value="4" min="2" max="30" style="padding:15px;border-radius:15px;border:2px solid #f59e0b;background:rgba(255,255,255,0.05);color:white;width:100%;text-align:center;font-size:1.2rem;outline:none">
+    </div>
+    <button class="btn" onclick="startGame()">게임 시작!</button>
+</div>
+
+<div id="game" style="display:none;text-align:center;width:100%">
 <div class="info">돌아가며 상자 하나를 열어보세요! 꽝이 나오면 벌칙!</div>
 <div class="player-label" id="player-label">플레이어 1</div>
-<div class="box-grid" id="box-grid"></div>
+<div class="box-grid" id="box-grid" style="margin:20px auto"></div>
+</div>
+
 <div class="result-overlay" id="result-overlay">
 <div class="emoji" id="result-emoji"></div>
 <h2 id="result-text"></h2>
 <p style="font-size:1.3rem;margin:15px 0" id="result-detail"></p>
-<button class="btn" onclick="resetGame()" style="background:white;color:black">다시 하기</button>
+<button class="btn" onclick="location.reload()" style="background:white;color:black">다시 하기</button>
 </div>
+
 <script>
-let boxes=[],bombIndex=-1,player=1,opened=0;
+let boxes=[],bombIndex=-1,player=1,totalPlayers=4,opened=0;
+
+function startGame(){
+    totalPlayers = Math.min(30, Math.max(2, +document.getElementById('player-count').value || 4));
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    initGame();
+}
+
 function initGame(){
-const total=10;
-bombIndex=Math.floor(Math.random()*total);
-boxes=Array(total).fill('hidden');opened=0;player=1;
-document.getElementById('player-label').textContent='플레이어 1';
-const grid=document.getElementById('box-grid');
-grid.innerHTML=boxes.map((_,i)=>`<div class="box" data-i="${i}" onclick="openBox(${i})">🎁</div>`).join('');
+    const total = totalPlayers; 
+    bombIndex = Math.floor(Math.random() * total);
+    boxes = Array(total).fill('hidden');
+    opened = 0;
+    player = 1;
+    document.getElementById('player-label').textContent = '플레이어 1';
+    document.getElementById('game').querySelector('.info').textContent = `총 ${total}명의 참가자 중 딱 1명만 꽝! 조심해서 여세요.`;
+    const grid = document.getElementById('box-grid');
+    grid.style.gridTemplateColumns = total > 15 ? 'repeat(5,1fr)' : (total > 8 ? 'repeat(4,1fr)' : 'repeat(3,1fr)');
+    grid.innerHTML = boxes.map((_, i) => `<div class="box" data-i="${i}" onclick="openBox(${i})">🎁</div>`).join('');
 }
+
 function openBox(i){
-if(boxes[i]!=='hidden')return;
-const el=document.querySelector(`[data-i="${i}"]`);
-if(i===bombIndex){
-boxes[i]='bomb';el.className='box opened bomb';el.textContent='💥';
-setTimeout(()=>{
-const overlay=document.getElementById('result-overlay');
-overlay.className='result-overlay lose';overlay.style.display='flex';
-document.getElementById('result-emoji').textContent='💥';
-document.getElementById('result-text').textContent='펑! 꽝!';
-document.getElementById('result-detail').textContent=`플레이어 ${player}이(가) 벌칙!`;
-},500);
-}else{
-boxes[i]='safe';el.className='box opened safe';
-const prizes=['🌟','💎','🎉','✨','🏆','💰','🎊','🍀','👑'];
-el.textContent=prizes[Math.floor(Math.random()*prizes.length)];
-opened++;
-if(opened===boxes.length-1){
-setTimeout(()=>{
-const overlay=document.getElementById('result-overlay');
-overlay.className='result-overlay win';overlay.style.display='flex';
-document.getElementById('result-emoji').textContent='🎉';
-document.getElementById('result-text').textContent='모두 안전!';
-document.getElementById('result-detail').textContent='아무도 벌칙을 받지 않았습니다!';
-},500);
-return;
-}
-player++;document.getElementById('player-label').textContent=`플레이어 ${player}`;
-}
+    if(boxes[i] !== 'hidden') return;
+    const el = document.querySelector(`[data-i="${i}"]`);
+    if(i === bombIndex){
+        boxes[i] = 'bomb';
+        el.className = 'box opened bomb';
+        el.textContent = '💥';
+        setTimeout(() => {
+            const overlay = document.getElementById('result-overlay');
+            overlay.className = 'result-overlay lose';
+            overlay.style.display = 'flex';
+            document.getElementById('result-emoji').textContent = '💥';
+            document.getElementById('result-text').textContent = '펑! 꽝!';
+            document.getElementById('result-detail').textContent = `플레이어 ${player}님이 꽝을 뽑았습니다!`;
+        }, 500);
+    } else {
+        boxes[i] = 'safe';
+        el.className = 'box opened safe';
+        const prizes = ['🌟','💎','🎉','✨','🏆','💰','🎊','🍀','👑'];
+        el.textContent = prizes[Math.floor(Math.random() * prizes.length)];
+        opened++;
+        
+        // Delay switching player label for better UX
+        setTimeout(() => {
+            player = (player % totalPlayers) + 1;
+            document.getElementById('player-label').textContent = `플레이어 ${player}`;
+        }, 500);
+    }
 }
 function resetGame(){
 document.getElementById('result-overlay').style.display='none';

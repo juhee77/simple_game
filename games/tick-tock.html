@@ -27,9 +27,20 @@ input:focus{border-color:#ef4444}
 <a href="../index.html" class="back back-button">← 메인</a>
 <div class="setup" id="setup" style="text-align:center">
 <div class="bomb">💣</div>
-<p style="color:#94a3b8;margin:15px 0">참가자 수를 입력하세요 (2~30명)</p>
-<input id="player-count" type="number" placeholder="참가자 수" min="2" max="30" value="4" style="width:80%;margin-bottom:20px">
-<br><button class="btn" onclick="startGame()">폭탄 가동!</button>
+<p style="color:#94a3b8;margin:15px 0">게임 설정을 선택하세요</p>
+<div style="margin-bottom:15px">
+    <label style="display:block;color:#64748b;font-size:0.8rem;margin-bottom:5px">참가자 수 (2~30명)</label>
+    <input id="player-count" type="number" placeholder="참가자 수" min="2" max="30" value="4" style="width:80%">
+</div>
+<div style="margin-bottom:20px">
+    <label style="display:block;color:#64748b;font-size:0.8rem;margin-bottom:5px">폭발 타이머 난이도</label>
+    <select id="timer-mode" style="width:80%;padding:14px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.15);border-radius:16px;color:#fff;font-size:1.1rem;font-family:inherit;outline:none;appearance:none;text-align:center">
+        <option value="short">짧게 (10~20초)</option>
+        <option value="normal" selected>보통 (20~40초)</option>
+        <option value="long">길게 (40~80초)</option>
+    </select>
+</div>
+<button class="btn" onclick="startGame()">폭탄 가동!</button>
 </div>
 <div id="game" style="text-align:center;display:none">
 <div class="player-label" id="player-label" style="font-size:1.5rem;font-weight:800;color:#ef4444;margin-bottom:10px">플레이어 1</div>
@@ -76,41 +87,46 @@ let hintTimeout, canSkip = false;
 
 function startGame(){
     totalPlayers = Math.min(30, Math.max(2, +document.getElementById('player-count').value || 4));
+    timerMode = document.getElementById('timer-mode').value;
     currentPlayer = 1;
     document.getElementById('setup').style.display = 'none';
     document.getElementById('game').style.display = 'block';
     init();
 }
 function init(){
-timeLeft=20+Math.floor(Math.random()*20); // 20~40s
-quizzes=[...categories].sort(()=>Math.random()-.5);
-currentQ=0;showQuiz();
-const bomb=document.getElementById('bomb');
-if(timer) clearInterval(timer);
-timer=setInterval(()=>{
-timeLeft-=0.1;
-if(timeLeft<5)bomb.classList.add('fast');
-document.getElementById('timer-text').textContent=timeLeft>3?'틱... 탁...':'⚠️ 곧 터집니다!';
-if(timeLeft<=0){clearInterval(timer);explode()}
-},100);
+    let minT = 20, maxT = 40;
+    if(timerMode === 'short') { minT = 10; maxT = 20; }
+    else if(timerMode === 'long') { minT = 40; maxT = 80; }
+    
+    timeLeft = minT + Math.floor(Math.random() * (maxT - minT));
+    quizzes = [...categories].sort(() => Math.random() - .5);
+    currentQ = 0; showQuiz();
+    const bomb = document.getElementById('bomb');
+    if(timer) clearInterval(timer);
+    timer = setInterval(() => {
+        timeLeft -= 0.1;
+        if(timeLeft < 5) bomb.classList.add('fast');
+        document.getElementById('timer-text').textContent = timeLeft > 3 ? '틱... 탁...' : '⚠️ 곧 터집니다!';
+        if(timeLeft <= 0) { clearInterval(timer); explode() }
+    }, 100);
 }
 function showQuiz(){
-if(currentQ>=quizzes.length)currentQ=0;
-canSkip = false;
-document.getElementById('quiz').textContent=quizzes[currentQ].q;
-document.getElementById('player-label').textContent=`플레이어 ${currentPlayer}`;
-document.getElementById('answer').value='';
-document.getElementById('answer').placeholder='정답 입력';
-document.getElementById('submit-btn').textContent='제출 & 넘기기!';
-document.getElementById('answer').focus();
+    if(currentQ >= quizzes.length) currentQ = 0;
+    canSkip = false;
+    document.getElementById('quiz').textContent = quizzes[currentQ].q;
+    document.getElementById('player-label').textContent = `플레이어 ${currentPlayer}`;
+    document.getElementById('answer').value = '';
+    document.getElementById('answer').placeholder = '정답 입력';
+    document.getElementById('submit-btn').textContent = '제출 & 넘기기!';
+    document.getElementById('answer').focus();
 
-clearTimeout(hintTimeout);
-hintTimeout = setTimeout(() => {
-    canSkip = true;
-    const correct = quizzes[currentQ].a;
-    document.getElementById('answer').placeholder = `정답: ${correct}`;
-    document.getElementById('submit-btn').textContent = `몰라요! (정답: ${correct})`;
-}, 3000);
+    clearTimeout(hintTimeout);
+    hintTimeout = setTimeout(() => {
+        canSkip = true;
+        const correct = quizzes[currentQ].a;
+        document.getElementById('answer').placeholder = `정답: ${correct}`;
+        document.getElementById('submit-btn').textContent = `몰라요! (정답: ${correct})`;
+    }, 10000);
 }
 function submit(){
     const input = document.getElementById('answer');

@@ -8,83 +8,124 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
 .back{position:absolute;top:20px;left:20px;z-index:10}
-h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#f472b6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.face-card{width:90%;max-width:400px;aspect-ratio:.75;background:rgba(255,255,255,.05);border-radius:30px;border:2px solid rgba(236,72,153,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:20px 0;font-size:8rem;position:relative;overflow:hidden}
-.face-card .prompt{position:absolute;top:15px;font-size:1rem;color:#94a3b8;font-weight:600}
-.face-card .player-tag{position:absolute;bottom:15px;padding:6px 20px;border-radius:20px;background:rgba(236,72,153,.2);color:#ec4899;font-weight:700;font-size:.9rem}
-.btn{background:linear-gradient(135deg,#f472b6,#ec4899);border:none;color:#fff;padding:14px 40px;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
-.expression-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:90%;max-width:400px;margin:15px 0}
+h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#f472b6,#ec4899);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+@keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.face-card{width:90%;max-width:400px;min-height:300px;background:rgba(255,255,255,.08);border-radius:30px;border:3px solid #ec4899;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:20px auto;font-size:8rem;color:#fff;box-shadow:0 0 30px rgba(236,72,153,.2)}
 .expr-btn{font-size:3rem;padding:20px;border-radius:20px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);cursor:pointer;transition:all .3s;text-align:center}
 .expr-btn:hover{border-color:#ec4899;transform:scale(1.05)}
-.expr-btn.selected{border-color:#ec4899;background:rgba(236,72,153,.1)}
-.gallery{display:flex;flex-wrap:wrap;gap:15px;justify-content:center;margin:20px 0}
-.gallery-item{text-align:center}
-.gallery-item .face{font-size:4rem;width:100px;height:100px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border-radius:20px}
-.gallery-item .name{font-size:.85rem;color:#94a3b8;margin-top:5px}
+.btn{background:linear-gradient(135deg,#f472b6,#ec4899);border:none;color:#fff;padding:14px 40px;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;margin:15px;box-shadow:0 0 20px rgba(236,72,153,.3);transition:all .3s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 5px 25px rgba(236,72,153,.5)}
+.gallery{display:none}
 </style>
 </head>
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
 <h1>🤪 네온 표정 따라하기</h1>
-<div id="setup" style="text-align:center">
-    <div class="face-card" style="font-size:5rem;margin:20px auto">🤔</div>
-    <p style="color:#94a3b8;margin:15px 0">참가자 수를 입력하세요 (2~30명)</p>
-    <input id="player-count" type="number" value="4" min="2" max="30" style="padding:15px;border-radius:15px;border:2px solid #ec4899;background:rgba(255,255,255,0.05);color:white;width:200px;text-align:center;font-size:1.2rem;outline:none">
-    <br><button class="btn" onclick="startGame()">표정 릴레이 시작!</button>
+<div id="setup" style="text-align:center;width:90%;max-width:400px;margin-top:40px">
+    <div style="font-size:4rem;margin-bottom:20px">🎭</div>
+    <p style="color:#94a3b8;margin:15px 0">상대의 표정을 보고 어떤 이모지였는지 맞히세요!</p>
+    <div style="margin-bottom:20px">
+        <label style="display:block;color:#64748b;font-size:0.8rem;margin-bottom:5px">참가자 수 (2~30명)</label>
+        <input id="player-count" type="number" value="4" min="2" max="30" style="padding:15px;border-radius:15px;border:2px solid #ec4899;background:rgba(255,255,255,0.05);color:white;width:100%;text-align:center;font-size:1.2rem;outline:none">
+    </div>
+    <button class="btn" onclick="startGame()">도전 시작!</button>
 </div>
-<div id="game" style="display:none">
-<div class="face-card" id="face-card">
-<div class="prompt">이 표정을 따라해보세요!</div>
-<span id="current-face">😄</span>
-<div class="player-tag" id="player-tag">플레이어 1</div>
+
+<div id="game" style="display:none;width:100%;max-width:400px;text-align:center;margin-top:20px;padding:10px">
+    <div id="player-label" style="font-size:1.5rem;font-weight:700;color:#f472b6;margin-bottom:10px">플레이어 1의 차례</div>
+    <div id="phase-container"></div>
 </div>
-<p style="color:#94a3b8;text-align:center;margin:5px 0">표정을 따라한 뒤 어떤 표정인지 선택하세요!</p>
-<div class="expression-grid" id="expr-grid"></div>
-<button class="btn" onclick="nextTurn()">다음 사람에게 넘기기</button>
+
+<div id="game-over" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.95);flex-direction:column;align-items:center;justify-content:center;z-index:100;text-align:center">
+    <div style="font-size:5rem;margin-bottom:20px">❌😵</div>
+    <h2 style="font-size:2.5rem;color:#ef4444;margin-bottom:10px">오답입니다!</h2>
+    <p style="font-size:1.2rem;color:#94a3b8;margin-bottom:30px" id="loser-msg"></p>
+    <button class="btn" onclick="location.reload()" style="background:white;color:black">다시 도전</button>
 </div>
-<div id="result" style="display:none;text-align:center;width:90%;max-width:500px;margin:0 auto">
-<h2 style="font-size:2rem;margin:20px 0">📸 표정 갤러리</h2>
-<div class="gallery" id="gallery"></div>
-<button class="btn" onclick="location.reload()">다시 하기</button>
-</div>
+
 <script>
-const faces=['😄','😢','😡','😱','🤔','😴','🤩','😤','🥺','😎','🤢','😜','🫣','😏','🥳'];
-let totalPlayers=4,player=1,history=[],currentFace='',selectedFace='';
+const emojis=['😂','😍','🤔','😱','😎','🤩','😡','🙄','🥳','🥺','😴','👽','🤡','👻','🦁','🐶'];
+let totalPlayers=4, currentPlayer=1, targetEmoji='', phase='show';
 
 function startGame(){
     totalPlayers = Math.min(30, Math.max(2, +document.getElementById('player-count').value || 4));
     document.getElementById('setup').style.display = 'none';
-    document.getElementById('game').style.display = 'block';
-    newFace();
+    const game = document.getElementById('game');
+    game.style.display = 'block';
+    game.style.visibility = 'visible';
+    game.style.opacity = '1';
+    nextTurn();
 }
-function newFace(){
-currentFace=faces[Math.floor(Math.random()*faces.length)];
-document.getElementById('current-face').textContent=currentFace;
-document.getElementById('player-tag').textContent=`플레이어 ${player}`;
-renderGrid();
-}
-function renderGrid(){
-const shuffled=[...faces].sort(()=>Math.random()-.5).slice(0,9);
-if(!shuffled.includes(currentFace)){shuffled[Math.floor(Math.random()*9)]=currentFace}
-document.getElementById('expr-grid').innerHTML=shuffled.map(f=>
-`<div class="expr-btn ${f===selectedFace?'selected':''}" onclick="selectFace('${f}')">${f}</div>`
-).join('');
-}
-function selectFace(f){selectedFace=f;renderGrid()}
+
 function nextTurn(){
-history.push({player,target:currentFace,chosen:selectedFace||'❓'});
-player++;selectedFace='';
-    if(player>totalPlayers){showResult();return}
-newFace();
+    phase = 'show';
+    targetEmoji = emojis[Math.floor(Math.random()*emojis.length)];
+    render();
 }
-function showResult(){
-document.getElementById('game').style.display='none';
-document.getElementById('result').style.display='block';
-document.getElementById('gallery').innerHTML=history.map(h=>
-`<div class="gallery-item"><div class="face">${h.target}</div><div class="name">P${h.player}: ${h.chosen}${h.target===h.chosen?' ✅':' ❌'}</div></div>`
-).join('');
+
+function render(){
+    const container = document.getElementById('phase-container');
+    const label = document.getElementById('player-label');
+    if(!container || !label) return;
+    
+    if(phase === 'show') {
+        label.textContent = `플레이어 ${currentPlayer}의 차례 (표정 짓기)`;
+        container.innerHTML = `
+            <div class="face-card" style="font-size:8rem;margin:20px auto;animation:pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)">${targetEmoji}</div>
+            <p class="info" style="color:#94a3b8;margin-bottom:15px">위 표정을 지은 채로 다음 사람에게 폰을 넘기세요!</p>
+            <button class="btn" onclick="goToPass()">흉내 완료 & 넘기기</button>
+        `;
+    } else if(phase === 'pass') {
+        const nextP = (currentPlayer % totalPlayers) + 1;
+        label.textContent = `다음 플레이어에게 전달하세요`;
+        container.innerHTML = `
+            <div style="font-size:5rem;margin:40px 0">📱➡👤</div>
+            <p class="info" style="color:#94a3b8;margin-bottom:15px">플레이어 ${nextP}님이 폰을 받으면 확인을 눌러주세요.</p>
+            <button class="btn" onclick="goToGuess()">받았습니다!</button>
+        `;
+    } else if(phase === 'guess') {
+        const nextP = (currentPlayer % totalPlayers) + 1;
+        label.textContent = `플레이어 ${nextP}의 차례 (정답 맞히기)`;
+        
+        let options = [targetEmoji];
+        while(options.length < 4) {
+            let rand = emojis[Math.floor(Math.random()*emojis.length)];
+            if(!options.includes(rand)) options.push(rand);
+        }
+        options.sort(() => Math.random() - 0.5);
+        
+        container.innerHTML = `
+            <p class="info" style="color:#94a3b8;margin-bottom:15px">이전 플레이어가 지었던 표정은 무엇일까요?</p>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin-top:10px">
+                ${options.map(opt => `<div class="expr-btn" onclick="checkAnswer('${opt}')" style="font-size:3rem;padding:20px">${opt}</div>`).join('')}
+            </div>
+        `;
+    }
 }
-newFace();
+
+function goToPass(){
+    phase = 'pass';
+    render();
+}
+
+function goToGuess(){
+    phase = 'guess';
+    render();
+}
+
+function checkAnswer(selected){
+    if(selected === targetEmoji) {
+        currentPlayer = (currentPlayer % totalPlayers) + 1;
+        nextTurn();
+    } else {
+        const nextP = (currentPlayer % totalPlayers) + 1;
+        document.getElementById('loser-msg').textContent = `플레이어 ${nextP}님이 틀렸습니다! 정답은 ${targetEmoji} 였습니다.`;
+        document.getElementById('game-over').style.display = 'flex';
+    }
+}
 </script>
     <script src="../scripts/game-common.js"></script>
 </body>
