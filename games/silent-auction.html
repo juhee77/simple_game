@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>침묵 경매 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(251, 191, 36, 0.18), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.16), transparent 30%),
+                #0f172a;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            max-width: 920px;
+            padding-top: 1.5rem;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.76);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 26px;
+            padding: 1.4rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .hero-copy,
+        .subtitle-copy {
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.75;
+        }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .field label {
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--text-primary);
+            font: inherit;
+        }
+
+        .field-help {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .status-strip {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 800;
+            background: rgba(251, 191, 36, 0.14);
+            color: #fde68a;
+        }
+
+        .word-card,
+        .player-card,
+        .result-card,
+        .play-card {
+            text-align: center;
+        }
+
+        .target-word {
+            font-size: clamp(2rem, 7vw, 3rem);
+            font-weight: 900;
+            line-height: 1.3;
+            margin: 0.9rem 0 0.6rem;
+        }
+
+        .player-name {
+            font-size: clamp(2rem, 7vw, 2.8rem);
+            font-weight: 900;
+            margin: 1rem 0;
+        }
+
+        .bid-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.8rem;
+            margin-top: 1.2rem;
+        }
+
+        .bid-copy {
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        .bid-btn {
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            background: rgba(15, 23, 42, 0.82);
+            color: var(--text-primary);
+            border-radius: 18px;
+            padding: 1rem 0.6rem;
+            font: inherit;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .bid-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(251, 191, 36, 0.55);
+            box-shadow: 0 14px 24px rgba(15, 23, 42, 0.22);
+        }
+
+        .bid-label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .bid-value {
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .scoreboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.85rem;
+            margin-top: 1.2rem;
+        }
+
+        .score-box {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 18px;
+            padding: 1rem 0.9rem;
+            text-align: center;
+        }
+
+        .score-label {
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+
+        .auction-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 1rem 0 1.3rem;
+        }
+
+        .auction-copy {
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .auction-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .auction-row.winner {
+            border-color: rgba(251, 191, 36, 0.5);
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(249, 115, 22, 0.12));
+        }
+
+        .auction-player {
+            font-weight: 800;
+        }
+
+        .auction-bid {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #fde68a;
+        }
+
+        .countdown-ring {
+            width: min(230px, 62vw);
+            aspect-ratio: 1;
+            margin: 1.2rem auto;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(circle, rgba(15, 23, 42, 0.95) 55%, transparent 56%),
+                conic-gradient(#f59e0b calc(var(--progress) * 1%), rgba(148, 163, 184, 0.16) 0);
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
+        }
+
+        .countdown-center {
+            text-align: center;
+        }
+
+        .countdown-seconds {
+            font-size: clamp(2rem, 9vw, 3.4rem);
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .countdown-caption {
+            color: var(--text-secondary);
+            margin-top: 0.45rem;
+        }
+
+        .play-word-limit {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1rem;
+            border-radius: 999px;
+            background: rgba(14, 165, 233, 0.15);
+            color: #bae6fd;
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-size: clamp(1.9rem, 5vw, 2.7rem);
+            font-weight: 900;
+            margin-bottom: 0.8rem;
+        }
+
+        .result-detail {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .play-checklist {
+            display: grid;
+            gap: 0.6rem;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .play-check {
+            padding: 0.85rem 1rem;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            color: var(--text-secondary);
+        }
+
+        .controls {
+            margin-top: 1.2rem;
+        }
+
+        @media (max-width: 640px) {
+            .bid-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .panel {
+                padding: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🤫 침묵 경매</h1>
+            <p class="game-description">최소 단어 수를 몰래 입찰하고, 가장 낮게 부른 사람이 설명합니다.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">총 라운드</span>
+                <div class="status-value" id="status-round">3</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">현재 단어</span>
+                <div class="status-value" id="status-word">-</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">최저 입찰</span>
+                <div class="status-value" id="status-bid">-</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <section id="setup-screen" class="screen active">
+                <div class="panel">
+                    <div class="hero-copy">
+                        모든 플레이어가 같은 제시어를 보고
+                        <br>
+                        “몇 단어 안에 설명할 수 있는지” 숫자로만 입찰합니다.
+                        <br>
+                        가장 낮게 부른 사람이 실제로 설명에 도전합니다.
+                    </div>
+                    <div class="setup-grid">
+                        <div class="field">
+                            <label for="player-count">참가자 수</label>
+                            <input id="player-count" type="number" min="3" max="10" value="4">
+                        </div>
+                        <div class="field">
+                            <label for="round-count">라운드 수</label>
+                            <select id="round-count">
+                                <option value="2">2라운드</option>
+                                <option value="3" selected>3라운드</option>
+                                <option value="4">4라운드</option>
+                                <option value="5">5라운드</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="word-pack">단어 팩</label>
+                            <select id="word-pack">
+                                <option value="all" selected>랜덤</option>
+                                <option value="object">사물</option>
+                                <option value="place">장소/장면</option>
+                                <option value="activity">행동/상황</option>
+                            </select>
+                            <div class="field-help">같은 성격의 단어끼리 모아서 분위기를 바꿀 수 있습니다.</div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startGame()">게임 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="auction-word-screen" class="screen">
+                <div class="panel word-card">
+                    <div class="status-strip">
+                        <span class="pill" id="round-label">1 / 3 라운드</span>
+                        <span class="pill">모두 같은 단어를 봅니다</span>
+                    </div>
+                    <div class="subtitle-copy">이번 라운드 제시어를 다 같이 확인하고, 바로 폰을 돌려 비밀 입찰을 진행하세요.</div>
+                    <div class="target-word" id="target-word">오로라</div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startBidding()">입찰 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="bid-screen" class="screen">
+                <div class="panel player-card">
+                    <div class="bid-copy" id="bid-copy">자신만 보고 선택하세요. 낮게 부를수록 직접 설명할 확률이 높습니다.</div>
+                    <div class="player-name" id="bid-player-label">플레이어 1</div>
+                    <div class="bid-grid" id="bid-grid"></div>
+                </div>
+            </section>
+
+            <section id="auction-result-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="status-strip">
+                        <span class="pill">입찰 공개</span>
+                        <span class="pill" id="winner-pill">설명자 결정</span>
+                    </div>
+                    <div class="auction-copy" id="auction-copy">가장 낮게 부른 플레이어가 설명합니다.</div>
+                    <div class="auction-list" id="auction-list"></div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startExplanation()">설명 도전 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="play-screen" class="screen">
+                <div class="panel play-card">
+                    <div class="subtitle-copy" id="play-player-copy">플레이어 1이 설명합니다.</div>
+                    <div class="play-word-limit" id="play-word-limit">3단어 제한</div>
+                    <div class="target-word" id="play-target-word">오로라</div>
+                    <div class="countdown-ring" id="countdown-ring" style="--progress:100;">
+                        <div class="countdown-center">
+                            <div class="countdown-seconds" id="countdown-seconds">30</div>
+                            <div class="countdown-caption">설명 타이머</div>
+                        </div>
+                    </div>
+                    <div class="subtitle-copy">
+                        설명자는 제시어를 직접 말하면 안 됩니다.
+                        <br>
+                        단어 수는 참가자들이 직접 세고, 성공 여부만 여기서 선택하세요.
+                    </div>
+                    <div class="play-checklist">
+                        <div class="play-check">1. 같은 단어를 반복해도 단어 수는 다시 셉니다.</div>
+                        <div class="play-check">2. 제시어 자체를 말하거나 철자를 힌트로 주면 바로 실패 처리하세요.</div>
+                        <div class="play-check">3. 제한 단어 안에 맞혔다고 모두 동의하면 성공을 누르세요.</div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="finishRound(true)">성공</button>
+                        <button class="button button-secondary" type="button" onclick="finishRound(false)">실패</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="round-result-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="result-title" id="result-title"></div>
+                    <div class="result-detail" id="result-detail"></div>
+                    <div class="scoreboard" id="scoreboard"></div>
+                    <div class="controls">
+                        <button class="button" type="button" id="next-btn" onclick="nextStep()">다음 라운드</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const WORD_BANKS = {
+            all: ['번지점프', '전동킥보드', '팝콘', '출근길', '캠핑장', '회전목마', '마라톤', '도서관', '엘리베이터',
+                '빙수', '노을', '이어폰', '우주선', '스케이트', '미용실', '북극곰', '피크닉', '헬스장', '신문', '퍼즐',
+                '계단', '찜질방', '풍선', '조개구이', '개미', '관람차', '손전등', '주차장', '오로라', '디저트', '사막',
+                '비밀지도', '세탁기', '폭죽', '박물관', '유리병', '체스', '드라이브', '만년필', '해바라기'],
+            object: ['이어폰', '신문', '퍼즐', '손전등', '유리병', '만년필', '세탁기', '전동킥보드', '풍선', '체스', '엘리베이터', '팝콘'],
+            place: ['캠핑장', '도서관', '주차장', '사막', '박물관', '찜질방', '미용실', '헬스장', '피크닉', '출근길', '노을', '오로라'],
+            activity: ['번지점프', '마라톤', '회전목마', '드라이브', '조개구이', '스케이트', '비밀지도', '폭죽', '해바라기', '북극곰', '빙수', '관람차']
+        };
+
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            auctionWord: document.getElementById('auction-word-screen'),
+            bid: document.getElementById('bid-screen'),
+            auctionResult: document.getElementById('auction-result-screen'),
+            play: document.getElementById('play-screen'),
+            roundResult: document.getElementById('round-result-screen')
+        };
+
+        const bidOptions = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12];
+        const roundLabel = document.getElementById('round-label');
+        const targetWordElement = document.getElementById('target-word');
+        const statusRound = document.getElementById('status-round');
+        const statusWord = document.getElementById('status-word');
+        const statusBid = document.getElementById('status-bid');
+        const bidPlayerLabel = document.getElementById('bid-player-label');
+        const bidCopy = document.getElementById('bid-copy');
+        const bidGrid = document.getElementById('bid-grid');
+        const auctionList = document.getElementById('auction-list');
+        const auctionCopy = document.getElementById('auction-copy');
+        const winnerPill = document.getElementById('winner-pill');
+        const playPlayerCopy = document.getElementById('play-player-copy');
+        const playWordLimit = document.getElementById('play-word-limit');
+        const playTargetWord = document.getElementById('play-target-word');
+        const countdownSeconds = document.getElementById('countdown-seconds');
+        const countdownRing = document.getElementById('countdown-ring');
+        const resultTitle = document.getElementById('result-title');
+        const resultDetail = document.getElementById('result-detail');
+        const scoreboard = document.getElementById('scoreboard');
+        const nextBtn = document.getElementById('next-btn');
+
+        let playerCount = 4;
+        let totalRounds = 3;
+        let currentRound = 0;
+        let currentPlayer = 0;
+        let currentWord = '';
+        let bids = [];
+        let scores = [];
+        let explainerIndex = 0;
+        let winningBid = 0;
+        let activePack = 'all';
+        let activeBidders = [];
+        let tieBreakMode = false;
+        let countdownTimer = null;
+        let remainingSeconds = 30;
+
+        function showScreen(name) {
+            Object.values(screens).forEach((screen) => screen.classList.remove('active'));
+            screens[name].classList.add('active');
+        }
+
+        function shuffle(array) {
+            const next = [...array];
+            for (let i = next.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [next[i], next[j]] = [next[j], next[i]];
+            }
+            return next;
+        }
+
+        function pickWord() {
+            const bank = WORD_BANKS[activePack] || WORD_BANKS.all;
+            return bank[Math.floor(Math.random() * bank.length)];
+        }
+
+        function updateHeader() {
+            statusRound.textContent = `${currentRound} / ${totalRounds}`;
+            statusWord.textContent = currentWord || '-';
+            statusBid.textContent = winningBid ? `${winningBid}단어` : '-';
+        }
+
+        function renderScoreboard() {
+            scoreboard.innerHTML = '';
+            scores.forEach((score, index) => {
+                const box = document.createElement('div');
+                box.className = 'score-box';
+                box.innerHTML = `
+                    <div class="score-label">플레이어 ${index + 1}</div>
+                    <div class="score-value">${score}점</div>
+                `;
+                scoreboard.appendChild(box);
+            });
+        }
+
+        function startGame() {
+            playerCount = Math.min(10, Math.max(3, Number(document.getElementById('player-count').value) || 4));
+            totalRounds = Number(document.getElementById('round-count').value) || 3;
+            activePack = document.getElementById('word-pack').value || 'all';
+            currentRound = 0;
+            scores = Array.from({ length: playerCount }, () => 0);
+            startRound();
+        }
+
+        function startRound() {
+            currentRound += 1;
+            currentPlayer = 0;
+            currentWord = pickWord();
+            bids = Array.from({ length: playerCount }, () => null);
+            winningBid = 0;
+            activeBidders = Array.from({ length: playerCount }, (_, index) => index);
+            tieBreakMode = false;
+
+            roundLabel.textContent = `${currentRound} / ${totalRounds} 라운드`;
+            targetWordElement.textContent = currentWord;
+            updateHeader();
+            showScreen('auctionWord');
+        }
+
+        function startBidding() {
+            renderBidOptions();
+            updateBidTurn();
+            showScreen('bid');
+        }
+
+        function renderBidOptions() {
+            bidGrid.innerHTML = '';
+            const options = tieBreakMode
+                ? bidOptions.filter((bid) => bid <= winningBid)
+                : bidOptions;
+
+            options.forEach((bid) => {
+                const button = document.createElement('button');
+                button.className = 'bid-btn';
+                button.type = 'button';
+                button.innerHTML = `
+                    <span class="bid-label">입찰</span>
+                    <span class="bid-value">${bid}단어</span>
+                `;
+                button.addEventListener('click', () => submitBid(bid));
+                bidGrid.appendChild(button);
+            });
+        }
+
+        function updateBidTurn() {
+            const playerIndex = activeBidders[currentPlayer];
+            bidPlayerLabel.textContent = `플레이어 ${playerIndex + 1}`;
+            bidCopy.textContent = tieBreakMode
+                ? `동점자끼리 다시 부릅니다. 같은 가격이 또 나오면 추첨으로 설명자를 정합니다.`
+                : '자신만 보고 선택하세요. 낮게 부를수록 직접 설명할 확률이 높습니다.';
+        }
+
+        function submitBid(bid) {
+            bids[activeBidders[currentPlayer]] = bid;
+            currentPlayer += 1;
+
+            if (currentPlayer < activeBidders.length) {
+                updateBidTurn();
+                return;
+            }
+
+            resolveAuction();
+        }
+
+        function resolveAuction() {
+            winningBid = Math.min(...activeBidders.map((playerIndex) => bids[playerIndex]));
+            const tiedPlayers = activeBidders.filter((playerIndex) => bids[playerIndex] === winningBid);
+
+            if (tiedPlayers.length > 1 && !tieBreakMode && winningBid > 1) {
+                tieBreakMode = true;
+                activeBidders = tiedPlayers;
+                currentPlayer = 0;
+                winnerPill.textContent = `동점 ${winningBid}단어`;
+                auctionCopy.textContent = '동점자들끼리 한 번 더 입찰합니다.';
+                startBidding();
+                return;
+            }
+
+            explainerIndex = tiedPlayers[Math.floor(Math.random() * tiedPlayers.length)];
+            winnerPill.textContent = tiedPlayers.length > 1
+                ? `동점 추첨: 플레이어 ${explainerIndex + 1}`
+                : `설명자: 플레이어 ${explainerIndex + 1}`;
+            auctionCopy.textContent = tiedPlayers.length > 1
+                ? `최저 입찰이 다시 같아 추첨으로 설명자를 정했습니다.`
+                : '가장 낮게 부른 플레이어가 설명합니다.';
+
+            auctionList.innerHTML = '';
+            bids.forEach((bid, index) => {
+                const row = document.createElement('div');
+                row.className = `auction-row ${index === explainerIndex ? 'winner' : ''}`;
+                row.innerHTML = `
+                    <div class="auction-player">플레이어 ${index + 1}</div>
+                    <div class="auction-bid">${bid}단어</div>
+                `;
+                auctionList.appendChild(row);
+            });
+
+            updateHeader();
+            showScreen('auctionResult');
+        }
+
+        function startExplanation() {
+            playPlayerCopy.textContent = `플레이어 ${explainerIndex + 1}이 설명합니다.`;
+            playWordLimit.textContent = `${winningBid}단어 제한`;
+            playTargetWord.textContent = currentWord;
+            remainingSeconds = 30;
+            updateCountdownUI();
+            startTimer();
+            showScreen('play');
+        }
+
+        function startTimer() {
+            clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                remainingSeconds -= 1;
+                updateCountdownUI();
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(countdownTimer);
+                }
+            }, 1000);
+        }
+
+        function updateCountdownUI() {
+            countdownSeconds.textContent = String(Math.max(remainingSeconds, 0));
+            countdownRing.style.setProperty('--progress', String((Math.max(remainingSeconds, 0) / 30) * 100));
+        }
+
+        function finishRound(success) {
+            clearInterval(countdownTimer);
+
+            if (success) {
+                const bonus = winningBid <= 2 ? 3 : winningBid <= 4 ? 2 : winningBid <= 6 ? 1 : 0;
+                const earned = 1 + bonus;
+                scores[explainerIndex] += earned;
+                resultTitle.textContent = '👏 설명 성공';
+                resultDetail.innerHTML = `플레이어 ${explainerIndex + 1}이 <strong>${winningBid}단어</strong> 안에 설명을 마쳤습니다.<br>기본 1점 + 저단어 보너스 ${earned - 1}점으로 총 <strong>${earned}점</strong>을 획득합니다.`;
+            } else {
+                resultTitle.textContent = '💥 설명 실패';
+                resultDetail.innerHTML = `플레이어 ${explainerIndex + 1}이 제한 안에 설명하지 못했습니다.<br>이번 라운드는 점수 없이 종료됩니다.`;
+            }
+
+            renderScoreboard();
+            nextBtn.textContent = currentRound >= totalRounds ? '처음부터 다시' : '다음 라운드';
+            showScreen('roundResult');
+        }
+
+        function nextStep() {
+            if (currentRound >= totalRounds) {
+                clearInterval(countdownTimer);
+                updateHeader();
+                showScreen('setup');
+                return;
+            }
+            startRound();
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>가짜 취향 감별기 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top, rgba(236, 72, 153, 0.18), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.2), transparent 32%),
+                #0f172a;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            max-width: 880px;
+            padding-top: 1.5rem;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 24px;
+            padding: 1.5rem;
+            backdrop-filter: blur(14px);
+        }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .field label {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(15, 23, 42, 0.78);
+            color: var(--text-primary);
+            font: inherit;
+        }
+
+        .setup-tip,
+        .subtitle-box {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .round-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 700;
+            background: rgba(99, 102, 241, 0.16);
+            color: #c7d2fe;
+        }
+
+        .pass-card,
+        .role-card,
+        .answer-card,
+        .result-card {
+            text-align: center;
+        }
+
+        .pass-player {
+            font-size: clamp(2rem, 8vw, 3rem);
+            font-weight: 800;
+            margin: 1rem 0;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            padding: 0.6rem 1rem;
+            border-radius: 999px;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .role-badge.honest {
+            background: rgba(34, 197, 94, 0.18);
+            color: #86efac;
+        }
+
+        .role-badge.fake {
+            background: rgba(244, 63, 94, 0.18);
+            color: #fda4af;
+        }
+
+        .mission-card {
+            margin-top: 1rem;
+            padding: 1.2rem;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.18), rgba(168, 85, 247, 0.18));
+            border: 1px solid rgba(244, 114, 182, 0.18);
+        }
+
+        .mission-title {
+            font-size: 0.95rem;
+            color: #f9a8d4;
+            margin-bottom: 0.45rem;
+            font-weight: 700;
+        }
+
+        .mission-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            line-height: 1.5;
+        }
+
+        .question-progress {
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+        }
+
+        .question-prompt {
+            font-size: clamp(1.4rem, 4vw, 2rem);
+            font-weight: 800;
+            line-height: 1.45;
+            margin-bottom: 1.25rem;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text-primary);
+            border-radius: 20px;
+            padding: 1.15rem;
+            font: inherit;
+            cursor: pointer;
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .option-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.55);
+            box-shadow: 0 14px 24px rgba(15, 23, 42, 0.22);
+        }
+
+        .option-label {
+            display: block;
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.45rem;
+        }
+
+        .option-value {
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .answer-board {
+            display: grid;
+            gap: 0.85rem;
+            margin-top: 1.1rem;
+        }
+
+        .summary-board {
+            display: grid;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .summary-card {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 18px;
+            padding: 1rem 1.1rem;
+            text-align: left;
+        }
+
+        .summary-title {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 0.65rem;
+        }
+
+        .summary-options {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .summary-option {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .answer-row {
+            background: rgba(15, 23, 42, 0.76);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 18px;
+            padding: 1rem 1.1rem;
+            text-align: left;
+        }
+
+        .player-name {
+            font-size: 1.05rem;
+            font-weight: 800;
+            margin-bottom: 0.6rem;
+        }
+
+        .player-answers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .answer-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(99, 102, 241, 0.15);
+            color: #e2e8f0;
+            font-size: 0.92rem;
+        }
+
+        .suspect-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.8rem;
+            margin-top: 1.2rem;
+        }
+
+        .suspect-btn {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.82);
+            color: var(--text-primary);
+            border-radius: 16px;
+            padding: 1rem;
+            font: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease;
+        }
+
+        .suspect-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(244, 63, 94, 0.55);
+        }
+
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.9rem;
+            margin: 1rem 0 1.5rem;
+        }
+
+        .score-box {
+            border-radius: 18px;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
+        .score-label {
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+
+        .score-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .result-title {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 900;
+            margin-bottom: 0.9rem;
+        }
+
+        .result-detail {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .controls {
+            margin-top: 1.4rem;
+        }
+
+        @media (max-width: 640px) {
+            .option-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                padding: 1.15rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🎭 가짜 취향 감별기</h1>
+            <p class="game-description">한 명만 가짜 미션을 받고, 나머지는 진짜 취향대로 답하세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">총 라운드</span>
+                <div class="status-value" id="status-rounds">3</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">탐정 점수</span>
+                <div class="status-value" id="status-detectives">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">가짜 점수</span>
+                <div class="status-value" id="status-fake">0</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <section id="setup-screen" class="screen active">
+                <div class="panel">
+                    <div class="subtitle-box">
+                        한 라운드마다 4개의 취향 질문이 나옵니다.
+                        <br>
+                        한 명만 비밀 미션을 받고 답하기 때문에, 공개된 답변을 보고 누가 가짜였는지 맞히면 됩니다.
+                    </div>
+                    <div class="setup-grid">
+                        <div class="field">
+                            <label for="player-count">참가자 수</label>
+                            <input id="player-count" type="number" min="3" max="10" value="4">
+                        </div>
+                        <div class="field">
+                            <label for="round-count">라운드 수</label>
+                            <select id="round-count">
+                                <option value="2">2라운드</option>
+                                <option value="3" selected>3라운드</option>
+                                <option value="4">4라운드</option>
+                                <option value="5">5라운드</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="question-theme">질문 테마</label>
+                            <select id="question-theme">
+                                <option value="all" selected>랜덤</option>
+                                <option value="food">음식/취향</option>
+                                <option value="daily">일상</option>
+                                <option value="social">관계/분위기</option>
+                                <option value="work">일/생산성</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startGame()">게임 시작</button>
+                    </div>
+                    <div class="setup-tip" style="margin-top: 1rem;">
+                        탐정 팀은 맞히면 1점, 가짜는 살아남으면 2점을 얻습니다.
+                    </div>
+                </div>
+            </section>
+
+            <section id="pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="round-banner">
+                        <span class="pill" id="round-label">1 / 3 라운드</span>
+                        <span class="pill" id="question-set-label">질문 4개</span>
+                    </div>
+                    <p class="subtitle-box">다음 플레이어만 화면을 확인하세요.</p>
+                    <div class="pass-player" id="current-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="showRole()">역할 보기</button>
+                </div>
+            </section>
+
+            <section id="role-screen" class="screen">
+                <div class="panel role-card">
+                    <div class="role-badge honest" id="role-badge">진짜 취향</div>
+                    <div class="subtitle-box" id="role-copy">평소 취향대로 솔직하게 답하세요.</div>
+                    <div class="mission-card" id="mission-card" style="display: none;">
+                        <div class="mission-title">가짜 미션</div>
+                        <div class="mission-text" id="mission-text"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="beginAnswering()">답변 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="question-screen" class="screen">
+                <div class="panel answer-card">
+                    <div class="question-progress" id="question-progress">1 / 4 문항</div>
+                    <div class="question-prompt" id="question-prompt"></div>
+                    <div class="option-grid">
+                        <button class="option-btn" type="button" id="option-left" onclick="submitAnswer(0)">
+                            <span class="option-label">선택 A</span>
+                            <span class="option-value" id="option-left-value"></span>
+                        </button>
+                        <button class="option-btn" type="button" id="option-right" onclick="submitAnswer(1)">
+                            <span class="option-label">선택 B</span>
+                            <span class="option-value" id="option-right-value"></span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="review-screen" class="screen">
+                <div class="panel">
+                    <div class="round-banner">
+                        <span class="pill">답변 공개</span>
+                        <span class="pill">패턴을 보고 가짜를 지목하세요</span>
+                    </div>
+                    <div class="answer-board" id="answer-board"></div>
+                    <div class="summary-board" id="summary-board"></div>
+                    <div class="suspect-grid" id="suspect-grid"></div>
+                </div>
+            </section>
+
+            <section id="result-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="result-title" id="result-title"></div>
+                    <div class="score-grid">
+                        <div class="score-box">
+                            <div class="score-label">이번 라운드 가짜</div>
+                            <div class="score-value" id="round-fake-player">-</div>
+                        </div>
+                        <div class="score-box">
+                            <div class="score-label">가짜 미션</div>
+                            <div class="score-value" id="round-mission-label" style="font-size: 1rem; line-height: 1.5;">-</div>
+                        </div>
+                    </div>
+                    <div class="result-detail" id="result-detail"></div>
+                    <div class="controls">
+                        <button class="button" type="button" id="next-round-btn" onclick="nextStep()">다음 라운드</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const QUESTIONS = [
+            { category: 'food', prompt: '야식으로 더 끌리는 건?', options: ['치킨', '떡볶이'] },
+            { category: 'daily', prompt: '주말에 더 당기는 일정은?', options: ['집에서 푹 쉬기', '밖에서 신나게 놀기'] },
+            { category: 'daily', prompt: '여행 숙소로 더 끌리는 건?', options: ['오션뷰 호텔', '감성 시골 숙소'] },
+            { category: 'daily', prompt: '비 오는 날 더 좋은 건?', options: ['창가에서 음악 듣기', '장화 신고 산책하기'] },
+            { category: 'work', prompt: '회의 전에 더 필요한 건?', options: ['커피 한 잔', '조용한 10분'] },
+            { category: 'work', prompt: '팀플에서 더 맡고 싶은 역할은?', options: ['발표', '자료 정리'] },
+            { category: 'daily', prompt: '갑자기 휴가가 생기면?', options: ['비행기부터 찾기', '침대부터 눕기'] },
+            { category: 'social', prompt: '영화관에서 더 중요한 건?', options: ['스토리 몰입', '팝콘과 분위기'] },
+            { category: 'food', prompt: '배달앱에서 더 잘 누르는 건?', options: ['새로운 집 도전', '익숙한 맛 재주문'] },
+            { category: 'social', prompt: '친구 약속 장소는?', options: ['시끄러운 핫플', '조용한 카페'] },
+            { category: 'daily', prompt: '하루가 비면 더 하고 싶은 건?', options: ['운동으로 개운하게', '아무것도 안 하고 뒹굴기'] },
+            { category: 'social', prompt: '사진 찍을 때 더 가까운 건?', options: ['자연스러운 스냅', '각 잡힌 인생샷'] },
+            { category: 'food', prompt: '식당 고를 때 더 우선인 건?', options: ['가성비', '분위기'] },
+            { category: 'work', prompt: '업무 도중 더 반가운 건?', options: ['칭찬 메신저', '예상보다 빠른 퇴근'] },
+            { category: 'food', prompt: '카페에서 더 자주 고르는 건?', options: ['시그니처 메뉴', '무난한 아메리카노'] },
+            { category: 'social', prompt: '파티에서 더 편한 순간은?', options: ['처음부터 중심에 있을 때', '슬슬 분위기 익고 나서'] },
+            { category: 'daily', prompt: '선물로 더 탐나는 건?', options: ['실용적인 물건', '의미 있는 취향템'] },
+            { category: 'daily', prompt: '야외 일정에서 더 힘든 건?', options: ['더위', '추위'] },
+            { category: 'daily', prompt: '집 꾸밀 때 더 중요한 건?', options: ['깔끔한 정리감', '눈에 띄는 포인트'] },
+            { category: 'social', prompt: '친구가 갑자기 전화하면?', options: ['바로 받는다', '메시지부터 본다'] },
+            { category: 'food', prompt: '디저트로 더 먼저 집는 건?', options: ['진한 초코', '상큼한 과일'] },
+            { category: 'work', prompt: '집중할 때 더 필요한 건?', options: ['완전한 정적', '적당한 배경음'] },
+            { category: 'social', prompt: '낯선 모임에서 더 편한 건?', options: ['먼저 말 걸기', '분위기 읽고 천천히 섞이기'] },
+            { category: 'food', prompt: '라면 끓일 때 더 중요한 건?', options: ['면 식감', '국물 진함'] },
+            { category: 'daily', prompt: '즉흥 약속이 생기면?', options: ['바로 나간다', '한 번 고민한다'] },
+            { category: 'work', prompt: '해야 할 일이 많을 때?', options: ['쉬운 것부터 끝낸다', '제일 큰 것부터 친다'] },
+            { category: 'social', prompt: '여행 사진은?', options: ['바로 올린다', '정리 후 올린다'] },
+            { category: 'food', prompt: '빵집에서 더 못 참는 건?', options: ['짭짤한 빵', '달콤한 빵'] }
+        ];
+
+        const MISSIONS = [
+            '무조건 더 돈 아낄 것 같은 쪽을 고르세요.',
+            '무조건 더 체력 덜 들 것 같은 쪽을 고르세요.',
+            '무조건 더 인싸처럼 보이는 쪽을 고르세요.',
+            '무조건 더 혼자 있기 좋은 쪽을 고르세요.',
+            '무조건 더 안전한 선택처럼 보이는 쪽을 고르세요.',
+            '무조건 오늘의 내가 되고 싶은 사람처럼 고르세요.',
+            '무조건 더 어른스러운 선택처럼 보이는 쪽을 고르세요.',
+            '무조건 더 귀찮아 보이는 선택은 피하고 고르세요.',
+            '무조건 SNS에 올리기 좋아 보이는 쪽을 고르세요.',
+            '무조건 더 감성적인 사람처럼 보이는 쪽을 고르세요.'
+        ];
+
+        const THEME_LABELS = {
+            all: '랜덤',
+            food: '음식/취향',
+            daily: '일상',
+            social: '관계/분위기',
+            work: '일/생산성'
+        };
+
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            pass: document.getElementById('pass-screen'),
+            role: document.getElementById('role-screen'),
+            question: document.getElementById('question-screen'),
+            review: document.getElementById('review-screen'),
+            result: document.getElementById('result-screen')
+        };
+
+        const statusRounds = document.getElementById('status-rounds');
+        const statusDetectives = document.getElementById('status-detectives');
+        const statusFake = document.getElementById('status-fake');
+        const roundLabel = document.getElementById('round-label');
+        const questionSetLabel = document.getElementById('question-set-label');
+        const currentPlayerLabel = document.getElementById('current-player-label');
+        const roleBadge = document.getElementById('role-badge');
+        const roleCopy = document.getElementById('role-copy');
+        const missionCard = document.getElementById('mission-card');
+        const missionText = document.getElementById('mission-text');
+        const questionProgress = document.getElementById('question-progress');
+        const questionPrompt = document.getElementById('question-prompt');
+        const optionLeftValue = document.getElementById('option-left-value');
+        const optionRightValue = document.getElementById('option-right-value');
+        const answerBoard = document.getElementById('answer-board');
+        const summaryBoard = document.getElementById('summary-board');
+        const suspectGrid = document.getElementById('suspect-grid');
+        const resultTitle = document.getElementById('result-title');
+        const roundFakePlayer = document.getElementById('round-fake-player');
+        const roundMissionLabel = document.getElementById('round-mission-label');
+        const resultDetail = document.getElementById('result-detail');
+        const nextRoundBtn = document.getElementById('next-round-btn');
+
+        let playerCount = 4;
+        let totalRounds = 3;
+        let currentRound = 0;
+        let currentPlayer = 0;
+        let currentQuestion = 0;
+        let detectiveScore = 0;
+        let fakeScore = 0;
+        let fakerIndex = 0;
+        let selectedMission = '';
+        let selectedTheme = 'all';
+        let roundQuestions = [];
+        let answers = [];
+
+        function showScreen(name) {
+            Object.values(screens).forEach((screen) => screen.classList.remove('active'));
+            screens[name].classList.add('active');
+        }
+
+        function shuffle(array) {
+            const next = [...array];
+            for (let i = next.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [next[i], next[j]] = [next[j], next[i]];
+            }
+            return next;
+        }
+
+        function pickQuestions() {
+            const themedQuestions = selectedTheme === 'all'
+                ? QUESTIONS
+                : QUESTIONS.filter((question) => question.category === selectedTheme);
+            const source = themedQuestions.length >= 4 ? themedQuestions : QUESTIONS;
+            return shuffle(source).slice(0, 4);
+        }
+
+        function updateStatusBar() {
+            statusRounds.textContent = `${currentRound} / ${totalRounds}`;
+            statusDetectives.textContent = String(detectiveScore);
+            statusFake.textContent = String(fakeScore);
+        }
+
+        function startGame() {
+            playerCount = Math.min(10, Math.max(3, Number(document.getElementById('player-count').value) || 4));
+            totalRounds = Number(document.getElementById('round-count').value) || 3;
+            selectedTheme = document.getElementById('question-theme').value || 'all';
+            currentRound = 0;
+            detectiveScore = 0;
+            fakeScore = 0;
+            statusRounds.textContent = totalRounds;
+            startRound();
+        }
+
+        function startRound() {
+            currentRound += 1;
+            currentPlayer = 0;
+            currentQuestion = 0;
+            fakerIndex = Math.floor(Math.random() * playerCount);
+            selectedMission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
+            roundQuestions = pickQuestions();
+            answers = Array.from({ length: playerCount }, () => []);
+
+            roundLabel.textContent = `${currentRound} / ${totalRounds} 라운드`;
+            questionSetLabel.textContent = `${THEME_LABELS[selectedTheme]} · ${roundQuestions.length}문항`;
+            updateStatusBar();
+            passToPlayer();
+        }
+
+        function passToPlayer() {
+            currentPlayerLabel.textContent = `플레이어 ${currentPlayer + 1}`;
+            showScreen('pass');
+        }
+
+        function showRole() {
+            const isFake = currentPlayer === fakerIndex;
+            roleBadge.textContent = isFake ? '가짜 미션' : '진짜 취향';
+            roleBadge.className = `role-badge ${isFake ? 'fake' : 'honest'}`;
+            roleCopy.textContent = isFake
+                ? '정체를 숨기면서 4문항 모두 미션 기준으로 답하세요.'
+                : '평소 취향대로 자연스럽게 답하세요.';
+            missionCard.style.display = isFake ? 'block' : 'none';
+            missionText.textContent = selectedMission;
+            showScreen('role');
+        }
+
+        function beginAnswering() {
+            currentQuestion = 0;
+            renderQuestion();
+            showScreen('question');
+        }
+
+        function renderQuestion() {
+            const question = roundQuestions[currentQuestion];
+            questionProgress.textContent = `${currentQuestion + 1} / ${roundQuestions.length} 문항`;
+            questionPrompt.textContent = question.prompt;
+            optionLeftValue.textContent = question.options[0];
+            optionRightValue.textContent = question.options[1];
+        }
+
+        function submitAnswer(choiceIndex) {
+            answers[currentPlayer].push(choiceIndex);
+            currentQuestion += 1;
+
+            if (currentQuestion < roundQuestions.length) {
+                renderQuestion();
+                return;
+            }
+
+            currentPlayer += 1;
+            if (currentPlayer < playerCount) {
+                passToPlayer();
+                return;
+            }
+
+            revealAnswers();
+        }
+
+        function renderAnswerRow(playerIndex) {
+            const row = document.createElement('div');
+            row.className = 'answer-row';
+
+            const title = document.createElement('div');
+            title.className = 'player-name';
+            title.textContent = `플레이어 ${playerIndex + 1}`;
+
+            const answerList = document.createElement('div');
+            answerList.className = 'player-answers';
+
+            answers[playerIndex].forEach((choice, questionIndex) => {
+                const chip = document.createElement('div');
+                chip.className = 'answer-chip';
+                chip.textContent = `${questionIndex + 1}. ${roundQuestions[questionIndex].options[choice]}`;
+                answerList.appendChild(chip);
+            });
+
+            row.appendChild(title);
+            row.appendChild(answerList);
+            return row;
+        }
+
+        function revealAnswers() {
+            answerBoard.innerHTML = '';
+            summaryBoard.innerHTML = '';
+            suspectGrid.innerHTML = '';
+
+            for (let i = 0; i < playerCount; i += 1) {
+                answerBoard.appendChild(renderAnswerRow(i));
+
+                const suspectBtn = document.createElement('button');
+                suspectBtn.className = 'suspect-btn';
+                suspectBtn.type = 'button';
+                suspectBtn.textContent = `플레이어 ${i + 1}`;
+                suspectBtn.addEventListener('click', () => chooseSuspect(i));
+                suspectGrid.appendChild(suspectBtn);
+            }
+
+            roundQuestions.forEach((question, questionIndex) => {
+                const counts = [0, 0];
+                answers.forEach((playerAnswers) => {
+                    counts[playerAnswers[questionIndex]] += 1;
+                });
+
+                const summary = document.createElement('div');
+                summary.className = 'summary-card';
+                summary.innerHTML = `
+                    <div class="summary-title">${questionIndex + 1}. ${question.prompt}</div>
+                    <div class="summary-options">
+                        <div class="summary-option"><span>${question.options[0]}</span><strong>${counts[0]}명</strong></div>
+                        <div class="summary-option"><span>${question.options[1]}</span><strong>${counts[1]}명</strong></div>
+                    </div>
+                `;
+                summaryBoard.appendChild(summary);
+            });
+
+            showScreen('review');
+        }
+
+        function chooseSuspect(suspectIndex) {
+            const caught = suspectIndex === fakerIndex;
+            if (caught) {
+                detectiveScore += 1;
+                resultTitle.textContent = '🕵️ 탐정 팀 승리';
+                resultDetail.innerHTML = `가짜를 정확히 찾아냈습니다.<br>선택된 사람: 플레이어 ${suspectIndex + 1}<br>탐정 팀이 1점을 획득합니다.`;
+            } else {
+                fakeScore += 2;
+                resultTitle.textContent = '😈 가짜 생존 성공';
+                resultDetail.innerHTML = `탐정 팀이 속았습니다.<br>지목된 사람: 플레이어 ${suspectIndex + 1}<br>가짜가 2점을 획득합니다.`;
+            }
+
+            roundFakePlayer.textContent = `플레이어 ${fakerIndex + 1}`;
+            roundMissionLabel.textContent = selectedMission;
+            updateStatusBar();
+
+            const finished = currentRound >= totalRounds;
+            nextRoundBtn.textContent = finished ? '처음부터 다시' : '다음 라운드';
+            showScreen('result');
+        }
+
+        function nextStep() {
+            if (currentRound >= totalRounds) {
+                showScreen('setup');
+                return;
+            }
+            startRound();
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>
