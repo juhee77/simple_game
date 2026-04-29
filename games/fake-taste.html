@@ -100,6 +100,7 @@
         }
 
         .pass-card,
+        .secret-card,
         .role-card,
         .answer-card,
         .result-card {
@@ -110,6 +111,30 @@
             font-size: clamp(2rem, 8vw, 3rem);
             font-weight: 800;
             margin: 1rem 0;
+        }
+
+        .secret-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.8rem;
+            margin-top: 1.2rem;
+        }
+
+        .secret-btn {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.82);
+            color: var(--text-primary);
+            border-radius: 16px;
+            padding: 1rem;
+            font: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease;
+        }
+
+        .secret-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(236, 72, 153, 0.55);
         }
 
         .role-badge {
@@ -421,6 +446,22 @@
                 </div>
             </section>
 
+            <section id="secret-screen" class="screen">
+                <div class="panel secret-card">
+                    <div class="round-banner">
+                        <span class="pill">비밀 전략</span>
+                        <span class="pill" id="secret-step-label">플레이어 1</span>
+                    </div>
+                    <div class="subtitle-box" id="secret-copy">
+                        다음 플레이어만 화면을 확인하세요.
+                    </div>
+                    <div class="pass-player" id="secret-player-label">플레이어 1</div>
+                    <div id="secret-action-area">
+                        <button class="button" type="button" onclick="openSecretAction()">확인</button>
+                    </div>
+                </div>
+            </section>
+
             <section id="role-screen" class="screen">
                 <div class="panel role-card">
                     <div class="role-badge honest" id="role-badge">진짜 취향</div>
@@ -475,6 +516,10 @@
                         <div class="score-box">
                             <div class="score-label">가짜 미션</div>
                             <div class="score-value" id="round-mission-label" style="font-size: 1rem; line-height: 1.5;">-</div>
+                        </div>
+                        <div class="score-box">
+                            <div class="score-label">역지목 대상</div>
+                            <div class="score-value" id="round-frame-player" style="font-size: 1rem; line-height: 1.5;">-</div>
                         </div>
                     </div>
                     <div class="result-detail" id="result-detail"></div>
@@ -542,6 +587,7 @@
         const screens = {
             setup: document.getElementById('setup-screen'),
             pass: document.getElementById('pass-screen'),
+            secret: document.getElementById('secret-screen'),
             role: document.getElementById('role-screen'),
             question: document.getElementById('question-screen'),
             review: document.getElementById('review-screen'),
@@ -554,6 +600,10 @@
         const roundLabel = document.getElementById('round-label');
         const questionSetLabel = document.getElementById('question-set-label');
         const currentPlayerLabel = document.getElementById('current-player-label');
+        const secretStepLabel = document.getElementById('secret-step-label');
+        const secretCopy = document.getElementById('secret-copy');
+        const secretPlayerLabel = document.getElementById('secret-player-label');
+        const secretActionArea = document.getElementById('secret-action-area');
         const roleBadge = document.getElementById('role-badge');
         const roleCopy = document.getElementById('role-copy');
         const missionCard = document.getElementById('mission-card');
@@ -568,6 +618,7 @@
         const resultTitle = document.getElementById('result-title');
         const roundFakePlayer = document.getElementById('round-fake-player');
         const roundMissionLabel = document.getElementById('round-mission-label');
+        const roundFramePlayer = document.getElementById('round-frame-player');
         const resultDetail = document.getElementById('result-detail');
         const nextRoundBtn = document.getElementById('next-round-btn');
 
@@ -579,6 +630,7 @@
         let detectiveScore = 0;
         let fakeScore = 0;
         let fakerIndex = 0;
+        let frameTargetIndex = null;
         let selectedMission = '';
         let selectedTheme = 'all';
         let roundQuestions = [];
@@ -628,6 +680,7 @@
             currentPlayer = 0;
             currentQuestion = 0;
             fakerIndex = Math.floor(Math.random() * playerCount);
+            frameTargetIndex = null;
             selectedMission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
             roundQuestions = pickQuestions();
             answers = Array.from({ length: playerCount }, () => []);
@@ -681,6 +734,61 @@
             currentPlayer += 1;
             if (currentPlayer < playerCount) {
                 passToPlayer();
+                return;
+            }
+
+            startSecretPhase();
+        }
+
+        function startSecretPhase() {
+            currentPlayer = 0;
+            prepareSecretPass();
+        }
+
+        function prepareSecretPass() {
+            secretStepLabel.textContent = `플레이어 ${currentPlayer + 1}`;
+            secretPlayerLabel.textContent = `플레이어 ${currentPlayer + 1}`;
+            secretCopy.textContent = '다음 플레이어만 화면을 확인하세요.';
+            secretActionArea.innerHTML = '<button class="button" type="button" onclick="openSecretAction()">확인</button>';
+            showScreen('secret');
+        }
+
+        function openSecretAction() {
+            const isFake = currentPlayer === fakerIndex;
+            if (!isFake) {
+                secretCopy.textContent = '이번 단계에서는 할 일이 없습니다. 다음 사람에게 넘기세요.';
+                secretActionArea.innerHTML = '<button class="button" type="button" onclick="advanceSecretPhase()">다음 사람으로</button>';
+                return;
+            }
+
+            secretCopy.textContent = '탐정들이 잘못 찍게 만들고 싶은 대상을 한 명 고르세요.';
+            const grid = document.createElement('div');
+            grid.className = 'secret-grid';
+
+            for (let i = 0; i < playerCount; i += 1) {
+                if (i === fakerIndex) {
+                    continue;
+                }
+
+                const button = document.createElement('button');
+                button.className = 'secret-btn';
+                button.type = 'button';
+                button.textContent = `플레이어 ${i + 1}`;
+                button.addEventListener('click', () => {
+                    frameTargetIndex = i;
+                    advanceSecretPhase();
+                });
+                grid.appendChild(button);
+            }
+
+            secretActionArea.innerHTML = '';
+            secretActionArea.appendChild(grid);
+        }
+
+        function advanceSecretPhase() {
+            currentPlayer += 1;
+            if (currentPlayer < playerCount) {
+                prepareSecretPass();
                 return;
             }
 
@@ -754,13 +862,17 @@
                 resultTitle.textContent = '🕵️ 탐정 팀 승리';
                 resultDetail.innerHTML = `가짜를 정확히 찾아냈습니다.<br>선택된 사람: 플레이어 ${suspectIndex + 1}<br>탐정 팀이 1점을 획득합니다.`;
             } else {
-                fakeScore += 2;
+                const frameBonus = frameTargetIndex === suspectIndex ? 1 : 0;
+                fakeScore += 2 + frameBonus;
                 resultTitle.textContent = '😈 가짜 생존 성공';
-                resultDetail.innerHTML = `탐정 팀이 속았습니다.<br>지목된 사람: 플레이어 ${suspectIndex + 1}<br>가짜가 2점을 획득합니다.`;
+                resultDetail.innerHTML = frameBonus
+                    ? `탐정 팀이 속았습니다.<br>지목된 사람: 플레이어 ${suspectIndex + 1}<br>가짜의 역지목이 성공해 <strong>총 3점</strong>을 획득합니다.`
+                    : `탐정 팀이 속았습니다.<br>지목된 사람: 플레이어 ${suspectIndex + 1}<br>가짜가 2점을 획득합니다.`;
             }
 
             roundFakePlayer.textContent = `플레이어 ${fakerIndex + 1}`;
             roundMissionLabel.textContent = selectedMission;
+            roundFramePlayer.textContent = frameTargetIndex === null ? '-' : `플레이어 ${frameTargetIndex + 1}`;
             updateStatusBar();
 
             const finished = currentRound >= totalRounds;
