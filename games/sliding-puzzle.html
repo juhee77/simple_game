@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>슬라이딩 퍼즐 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .puzzle-shell {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 0.7rem 1.1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-color: transparent;
+        }
+
+        .puzzle-hint {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        .puzzle-board {
+            display: grid;
+            gap: 0.75rem;
+            width: min(100%, 520px);
+            margin: 0 auto;
+            touch-action: manipulation;
+        }
+
+        .tile {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95));
+            color: #fff;
+            font-size: clamp(1.4rem, 5vw, 2rem);
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.14s ease, box-shadow 0.14s ease, opacity 0.14s ease;
+            box-shadow: 0 16px 24px rgba(15, 23, 42, 0.24);
+        }
+
+        .tile:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 28px rgba(99, 102, 241, 0.28);
+        }
+
+        .tile:disabled {
+            cursor: default;
+        }
+
+        .tile.movable {
+            outline: 2px solid rgba(248, 250, 252, 0.22);
+        }
+
+        .tile.empty {
+            background: rgba(99, 102, 241, 0.08);
+            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.16);
+        }
+
+        .result-banner {
+            min-height: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        @media (max-width: 768px) {
+            .tile {
+                border-radius: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🧩 슬라이딩 퍼즐</h1>
+            <p class="game-description">빈칸을 이용해 숫자를 1부터 순서대로 맞추세요.</p>
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="difficulty-btn" type="button" data-size="3">3 x 3</button>
+            <button class="difficulty-btn active" type="button" data-size="4">4 x 4</button>
+            <button class="difficulty-btn" type="button" data-size="5">5 x 5</button>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">난이도</span>
+                <div class="status-value" id="size-label">4 x 4</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">이동 횟수</span>
+                <div class="status-value" id="move-count">0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">시간</span>
+                <div class="status-value" id="timer">0초</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">베스트</span>
+                <div class="status-value" id="best-record">-</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="puzzle-shell">
+                <div class="puzzle-hint">탭하거나 클릭해서 빈칸 옆 숫자를 움직이세요. 키보드 화살표로도 조작할 수 있습니다.</div>
+                <div class="result-banner" id="result-banner">새 퍼즐을 섞었습니다. 가장 적은 이동으로 맞춰보세요.</div>
+                <div class="puzzle-board" id="puzzle-board" aria-label="슬라이딩 퍼즐 보드"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="button" type="button" onclick="resetPuzzle()">다시 섞기</button>
+            <button class="button button-secondary" type="button" onclick="showHint()">힌트 보기</button>
+        </div>
+    </div>
+
+    <script>
+        const BEST_RECORDS_KEY = 'sliding-puzzle-best-records';
+        const boardElement = document.getElementById('puzzle-board');
+        const moveCountElement = document.getElementById('move-count');
+        const timerElement = document.getElementById('timer');
+        const bestRecordElement = document.getElementById('best-record');
+        const sizeLabelElement = document.getElementById('size-label');
+        const resultBannerElement = document.getElementById('result-banner');
+        const difficultyButtons = Array.from(document.querySelectorAll('.difficulty-btn'));
+
+        let size = 4;
+        let tiles = [];
+        let moveCount = 0;
+        let seconds = 0;
+        let timerInterval = null;
+        let gameStarted = false;
+        let gameWon = false;
+        let bestRecords = loadBestRecords();
+
+        function loadBestRecords() {
+            try {
+                return JSON.parse(localStorage.getItem(BEST_RECORDS_KEY)) || {};
+            } catch {
+                return {};
+            }
+        }
+
+        function saveBestRecords() {
+            localStorage.setItem(BEST_RECORDS_KEY, JSON.stringify(bestRecords));
+        }
+
+        function createSolvedTiles(nextSize) {
+            const nextTiles = Array.from({ length: nextSize * nextSize }, (_, index) => index + 1);
+            nextTiles[nextTiles.length - 1] = 0;
+            return nextTiles;
+        }
+
+        function getEmptyIndex() {
+            return tiles.indexOf(0);
+        }
+
+        function getRow(index) {
+            return Math.floor(index / size);
+        }
+
+        function getCol(index) {
+            return index % size;
+        }
+
+        function getNeighbors(index) {
+            const neighbors = [];
+            const row = getRow(index);
+            const col = getCol(index);
+
+            if (row > 0) neighbors.push(index - size);
+            if (row < size - 1) neighbors.push(index + size);
+            if (col > 0) neighbors.push(index - 1);
+            if (col < size - 1) neighbors.push(index + 1);
+
+            return neighbors;
+        }
+
+        function isMovable(index) {
+            return getNeighbors(getEmptyIndex()).includes(index);
+        }
+
+        function isSolved() {
+            return tiles.every((value, index) => {
+                if (index === tiles.length - 1) {
+                    return value === 0;
+                }
+                return value === index + 1;
+            });
+        }
+
+        function formatTime(totalSeconds) {
+            if (totalSeconds < 60) {
+                return `${totalSeconds}초`;
+            }
+
+            const minutes = Math.floor(totalSeconds / 60);
+            const remainSeconds = totalSeconds % 60;
+            return `${minutes}분 ${remainSeconds}초`;
+        }
+
+        function updateStatus() {
+            moveCountElement.textContent = String(moveCount);
+            timerElement.textContent = formatTime(seconds);
+            sizeLabelElement.textContent = `${size} x ${size}`;
+
+            const record = bestRecords[String(size)];
+            bestRecordElement.textContent = record ? `${record.moves}회 / ${formatTime(record.seconds)}` : '-';
+        }
+
+        function renderBoard() {
+            boardElement.innerHTML = '';
+            boardElement.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+
+            tiles.forEach((value, index) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = value === 0 ? 'tile empty' : 'tile';
+                button.disabled = value === 0;
+                button.textContent = value === 0 ? '' : String(value);
+                button.setAttribute('aria-label', value === 0 ? '빈칸' : `${value}번 타일`);
+
+                if (value !== 0 && isMovable(index)) {
+                    button.classList.add('movable');
+                }
+
+                button.addEventListener('click', () => moveTile(index));
+                boardElement.appendChild(button);
+            });
+        }
+
+        function startTimer() {
+            if (timerInterval) {
+                return;
+            }
+
+            timerInterval = setInterval(() => {
+                seconds += 1;
+                updateStatus();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function shuffleTiles(nextSize) {
+            let nextTiles = createSolvedTiles(nextSize);
+            let emptyIndex = nextTiles.length - 1;
+            let previousIndex = -1;
+            const shuffleCount = nextSize * nextSize * 30;
+
+            for (let i = 0; i < shuffleCount; i += 1) {
+                let candidates = getNeighborsForSize(emptyIndex, nextSize).filter((candidate) => candidate !== previousIndex);
+                if (!candidates.length) {
+                    candidates = getNeighborsForSize(emptyIndex, nextSize);
+                }
+
+                const targetIndex = candidates[Math.floor(Math.random() * candidates.length)];
+                [nextTiles[emptyIndex], nextTiles[targetIndex]] = [nextTiles[targetIndex], nextTiles[emptyIndex]];
+                previousIndex = emptyIndex;
+                emptyIndex = targetIndex;
+            }
+
+            if (nextTiles.every((value, index) => value === createSolvedTiles(nextSize)[index])) {
+                return shuffleTiles(nextSize);
+            }
+
+            return nextTiles;
+        }
+
+        function getNeighborsForSize(index, nextSize) {
+            const neighbors = [];
+            const row = Math.floor(index / nextSize);
+            const col = index % nextSize;
+
+            if (row > 0) neighbors.push(index - nextSize);
+            if (row < nextSize - 1) neighbors.push(index + nextSize);
+            if (col > 0) neighbors.push(index - 1);
+            if (col < nextSize - 1) neighbors.push(index + 1);
+
+            return neighbors;
+        }
+
+        function resetPuzzle(nextSize = size) {
+            size = nextSize;
+            tiles = shuffleTiles(size);
+            moveCount = 0;
+            seconds = 0;
+            gameStarted = false;
+            gameWon = false;
+            stopTimer();
+            resultBannerElement.textContent = '새 퍼즐을 섞었습니다. 가장 적은 이동으로 맞춰보세요.';
+
+            difficultyButtons.forEach((button) => {
+                button.classList.toggle('active', Number(button.dataset.size) === size);
+            });
+
+            updateStatus();
+            renderBoard();
+        }
+
+        function completeGame() {
+            gameWon = true;
+            stopTimer();
+
+            const recordKey = String(size);
+            const currentRecord = bestRecords[recordKey];
+            if (!currentRecord || moveCount < currentRecord.moves || (moveCount === currentRecord.moves && seconds < currentRecord.seconds)) {
+                bestRecords[recordKey] = { moves: moveCount, seconds };
+                saveBestRecords();
+            }
+
+            updateStatus();
+            resultBannerElement.textContent = `완성했습니다! ${moveCount}회 이동, ${formatTime(seconds)} 걸렸습니다.`;
+        }
+
+        function moveTile(index) {
+            if (gameWon || !isMovable(index)) {
+                return;
+            }
+
+            if (!gameStarted) {
+                gameStarted = true;
+                startTimer();
+            }
+
+            const emptyIndex = getEmptyIndex();
+            [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
+            moveCount += 1;
+
+            updateStatus();
+            renderBoard();
+
+            if (isSolved()) {
+                completeGame();
+            }
+        }
+
+        function moveByKeyboard(direction) {
+            if (gameWon) {
+                return;
+            }
+
+            const emptyIndex = getEmptyIndex();
+            const row = getRow(emptyIndex);
+            const col = getCol(emptyIndex);
+            let targetIndex = -1;
+
+            if (direction === 'ArrowUp' && row < size - 1) targetIndex = emptyIndex + size;
+            if (direction === 'ArrowDown' && row > 0) targetIndex = emptyIndex - size;
+            if (direction === 'ArrowLeft' && col < size - 1) targetIndex = emptyIndex + 1;
+            if (direction === 'ArrowRight' && col > 0) targetIndex = emptyIndex - 1;
+
+            if (targetIndex !== -1) {
+                moveTile(targetIndex);
+            }
+        }
+
+        function showHint() {
+            const movableTiles = tiles
+                .map((value, index) => ({ value, index }))
+                .filter(({ value, index }) => value !== 0 && isMovable(index))
+                .map(({ value }) => value);
+
+            resultBannerElement.textContent = `지금 움직일 수 있는 타일: ${movableTiles.join(', ')}`;
+        }
+
+        difficultyButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                resetPuzzle(Number(button.dataset.size));
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                event.preventDefault();
+                moveByKeyboard(event.key);
+            }
+        });
+
+        resetPuzzle();
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>

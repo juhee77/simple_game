@@ -124,21 +124,22 @@
         <div class="game-header">
             <a href="../index.html" class="back-button">← 메인으로</a>
             <h1 class="game-title">⚡ 반응 속도 테스트</h1>
-            <p class="game-description">초록색이 되면 최대한 빨리 클릭하세요!</p>
+            <p class="game-description">초록색이 되면 최대한 빨리 탭하거나 클릭하세요!</p>
         </div>
 
         <div class="game-board">
-            <div id="game-area" class="reaction-area state-waiting" onmousedown="handleClick()">
+            <div id="game-area" class="reaction-area state-waiting" tabindex="0" role="button" aria-label="반응 속도 게임 영역">
                 <div class="status-icon" id="status-icon">⏳</div>
                 <div class="helper-text" id="main-text">클릭해서 시작하세요</div>
                 <div class="helper-text" id="sub-text" style="font-size: 1rem; font-weight: 400; opacity: 0.8;">(너무 빨리
-                    누르면 패널티가 있어요!)</div>
+                    누르면 패널티가 있어요. 터치와 스페이스바도 지원합니다.)</div>
             </div>
 
             <div class="history-list hidden" id="history-container">
                 <h3>📜 최근 기록</h3>
                 <div id="history-list"></div>
                 <div class="avg-score" id="average-score"></div>
+                <div class="avg-score" id="best-score"></div>
             </div>
 
             <div style="text-align: center; margin-top: 2rem;">
@@ -148,17 +149,21 @@
     </div>
 
     <script>
+        const BEST_SCORE_KEY = 'reaction-best-score';
         const gameArea = document.getElementById('game-area');
         const mainText = document.getElementById('main-text');
         const subText = document.getElementById('sub-text');
         const icon = document.getElementById('status-icon');
         const historyContainer = document.getElementById('history-container');
         const historyList = document.getElementById('history-list');
+        const averageScore = document.getElementById('average-score');
+        const bestScoreElement = document.getElementById('best-score');
 
         let state = 'start'; // start, waiting, ready, result
         let startTime = 0;
         let timeoutId = null;
         let scores = [];
+        let bestScore = Number(localStorage.getItem(BEST_SCORE_KEY)) || 0;
 
         function handleClick() {
             if (state === 'start' || state === 'result') {
@@ -173,6 +178,7 @@
         function startGame() {
             state = 'waiting';
             gameArea.className = 'reaction-area state-waiting';
+            gameArea.style.backgroundColor = '';
             mainText.textContent = "초록색이 되면 클릭하세요!";
             subText.textContent = "기다리세요...";
             icon.textContent = "🔴";
@@ -197,6 +203,7 @@
         function tooEarly() {
             state = 'result'; // Go to result state to prevent accidental clicks
             clearTimeout(timeoutId);
+            timeoutId = null;
             gameArea.className = 'reaction-area state-waiting'; // Keep red
             gameArea.style.backgroundColor = '#fca5a5'; // Lighter red
             mainText.textContent = "너무 빨라요! 🙅‍♂️";
@@ -210,6 +217,7 @@
 
             state = 'result';
             gameArea.className = 'reaction-area state-now';
+            gameArea.style.backgroundColor = '';
             mainText.textContent = `${timeDiff} ms`;
 
             let message = '';
@@ -222,6 +230,11 @@
 
             subText.textContent = `${emoji} ${message} (클릭하여 다시하기)`;
             icon.textContent = "⏱️";
+
+            if (bestScore === 0 || timeDiff < bestScore) {
+                bestScore = timeDiff;
+                localStorage.setItem(BEST_SCORE_KEY, String(bestScore));
+            }
 
             saveScore(timeDiff);
         }
@@ -248,7 +261,8 @@
             `).join(''); // Reverse order for display? No, chronological is fine.
 
             const avg = Math.floor(scores.reduce((a, b) => a + b, 0) / scores.length);
-            document.getElementById('average-score').textContent = `평균: ${avg} ms`;
+            averageScore.textContent = `평균: ${avg} ms`;
+            bestScoreElement.textContent = bestScore > 0 ? `최고 기록: ${bestScore} ms` : '';
         }
 
         function resetAll() {
@@ -256,11 +270,23 @@
             updateHistory();
             state = 'start';
             gameArea.className = 'reaction-area state-waiting';
+            gameArea.style.backgroundColor = '';
             mainText.textContent = "클릭해서 시작하세요";
-            subText.textContent = "(너무 빨리 누르면 패널티가 있어요!)";
+            subText.textContent = "(너무 빨리 누르면 패널티가 있어요. 터치와 스페이스바도 지원합니다.)";
             icon.textContent = "⏳";
             clearTimeout(timeoutId);
+            timeoutId = null;
         }
+
+        gameArea.addEventListener('pointerdown', handleClick);
+        gameArea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleClick();
+            }
+        });
+
+        updateHistory();
     </script>
     <script src="../scripts/game-common.js"></script>
 </body>

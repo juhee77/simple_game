@@ -171,17 +171,28 @@
 
     <script>
         const GRID_SIZE = 4;
+        const BEST_SCORE_KEY = '2048-best';
+        const GAME_STATE_KEY = '2048-state';
+        const SWIPE_THRESHOLD = 30;
+        const boardElement = document.getElementById('game-2048');
         let grid = [];
         let score = 0;
-        let bestScore = localStorage.getItem('2048-best') || 0;
+        let bestScore = Number(localStorage.getItem(BEST_SCORE_KEY)) || 0;
         let touchStartX, touchStartY;
 
         function initGame() {
+            const restored = loadGameState();
+            if (restored) {
+                updateUI();
+                return;
+            }
+
             grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
             score = 0;
             addRandomTile();
             addRandomTile();
             updateUI();
+            saveGameState();
         }
 
         function addRandomTile() {
@@ -199,7 +210,6 @@
         }
 
         function updateUI() {
-            const boardElement = document.getElementById('game-2048');
             boardElement.innerHTML = '';
 
             for (let i = 0; i < GRID_SIZE; i++) {
@@ -216,6 +226,35 @@
 
             document.getElementById('score').textContent = score;
             document.getElementById('best-score').textContent = bestScore;
+        }
+
+        function saveGameState() {
+            localStorage.setItem(GAME_STATE_KEY, JSON.stringify({ grid, score }));
+        }
+
+        function loadGameState() {
+            try {
+                const savedState = JSON.parse(localStorage.getItem(GAME_STATE_KEY));
+                if (!savedState) return false;
+
+                const isValidGrid = Array.isArray(savedState.grid)
+                    && savedState.grid.length === GRID_SIZE
+                    && savedState.grid.every(row =>
+                        Array.isArray(row)
+                        && row.length === GRID_SIZE
+                        && row.every(cell => Number.isInteger(cell) && cell >= 0)
+                    );
+
+                if (!isValidGrid || !Number.isInteger(savedState.score) || savedState.score < 0) {
+                    return false;
+                }
+
+                grid = savedState.grid.map(row => [...row]);
+                score = savedState.score;
+                return true;
+            } catch {
+                return false;
+            }
         }
 
         function move(direction) {
@@ -246,12 +285,14 @@
             if (moved) {
                 grid = newGrid;
                 addRandomTile();
-                updateUI();
 
                 if (score > bestScore) {
                     bestScore = score;
-                    localStorage.setItem('2048-best', bestScore);
+                    localStorage.setItem(BEST_SCORE_KEY, bestScore);
                 }
+
+                updateUI();
+                saveGameState();
 
                 if (isGameOver()) {
                     setTimeout(() => alert('게임 오버! 점수: ' + score), 200);
@@ -300,6 +341,7 @@
         }
 
         function resetGame() {
+            localStorage.removeItem(GAME_STATE_KEY);
             initGame();
         }
 
@@ -318,12 +360,12 @@
         });
 
         // Touch controls
-        document.addEventListener('touchstart', (e) => {
+        boardElement.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
         });
 
-        document.addEventListener('touchend', (e) => {
+        boardElement.addEventListener('touchend', (e) => {
             if (!touchStartX || !touchStartY) return;
 
             const touchEndX = e.changedTouches[0].clientX;
@@ -331,6 +373,13 @@
 
             const dx = touchEndX - touchStartX;
             const dy = touchEndY - touchStartY;
+            const distance = Math.max(Math.abs(dx), Math.abs(dy));
+
+            if (distance < SWIPE_THRESHOLD) {
+                touchStartX = null;
+                touchStartY = null;
+                return;
+            }
 
             if (Math.abs(dx) > Math.abs(dy)) {
                 move(dx > 0 ? 'right' : 'left');

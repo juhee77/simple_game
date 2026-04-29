@@ -88,10 +88,9 @@
         }
 
         .card-back {
-            background-color: #ffd1dc;
-            background-image: url('../assets/images/card_back.png');
-            background-size: 150px;
-            background-repeat: repeat;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.45), transparent 35%),
+                linear-gradient(135deg, #ffd1dc, #f9a8d4);
             border: 3px solid white;
         }
 
@@ -111,12 +110,17 @@
         }
 
         .card-front {
-            background-color: white;
+            background:
+                radial-gradient(circle at top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.82) 45%, rgba(224, 231, 255, 0.92)),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.9), var(--tile-accent, #a8e6cf));
             transform: rotateY(180deg);
             border: 3px solid var(--cute-blue);
-            background-image: url('../assets/images/characters.png');
-            background-size: 400% 400%;
-            /* 4x4 sprite sheet */
+            font-size: clamp(2rem, 6vw, 3rem);
+            text-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+        }
+
+        .card-emoji {
+            transform: translateY(2px);
         }
 
         @keyframes pulse {
@@ -246,8 +250,8 @@
 
         <div class="game-board">
             <div class="difficulty-selector">
-                <button class="difficulty-btn active" onclick="setDifficulty(4)">4x4 (쉬움)</button>
-                <button class="difficulty-btn" onclick="setDifficulty(6)">6x4 (어려움)</button>
+                <button class="difficulty-btn active" onclick="setDifficulty(4, this)">4x4 (쉬움)</button>
+                <button class="difficulty-btn" onclick="setDifficulty(6, this)">6x4 (어려움)</button>
             </div>
 
             <div class="game-stats">
@@ -289,8 +293,7 @@
     </div>
 
     <script>
-        // Use indices for sprite sheet positions (0-15 for a 4x4 grid)
-        const characterIndices = Array.from({ length: 16 }, (_, i) => i);
+        const characterItems = ['🐶', '🐱', '🦊', '🐼', '🐸', '🐵', '🐹', '🐰', '🦁', '🐻', '🐯', '🐮', '🐨', '🦄', '🐙', '🐥'];
 
         let cards = [];
         let flippedCards = [];
@@ -301,10 +304,15 @@
         let isLocked = false;
         let currentSize = 16; // Default 4x4
 
-        function setDifficulty(cols) {
+        function getAccent(index) {
+            const hue = (index * 37) % 360;
+            return `hsl(${hue} 80% 82%)`;
+        }
+
+        function setDifficulty(cols, button) {
             const btns = document.querySelectorAll('.difficulty-btn');
             btns.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            button.classList.add('active');
 
             const grid = document.getElementById('grid');
             if (cols === 6) {
@@ -335,38 +343,28 @@
 
             // Create pairs
             const pairCount = currentSize / 2;
-            // Shuffle indices to pick random characters
-            const shuffledIndices = characterIndices.sort(() => 0.5 - Math.random());
-            const selectedIndices = shuffledIndices.slice(0, pairCount);
+            const shuffledCharacters = [...characterItems];
+            shuffle(shuffledCharacters);
+            const selectedCharacters = shuffledCharacters.slice(0, pairCount);
 
-            const gameCards = [...selectedIndices, ...selectedIndices];
+            const gameCards = [...selectedCharacters, ...selectedCharacters];
 
             // Shuffle cards
             shuffle(gameCards);
 
             // Create DOM elements
-            gameCards.forEach((charIndex, index) => {
+            gameCards.forEach((character, index) => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.dataset.index = index;
-                card.dataset.charIndex = charIndex;
-
-                // Calculate background position
-                // Assuming 4 columns in sprite sheet
-                const cols = 4;
-                const row = Math.floor(charIndex / cols);
-                const col = charIndex % cols;
-
-                // background-position % = (index / (total - 1)) * 100
-                // Since we have 4 items, positions are 0%, 33.33%, 66.66%, 100%
-                const posX = col * (100 / (cols - 1));
-                const posY = row * (100 / (cols - 1)); // Assuming 4 rows as well
-
-                const frontStyle = `background-position: ${posX}% ${posY}%`;
+                card.dataset.charKey = character;
+                const accent = getAccent(characterItems.indexOf(character));
 
                 card.innerHTML = `
                     <div class="card-face card-back"></div>
-                    <div class="card-face card-front" style="${frontStyle}"></div>
+                    <div class="card-face card-front" style="--tile-accent: ${accent}">
+                        <span class="card-emoji">${character}</span>
+                    </div>
                 `;
 
                 card.addEventListener('click', flipCard);
@@ -399,7 +397,7 @@
 
         function checkForMatch() {
             const [card1, card2] = flippedCards;
-            const match = card1.dataset.charIndex === card2.dataset.charIndex;
+            const match = card1.dataset.charKey === card2.dataset.charKey;
 
             isLocked = true;
 
