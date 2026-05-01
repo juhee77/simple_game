@@ -85,6 +85,10 @@
             line-height: 1.5;
         }
 
+        .mode-note {
+            margin-top: 0.35rem;
+        }
+
         .status-strip {
             display: flex;
             justify-content: space-between;
@@ -173,12 +177,33 @@
             margin-top: 1.2rem;
         }
 
+        .teamboard {
+            display: none;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+            margin-top: 1.2rem;
+        }
+
+        .teamboard.active {
+            display: grid;
+        }
+
         .score-box {
             background: rgba(15, 23, 42, 0.78);
             border: 1px solid rgba(148, 163, 184, 0.14);
             border-radius: 18px;
             padding: 1rem 0.9rem;
             text-align: center;
+        }
+
+        .score-box.team-a {
+            border-color: rgba(251, 191, 36, 0.32);
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.14), rgba(249, 115, 22, 0.14));
+        }
+
+        .score-box.team-b {
+            border-color: rgba(56, 189, 248, 0.32);
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(59, 130, 246, 0.14));
         }
 
         .score-label {
@@ -222,6 +247,27 @@
 
         .auction-player {
             font-weight: 800;
+        }
+
+        .team-tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 48px;
+            padding: 0.28rem 0.58rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.03em;
+            color: #fff;
+        }
+
+        .team-tag.team-a {
+            background: rgba(245, 158, 11, 0.9);
+        }
+
+        .team-tag.team-b {
+            background: rgba(14, 165, 233, 0.88);
         }
 
         .auction-bid {
@@ -325,6 +371,10 @@
                 <div class="status-value" id="status-round">3</div>
             </div>
             <div class="status-item">
+                <span class="status-label">플레이 모드</span>
+                <div class="status-value" id="status-mode">개인전</div>
+            </div>
+            <div class="status-item">
                 <span class="status-label">현재 단어</span>
                 <div class="status-value" id="status-word">-</div>
             </div>
@@ -367,6 +417,14 @@
                                 <option value="activity">행동/상황</option>
                             </select>
                             <div class="field-help">같은 성격의 단어끼리 모아서 분위기를 바꿀 수 있습니다.</div>
+                        </div>
+                        <div class="field">
+                            <label for="play-mode">플레이 모드</label>
+                            <select id="play-mode">
+                                <option value="solo" selected>개인전</option>
+                                <option value="team">팀전</option>
+                            </select>
+                            <div class="field-help mode-note">팀전은 참가자를 번갈아 A팀과 B팀으로 배치해 점수를 합산합니다.</div>
                         </div>
                     </div>
                     <div class="controls">
@@ -443,6 +501,7 @@
                 <div class="panel result-card">
                     <div class="result-title" id="result-title"></div>
                     <div class="result-detail" id="result-detail"></div>
+                    <div class="teamboard" id="teamboard"></div>
                     <div class="scoreboard" id="scoreboard"></div>
                     <div class="controls">
                         <button class="button" type="button" id="next-btn" onclick="nextStep()">다음 라운드</button>
@@ -476,6 +535,7 @@
         const roundLabel = document.getElementById('round-label');
         const targetWordElement = document.getElementById('target-word');
         const statusRound = document.getElementById('status-round');
+        const statusMode = document.getElementById('status-mode');
         const statusWord = document.getElementById('status-word');
         const statusBid = document.getElementById('status-bid');
         const bidPlayerLabel = document.getElementById('bid-player-label');
@@ -491,6 +551,7 @@
         const countdownRing = document.getElementById('countdown-ring');
         const resultTitle = document.getElementById('result-title');
         const resultDetail = document.getElementById('result-detail');
+        const teamboard = document.getElementById('teamboard');
         const scoreboard = document.getElementById('scoreboard');
         const nextBtn = document.getElementById('next-btn');
 
@@ -504,6 +565,8 @@
         let explainerIndex = 0;
         let winningBid = 0;
         let activePack = 'all';
+        let playMode = 'solo';
+        let playerTeams = [];
         let activeBidders = [];
         let tieBreakMode = false;
         let countdownTimer = null;
@@ -528,19 +591,66 @@
             return bank[Math.floor(Math.random() * bank.length)];
         }
 
+        function getTeamClass(teamIndex) {
+            return teamIndex === 0 ? 'team-a' : 'team-b';
+        }
+
+        function getTeamLabel(teamIndex) {
+            return teamIndex === 0 ? 'A팀' : 'B팀';
+        }
+
+        function getPlayerLabel(playerIndex) {
+            if (playMode !== 'team') {
+                return `플레이어 ${playerIndex + 1}`;
+            }
+            return `플레이어 ${playerIndex + 1} · ${getTeamLabel(playerTeams[playerIndex])}`;
+        }
+
+        function getTeamTotals() {
+            const totals = [0, 0];
+            if (playMode !== 'team') {
+                return totals;
+            }
+
+            scores.forEach((score, index) => {
+                totals[playerTeams[index]] += score;
+            });
+
+            return totals;
+        }
+
         function updateHeader() {
             statusRound.textContent = `${currentRound} / ${totalRounds}`;
+            statusMode.textContent = playMode === 'team' ? '팀전' : '개인전';
             statusWord.textContent = currentWord || '-';
             statusBid.textContent = winningBid ? `${winningBid}단어` : '-';
         }
 
         function renderScoreboard() {
+            teamboard.innerHTML = '';
             scoreboard.innerHTML = '';
+
+            if (playMode === 'team') {
+                const totals = getTeamTotals();
+                teamboard.classList.add('active');
+                totals.forEach((score, index) => {
+                    const box = document.createElement('div');
+                    box.className = `score-box ${getTeamClass(index)}`;
+                    box.innerHTML = `
+                        <div class="score-label">${getTeamLabel(index)}</div>
+                        <div class="score-value">${score}점</div>
+                    `;
+                    teamboard.appendChild(box);
+                });
+            } else {
+                teamboard.classList.remove('active');
+            }
+
             scores.forEach((score, index) => {
                 const box = document.createElement('div');
                 box.className = 'score-box';
                 box.innerHTML = `
-                    <div class="score-label">플레이어 ${index + 1}</div>
+                    <div class="score-label">${getPlayerLabel(index)}</div>
                     <div class="score-value">${score}점</div>
                 `;
                 scoreboard.appendChild(box);
@@ -551,8 +661,10 @@
             playerCount = Math.min(10, Math.max(3, Number(document.getElementById('player-count').value) || 4));
             totalRounds = Number(document.getElementById('round-count').value) || 3;
             activePack = document.getElementById('word-pack').value || 'all';
+            playMode = document.getElementById('play-mode').value || 'solo';
             currentRound = 0;
             scores = Array.from({ length: playerCount }, () => 0);
+            playerTeams = Array.from({ length: playerCount }, (_, index) => index % 2);
             startRound();
         }
 
@@ -598,7 +710,7 @@
 
         function updateBidTurn() {
             const playerIndex = activeBidders[currentPlayer];
-            bidPlayerLabel.textContent = `플레이어 ${playerIndex + 1}`;
+            bidPlayerLabel.textContent = getPlayerLabel(playerIndex);
             bidCopy.textContent = tieBreakMode
                 ? `동점자끼리 다시 부릅니다. 같은 가격이 또 나오면 추첨으로 설명자를 정합니다.`
                 : '자신만 보고 선택하세요. 낮게 부를수록 직접 설명할 확률이 높습니다.';
@@ -632,8 +744,8 @@
 
             explainerIndex = tiedPlayers[Math.floor(Math.random() * tiedPlayers.length)];
             winnerPill.textContent = tiedPlayers.length > 1
-                ? `동점 추첨: 플레이어 ${explainerIndex + 1}`
-                : `설명자: 플레이어 ${explainerIndex + 1}`;
+                ? `동점 추첨: ${getPlayerLabel(explainerIndex)}`
+                : `설명자: ${getPlayerLabel(explainerIndex)}`;
             auctionCopy.textContent = tiedPlayers.length > 1
                 ? `최저 입찰이 다시 같아 추첨으로 설명자를 정했습니다.`
                 : '가장 낮게 부른 플레이어가 설명합니다.';
@@ -642,8 +754,12 @@
             bids.forEach((bid, index) => {
                 const row = document.createElement('div');
                 row.className = `auction-row ${index === explainerIndex ? 'winner' : ''}`;
+                const teamTag = playMode === 'team'
+                    ? `<span class="team-tag ${getTeamClass(playerTeams[index])}">${getTeamLabel(playerTeams[index])}</span>`
+                    : '';
                 row.innerHTML = `
-                    <div class="auction-player">플레이어 ${index + 1}</div>
+                    <div class="auction-player">${getPlayerLabel(index)}</div>
+                    ${teamTag}
                     <div class="auction-bid">${bid}단어</div>
                 `;
                 auctionList.appendChild(row);
@@ -654,7 +770,7 @@
         }
 
         function startExplanation() {
-            playPlayerCopy.textContent = `플레이어 ${explainerIndex + 1}이 설명합니다.`;
+            playPlayerCopy.textContent = `${getPlayerLabel(explainerIndex)}이 설명합니다.`;
             playWordLimit.textContent = `${winningBid}단어 제한`;
             playTargetWord.textContent = currentWord;
             remainingSeconds = 30;
@@ -688,10 +804,33 @@
                 const earned = 1 + bonus;
                 scores[explainerIndex] += earned;
                 resultTitle.textContent = '👏 설명 성공';
-                resultDetail.innerHTML = `플레이어 ${explainerIndex + 1}이 <strong>${winningBid}단어</strong> 안에 설명을 마쳤습니다.<br>기본 1점 + 저단어 보너스 ${earned - 1}점으로 총 <strong>${earned}점</strong>을 획득합니다.`;
+                resultDetail.innerHTML = `${getPlayerLabel(explainerIndex)}이 <strong>${winningBid}단어</strong> 안에 설명을 마쳤습니다.<br>기본 1점 + 저단어 보너스 ${earned - 1}점으로 총 <strong>${earned}점</strong>을 획득합니다.${playMode === 'team' ? '<br>팀전이므로 이 점수는 팀 합산에도 바로 반영됩니다.' : ''}`;
             } else {
                 resultTitle.textContent = '💥 설명 실패';
-                resultDetail.innerHTML = `플레이어 ${explainerIndex + 1}이 제한 안에 설명하지 못했습니다.<br>이번 라운드는 점수 없이 종료됩니다.`;
+                resultDetail.innerHTML = `${getPlayerLabel(explainerIndex)}이 제한 안에 설명하지 못했습니다.<br>이번 라운드는 점수 없이 종료됩니다.`;
+            }
+
+            if (currentRound >= totalRounds) {
+                if (playMode === 'team') {
+                    const totals = getTeamTotals();
+                    if (totals[0] === totals[1]) {
+                        resultDetail.innerHTML += `<br><br>최종 결과: <strong>무승부</strong> (${getTeamLabel(0)} ${totals[0]}점 / ${getTeamLabel(1)} ${totals[1]}점)`;
+                    } else {
+                        const winner = totals[0] > totals[1] ? 0 : 1;
+                        resultDetail.innerHTML += `<br><br>최종 우승: <strong>${getTeamLabel(winner)}</strong> (${totals[winner]}점)`;
+                    }
+                } else {
+                    const topScore = Math.max(...scores);
+                    const leaders = scores
+                        .map((score, index) => ({ score, index }))
+                        .filter((entry) => entry.score === topScore);
+
+                    if (leaders.length > 1) {
+                        resultDetail.innerHTML += `<br><br>최종 공동 우승: <strong>${leaders.map((entry) => getPlayerLabel(entry.index)).join(', ')}</strong>`;
+                    } else {
+                        resultDetail.innerHTML += `<br><br>최종 우승: <strong>${getPlayerLabel(leaders[0].index)}</strong>`;
+                    }
+                }
             }
 
             renderScoreboard();
