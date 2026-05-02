@@ -353,6 +353,10 @@
             line-height: 1.8;
         }
 
+        .vote-copy {
+            margin-bottom: 1rem;
+        }
+
         .controls {
             margin-top: 1.4rem;
         }
@@ -429,7 +433,7 @@
                         <button class="button" type="button" onclick="startGame()">게임 시작</button>
                     </div>
                     <div class="setup-tip" style="margin-top: 1rem;">
-                        탐정 팀은 맞히면 1점, 가짜는 살아남으면 2점을 얻습니다.
+                        답변 공개 뒤 토론하고, 전원이 비밀 투표합니다. 탐정 팀은 맞히면 1점, 가짜는 살아남으면 2점을 얻습니다.
                     </div>
                 </div>
             </section>
@@ -497,11 +501,36 @@
                 <div class="panel">
                     <div class="round-banner">
                         <span class="pill">답변 공개</span>
-                        <span class="pill">패턴을 보고 가짜를 지목하세요</span>
+                        <span class="pill">패턴을 보고 토론한 뒤 비밀 투표하세요</span>
                     </div>
                     <div class="answer-board" id="answer-board"></div>
                     <div class="summary-board" id="summary-board"></div>
-                    <div class="suspect-grid" id="suspect-grid"></div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startVoting()">비밀 투표 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vote-pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="round-banner">
+                        <span class="pill">비밀 투표</span>
+                        <span class="pill" id="vote-step-label">1 / 4 표</span>
+                    </div>
+                    <p class="subtitle-box">다음 플레이어만 화면을 확인하세요.</p>
+                    <div class="pass-player" id="vote-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="openVoting()">투표하기</button>
+                </div>
+            </section>
+
+            <section id="vote-screen" class="screen">
+                <div class="panel secret-card">
+                    <div class="round-banner">
+                        <span class="pill">비밀 투표</span>
+                        <span class="pill" id="vote-secret-player-label">플레이어 1</span>
+                    </div>
+                    <div class="subtitle-box vote-copy" id="vote-copy">가짜라고 의심하는 사람을 고르세요. 본인에게는 투표할 수 없습니다.</div>
+                    <div class="suspect-grid" id="vote-grid"></div>
                 </div>
             </section>
 
@@ -591,6 +620,8 @@
             role: document.getElementById('role-screen'),
             question: document.getElementById('question-screen'),
             review: document.getElementById('review-screen'),
+            votePass: document.getElementById('vote-pass-screen'),
+            vote: document.getElementById('vote-screen'),
             result: document.getElementById('result-screen')
         };
 
@@ -614,7 +645,11 @@
         const optionRightValue = document.getElementById('option-right-value');
         const answerBoard = document.getElementById('answer-board');
         const summaryBoard = document.getElementById('summary-board');
-        const suspectGrid = document.getElementById('suspect-grid');
+        const voteStepLabel = document.getElementById('vote-step-label');
+        const votePlayerLabel = document.getElementById('vote-player-label');
+        const voteSecretPlayerLabel = document.getElementById('vote-secret-player-label');
+        const voteCopy = document.getElementById('vote-copy');
+        const voteGrid = document.getElementById('vote-grid');
         const resultTitle = document.getElementById('result-title');
         const roundFakePlayer = document.getElementById('round-fake-player');
         const roundMissionLabel = document.getElementById('round-mission-label');
@@ -635,6 +670,9 @@
         let selectedTheme = 'all';
         let roundQuestions = [];
         let answers = [];
+        let votes = [];
+        let availableQuestions = [];
+        let availableMissions = [];
 
         function showScreen(name) {
             Object.values(screens).forEach((screen) => screen.classList.remove('active'));
@@ -650,12 +688,30 @@
             return next;
         }
 
-        function pickQuestions() {
+        function resetQuestionPool() {
             const themedQuestions = selectedTheme === 'all'
                 ? QUESTIONS
                 : QUESTIONS.filter((question) => question.category === selectedTheme);
             const source = themedQuestions.length >= 4 ? themedQuestions : QUESTIONS;
-            return shuffle(source).slice(0, 4);
+            availableQuestions = shuffle(source);
+        }
+
+        function pickQuestions() {
+            if (availableQuestions.length < 4) {
+                resetQuestionPool();
+            }
+            return availableQuestions.splice(0, 4);
+        }
+
+        function pickMission() {
+            if (availableMissions.length === 0) {
+                availableMissions = shuffle(MISSIONS);
+            }
+            return availableMissions.pop();
+        }
+
+        function getPlayerLabel(playerIndex) {
+            return `플레이어 ${playerIndex + 1}`;
         }
 
         function updateStatusBar() {
@@ -671,6 +727,8 @@
             currentRound = 0;
             detectiveScore = 0;
             fakeScore = 0;
+            availableQuestions = [];
+            availableMissions = [];
             statusRounds.textContent = totalRounds;
             startRound();
         }
@@ -681,9 +739,10 @@
             currentQuestion = 0;
             fakerIndex = Math.floor(Math.random() * playerCount);
             frameTargetIndex = null;
-            selectedMission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
+            selectedMission = pickMission();
             roundQuestions = pickQuestions();
             answers = Array.from({ length: playerCount }, () => []);
+            votes = Array.from({ length: playerCount }, () => null);
 
             roundLabel.textContent = `${currentRound} / ${totalRounds} 라운드`;
             questionSetLabel.textContent = `${THEME_LABELS[selectedTheme]} · ${roundQuestions.length}문항`;
@@ -692,7 +751,7 @@
         }
 
         function passToPlayer() {
-            currentPlayerLabel.textContent = `플레이어 ${currentPlayer + 1}`;
+            currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
             showScreen('pass');
         }
 
@@ -746,8 +805,8 @@
         }
 
         function prepareSecretPass() {
-            secretStepLabel.textContent = `플레이어 ${currentPlayer + 1}`;
-            secretPlayerLabel.textContent = `플레이어 ${currentPlayer + 1}`;
+            secretStepLabel.textContent = getPlayerLabel(currentPlayer);
+            secretPlayerLabel.textContent = getPlayerLabel(currentPlayer);
             secretCopy.textContent = '다음 플레이어만 화면을 확인하세요.';
             secretActionArea.innerHTML = '<button class="button" type="button" onclick="openSecretAction()">확인</button>';
             showScreen('secret');
@@ -773,7 +832,7 @@
                 const button = document.createElement('button');
                 button.className = 'secret-btn';
                 button.type = 'button';
-                button.textContent = `플레이어 ${i + 1}`;
+                button.textContent = getPlayerLabel(i);
                 button.addEventListener('click', () => {
                     frameTargetIndex = i;
                     advanceSecretPhase();
@@ -801,7 +860,7 @@
 
             const title = document.createElement('div');
             title.className = 'player-name';
-            title.textContent = `플레이어 ${playerIndex + 1}`;
+            title.textContent = getPlayerLabel(playerIndex);
 
             const answerList = document.createElement('div');
             answerList.className = 'player-answers';
@@ -821,17 +880,9 @@
         function revealAnswers() {
             answerBoard.innerHTML = '';
             summaryBoard.innerHTML = '';
-            suspectGrid.innerHTML = '';
 
             for (let i = 0; i < playerCount; i += 1) {
                 answerBoard.appendChild(renderAnswerRow(i));
-
-                const suspectBtn = document.createElement('button');
-                suspectBtn.className = 'suspect-btn';
-                suspectBtn.type = 'button';
-                suspectBtn.textContent = `플레이어 ${i + 1}`;
-                suspectBtn.addEventListener('click', () => chooseSuspect(i));
-                suspectGrid.appendChild(suspectBtn);
             }
 
             roundQuestions.forEach((question, questionIndex) => {
@@ -855,29 +906,115 @@
             showScreen('review');
         }
 
-        function chooseSuspect(suspectIndex) {
+        function startVoting() {
+            currentPlayer = 0;
+            votes = Array.from({ length: playerCount }, () => null);
+            prepareVotePass();
+        }
+
+        function prepareVotePass() {
+            voteStepLabel.textContent = `${currentPlayer + 1} / ${playerCount} 표`;
+            votePlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            showScreen('votePass');
+        }
+
+        function openVoting() {
+            voteSecretPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            voteCopy.textContent = '가짜라고 의심하는 사람을 고르세요. 본인에게는 투표할 수 없습니다.';
+            voteGrid.innerHTML = '';
+
+            for (let i = 0; i < playerCount; i += 1) {
+                if (i === currentPlayer) {
+                    continue;
+                }
+
+                const voteBtn = document.createElement('button');
+                voteBtn.className = 'suspect-btn';
+                voteBtn.type = 'button';
+                voteBtn.textContent = getPlayerLabel(i);
+                voteBtn.addEventListener('click', () => submitVote(i));
+                voteGrid.appendChild(voteBtn);
+            }
+
+            showScreen('vote');
+        }
+
+        function submitVote(suspectIndex) {
+            votes[currentPlayer] = suspectIndex;
+            currentPlayer += 1;
+
+            if (currentPlayer < playerCount) {
+                prepareVotePass();
+                return;
+            }
+
+            finalizeVotes();
+        }
+
+        function buildVoteSummary(voteCounts) {
+            return voteCounts
+                .map((count, index) => ({ count, index }))
+                .filter((entry) => entry.count > 0)
+                .sort((a, b) => b.count - a.count || a.index - b.index)
+                .map((entry) => `${getPlayerLabel(entry.index)} ${entry.count}표`)
+                .join(' · ');
+        }
+
+        function chooseSuspect(suspectIndex, voteCounts, leaders) {
             const caught = suspectIndex === fakerIndex;
             if (caught) {
                 detectiveScore += 1;
                 resultTitle.textContent = '🕵️ 탐정 팀 승리';
-                resultDetail.innerHTML = `가짜를 정확히 찾아냈습니다.<br>선택된 사람: 플레이어 ${suspectIndex + 1}<br>탐정 팀이 1점을 획득합니다.`;
+                resultDetail.innerHTML = `최다 득표로 ${getPlayerLabel(suspectIndex)}이 공식 지목됐고, 실제 가짜와 일치했습니다.<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>탐정 팀이 1점을 획득합니다.`;
+            } else if (suspectIndex === null) {
+                const frameBonus = frameTargetIndex !== null && leaders.some((entry) => entry.index === frameTargetIndex) ? 1 : 0;
+                fakeScore += 2 + frameBonus;
+                resultTitle.textContent = '😈 가짜 생존 성공';
+                resultDetail.innerHTML = frameBonus
+                    ? `최다 득표가 동점으로 갈려 공식 지목이 무산됐습니다.<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>가짜의 역지목 대상이 상위권에 남아 <strong>총 3점</strong>을 획득합니다.`
+                    : `최다 득표가 동점으로 갈려 공식 지목이 무산됐습니다.<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>가짜가 2점을 획득합니다.`;
             } else {
                 const frameBonus = frameTargetIndex === suspectIndex ? 1 : 0;
                 fakeScore += 2 + frameBonus;
                 resultTitle.textContent = '😈 가짜 생존 성공';
                 resultDetail.innerHTML = frameBonus
-                    ? `탐정 팀이 속았습니다.<br>지목된 사람: 플레이어 ${suspectIndex + 1}<br>가짜의 역지목이 성공해 <strong>총 3점</strong>을 획득합니다.`
-                    : `탐정 팀이 속았습니다.<br>지목된 사람: 플레이어 ${suspectIndex + 1}<br>가짜가 2점을 획득합니다.`;
+                    ? `탐정 팀이 속았습니다.<br>공식 지목: ${getPlayerLabel(suspectIndex)}<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>가짜의 역지목이 성공해 <strong>총 3점</strong>을 획득합니다.`
+                    : `탐정 팀이 속았습니다.<br>공식 지목: ${getPlayerLabel(suspectIndex)}<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>가짜가 2점을 획득합니다.`;
             }
 
-            roundFakePlayer.textContent = `플레이어 ${fakerIndex + 1}`;
+            roundFakePlayer.textContent = getPlayerLabel(fakerIndex);
             roundMissionLabel.textContent = selectedMission;
-            roundFramePlayer.textContent = frameTargetIndex === null ? '-' : `플레이어 ${frameTargetIndex + 1}`;
+            roundFramePlayer.textContent = frameTargetIndex === null ? '-' : getPlayerLabel(frameTargetIndex);
             updateStatusBar();
 
             const finished = currentRound >= totalRounds;
+            if (finished) {
+                if (detectiveScore === fakeScore) {
+                    resultDetail.innerHTML += '<br><br>최종 결과: <strong>무승부</strong>';
+                } else if (detectiveScore > fakeScore) {
+                    resultDetail.innerHTML += '<br><br>최종 우승: <strong>탐정 팀</strong>';
+                } else {
+                    resultDetail.innerHTML += '<br><br>최종 우승: <strong>가짜 팀</strong>';
+                }
+            }
             nextRoundBtn.textContent = finished ? '처음부터 다시' : '다음 라운드';
             showScreen('result');
+        }
+
+        function finalizeVotes() {
+            const voteCounts = Array.from({ length: playerCount }, () => 0);
+            votes.forEach((voteIndex) => {
+                if (voteIndex !== null) {
+                    voteCounts[voteIndex] += 1;
+                }
+            });
+
+            const highestVote = Math.max(...voteCounts);
+            const leaders = voteCounts
+                .map((count, index) => ({ count, index }))
+                .filter((entry) => entry.count === highestVote);
+            const suspectIndex = leaders.length === 1 ? leaders[0].index : null;
+            chooseSuspect(suspectIndex, voteCounts, leaders);
         }
 
         function nextStep() {

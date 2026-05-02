@@ -571,6 +571,7 @@
         let tieBreakMode = false;
         let countdownTimer = null;
         let remainingSeconds = 30;
+        let availableWords = [];
 
         function showScreen(name) {
             Object.values(screens).forEach((screen) => screen.classList.remove('active'));
@@ -586,9 +587,16 @@
             return next;
         }
 
-        function pickWord() {
+        function refillWordPool() {
             const bank = WORD_BANKS[activePack] || WORD_BANKS.all;
-            return bank[Math.floor(Math.random() * bank.length)];
+            availableWords = shuffle(bank);
+        }
+
+        function pickWord() {
+            if (availableWords.length === 0) {
+                refillWordPool();
+            }
+            return availableWords.pop();
         }
 
         function getTeamClass(teamIndex) {
@@ -665,6 +673,7 @@
             currentRound = 0;
             scores = Array.from({ length: playerCount }, () => 0);
             playerTeams = Array.from({ length: playerCount }, (_, index) => index % 2);
+            availableWords = [];
             startRound();
         }
 
