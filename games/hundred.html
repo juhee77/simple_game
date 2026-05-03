@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>합계 100 만들기 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(245, 158, 11, 0.18), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.16), transparent 32%),
+                #0f172a;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            max-width: 960px;
+            padding-top: 1.5rem;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 26px;
+            padding: 1.4rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .intro-copy,
+        .subtitle-copy,
+        .helper-copy {
+            color: var(--text-secondary);
+            line-height: 1.75;
+            text-align: center;
+        }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .field label {
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--text-primary);
+            font: inherit;
+        }
+
+        .field-help {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .status-strip {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 800;
+            background: rgba(245, 158, 11, 0.14);
+            color: #fde68a;
+        }
+
+        .pass-card,
+        .choice-card,
+        .result-card,
+        .final-card {
+            text-align: center;
+        }
+
+        .player-name {
+            font-size: clamp(2rem, 7vw, 2.9rem);
+            font-weight: 900;
+            margin: 0.9rem 0;
+        }
+
+        .summary-grid,
+        .card-grid,
+        .result-grid,
+        .score-grid {
+            display: grid;
+            gap: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        .summary-grid,
+        .score-grid {
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        }
+
+        .card-grid,
+        .result-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+
+        .summary-box,
+        .result-box,
+        .score-box,
+        .history-box {
+            padding: 1rem 1.05rem;
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.84);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .summary-label,
+        .result-player,
+        .score-label,
+        .history-title {
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 0.45rem;
+        }
+
+        .summary-value,
+        .score-value,
+        .target-value {
+            font-size: 1.6rem;
+            font-weight: 900;
+        }
+
+        .summary-box.danger .summary-value,
+        .score-value.busted,
+        .target-value.danger {
+            color: #fda4af;
+        }
+
+        .card-btn {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.82);
+            color: var(--text-primary);
+            border-radius: 20px;
+            padding: 1rem 0.9rem;
+            font: inherit;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .card-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(245, 158, 11, 0.55);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.22);
+        }
+
+        .card-value {
+            display: block;
+            font-size: 1.7rem;
+            font-weight: 900;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-hint {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .result-choice {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.45rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(245, 158, 11, 0.14);
+            color: #fde68a;
+            font-weight: 800;
+            margin-bottom: 0.7rem;
+        }
+
+        .history-box {
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .history-list {
+            display: grid;
+            gap: 0.7rem;
+            margin-top: 0.9rem;
+        }
+
+        .history-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            color: var(--text-secondary);
+        }
+
+        .winner-title {
+            font-size: clamp(1.9rem, 5vw, 2.8rem);
+            font-weight: 900;
+            margin-bottom: 0.7rem;
+        }
+
+        .controls {
+            margin-top: 1.2rem;
+        }
+
+        @media (max-width: 640px) {
+            .panel {
+                padding: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">💯 합계 100 만들기</h1>
+            <p class="game-description">각자 손패를 숨긴 채 숫자를 내고, 100을 넘기지 않으면서 가장 가깝게 맞추세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">현재 라운드</span>
+                <div class="status-value" id="status-round">0 / 0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">현재 플레이어</span>
+                <div class="status-value" id="status-player">플레이어 1</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">생존 인원</span>
+                <div class="status-value" id="status-alive">0명</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <section id="setup-screen" class="screen active">
+                <div class="panel">
+                    <div class="intro-copy">
+                        각 플레이어는 비밀 숫자 손패를 받고, 라운드마다 한 장씩 냅니다.
+                        <br>
+                        개인 합계가 100을 넘으면 탈락, 끝까지 100에 가장 가까운 사람이 승리합니다.
+                    </div>
+                    <div class="setup-grid">
+                        <div class="field">
+                            <label for="player-count">참가자 수</label>
+                            <input id="player-count" type="number" min="2" max="8" value="4">
+                        </div>
+                        <div class="field">
+                            <label for="round-count">손패 수</label>
+                            <select id="round-count">
+                                <option value="4">4장</option>
+                                <option value="5" selected>5장</option>
+                                <option value="6">6장</option>
+                            </select>
+                            <div class="field-help">손패 수만큼 라운드가 진행됩니다.</div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startGame()">게임 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="status-strip">
+                        <span class="pill" id="turn-label">1 / 5 라운드</span>
+                        <span class="pill">다음 플레이어만 확인하세요</span>
+                    </div>
+                    <div class="subtitle-copy">이번 라운드에 낼 숫자 한 장을 고르세요.</div>
+                    <div class="player-name" id="current-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="openChoice()">손패 보기</button>
+                </div>
+            </section>
+
+            <section id="choice-screen" class="screen">
+                <div class="panel choice-card">
+                    <div class="status-strip">
+                        <span class="pill" id="choice-player-label">플레이어 1</span>
+                        <span class="pill">100을 넘기면 탈락</span>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <div class="summary-label">현재 합계</div>
+                            <div class="summary-value" id="current-total">0</div>
+                        </div>
+                        <div class="summary-box" id="target-box">
+                            <div class="summary-label">100까지 남은 수</div>
+                            <div class="target-value" id="target-left">100</div>
+                        </div>
+                    </div>
+                    <div class="helper-copy" style="margin-top: 1rem;">남은 손패 중 한 장만 선택하세요.</div>
+                    <div class="card-grid" id="card-grid"></div>
+                </div>
+            </section>
+
+            <section id="round-result-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="status-strip">
+                        <span class="pill">라운드 공개</span>
+                        <span class="pill" id="result-round-label">1라운드 결과</span>
+                    </div>
+                    <div class="result-grid" id="result-grid"></div>
+                    <div class="score-grid" id="score-grid"></div>
+                    <div class="controls">
+                        <button class="button" type="button" id="next-btn" onclick="nextStep()">다음 라운드</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="final-screen" class="screen">
+                <div class="panel final-card">
+                    <div class="winner-title" id="winner-title">플레이어 1 우승</div>
+                    <div class="helper-copy" id="winner-copy"></div>
+                    <div class="score-grid" id="final-score-grid"></div>
+                    <div class="history-box">
+                        <div class="history-title">라운드 로그</div>
+                        <div class="history-list" id="history-list"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="restartGame()">처음부터 다시</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            pass: document.getElementById('pass-screen'),
+            choice: document.getElementById('choice-screen'),
+            roundResult: document.getElementById('round-result-screen'),
+            final: document.getElementById('final-screen')
+        };
+
+        const statusRound = document.getElementById('status-round');
+        const statusPlayer = document.getElementById('status-player');
+        const statusAlive = document.getElementById('status-alive');
+        const turnLabel = document.getElementById('turn-label');
+        const currentPlayerLabel = document.getElementById('current-player-label');
+        const choicePlayerLabel = document.getElementById('choice-player-label');
+        const currentTotal = document.getElementById('current-total');
+        const targetLeft = document.getElementById('target-left');
+        const targetBox = document.getElementById('target-box');
+        const cardGrid = document.getElementById('card-grid');
+        const resultRoundLabel = document.getElementById('result-round-label');
+        const resultGrid = document.getElementById('result-grid');
+        const scoreGrid = document.getElementById('score-grid');
+        const nextBtn = document.getElementById('next-btn');
+        const winnerTitle = document.getElementById('winner-title');
+        const winnerCopy = document.getElementById('winner-copy');
+        const finalScoreGrid = document.getElementById('final-score-grid');
+        const historyList = document.getElementById('history-list');
+
+        let playerCount = 4;
+        let totalRounds = 5;
+        let currentRound = 1;
+        let currentPlayer = 0;
+        let hands = [];
+        let totals = [];
+        let alivePlayers = [];
+        let chosenCards = [];
+        let history = [];
+
+        function showScreen(name) {
+            Object.values(screens).forEach((screen) => screen.classList.remove('active'));
+            screens[name].classList.add('active');
+        }
+
+        function shuffle(array) {
+            const next = [...array];
+            for (let i = next.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [next[i], next[j]] = [next[j], next[i]];
+            }
+            return next;
+        }
+
+        function getPlayerLabel(playerIndex) {
+            return `플레이어 ${playerIndex + 1}`;
+        }
+
+        function generateHand(size) {
+            const deck = shuffle([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28]);
+            return deck.slice(0, size).sort((a, b) => a - b);
+        }
+
+        function getAliveCount() {
+            return alivePlayers.filter(Boolean).length;
+        }
+
+        function updateStatus() {
+            statusRound.textContent = `${Math.min(currentRound, totalRounds)} / ${totalRounds}`;
+            statusPlayer.textContent = currentPlayer < playerCount ? getPlayerLabel(currentPlayer) : '-';
+            statusAlive.textContent = `${getAliveCount()}명`;
+        }
+
+        function renderScoreGrid(target) {
+            target.innerHTML = '';
+            totals.forEach((total, index) => {
+                const box = document.createElement('div');
+                box.className = 'score-box';
+                box.innerHTML = `
+                    <div class="score-label">${getPlayerLabel(index)}</div>
+                    <div class="score-value ${alivePlayers[index] ? '' : 'busted'}">${alivePlayers[index] ? `${total}` : `${total} 탈락`}</div>
+                `;
+                target.appendChild(box);
+            });
+        }
+
+        function startGame() {
+            playerCount = Math.min(8, Math.max(2, Number(document.getElementById('player-count').value) || 4));
+            totalRounds = Math.min(6, Math.max(4, Number(document.getElementById('round-count').value) || 5));
+            currentRound = 1;
+            currentPlayer = 0;
+            hands = Array.from({ length: playerCount }, () => generateHand(totalRounds));
+            totals = Array.from({ length: playerCount }, () => 0);
+            alivePlayers = Array.from({ length: playerCount }, () => true);
+            chosenCards = Array.from({ length: playerCount }, () => null);
+            history = [];
+            updateStatus();
+            showPass();
+        }
+
+        function showPass() {
+            while (currentPlayer < playerCount && !alivePlayers[currentPlayer]) {
+                currentPlayer += 1;
+            }
+
+            if (currentPlayer >= playerCount) {
+                revealRound();
+                return;
+            }
+
+            turnLabel.textContent = `${currentRound} / ${totalRounds} 라운드`;
+            currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            updateStatus();
+            showScreen('pass');
+        }
+
+        function openChoice() {
+            choicePlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            currentTotal.textContent = String(totals[currentPlayer]);
+            const left = 100 - totals[currentPlayer];
+            targetLeft.textContent = String(left);
+            targetLeft.className = `target-value ${left <= 20 ? 'danger' : ''}`;
+            targetBox.classList.toggle('danger', left <= 20);
+
+            cardGrid.innerHTML = '';
+            hands[currentPlayer].forEach((card, index) => {
+                const projected = totals[currentPlayer] + card;
+                const button = document.createElement('button');
+                button.className = 'card-btn';
+                button.type = 'button';
+                button.innerHTML = `
+                    <span class="card-value">${card}</span>
+                    <span class="card-hint">${projected > 100 ? `${projected}로 초과` : `${projected} 예상`}</span>
+                `;
+                button.addEventListener('click', () => chooseCard(index));
+                cardGrid.appendChild(button);
+            });
+
+            showScreen('choice');
+        }
+
+        function chooseCard(cardIndex) {
+            const [card] = hands[currentPlayer].splice(cardIndex, 1);
+            chosenCards[currentPlayer] = card;
+            totals[currentPlayer] += card;
+            if (totals[currentPlayer] > 100) {
+                alivePlayers[currentPlayer] = false;
+            }
+
+            currentPlayer += 1;
+            showPass();
+        }
+
+        function revealRound() {
+            resultRoundLabel.textContent = `${currentRound}라운드 결과`;
+            resultGrid.innerHTML = '';
+
+            const roundLog = [];
+            chosenCards.forEach((card, index) => {
+                const box = document.createElement('div');
+                box.className = 'result-box';
+                const isBusted = !alivePlayers[index];
+                box.innerHTML = `
+                    <div class="result-player">${getPlayerLabel(index)}</div>
+                    <div class="result-choice">${card === null ? '건너뜀' : `낸 카드 ${card}`}</div>
+                    <div class="score-value ${isBusted ? 'busted' : ''}">${isBusted ? `${totals[index]} 탈락` : `${totals[index]}점`}</div>
+                `;
+                resultGrid.appendChild(box);
+                roundLog.push(`${getPlayerLabel(index)}: ${card === null ? '건너뜀' : `${card} 제출`} → ${totals[index]}${isBusted ? ' (탈락)' : ''}`);
+            });
+
+            history.push({
+                round: currentRound,
+                entries: roundLog
+            });
+
+            renderScoreGrid(scoreGrid);
+            nextBtn.textContent = currentRound >= totalRounds || getAliveCount() <= 1 ? '최종 결과 보기' : '다음 라운드';
+            updateStatus();
+            showScreen('roundResult');
+        }
+
+        function nextStep() {
+            if (currentRound >= totalRounds || getAliveCount() <= 1) {
+                showFinal();
+                return;
+            }
+
+            currentRound += 1;
+            currentPlayer = 0;
+            chosenCards = Array.from({ length: playerCount }, () => null);
+            updateStatus();
+            showPass();
+        }
+
+        function showFinal() {
+            const survivors = totals
+                .map((total, index) => ({ total, index }))
+                .filter((entry) => entry.total <= 100);
+
+            if (survivors.length === 0) {
+                winnerTitle.textContent = '전원 탈락';
+                winnerCopy.textContent = '모든 플레이어가 100을 넘겼습니다.';
+            } else {
+                const bestTotal = Math.max(...survivors.map((entry) => entry.total));
+                const winners = survivors.filter((entry) => entry.total === bestTotal);
+                if (winners.length === 1) {
+                    winnerTitle.textContent = `${getPlayerLabel(winners[0].index)} 우승`;
+                    winnerCopy.textContent = `100을 넘기지 않고 ${bestTotal}으로 가장 가깝게 도달했습니다.`;
+                } else {
+                    winnerTitle.textContent = '공동 우승';
+                    winnerCopy.textContent = `${winners.map((entry) => getPlayerLabel(entry.index)).join(', ')}이(가) ${bestTotal}으로 공동 1위입니다.`;
+                }
+            }
+
+            renderScoreGrid(finalScoreGrid);
+            historyList.innerHTML = '';
+            history.forEach((round) => {
+                const row = document.createElement('div');
+                row.className = 'history-box';
+                row.innerHTML = `
+                    <div class="history-title">${round.round}라운드</div>
+                    <div class="history-list">
+                        ${round.entries.map((entry) => `<div class="history-row"><span>${entry}</span></div>`).join('')}
+                    </div>
+                `;
+                historyList.appendChild(row);
+            });
+
+            currentPlayer = playerCount;
+            updateStatus();
+            showScreen('final');
+        }
+
+        function restartGame() {
+            showScreen('setup');
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>
