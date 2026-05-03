@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>한 글자씩 망가뜨리기 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(16, 185, 129, 0.18), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(234, 88, 12, 0.18), transparent 32%),
+                #0f172a;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            max-width: 920px;
+            padding-top: 1.5rem;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 26px;
+            padding: 1.4rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .intro-copy,
+        .subtitle-copy,
+        .helper-copy {
+            color: var(--text-secondary);
+            line-height: 1.75;
+            text-align: center;
+        }
+
+        .setup-grid,
+        .edit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .field label {
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--text-primary);
+            font: inherit;
+        }
+
+        .field-help {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .status-strip {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 800;
+            background: rgba(16, 185, 129, 0.14);
+            color: #a7f3d0;
+        }
+
+        .pass-card,
+        .edit-card,
+        .result-card {
+            text-align: center;
+        }
+
+        .player-name {
+            font-size: clamp(2rem, 7vw, 2.9rem);
+            font-weight: 900;
+            margin: 0.9rem 0;
+        }
+
+        .phrase-box {
+            margin: 1rem 0 1.2rem;
+            padding: 1.2rem;
+            border-radius: 22px;
+            background: rgba(15, 23, 42, 0.86);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .phrase-bubbles {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.65rem;
+            margin-top: 0.9rem;
+        }
+
+        .char-chip {
+            min-width: 54px;
+            padding: 0.8rem 0.7rem;
+            border-radius: 18px;
+            background: rgba(16, 185, 129, 0.16);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #ecfdf5;
+        }
+
+        .char-index {
+            display: block;
+            font-size: 0.74rem;
+            color: #99f6e4;
+            margin-bottom: 0.28rem;
+        }
+
+        .char-value {
+            display: block;
+            font-size: 1.3rem;
+            font-weight: 900;
+        }
+
+        .action-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.82);
+            color: var(--text-primary);
+            border-radius: 18px;
+            padding: 0.95rem 0.8rem;
+            font: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .action-btn.active {
+            border-color: rgba(16, 185, 129, 0.6);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(234, 88, 12, 0.18));
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .preview-box,
+        .history-box {
+            margin-top: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
+        .preview-label,
+        .history-title {
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 0.55rem;
+        }
+
+        .preview-value {
+            font-size: 1.3rem;
+            font-weight: 900;
+            line-height: 1.5;
+        }
+
+        .history-list {
+            display: grid;
+            gap: 0.8rem;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .history-entry {
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
+        .history-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.6rem;
+        }
+
+        .history-player {
+            font-weight: 800;
+        }
+
+        .history-action {
+            color: #a7f3d0;
+            font-weight: 700;
+        }
+
+        .history-change {
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .final-phrase {
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 900;
+            line-height: 1.4;
+            margin: 1rem 0 0.8rem;
+        }
+
+        .controls {
+            margin-top: 1.2rem;
+        }
+
+        @media (max-width: 640px) {
+            .action-row {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                padding: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🧬 한 글자씩 망가뜨리기</h1>
+            <p class="game-description">한 턴에 한 글자만 추가, 삭제, 교체해서 문장을 가장 이상하게 바꿔보세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">총 턴</span>
+                <div class="status-value" id="status-turns">0 / 0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">현재 플레이어</span>
+                <div class="status-value" id="status-player">플레이어 1</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">현재 문장 길이</span>
+                <div class="status-value" id="status-length">0글자</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <section id="setup-screen" class="screen active">
+                <div class="panel">
+                    <div class="intro-copy">
+                        시작 문장을 정한 뒤, 폰을 돌리며 문장을 한 글자씩만 고칠 수 있습니다.
+                        <br>
+                        마지막에 처음 문장이 어디까지 망가졌는지 함께 확인하세요.
+                    </div>
+                    <div class="setup-grid">
+                        <div class="field">
+                            <label for="player-count">참가자 수</label>
+                            <input id="player-count" type="number" min="3" max="10" value="4">
+                        </div>
+                        <div class="field">
+                            <label for="round-count">바퀴 수</label>
+                            <select id="round-count">
+                                <option value="1">1바퀴</option>
+                                <option value="2" selected>2바퀴</option>
+                                <option value="3">3바퀴</option>
+                            </select>
+                            <div class="field-help">한 바퀴마다 모든 플레이어가 한 번씩 수정합니다.</div>
+                        </div>
+                        <div class="field">
+                            <label for="seed-phrase">시작 문장</label>
+                            <input id="seed-phrase" type="text" maxlength="24" value="오늘 회식은 치킨이다">
+                            <div class="field-help">24자 이하로 짧을수록 변화가 더 잘 보입니다.</div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button button-secondary" type="button" onclick="randomizeSeed()">랜덤 문장</button>
+                        <button class="button" type="button" onclick="startGame()">게임 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="status-strip">
+                        <span class="pill" id="round-label">1 / 8 턴</span>
+                        <span class="pill">다음 플레이어만 확인하세요</span>
+                    </div>
+                    <div class="subtitle-copy">현재 문장을 보고 한 글자만 고칠 차례입니다.</div>
+                    <div class="player-name" id="current-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="openEditor()">문장 보기</button>
+                </div>
+            </section>
+
+            <section id="edit-screen" class="screen">
+                <div class="panel edit-card">
+                    <div class="status-strip">
+                        <span class="pill" id="editor-player-label">플레이어 1</span>
+                        <span class="pill">딱 한 글자만 바꿀 수 있습니다</span>
+                    </div>
+                    <div class="phrase-box">
+                        <div class="helper-copy">현재 문장</div>
+                        <div class="phrase-bubbles" id="phrase-bubbles"></div>
+                    </div>
+                    <div class="action-row" id="action-row">
+                        <button class="action-btn active" type="button" data-action="replace" onclick="setAction('replace')">교체</button>
+                        <button class="action-btn" type="button" data-action="add" onclick="setAction('add')">추가</button>
+                        <button class="action-btn" type="button" data-action="delete" onclick="setAction('delete')">삭제</button>
+                    </div>
+                    <div class="edit-grid">
+                        <div class="field">
+                            <label for="position-select" id="position-label">위치 선택</label>
+                            <select id="position-select" onchange="updatePreview()"></select>
+                        </div>
+                        <div class="field">
+                            <label for="char-input" id="char-label">바꿀 글자</label>
+                            <input id="char-input" type="text" maxlength="2" placeholder="예: 밥" oninput="updatePreview()">
+                            <div class="field-help" id="char-help">한 글자만 입력할 수 있습니다.</div>
+                        </div>
+                    </div>
+                    <div class="preview-box">
+                        <div class="preview-label">변경 미리보기</div>
+                        <div class="preview-value" id="preview-value">-</div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="applyEdit()">이 수정으로 넘기기</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="result-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="subtitle-copy">최종 문장</div>
+                    <div class="final-phrase" id="final-phrase">-</div>
+                    <div class="helper-copy" id="result-summary"></div>
+                    <div class="history-box">
+                        <div class="history-title">문장 변형 히스토리</div>
+                        <div class="history-list" id="history-list"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="restartGame()">처음부터 다시</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const SEED_PHRASES = [
+            '오늘 회식은 치킨이다',
+            '집 가는 길에 붕어빵',
+            '내일 아침은 무조건 산책',
+            '우리 팀 막내가 제일 강함',
+            '커피보다 잠이 더 필요해',
+            '이번 여행은 바다로 간다',
+            '점심 메뉴는 이미 정해졌다',
+            '퇴근 후 넷플릭스가 진리'
+        ];
+
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            pass: document.getElementById('pass-screen'),
+            edit: document.getElementById('edit-screen'),
+            result: document.getElementById('result-screen')
+        };
+
+        const statusTurns = document.getElementById('status-turns');
+        const statusPlayer = document.getElementById('status-player');
+        const statusLength = document.getElementById('status-length');
+        const roundLabel = document.getElementById('round-label');
+        const currentPlayerLabel = document.getElementById('current-player-label');
+        const editorPlayerLabel = document.getElementById('editor-player-label');
+        const phraseBubbles = document.getElementById('phrase-bubbles');
+        const positionSelect = document.getElementById('position-select');
+        const positionLabel = document.getElementById('position-label');
+        const charLabel = document.getElementById('char-label');
+        const charInput = document.getElementById('char-input');
+        const charHelp = document.getElementById('char-help');
+        const previewValue = document.getElementById('preview-value');
+        const finalPhrase = document.getElementById('final-phrase');
+        const resultSummary = document.getElementById('result-summary');
+        const historyList = document.getElementById('history-list');
+
+        let playerCount = 4;
+        let totalRounds = 2;
+        let totalTurns = 8;
+        let currentTurn = 0;
+        let currentPlayer = 0;
+        let seedPhrase = '';
+        let currentPhrase = '';
+        let currentAction = 'replace';
+        let history = [];
+
+        function showScreen(name) {
+            Object.values(screens).forEach((screen) => screen.classList.remove('active'));
+            screens[name].classList.add('active');
+        }
+
+        function randomizeSeed() {
+            document.getElementById('seed-phrase').value = SEED_PHRASES[Math.floor(Math.random() * SEED_PHRASES.length)];
+        }
+
+        function getPlayerLabel(playerIndex) {
+            return `플레이어 ${playerIndex + 1}`;
+        }
+
+        function getActionLabel(action) {
+            if (action === 'replace') return '교체';
+            if (action === 'add') return '추가';
+            return '삭제';
+        }
+
+        function getChars(text) {
+            return Array.from(text);
+        }
+
+        function updateStatus() {
+            statusTurns.textContent = `${currentTurn} / ${totalTurns}`;
+            statusPlayer.textContent = getPlayerLabel(currentPlayer);
+            statusLength.textContent = `${getChars(currentPhrase).length}글자`;
+        }
+
+        function renderPhraseBubbles() {
+            phraseBubbles.innerHTML = '';
+            getChars(currentPhrase).forEach((char, index) => {
+                const chip = document.createElement('div');
+                chip.className = 'char-chip';
+                chip.innerHTML = `
+                    <span class="char-index">${index + 1}</span>
+                    <span class="char-value">${char === ' ' ? '␠' : char}</span>
+                `;
+                phraseBubbles.appendChild(chip);
+            });
+        }
+
+        function updatePositionOptions() {
+            const chars = getChars(currentPhrase);
+            positionSelect.innerHTML = '';
+
+            if (currentAction === 'add') {
+                for (let i = 0; i <= chars.length; i += 1) {
+                    const option = document.createElement('option');
+                    option.value = String(i);
+                    if (i === 0) {
+                        option.textContent = '맨 앞';
+                    } else if (i === chars.length) {
+                        option.textContent = '맨 뒤';
+                    } else {
+                        option.textContent = `${i}번 뒤`;
+                    }
+                    positionSelect.appendChild(option);
+                }
+                positionLabel.textContent = '삽입 위치';
+                charLabel.textContent = '추가할 글자';
+                charHelp.textContent = '문장 사이 또는 양끝에 한 글자만 넣을 수 있습니다.';
+                charInput.disabled = false;
+            } else if (currentAction === 'replace') {
+                chars.forEach((char, index) => {
+                    const option = document.createElement('option');
+                    option.value = String(index);
+                    option.textContent = `${index + 1}번 글자 (${char === ' ' ? '띄어쓰기' : char})`;
+                    positionSelect.appendChild(option);
+                });
+                positionLabel.textContent = '바꿀 위치';
+                charLabel.textContent = '새 글자';
+                charHelp.textContent = '기존 글자 하나를 다른 글자 하나로 바꿉니다.';
+                charInput.disabled = false;
+            } else {
+                chars.forEach((char, index) => {
+                    const option = document.createElement('option');
+                    option.value = String(index);
+                    option.textContent = `${index + 1}번 글자 (${char === ' ' ? '띄어쓰기' : char})`;
+                    positionSelect.appendChild(option);
+                });
+                positionLabel.textContent = '지울 위치';
+                charLabel.textContent = '삭제 모드';
+                charHelp.textContent = '삭제는 입력 없이 위치만 고르면 됩니다.';
+                charInput.value = '';
+                charInput.disabled = true;
+            }
+        }
+
+        function setAction(action) {
+            currentAction = action;
+            document.querySelectorAll('.action-btn').forEach((button) => {
+                button.classList.toggle('active', button.dataset.action === action);
+            });
+            updatePositionOptions();
+            updatePreview();
+        }
+
+        function buildPreview() {
+            const chars = getChars(currentPhrase);
+            const position = Number(positionSelect.value);
+            const enteredChars = getChars(charInput.value.trim());
+
+            if (currentAction === 'delete') {
+                if (!chars.length) {
+                    return { ok: false, message: '지울 글자가 없습니다.' };
+                }
+                const nextChars = [...chars];
+                nextChars.splice(position, 1);
+                return {
+                    ok: true,
+                    nextPhrase: nextChars.join(''),
+                    detail: `${position + 1}번 글자를 삭제`
+                };
+            }
+
+            if (enteredChars.length !== 1) {
+                return { ok: false, message: '한 글자만 입력하세요.' };
+            }
+
+            if (currentAction === 'replace') {
+                if (!chars.length) {
+                    return { ok: false, message: '바꿀 글자가 없습니다.' };
+                }
+                const nextChars = [...chars];
+                nextChars[position] = enteredChars[0];
+                return {
+                    ok: true,
+                    nextPhrase: nextChars.join(''),
+                    detail: `${position + 1}번 글자를 ${enteredChars[0]}로 교체`
+                };
+            }
+
+            const nextChars = [...chars];
+            nextChars.splice(position, 0, enteredChars[0]);
+            return {
+                ok: true,
+                nextPhrase: nextChars.join(''),
+                detail: `${position === 0 ? '맨 앞' : position === chars.length ? '맨 뒤' : `${position}번 뒤`}에 ${enteredChars[0]} 추가`
+            };
+        }
+
+        function updatePreview() {
+            const preview = buildPreview();
+            previewValue.textContent = preview.ok ? preview.nextPhrase || '(빈 문장)' : preview.message;
+        }
+
+        function startGame() {
+            playerCount = Math.min(10, Math.max(3, Number(document.getElementById('player-count').value) || 4));
+            totalRounds = Math.min(3, Math.max(1, Number(document.getElementById('round-count').value) || 2));
+            seedPhrase = document.getElementById('seed-phrase').value.trim() || SEED_PHRASES[Math.floor(Math.random() * SEED_PHRASES.length)];
+            currentPhrase = seedPhrase;
+            totalTurns = playerCount * totalRounds;
+            currentTurn = 1;
+            currentPlayer = 0;
+            history = [];
+            updateStatus();
+            passTurn();
+        }
+
+        function passTurn() {
+            roundLabel.textContent = `${currentTurn} / ${totalTurns} 턴`;
+            currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            updateStatus();
+            showScreen('pass');
+        }
+
+        function openEditor() {
+            editorPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            renderPhraseBubbles();
+            charInput.value = '';
+            setAction('replace');
+            showScreen('edit');
+        }
+
+        function applyEdit() {
+            const preview = buildPreview();
+            if (!preview.ok) {
+                alert(preview.message);
+                return;
+            }
+
+            history.push({
+                player: currentPlayer,
+                action: currentAction,
+                detail: preview.detail,
+                before: currentPhrase,
+                after: preview.nextPhrase || '(빈 문장)'
+            });
+
+            currentPhrase = preview.nextPhrase;
+            if (currentTurn >= totalTurns) {
+                showResult();
+                return;
+            }
+
+            currentTurn += 1;
+            currentPlayer = (currentPlayer + 1) % playerCount;
+            updateStatus();
+            passTurn();
+        }
+
+        function showResult() {
+            finalPhrase.textContent = currentPhrase || '(빈 문장)';
+            resultSummary.innerHTML = `시작 문장 <strong>${seedPhrase}</strong>가 총 <strong>${history.length}번</strong> 수정되어 이렇게 바뀌었습니다.`;
+            historyList.innerHTML = '';
+
+            history.forEach((entry, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-entry';
+                item.innerHTML = `
+                    <div class="history-top">
+                        <div class="history-player">${index + 1}턴 · ${getPlayerLabel(entry.player)}</div>
+                        <div class="history-action">${getActionLabel(entry.action)} · ${entry.detail}</div>
+                    </div>
+                    <div class="history-change">${entry.before} → <strong>${entry.after}</strong></div>
+                `;
+                historyList.appendChild(item);
+            });
+
+            currentTurn = totalTurns;
+            updateStatus();
+            showScreen('result');
+        }
+
+        function restartGame() {
+            document.getElementById('seed-phrase').value = seedPhrase;
+            showScreen('setup');
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>
