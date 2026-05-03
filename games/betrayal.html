@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>동시 배신 게임 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.18), transparent 32%),
+                #0f172a;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            max-width: 940px;
+            padding-top: 1.5rem;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 26px;
+            padding: 1.4rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .intro-copy,
+        .subtitle-copy,
+        .helper-copy {
+            color: var(--text-secondary);
+            line-height: 1.75;
+            text-align: center;
+        }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .field label {
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--text-primary);
+            font: inherit;
+        }
+
+        .field-help {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .status-strip {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 800;
+            background: rgba(56, 189, 248, 0.16);
+            color: #bae6fd;
+        }
+
+        .rule-card,
+        .pass-card,
+        .choice-card,
+        .result-card,
+        .final-card {
+            text-align: center;
+        }
+
+        .player-name {
+            font-size: clamp(2rem, 7vw, 2.9rem);
+            font-weight: 900;
+            margin: 0.9rem 0;
+        }
+
+        .rule-box,
+        .summary-box,
+        .scoreboard,
+        .final-summary {
+            margin-top: 1rem;
+            padding: 1.1rem 1.2rem;
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.84);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .rule-name {
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            font-weight: 900;
+            margin-bottom: 0.7rem;
+        }
+
+        .rule-copy,
+        .summary-copy,
+        .final-copy {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .action-grid,
+        .result-grid,
+        .score-grid {
+            display: grid;
+            gap: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        .action-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .action-btn,
+        .choice-pill {
+            border-radius: 18px;
+            font: inherit;
+        }
+
+        .action-btn {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.82);
+            color: var(--text-primary);
+            padding: 1rem 0.9rem;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .action-btn.coop:hover {
+            border-color: rgba(34, 197, 94, 0.58);
+        }
+
+        .action-btn.betray:hover {
+            border-color: rgba(244, 63, 94, 0.58);
+        }
+
+        .action-btn.hide:hover {
+            border-color: rgba(56, 189, 248, 0.58);
+        }
+
+        .action-title {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 900;
+            margin-bottom: 0.35rem;
+        }
+
+        .action-desc {
+            display: block;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            font-size: 0.92rem;
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .choice-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.55rem 0.9rem;
+            font-weight: 800;
+        }
+
+        .choice-pill.coop {
+            background: rgba(34, 197, 94, 0.16);
+            color: #86efac;
+        }
+
+        .choice-pill.betray {
+            background: rgba(244, 63, 94, 0.16);
+            color: #fda4af;
+        }
+
+        .choice-pill.hide {
+            background: rgba(56, 189, 248, 0.16);
+            color: #bae6fd;
+        }
+
+        .result-grid,
+        .score-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+
+        .result-box,
+        .score-box {
+            padding: 1rem 1.05rem;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
+        .result-player,
+        .score-label {
+            font-weight: 800;
+            margin-bottom: 0.45rem;
+        }
+
+        .score-value,
+        .delta-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+
+        .delta-value.positive {
+            color: #bae6fd;
+        }
+
+        .delta-value.negative {
+            color: #fda4af;
+        }
+
+        .controls {
+            margin-top: 1.2rem;
+        }
+
+        @media (max-width: 640px) {
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                padding: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🕶️ 동시 배신 게임</h1>
+            <p class="game-description">매 라운드 모두가 동시에 선택합니다. 협력, 배신, 은신 중 무엇이 가장 이득일지 읽어내세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">현재 라운드</span>
+                <div class="status-value" id="status-round">0 / 0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">현재 플레이어</span>
+                <div class="status-value" id="status-player">플레이어 1</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">선두 점수</span>
+                <div class="status-value" id="status-lead">0점</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <section id="setup-screen" class="screen active">
+                <div class="panel">
+                    <div class="intro-copy">
+                        라운드마다 점수 규칙이 바뀝니다.
+                        <br>
+                        모두가 비밀리에 행동을 고른 뒤 동시에 공개하고, 가장 많이 읽어낸 사람이 이깁니다.
+                    </div>
+                    <div class="setup-grid">
+                        <div class="field">
+                            <label for="player-count">참가자 수</label>
+                            <input id="player-count" type="number" min="3" max="8" value="4">
+                        </div>
+                        <div class="field">
+                            <label for="round-count">라운드 수</label>
+                            <select id="round-count">
+                                <option value="4">4라운드</option>
+                                <option value="5" selected>5라운드</option>
+                                <option value="6">6라운드</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startGame()">게임 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="rule-screen" class="screen">
+                <div class="panel rule-card">
+                    <div class="status-strip">
+                        <span class="pill" id="round-label">1 / 5 라운드</span>
+                        <span class="pill">이번 라운드 점수 규칙</span>
+                    </div>
+                    <div class="rule-box">
+                        <div class="rule-name" id="rule-name">황금 분배</div>
+                        <div class="rule-copy" id="rule-copy"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startChoices()">비밀 선택 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="status-strip">
+                        <span class="pill" id="pick-label">1 / 4 선택</span>
+                        <span class="pill">다음 플레이어만 확인하세요</span>
+                    </div>
+                    <div class="helper-copy">규칙을 기억하고 이번 라운드 행동을 고르세요.</div>
+                    <div class="player-name" id="current-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="openChoices()">행동 선택</button>
+                </div>
+            </section>
+
+            <section id="choice-screen" class="screen">
+                <div class="panel choice-card">
+                    <div class="status-strip">
+                        <span class="pill" id="choice-player-label">플레이어 1</span>
+                        <span class="pill" id="choice-rule-label">황금 분배</span>
+                    </div>
+                    <div class="helper-copy" id="choice-copy">이번 규칙에서 가장 이득이 될 행동을 하나만 고르세요.</div>
+                    <div class="action-grid">
+                        <button class="action-btn coop" type="button" onclick="pickAction('coop')">
+                            <span class="action-title">🤝 협력</span>
+                            <span class="action-desc">여럿이 함께 움직일 때 강합니다.</span>
+                        </button>
+                        <button class="action-btn betray" type="button" onclick="pickAction('betray')">
+                            <span class="action-title">🗡️ 배신</span>
+                            <span class="action-desc">타이밍 맞으면 가장 크게 가져갑니다.</span>
+                        </button>
+                        <button class="action-btn hide" type="button" onclick="pickAction('hide')">
+                            <span class="action-title">🫥 은신</span>
+                            <span class="action-desc">위험을 줄이고 소소하게 챙깁니다.</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="result-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="status-strip">
+                        <span class="pill">행동 공개</span>
+                        <span class="pill" id="result-rule-label">황금 분배</span>
+                    </div>
+                    <div class="summary-box">
+                        <div class="summary-copy" id="result-copy"></div>
+                        <div class="summary-stats" id="summary-stats"></div>
+                    </div>
+                    <div class="result-grid" id="result-grid"></div>
+                    <div class="score-grid" id="score-grid"></div>
+                    <div class="controls">
+                        <button class="button" type="button" id="next-btn" onclick="nextStep()">다음 라운드</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="final-screen" class="screen">
+                <div class="panel final-card">
+                    <div class="helper-copy">최종 결과</div>
+                    <div class="final-summary">
+                        <div class="rule-name" id="winner-label">플레이어 1 우승</div>
+                        <div class="final-copy" id="winner-copy"></div>
+                    </div>
+                    <div class="score-grid" id="final-score-grid"></div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="restartGame()">처음부터 다시</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const ACTIONS = {
+            coop: { label: '협력', emoji: '🤝', className: 'coop' },
+            betray: { label: '배신', emoji: '🗡️', className: 'betray' },
+            hide: { label: '은신', emoji: '🫥', className: 'hide' }
+        };
+
+        const RULES = [
+            {
+                name: '황금 분배',
+                description: '배신이 없으면 협력이 강합니다. 배신이 끼면 협력은 크게 손해 보고, 배신은 크게 챙깁니다.',
+                score(action, counts) {
+                    if (action === 'coop') return counts.betray > 0 ? -2 : (counts.coop >= 3 ? 4 : 3);
+                    if (action === 'betray') return counts.coop > 0 ? 4 : -1;
+                    return 1;
+                }
+            },
+            {
+                name: '역풍 시장',
+                description: '배신은 너무 눈에 띄면 역풍을 맞습니다. 은신이 가장 안정적이고, 협력은 숫자가 많을수록 올라갑니다.',
+                score(action, counts) {
+                    if (action === 'coop') return counts.betray > 0 ? 0 : (2 + counts.coop);
+                    if (action === 'betray') return counts.coop > 0 ? 1 : -2;
+                    return counts.betray > 0 ? 3 : 2;
+                }
+            },
+            {
+                name: '검은 시장',
+                description: '은신도 제법 쎄지만, 협력자가 있을 때 배신은 폭발적입니다.',
+                score(action, counts) {
+                    if (action === 'coop') return counts.hide > 0 ? 1 : 3;
+                    if (action === 'betray') return counts.coop > 0 ? 5 : 0;
+                    return 3;
+                }
+            },
+            {
+                name: '신뢰 폭주',
+                description: '협력이 다수면 큰 보상, 반대로 다수가 안 모이면 배신이 치고 올라옵니다.',
+                score(action, counts, playerCount) {
+                    const trustLine = Math.ceil(playerCount / 2);
+                    if (action === 'coop') return counts.coop >= trustLine ? 5 : 1;
+                    if (action === 'betray') return counts.coop >= trustLine ? -1 : 3;
+                    return 2;
+                }
+            }
+        ];
+
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            rule: document.getElementById('rule-screen'),
+            pass: document.getElementById('pass-screen'),
+            choice: document.getElementById('choice-screen'),
+            result: document.getElementById('result-screen'),
+            final: document.getElementById('final-screen')
+        };
+
+        const statusRound = document.getElementById('status-round');
+        const statusPlayer = document.getElementById('status-player');
+        const statusLead = document.getElementById('status-lead');
+        const roundLabel = document.getElementById('round-label');
+        const ruleName = document.getElementById('rule-name');
+        const ruleCopy = document.getElementById('rule-copy');
+        const pickLabel = document.getElementById('pick-label');
+        const currentPlayerLabel = document.getElementById('current-player-label');
+        const choicePlayerLabel = document.getElementById('choice-player-label');
+        const choiceRuleLabel = document.getElementById('choice-rule-label');
+        const choiceCopy = document.getElementById('choice-copy');
+        const resultRuleLabel = document.getElementById('result-rule-label');
+        const resultCopy = document.getElementById('result-copy');
+        const summaryStats = document.getElementById('summary-stats');
+        const resultGrid = document.getElementById('result-grid');
+        const scoreGrid = document.getElementById('score-grid');
+        const nextBtn = document.getElementById('next-btn');
+        const winnerLabel = document.getElementById('winner-label');
+        const winnerCopy = document.getElementById('winner-copy');
+        const finalScoreGrid = document.getElementById('final-score-grid');
+
+        let playerCount = 4;
+        let totalRounds = 5;
+        let currentRound = 0;
+        let currentPlayer = 0;
+        let currentRule = null;
+        let rulePool = [];
+        let actions = [];
+        let scores = [];
+
+        function showScreen(name) {
+            Object.values(screens).forEach((screen) => screen.classList.remove('active'));
+            screens[name].classList.add('active');
+        }
+
+        function shuffle(array) {
+            const next = [...array];
+            for (let i = next.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [next[i], next[j]] = [next[j], next[i]];
+            }
+            return next;
+        }
+
+        function getPlayerLabel(playerIndex) {
+            return `플레이어 ${playerIndex + 1}`;
+        }
+
+        function updateStatus() {
+            statusRound.textContent = `${currentRound} / ${totalRounds}`;
+            statusPlayer.textContent = currentPlayer < playerCount ? getPlayerLabel(currentPlayer) : '-';
+            statusLead.textContent = `${scores.length ? Math.max(...scores) : 0}점`;
+        }
+
+        function pickRule() {
+            if (rulePool.length === 0) {
+                rulePool = shuffle(RULES);
+            }
+            return rulePool.pop();
+        }
+
+        function countActions() {
+            return actions.reduce((counts, action) => {
+                counts[action] += 1;
+                return counts;
+            }, { coop: 0, betray: 0, hide: 0 });
+        }
+
+        function scoreFor(action, counts) {
+            return currentRule.score(action, counts, playerCount);
+        }
+
+        function renderScores(target, values) {
+            target.innerHTML = '';
+            values.forEach((score, index) => {
+                const box = document.createElement('div');
+                box.className = 'score-box';
+                box.innerHTML = `
+                    <div class="score-label">${getPlayerLabel(index)}</div>
+                    <div class="score-value">${score}점</div>
+                `;
+                target.appendChild(box);
+            });
+        }
+
+        function startGame() {
+            playerCount = Math.min(8, Math.max(3, Number(document.getElementById('player-count').value) || 4));
+            totalRounds = Math.min(6, Math.max(4, Number(document.getElementById('round-count').value) || 5));
+            currentRound = 0;
+            currentPlayer = 0;
+            scores = Array.from({ length: playerCount }, () => 0);
+            rulePool = [];
+            startRound();
+        }
+
+        function startRound() {
+            currentRound += 1;
+            currentPlayer = 0;
+            actions = Array.from({ length: playerCount }, () => null);
+            currentRule = pickRule();
+
+            roundLabel.textContent = `${currentRound} / ${totalRounds} 라운드`;
+            ruleName.textContent = currentRule.name;
+            ruleCopy.textContent = currentRule.description;
+            updateStatus();
+            showScreen('rule');
+        }
+
+        function startChoices() {
+            preparePass();
+        }
+
+        function preparePass() {
+            pickLabel.textContent = `${currentPlayer + 1} / ${playerCount} 선택`;
+            currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            updateStatus();
+            showScreen('pass');
+        }
+
+        function openChoices() {
+            choicePlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            choiceRuleLabel.textContent = currentRule.name;
+            choiceCopy.textContent = currentRule.description;
+            showScreen('choice');
+        }
+
+        function pickAction(action) {
+            actions[currentPlayer] = action;
+            currentPlayer += 1;
+
+            if (currentPlayer < playerCount) {
+                preparePass();
+                return;
+            }
+
+            revealRound();
+        }
+
+        function revealRound() {
+            const counts = countActions();
+            resultRuleLabel.textContent = currentRule.name;
+            resultCopy.textContent = currentRule.description;
+            summaryStats.innerHTML = `
+                <span class="choice-pill coop">협력 ${counts.coop}명</span>
+                <span class="choice-pill betray">배신 ${counts.betray}명</span>
+                <span class="choice-pill hide">은신 ${counts.hide}명</span>
+            `;
+
+            resultGrid.innerHTML = '';
+            actions.forEach((action, index) => {
+                const delta = scoreFor(action, counts);
+                scores[index] += delta;
+                const meta = ACTIONS[action];
+                const box = document.createElement('div');
+                box.className = 'result-box';
+                box.innerHTML = `
+                    <div class="result-player">${getPlayerLabel(index)}</div>
+                    <div class="choice-pill ${meta.className}">${meta.emoji} ${meta.label}</div>
+                    <div class="delta-value ${delta >= 0 ? 'positive' : 'negative'}" style="margin-top:0.7rem;">${delta >= 0 ? '+' : ''}${delta}점</div>
+                `;
+                resultGrid.appendChild(box);
+            });
+
+            renderScores(scoreGrid, scores);
+            nextBtn.textContent = currentRound >= totalRounds ? '최종 결과 보기' : '다음 라운드';
+            updateStatus();
+            showScreen('result');
+        }
+
+        function nextStep() {
+            if (currentRound >= totalRounds) {
+                showFinal();
+                return;
+            }
+            startRound();
+        }
+
+        function showFinal() {
+            const topScore = Math.max(...scores);
+            const winners = scores
+                .map((score, index) => ({ score, index }))
+                .filter((entry) => entry.score === topScore);
+
+            if (winners.length === 1) {
+                winnerLabel.textContent = `${getPlayerLabel(winners[0].index)} 우승`;
+                winnerCopy.textContent = `최종 ${topScore}점으로 가장 많이 읽어낸 플레이어입니다.`;
+            } else {
+                winnerLabel.textContent = '공동 우승';
+                winnerCopy.textContent = `${winners.map((entry) => getPlayerLabel(entry.index)).join(', ')}이(가) ${topScore}점으로 공동 1위입니다.`;
+            }
+
+            renderScores(finalScoreGrid, scores);
+            showScreen('final');
+        }
+
+        function restartGame() {
+            showScreen('setup');
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>

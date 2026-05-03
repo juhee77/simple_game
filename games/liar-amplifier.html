@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>거짓말 증폭기 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(244, 63, 94, 0.18), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.18), transparent 32%),
+                #0f172a;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            max-width: 920px;
+            padding-top: 1.5rem;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 26px;
+            padding: 1.4rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .intro-copy,
+        .subtitle-copy,
+        .helper-copy {
+            color: var(--text-secondary);
+            line-height: 1.75;
+            text-align: center;
+        }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .field label {
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--text-primary);
+            font: inherit;
+        }
+
+        .field textarea {
+            min-height: 112px;
+            resize: vertical;
+        }
+
+        .field-help {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .status-strip {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 800;
+            background: rgba(244, 63, 94, 0.16);
+            color: #fecdd3;
+        }
+
+        .pass-card,
+        .edit-card,
+        .result-card {
+            text-align: center;
+        }
+
+        .player-name {
+            font-size: clamp(2rem, 7vw, 2.9rem);
+            font-weight: 900;
+            margin: 0.9rem 0;
+        }
+
+        .story-box,
+        .history-box,
+        .preview-box,
+        .mission-card {
+            margin-top: 1rem;
+            padding: 1.1rem 1.2rem;
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.84);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .story-title,
+        .history-title,
+        .preview-label,
+        .mission-title {
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 0.55rem;
+        }
+
+        .story-value,
+        .preview-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .mission-card {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.18), rgba(249, 115, 22, 0.18));
+            border-color: rgba(251, 113, 133, 0.24);
+        }
+
+        .mission-value {
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1.6;
+        }
+
+        .history-list {
+            display: grid;
+            gap: 0.8rem;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .history-entry {
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
+        .history-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.55rem;
+        }
+
+        .history-player {
+            font-weight: 800;
+        }
+
+        .history-style {
+            color: #fecdd3;
+            font-weight: 700;
+        }
+
+        .history-change {
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .final-story {
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            font-weight: 900;
+            line-height: 1.45;
+            margin: 1rem 0 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        .controls {
+            margin-top: 1.2rem;
+        }
+
+        @media (max-width: 640px) {
+            .panel {
+                padding: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">📣 거짓말 증폭기</h1>
+            <p class="game-description">처음 한 줄을 시작으로, 모두가 한 줄씩 덧붙여 그럴듯한 헛소리를 키웁니다.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">총 턴</span>
+                <div class="status-value" id="status-turns">0 / 0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">현재 플레이어</span>
+                <div class="status-value" id="status-player">플레이어 1</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">현재 줄 수</span>
+                <div class="status-value" id="status-lines">1줄</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <section id="setup-screen" class="screen active">
+                <div class="panel">
+                    <div class="intro-copy">
+                        첫 문장을 정한 뒤, 폰을 넘길 때마다 한 줄씩만 덧붙일 수 있습니다.
+                        <br>
+                        각 턴마다 말투 미션이 달라지므로, 모두가 다르게 그럴듯하게 포장해야 합니다.
+                    </div>
+                    <div class="setup-grid">
+                        <div class="field">
+                            <label for="player-count">참가자 수</label>
+                            <input id="player-count" type="number" min="3" max="10" value="4">
+                        </div>
+                        <div class="field">
+                            <label for="round-count">바퀴 수</label>
+                            <select id="round-count">
+                                <option value="1">1바퀴</option>
+                                <option value="2" selected>2바퀴</option>
+                                <option value="3">3바퀴</option>
+                            </select>
+                            <div class="field-help">한 바퀴마다 모든 플레이어가 한 줄씩 추가합니다.</div>
+                        </div>
+                        <div class="field">
+                            <label for="seed-story">시작 문장</label>
+                            <textarea id="seed-story" maxlength="80">우리 팀 대리가 어제 회의실에서 갑자기 울었다.</textarea>
+                            <div class="field-help">사실처럼 들리는 짧은 한 줄일수록 웃깁니다.</div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button button-secondary" type="button" onclick="randomizeSeed()">랜덤 시작</button>
+                        <button class="button" type="button" onclick="startGame()">게임 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="status-strip">
+                        <span class="pill" id="turn-label">1 / 8 턴</span>
+                        <span class="pill">다음 플레이어만 확인하세요</span>
+                    </div>
+                    <div class="helper-copy">이번 턴 미션에 맞게 한 줄만 덧붙일 차례입니다.</div>
+                    <div class="player-name" id="current-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="openEditor()">문장 보기</button>
+                </div>
+            </section>
+
+            <section id="edit-screen" class="screen">
+                <div class="panel edit-card">
+                    <div class="status-strip">
+                        <span class="pill" id="editor-player-label">플레이어 1</span>
+                        <span class="pill">한 줄만 추가 가능</span>
+                    </div>
+                    <div class="story-box">
+                        <div class="story-title">지금까지 쌓인 이야기</div>
+                        <div class="story-value" id="story-value"></div>
+                    </div>
+                    <div class="mission-card">
+                        <div class="mission-title">이번 턴 말투 미션</div>
+                        <div class="mission-value" id="mission-value"></div>
+                    </div>
+                    <div class="field" style="margin-top: 1rem; text-align: left;">
+                        <label for="line-input">덧붙일 한 줄</label>
+                        <textarea id="line-input" maxlength="70" placeholder="예: 심지어 경영지원팀도 그 장면을 봤다고 한다." oninput="updatePreview()"></textarea>
+                        <div class="field-help">새 줄 하나만 추가하세요. 너무 길면 리듬이 죽습니다.</div>
+                    </div>
+                    <div class="preview-box">
+                        <div class="preview-label">합쳐진 미리보기</div>
+                        <div class="preview-value" id="preview-value">-</div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="submitLine()">이 한 줄로 넘기기</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="result-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="helper-copy">최종 증폭 결과</div>
+                    <div class="final-story" id="final-story">-</div>
+                    <div class="helper-copy" id="result-summary"></div>
+                    <div class="history-box">
+                        <div class="history-title">증폭 로그</div>
+                        <div class="history-list" id="history-list"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="restartGame()">처음부터 다시</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const SEED_STORIES = [
+            '우리 팀 대리가 어제 회의실에서 갑자기 울었다.',
+            '동네 편의점 사장이 사실 전직 마술사라고 한다.',
+            '오늘 아침 엘리베이터에서 사장님이 떡볶이를 들고 있었다.',
+            '학교 앞 붕어빵 집이 사실 비밀 맛집 평가단을 운영한대.',
+            '친구가 주말에 우산 없이 비를 맞다가 캐스팅 제안을 받았다.'
+        ];
+
+        const STYLE_RULES = [
+            '목격담처럼 말하세요. 직접 본 장면처럼 구체적으로.',
+            '숫자를 하나 넣으세요. 괜히 더 믿기게 만듭니다.',
+            '전문가가 말한 것처럼 포장하세요.',
+            '별일 아닌 척 담담하게 더 큰 사실을 던지세요.',
+            '억울한 변명처럼 붙이세요.',
+            '단체 카톡에 떠돈 이야기처럼 말하세요.',
+            '쓸데없이 디테일한 장소를 꼭 넣으세요.',
+            '“심지어”로 시작해 더 과장하세요.'
+        ];
+
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            pass: document.getElementById('pass-screen'),
+            edit: document.getElementById('edit-screen'),
+            result: document.getElementById('result-screen')
+        };
+
+        const statusTurns = document.getElementById('status-turns');
+        const statusPlayer = document.getElementById('status-player');
+        const statusLines = document.getElementById('status-lines');
+        const turnLabel = document.getElementById('turn-label');
+        const currentPlayerLabel = document.getElementById('current-player-label');
+        const editorPlayerLabel = document.getElementById('editor-player-label');
+        const storyValue = document.getElementById('story-value');
+        const missionValue = document.getElementById('mission-value');
+        const lineInput = document.getElementById('line-input');
+        const previewValue = document.getElementById('preview-value');
+        const finalStory = document.getElementById('final-story');
+        const resultSummary = document.getElementById('result-summary');
+        const historyList = document.getElementById('history-list');
+
+        let playerCount = 4;
+        let totalRounds = 2;
+        let totalTurns = 8;
+        let currentTurn = 1;
+        let currentPlayer = 0;
+        let seedStory = '';
+        let storyParts = [];
+        let history = [];
+        let currentStyle = '';
+        let availableStyles = [];
+
+        function showScreen(name) {
+            Object.values(screens).forEach((screen) => screen.classList.remove('active'));
+            screens[name].classList.add('active');
+        }
+
+        function shuffle(array) {
+            const next = [...array];
+            for (let i = next.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [next[i], next[j]] = [next[j], next[i]];
+            }
+            return next;
+        }
+
+        function randomizeSeed() {
+            document.getElementById('seed-story').value = SEED_STORIES[Math.floor(Math.random() * SEED_STORIES.length)];
+        }
+
+        function getPlayerLabel(playerIndex) {
+            return `플레이어 ${playerIndex + 1}`;
+        }
+
+        function getStoryText(parts) {
+            return parts.join('\n');
+        }
+
+        function pickStyle() {
+            if (availableStyles.length === 0) {
+                availableStyles = shuffle(STYLE_RULES);
+            }
+            return availableStyles.pop();
+        }
+
+        function updateStatus() {
+            statusTurns.textContent = `${currentTurn} / ${totalTurns}`;
+            statusPlayer.textContent = getPlayerLabel(currentPlayer);
+            statusLines.textContent = `${storyParts.length}줄`;
+        }
+
+        function startGame() {
+            playerCount = Math.min(10, Math.max(3, Number(document.getElementById('player-count').value) || 4));
+            totalRounds = Math.min(3, Math.max(1, Number(document.getElementById('round-count').value) || 2));
+            seedStory = document.getElementById('seed-story').value.trim() || SEED_STORIES[Math.floor(Math.random() * SEED_STORIES.length)];
+            storyParts = [seedStory];
+            totalTurns = playerCount * totalRounds;
+            currentTurn = 1;
+            currentPlayer = 0;
+            history = [];
+            availableStyles = [];
+            updateStatus();
+            showPass();
+        }
+
+        function showPass() {
+            currentStyle = pickStyle();
+            turnLabel.textContent = `${currentTurn} / ${totalTurns} 턴`;
+            currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            updateStatus();
+            showScreen('pass');
+        }
+
+        function openEditor() {
+            editorPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            storyValue.textContent = getStoryText(storyParts);
+            missionValue.textContent = currentStyle;
+            lineInput.value = '';
+            updatePreview();
+            showScreen('edit');
+        }
+
+        function updatePreview() {
+            const addition = lineInput.value.trim();
+            previewValue.textContent = addition ? getStoryText([...storyParts, addition]) : getStoryText(storyParts);
+        }
+
+        function submitLine() {
+            const addition = lineInput.value.trim();
+            if (!addition) {
+                alert('덧붙일 한 줄을 입력하세요.');
+                return;
+            }
+
+            history.push({
+                player: currentPlayer,
+                style: currentStyle,
+                before: getStoryText(storyParts),
+                addition
+            });
+
+            storyParts.push(addition);
+
+            if (currentTurn >= totalTurns) {
+                showResult();
+                return;
+            }
+
+            currentTurn += 1;
+            currentPlayer = (currentPlayer + 1) % playerCount;
+            updateStatus();
+            showPass();
+        }
+
+        function showResult() {
+            finalStory.textContent = getStoryText(storyParts);
+            resultSummary.innerHTML = `시작 한 줄에서 총 <strong>${history.length}</strong>번 증폭돼 <strong>${storyParts.length}줄</strong>짜리 이야기가 됐습니다.`;
+            historyList.innerHTML = '';
+
+            history.forEach((entry, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-entry';
+                item.innerHTML = `
+                    <div class="history-top">
+                        <div class="history-player">${index + 1}턴 · ${getPlayerLabel(entry.player)}</div>
+                        <div class="history-style">${entry.style}</div>
+                    </div>
+                    <div class="history-change">추가한 줄: <strong>${entry.addition}</strong></div>
+                `;
+                historyList.appendChild(item);
+            });
+
+            currentTurn = totalTurns;
+            updateStatus();
+            showScreen('result');
+        }
+
+        function restartGame() {
+            document.getElementById('seed-story').value = seedStory;
+            showScreen('setup');
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>
