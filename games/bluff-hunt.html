@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>블러프 좌표 사냥 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.18), transparent 32%),
+                #0f172a;
+            min-height: 100vh;
+        }
+        .game-container { max-width: 960px; padding-top: 1.5rem; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .panel {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 26px;
+            padding: 1.4rem;
+            backdrop-filter: blur(16px);
+        }
+        .intro-copy, .subtitle-copy, .helper-copy {
+            color: var(--text-secondary);
+            line-height: 1.75;
+            text-align: center;
+        }
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+        .field { display: flex; flex-direction: column; gap: 0.5rem; }
+        .field label { color: var(--text-secondary); font-weight: 700; }
+        .field input, .field select {
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--text-primary);
+            font: inherit;
+        }
+        .field-help { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+        .status-strip {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 800;
+            background: rgba(14, 165, 233, 0.14);
+            color: #bae6fd;
+        }
+        .pass-card, .secret-card, .grid-card, .result-card, .final-card { text-align: center; }
+        .player-name {
+            font-size: clamp(2rem, 7vw, 2.9rem);
+            font-weight: 900;
+            margin: 0.9rem 0;
+        }
+        .hint-card, .result-copy-box, .scoreboard, .vote-summary-box {
+            margin-top: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.84);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+        .hint-title, .score-title, .vote-summary-title {
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .hint-value {
+            font-size: 1.25rem;
+            font-weight: 900;
+            line-height: 1.6;
+        }
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.55rem 0.95rem;
+            border-radius: 999px;
+            font-weight: 900;
+            margin-bottom: 0.8rem;
+        }
+        .role-badge.real { background: rgba(34, 197, 94, 0.18); color: #86efac; }
+        .role-badge.fake { background: rgba(244, 63, 94, 0.18); color: #fda4af; }
+        .grid-wrapper {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.6rem;
+        }
+        .coord-btn, .player-btn {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.82);
+            color: var(--text-primary);
+            border-radius: 18px;
+            padding: 0.95rem 0.5rem;
+            font: inherit;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+        .coord-btn:hover, .player-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(14, 165, 233, 0.55);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.22);
+        }
+        .player-grid, .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.85rem;
+            margin-top: 1rem;
+        }
+        .score-box {
+            padding: 1rem;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+        .score-label { color: var(--text-secondary); margin-bottom: 0.35rem; }
+        .score-value { font-size: 1.5rem; font-weight: 900; }
+        .result-title { font-size: clamp(1.9rem, 5vw, 2.7rem); font-weight: 900; margin-bottom: 0.7rem; }
+        .result-detail { color: var(--text-secondary); line-height: 1.8; }
+        .vote-summary-list {
+            display: grid;
+            gap: 0.65rem;
+            margin-top: 0.9rem;
+            text-align: left;
+        }
+        .vote-summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            color: var(--text-secondary);
+        }
+        .controls { margin-top: 1.2rem; }
+        @media (max-width: 640px) {
+            .panel { padding: 1.1rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🗺️ 블러프 좌표 사냥</h1>
+            <p class="game-description">한 명만 진짜 좌표 힌트를 봅니다. 보물 위치를 찾으면서 누가 진짜 정보원인지 읽어내세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">현재 라운드</span>
+                <div class="status-value" id="status-round">0 / 0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">현재 플레이어</span>
+                <div class="status-value" id="status-player">플레이어 1</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">정보원 점수</span>
+                <div class="status-value" id="status-real">0</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <section id="setup-screen" class="screen active">
+                <div class="panel">
+                    <div class="intro-copy">
+                        매 라운드마다 5x5 보드 어딘가에 보물이 숨겨집니다.
+                        <br>
+                        오직 한 명만 진짜 힌트를 보고, 나머지는 틀린 힌트를 본 상태에서 좌표와 정보원을 함께 추리합니다.
+                    </div>
+                    <div class="setup-grid">
+                        <div class="field">
+                            <label for="player-count">참가자 수</label>
+                            <input id="player-count" type="number" min="3" max="8" value="4">
+                        </div>
+                        <div class="field">
+                            <label for="round-count">라운드 수</label>
+                            <select id="round-count">
+                                <option value="2">2라운드</option>
+                                <option value="3" selected>3라운드</option>
+                                <option value="4">4라운드</option>
+                                <option value="5">5라운드</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startGame()">게임 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="status-strip">
+                        <span class="pill" id="round-label">1 / 3 라운드</span>
+                        <span class="pill">다음 플레이어만 확인하세요</span>
+                    </div>
+                    <div class="helper-copy">이번 라운드에 받은 힌트는 절대 화면에 다시 뜨지 않습니다.</div>
+                    <div class="player-name" id="current-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="showHint()">힌트 보기</button>
+                </div>
+            </section>
+
+            <section id="secret-screen" class="screen">
+                <div class="panel secret-card">
+                    <div class="role-badge real" id="role-badge">진짜 힌트</div>
+                    <div class="helper-copy" id="role-copy">이 힌트를 바탕으로 최대한 자연스럽게 말하세요.</div>
+                    <div class="hint-card">
+                        <div class="hint-title">당신의 힌트</div>
+                        <div class="hint-value" id="hint-value"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="nextHintStep()">다음 사람에게 넘기기</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="coord-pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="status-strip">
+                        <span class="pill" id="coord-step-label">1 / 4 좌표 선택</span>
+                        <span class="pill">다음 플레이어만 확인하세요</span>
+                    </div>
+                    <div class="helper-copy">모두 토론을 마쳤다면, 각자 진짜 보물 좌표를 비밀리에 찍으세요.</div>
+                    <div class="player-name" id="coord-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="openCoordinateVote()">좌표 찍기</button>
+                </div>
+            </section>
+
+            <section id="coord-screen" class="screen">
+                <div class="panel grid-card">
+                    <div class="status-strip">
+                        <span class="pill">보물 좌표 선택</span>
+                        <span class="pill" id="coord-secret-player-label">플레이어 1</span>
+                    </div>
+                    <div class="helper-copy">가장 의심되는 칸 하나를 고르세요.</div>
+                    <div class="grid-wrapper" id="coord-grid"></div>
+                </div>
+            </section>
+
+            <section id="informer-pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="status-strip">
+                        <span class="pill" id="informer-step-label">1 / 4 정보원 지목</span>
+                        <span class="pill">다음 플레이어만 확인하세요</span>
+                    </div>
+                    <div class="helper-copy">이제 누가 진짜 힌트를 봤는지 비밀 투표합니다.</div>
+                    <div class="player-name" id="informer-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="openInformerVote()">정보원 찍기</button>
+                </div>
+            </section>
+
+            <section id="informer-screen" class="screen">
+                <div class="panel grid-card">
+                    <div class="status-strip">
+                        <span class="pill">정보원 지목</span>
+                        <span class="pill" id="informer-secret-player-label">플레이어 1</span>
+                    </div>
+                    <div class="helper-copy">진짜 힌트를 본 사람을 한 명 고르세요. 본인도 선택할 수 있습니다.</div>
+                    <div class="player-grid" id="informer-grid"></div>
+                </div>
+            </section>
+
+            <section id="result-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="result-title" id="result-title"></div>
+                    <div class="result-detail" id="result-detail"></div>
+                    <div class="vote-summary-box">
+                        <div class="vote-summary-title">라운드 공개</div>
+                        <div class="vote-summary-list" id="vote-summary-list"></div>
+                    </div>
+                    <div class="scoreboard">
+                        <div class="score-title">누적 점수</div>
+                        <div class="score-grid" id="score-grid"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" id="next-btn" onclick="nextStep()">다음 라운드</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const LETTERS = ['A', 'B', 'C', 'D', 'E'];
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            pass: document.getElementById('pass-screen'),
+            secret: document.getElementById('secret-screen'),
+            coordPass: document.getElementById('coord-pass-screen'),
+            coord: document.getElementById('coord-screen'),
+            informerPass: document.getElementById('informer-pass-screen'),
+            informer: document.getElementById('informer-screen'),
+            result: document.getElementById('result-screen')
+        };
+
+        const statusRound = document.getElementById('status-round');
+        const statusPlayer = document.getElementById('status-player');
+        const statusReal = document.getElementById('status-real');
+        const roundLabel = document.getElementById('round-label');
+        const currentPlayerLabel = document.getElementById('current-player-label');
+        const roleBadge = document.getElementById('role-badge');
+        const roleCopy = document.getElementById('role-copy');
+        const hintValue = document.getElementById('hint-value');
+        const coordStepLabel = document.getElementById('coord-step-label');
+        const coordPlayerLabel = document.getElementById('coord-player-label');
+        const coordSecretPlayerLabel = document.getElementById('coord-secret-player-label');
+        const coordGrid = document.getElementById('coord-grid');
+        const informerStepLabel = document.getElementById('informer-step-label');
+        const informerPlayerLabel = document.getElementById('informer-player-label');
+        const informerSecretPlayerLabel = document.getElementById('informer-secret-player-label');
+        const informerGrid = document.getElementById('informer-grid');
+        const resultTitle = document.getElementById('result-title');
+        const resultDetail = document.getElementById('result-detail');
+        const voteSummaryList = document.getElementById('vote-summary-list');
+        const scoreGrid = document.getElementById('score-grid');
+        const nextBtn = document.getElementById('next-btn');
+
+        let playerCount = 4;
+        let totalRounds = 3;
+        let currentRound = 0;
+        let currentPlayer = 0;
+        let informerIndex = 0;
+        let treasure = '';
+        let hints = [];
+        let coordinateVotes = [];
+        let informerVotes = [];
+        let informerScore = 0;
+        let hunterScore = 0;
+
+        function showScreen(name) {
+            Object.values(screens).forEach((screen) => screen.classList.remove('active'));
+            screens[name].classList.add('active');
+        }
+
+        function getPlayerLabel(playerIndex) {
+            return `플레이어 ${playerIndex + 1}`;
+        }
+
+        function getCoordinate(row, col) {
+            return `${LETTERS[col]}${row + 1}`;
+        }
+
+        function pickTreasure() {
+            const row = Math.floor(Math.random() * 5);
+            const col = Math.floor(Math.random() * 5);
+            return { row, col, coord: getCoordinate(row, col) };
+        }
+
+        function getRowHint(row) {
+            if (row <= 1) return '보물은 윗줄 쪽에 가깝다.';
+            if (row === 2) return '보물은 정확히 가운데 줄에 있다.';
+            return '보물은 아랫줄 쪽에 가깝다.';
+        }
+
+        function getColHint(col) {
+            if (col <= 1) return '보물은 왼쪽 칸들에 가깝다.';
+            if (col === 2) return '보물은 정중앙 세로줄에 걸쳐 있다.';
+            return '보물은 오른쪽 칸들에 가깝다.';
+        }
+
+        function getParityHint(row, col) {
+            return (row + col) % 2 === 0
+                ? '보물 칸의 색은 체커보드 기준 밝은 칸이다.'
+                : '보물 칸의 색은 체커보드 기준 어두운 칸이다.';
+        }
+
+        function getTruthHint(target) {
+            const options = [
+                `보물의 가로 좌표는 ${LETTERS[target.col]}열이다.`,
+                `보물의 세로 좌표는 ${target.row + 1}행이다.`,
+                getRowHint(target.row),
+                getColHint(target.col),
+                getParityHint(target.row, target.col)
+            ];
+            return options[Math.floor(Math.random() * options.length)];
+        }
+
+        function getFakeHint(target) {
+            const fakes = [];
+            LETTERS.forEach((letter, col) => {
+                if (col !== target.col) {
+                    fakes.push(`보물의 가로 좌표는 ${letter}열이다.`);
+                }
+            });
+            [1, 2, 3, 4, 5].forEach((row) => {
+                if (row !== target.row + 1) {
+                    fakes.push(`보물의 세로 좌표는 ${row}행이다.`);
+                }
+            });
+
+            ['보물은 윗줄 쪽에 가깝다.', '보물은 정확히 가운데 줄에 있다.', '보물은 아랫줄 쪽에 가깝다.']
+                .filter((hint) => hint !== getRowHint(target.row))
+                .forEach((hint) => fakes.push(hint));
+
+            ['보물은 왼쪽 칸들에 가깝다.', '보물은 정중앙 세로줄에 걸쳐 있다.', '보물은 오른쪽 칸들에 가깝다.']
+                .filter((hint) => hint !== getColHint(target.col))
+                .forEach((hint) => fakes.push(hint));
+
+            const falseParity = getParityHint(target.row, target.col) === '보물 칸의 색은 체커보드 기준 밝은 칸이다.'
+                ? '보물 칸의 색은 체커보드 기준 어두운 칸이다.'
+                : '보물 칸의 색은 체커보드 기준 밝은 칸이다.';
+            fakes.push(falseParity);
+
+            return fakes[Math.floor(Math.random() * fakes.length)];
+        }
+
+        function updateStatus() {
+            statusRound.textContent = `${currentRound} / ${totalRounds}`;
+            statusPlayer.textContent = currentPlayer < playerCount ? getPlayerLabel(currentPlayer) : '-';
+            statusReal.textContent = String(informerScore);
+        }
+
+        function renderScores() {
+            scoreGrid.innerHTML = `
+                <div class="score-box">
+                    <div class="score-label">정보원 팀</div>
+                    <div class="score-value">${informerScore}</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">사냥꾼 팀</div>
+                    <div class="score-value">${hunterScore}</div>
+                </div>
+            `;
+        }
+
+        function startGame() {
+            playerCount = Math.min(8, Math.max(3, Number(document.getElementById('player-count').value) || 4));
+            totalRounds = Number(document.getElementById('round-count').value) || 3;
+            informerScore = 0;
+            hunterScore = 0;
+            currentRound = 0;
+            startRound();
+        }
+
+        function startRound() {
+            currentRound += 1;
+            currentPlayer = 0;
+            informerIndex = Math.floor(Math.random() * playerCount);
+            const target = pickTreasure();
+            treasure = target.coord;
+            hints = Array.from({ length: playerCount }, (_, index) => index === informerIndex ? getTruthHint(target) : getFakeHint(target));
+            coordinateVotes = Array.from({ length: playerCount }, () => null);
+            informerVotes = Array.from({ length: playerCount }, () => null);
+            roundLabel.textContent = `${currentRound} / ${totalRounds} 라운드`;
+            updateStatus();
+            currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            showScreen('pass');
+        }
+
+        function showHint() {
+            const isInformer = currentPlayer === informerIndex;
+            roleBadge.textContent = isInformer ? '진짜 힌트' : '가짜 힌트';
+            roleBadge.className = `role-badge ${isInformer ? 'real' : 'fake'}`;
+            roleCopy.textContent = isInformer
+                ? '진짜 정보를 자연스럽게 흘리되 너무 티 내면 잡힙니다.'
+                : '틀린 힌트지만 최대한 그럴듯하게 말하세요.';
+            hintValue.textContent = hints[currentPlayer];
+            showScreen('secret');
+        }
+
+        function nextHintStep() {
+            currentPlayer += 1;
+            if (currentPlayer < playerCount) {
+                currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+                updateStatus();
+                showScreen('pass');
+                return;
+            }
+            currentPlayer = 0;
+            updateStatus();
+            coordStepLabel.textContent = `1 / ${playerCount} 좌표 선택`;
+            coordPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            showScreen('coordPass');
+        }
+
+        function openCoordinateVote() {
+            coordSecretPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            coordGrid.innerHTML = '';
+            for (let row = 0; row < 5; row += 1) {
+                for (let col = 0; col < 5; col += 1) {
+                    const coord = getCoordinate(row, col);
+                    const button = document.createElement('button');
+                    button.className = 'coord-btn';
+                    button.type = 'button';
+                    button.textContent = coord;
+                    button.addEventListener('click', () => submitCoordinateVote(coord));
+                    coordGrid.appendChild(button);
+                }
+            }
+            showScreen('coord');
+        }
+
+        function submitCoordinateVote(coord) {
+            coordinateVotes[currentPlayer] = coord;
+            currentPlayer += 1;
+            if (currentPlayer < playerCount) {
+                coordStepLabel.textContent = `${currentPlayer + 1} / ${playerCount} 좌표 선택`;
+                coordPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+                updateStatus();
+                showScreen('coordPass');
+                return;
+            }
+
+            currentPlayer = 0;
+            informerStepLabel.textContent = `1 / ${playerCount} 정보원 지목`;
+            informerPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            updateStatus();
+            showScreen('informerPass');
+        }
+
+        function openInformerVote() {
+            informerSecretPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            informerGrid.innerHTML = '';
+            for (let i = 0; i < playerCount; i += 1) {
+                const button = document.createElement('button');
+                button.className = 'player-btn';
+                button.type = 'button';
+                button.textContent = getPlayerLabel(i);
+                button.addEventListener('click', () => submitInformerVote(i));
+                informerGrid.appendChild(button);
+            }
+            showScreen('informer');
+        }
+
+        function getMajority(values) {
+            const counts = new Map();
+            values.forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
+            let bestValue = null;
+            let bestCount = 0;
+            let tie = false;
+            counts.forEach((count, value) => {
+                if (count > bestCount) {
+                    bestValue = value;
+                    bestCount = count;
+                    tie = false;
+                } else if (count === bestCount) {
+                    tie = true;
+                }
+            });
+            return tie ? null : bestValue;
+        }
+
+        function submitInformerVote(targetPlayer) {
+            informerVotes[currentPlayer] = targetPlayer;
+            currentPlayer += 1;
+            if (currentPlayer < playerCount) {
+                informerStepLabel.textContent = `${currentPlayer + 1} / ${playerCount} 정보원 지목`;
+                informerPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+                updateStatus();
+                showScreen('informerPass');
+                return;
+            }
+            revealResult();
+        }
+
+        function revealResult() {
+            const chosenCoord = getMajority(coordinateVotes);
+            const chosenInformer = getMajority(informerVotes);
+            const treasureFound = chosenCoord === treasure;
+            const informerCaught = chosenInformer === informerIndex;
+
+            if (treasureFound && !informerCaught) {
+                informerScore += 2;
+                resultTitle.textContent = '🕶️ 정보원 완승';
+                resultDetail.innerHTML = `사냥꾼들은 보물을 찾았지만 정보원을 놓쳤습니다.<br>정보원 팀이 <strong>2점</strong>을 획득합니다.`;
+            } else if (treasureFound || informerCaught) {
+                hunterScore += 1;
+                resultTitle.textContent = '🎯 사냥꾼 팀 우세';
+                resultDetail.innerHTML = treasureFound
+                    ? `보물 좌표를 정확히 찾아냈습니다.<br>사냥꾼 팀이 <strong>1점</strong>을 획득합니다.`
+                    : `정보원을 정확히 지목했습니다.<br>사냥꾼 팀이 <strong>1점</strong>을 획득합니다.`;
+            } else {
+                informerScore += 1;
+                resultTitle.textContent = '🌫️ 정보원 생존';
+                resultDetail.innerHTML = `보물도 못 찾고 정보원도 놓쳤습니다.<br>정보원 팀이 <strong>1점</strong>을 획득합니다.`;
+            }
+
+            voteSummaryList.innerHTML = '';
+            [
+                `실제 보물 좌표: ${treasure}`,
+                `실제 정보원: ${getPlayerLabel(informerIndex)}`,
+                `좌표 다수결 결과: ${chosenCoord === null ? '동점으로 실패' : chosenCoord}`,
+                `정보원 다수결 결과: ${chosenInformer === null ? '동점으로 실패' : getPlayerLabel(chosenInformer)}`
+            ].forEach((text) => {
+                const row = document.createElement('div');
+                row.className = 'vote-summary-row';
+                row.innerHTML = `<span>${text}</span>`;
+                voteSummaryList.appendChild(row);
+            });
+
+            coordinateVotes.forEach((coord, index) => {
+                const row = document.createElement('div');
+                row.className = 'vote-summary-row';
+                row.innerHTML = `<span>${getPlayerLabel(index)} 좌표</span><strong>${coord}</strong>`;
+                voteSummaryList.appendChild(row);
+            });
+            informerVotes.forEach((vote, index) => {
+                const row = document.createElement('div');
+                row.className = 'vote-summary-row';
+                row.innerHTML = `<span>${getPlayerLabel(index)} 정보원 지목</span><strong>${getPlayerLabel(vote)}</strong>`;
+                voteSummaryList.appendChild(row);
+            });
+
+            renderScores();
+            nextBtn.textContent = currentRound >= totalRounds ? '처음부터 다시' : '다음 라운드';
+            currentPlayer = playerCount;
+            updateStatus();
+            showScreen('result');
+        }
+
+        function nextStep() {
+            if (currentRound >= totalRounds) {
+                showScreen('setup');
+                return;
+            }
+            startRound();
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>

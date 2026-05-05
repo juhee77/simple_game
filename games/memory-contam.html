@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>기억 오염 실험 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(168, 85, 247, 0.18), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.18), transparent 32%),
+                #0f172a;
+            min-height: 100vh;
+        }
+        .game-container { max-width: 960px; padding-top: 1.5rem; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .panel {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 26px;
+            padding: 1.4rem;
+            backdrop-filter: blur(16px);
+        }
+        .intro-copy, .subtitle-copy, .helper-copy {
+            color: var(--text-secondary);
+            line-height: 1.75;
+            text-align: center;
+        }
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+        .field { display: flex; flex-direction: column; gap: 0.5rem; }
+        .field label { color: var(--text-secondary); font-weight: 700; }
+        .field input, .field select, .field textarea {
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--text-primary);
+            font: inherit;
+        }
+        .field textarea { min-height: 120px; resize: vertical; }
+        .field-help { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+        .status-strip {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 800;
+            background: rgba(168, 85, 247, 0.14);
+            color: #ddd6fe;
+        }
+        .pass-card, .memory-card, .rewrite-card, .result-card, .final-card { text-align: center; }
+        .player-name {
+            font-size: clamp(2rem, 7vw, 2.9rem);
+            font-weight: 900;
+            margin: 0.9rem 0;
+        }
+        .scene-box, .rewrite-box, .result-box, .history-box {
+            margin-top: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.84);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+        .scene-title, .history-title, .result-subtitle {
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 0.55rem;
+        }
+        .scene-text, .result-text {
+            font-size: 1.2rem;
+            font-weight: 800;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+        .timer-ring {
+            width: min(220px, 62vw);
+            aspect-ratio: 1;
+            margin: 1.2rem auto;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(circle, rgba(15, 23, 42, 0.95) 55%, transparent 56%),
+                conic-gradient(#a855f7 calc(var(--progress) * 1%), rgba(148, 163, 184, 0.16) 0);
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
+        }
+        .timer-seconds { font-size: clamp(2rem, 9vw, 3.4rem); font-weight: 900; line-height: 1; }
+        .timer-caption { color: var(--text-secondary); margin-top: 0.45rem; }
+        .split-grid, .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.9rem;
+            margin-top: 1rem;
+        }
+        .score-box {
+            padding: 1rem;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+        .score-label { color: var(--text-secondary); margin-bottom: 0.35rem; }
+        .score-value { font-size: 1.5rem; font-weight: 900; }
+        .history-list {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 0.9rem;
+            text-align: left;
+        }
+        .history-row {
+            padding: 0.95rem 1rem;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.76);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+        .history-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.45rem;
+        }
+        .history-player { font-weight: 800; }
+        .history-desc { color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
+        .controls { margin-top: 1.2rem; }
+        @media (max-width: 640px) {
+            .panel { padding: 1.1rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🧠 기억 오염 실험</h1>
+            <p class="game-description">첫 플레이어가 본 장면이 사람을 거칠수록 얼마나 망가지는지 실험해보세요.</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">현재 실험</span>
+                <div class="status-value" id="status-round">0 / 0</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">현재 플레이어</span>
+                <div class="status-value" id="status-player">플레이어 1</div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">평균 보존율</span>
+                <div class="status-value" id="status-score">0%</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <section id="setup-screen" class="screen active">
+                <div class="panel">
+                    <div class="intro-copy">
+                        첫 플레이어만 원본 장면을 봅니다.
+                        <br>
+                        이후 사람들은 바로 이전 사람이 남긴 기억만 보고 다시 적어, 마지막에 원본과 얼마나 달라졌는지 비교합니다.
+                    </div>
+                    <div class="setup-grid">
+                        <div class="field">
+                            <label for="player-count">참가자 수</label>
+                            <input id="player-count" type="number" min="3" max="8" value="4">
+                        </div>
+                        <div class="field">
+                            <label for="round-count">실험 수</label>
+                            <select id="round-count">
+                                <option value="1">1회</option>
+                                <option value="2" selected>2회</option>
+                                <option value="3">3회</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="startGame()">게임 시작</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pass-screen" class="screen">
+                <div class="panel pass-card">
+                    <div class="status-strip">
+                        <span class="pill" id="round-label">1 / 2 실험</span>
+                        <span class="pill">다음 플레이어만 확인하세요</span>
+                    </div>
+                    <div class="helper-copy" id="pass-copy">첫 플레이어는 원본 장면을 보고, 나머지는 이전 기억을 다시 적습니다.</div>
+                    <div class="player-name" id="current-player-label">플레이어 1</div>
+                    <button class="button" type="button" onclick="openStep()">확인</button>
+                </div>
+            </section>
+
+            <section id="scene-screen" class="screen">
+                <div class="panel memory-card">
+                    <div class="status-strip">
+                        <span class="pill">원본 장면</span>
+                        <span class="pill">첫 플레이어만 봅니다</span>
+                    </div>
+                    <div class="scene-box">
+                        <div class="scene-title">기억해야 할 장면</div>
+                        <div class="scene-text" id="scene-text"></div>
+                    </div>
+                    <div class="timer-ring" id="timer-ring" style="--progress:100;">
+                        <div>
+                            <div class="timer-seconds" id="timer-seconds">8</div>
+                            <div class="timer-caption">남은 시간</div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="finishPreview()">다 봤어요</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="rewrite-screen" class="screen">
+                <div class="panel rewrite-card">
+                    <div class="status-strip">
+                        <span class="pill" id="rewrite-player-label">플레이어 2</span>
+                        <span class="pill">방금 본 기억만 다시 적으세요</span>
+                    </div>
+                    <div class="scene-box">
+                        <div class="scene-title">전달받은 기억</div>
+                        <div class="scene-text" id="memory-source"></div>
+                    </div>
+                    <div class="field" style="margin-top: 1rem; text-align: left;">
+                        <label for="rewrite-input">다음 사람에게 넘길 기억</label>
+                        <textarea id="rewrite-input" maxlength="150" placeholder="방금 본 내용을 자기 말로 다시 적으세요."></textarea>
+                        <div class="field-help">너무 길게 적지 말고 핵심 장면만 남기세요.</div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="submitRewrite()">다음 사람에게 넘기기</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="result-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="status-strip">
+                        <span class="pill">실험 결과</span>
+                        <span class="pill" id="preserve-pill">보존율 0%</span>
+                    </div>
+                    <div class="split-grid">
+                        <div class="result-box">
+                            <div class="result-subtitle">원본 장면</div>
+                            <div class="result-text" id="original-result"></div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-subtitle">최종 기억</div>
+                            <div class="result-text" id="final-result"></div>
+                        </div>
+                    </div>
+                    <div class="history-box">
+                        <div class="history-title">오염 과정</div>
+                        <div class="history-list" id="history-list"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" id="next-btn" onclick="nextStep()">다음 실험</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const PLACES = ['지하철 승강장', '옥상 정원', '해변 매점 앞', '비 오는 운동장', '야시장 골목', '학교 도서관', '산책로 벤치 옆'];
+        const CHARACTERS = ['노란 우산을 든 고양이', '붉은 모자를 쓴 아이', '초록 코트를 입은 할머니', '커다란 안경을 쓴 청년', '보라색 가방을 멘 학생'];
+        const ACTIONS = ['풍선을 놓쳤다', '떡볶이를 흘렸다', '자전거를 붙잡고 소리쳤다', '휴대폰으로 별 사진을 찍었다', '갑자기 신발끈을 묶기 시작했다'];
+        const OBJECTS = ['분홍 자전거', '파란 쿨러 박스', '반짝이는 물고기 모양 풍선', '쌓여 있는 오렌지 상자', '넘어진 작은 화분'];
+        const DETAILS = ['멀리서 강아지가 짖고 있었다.', '천장 전구 하나가 깜빡였다.', '옆에서 누군가 휘파람을 불고 있었다.', '바닥에는 얼음 조각이 조금 흩어져 있었다.', '배경 전광판에는 숫자 17이 떠 있었다.'];
+
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            pass: document.getElementById('pass-screen'),
+            scene: document.getElementById('scene-screen'),
+            rewrite: document.getElementById('rewrite-screen'),
+            result: document.getElementById('result-screen')
+        };
+
+        const statusRound = document.getElementById('status-round');
+        const statusPlayer = document.getElementById('status-player');
+        const statusScore = document.getElementById('status-score');
+        const roundLabel = document.getElementById('round-label');
+        const passCopy = document.getElementById('pass-copy');
+        const currentPlayerLabel = document.getElementById('current-player-label');
+        const sceneText = document.getElementById('scene-text');
+        const timerRing = document.getElementById('timer-ring');
+        const timerSeconds = document.getElementById('timer-seconds');
+        const rewritePlayerLabel = document.getElementById('rewrite-player-label');
+        const memorySource = document.getElementById('memory-source');
+        const rewriteInput = document.getElementById('rewrite-input');
+        const preservePill = document.getElementById('preserve-pill');
+        const originalResult = document.getElementById('original-result');
+        const finalResult = document.getElementById('final-result');
+        const historyList = document.getElementById('history-list');
+        const nextBtn = document.getElementById('next-btn');
+
+        let playerCount = 4;
+        let totalRounds = 2;
+        let currentRound = 0;
+        let currentPlayer = 0;
+        let previewTimer = null;
+        let remainingSeconds = 8;
+        let currentScene = '';
+        let memoryChain = [];
+        let roundScores = [];
+
+        function showScreen(name) {
+            Object.values(screens).forEach((screen) => screen.classList.remove('active'));
+            screens[name].classList.add('active');
+        }
+
+        function getPlayerLabel(playerIndex) {
+            return `플레이어 ${playerIndex + 1}`;
+        }
+
+        function pick(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function generateScene() {
+            return `${pick(PLACES)}에서 ${pick(CHARACTERS)}가 ${pick(OBJECTS)} 옆에서 ${pick(ACTIONS)}\n${pick(DETAILS)}`;
+        }
+
+        function getKeywords(text) {
+            return text
+                .replace(/[.,!?\n]/g, ' ')
+                .split(/\s+/)
+                .map((word) => word.trim())
+                .filter((word) => word.length >= 2);
+        }
+
+        function getPreserveScore(original, finalText) {
+            const originalKeywords = [...new Set(getKeywords(original))];
+            if (!originalKeywords.length) return 0;
+            const finalKeywords = new Set(getKeywords(finalText));
+            const matched = originalKeywords.filter((word) => finalKeywords.has(word)).length;
+            return Math.round((matched / originalKeywords.length) * 100);
+        }
+
+        function getAverageScore() {
+            if (!roundScores.length) return 0;
+            return Math.round(roundScores.reduce((sum, score) => sum + score, 0) / roundScores.length);
+        }
+
+        function updateStatus() {
+            statusRound.textContent = `${currentRound} / ${totalRounds}`;
+            statusPlayer.textContent = currentPlayer < playerCount ? getPlayerLabel(currentPlayer) : '-';
+            statusScore.textContent = `${getAverageScore()}%`;
+        }
+
+        function startGame() {
+            playerCount = Math.min(8, Math.max(3, Number(document.getElementById('player-count').value) || 4));
+            totalRounds = Number(document.getElementById('round-count').value) || 2;
+            roundScores = [];
+            currentRound = 0;
+            startRound();
+        }
+
+        function startRound() {
+            currentRound += 1;
+            currentPlayer = 0;
+            currentScene = generateScene();
+            memoryChain = [{ player: 0, text: currentScene, role: '원본' }];
+            roundLabel.textContent = `${currentRound} / ${totalRounds} 실험`;
+            passCopy.textContent = '첫 플레이어는 원본 장면을 보고, 나머지는 이전 기억을 다시 적습니다.';
+            currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            updateStatus();
+            showScreen('pass');
+        }
+
+        function openStep() {
+            if (currentPlayer === 0) {
+                sceneText.textContent = currentScene;
+                remainingSeconds = 8;
+                updateTimer();
+                startTimer();
+                showScreen('scene');
+                return;
+            }
+
+            rewritePlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            memorySource.textContent = memoryChain[memoryChain.length - 1].text;
+            rewriteInput.value = '';
+            showScreen('rewrite');
+        }
+
+        function startTimer() {
+            clearInterval(previewTimer);
+            previewTimer = setInterval(() => {
+                remainingSeconds -= 1;
+                updateTimer();
+                if (remainingSeconds <= 0) {
+                    clearInterval(previewTimer);
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            timerSeconds.textContent = String(Math.max(remainingSeconds, 0));
+            timerRing.style.setProperty('--progress', String((Math.max(remainingSeconds, 0) / 8) * 100));
+        }
+
+        function finishPreview() {
+            clearInterval(previewTimer);
+            currentPlayer = 1;
+            currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            passCopy.textContent = '이제부터는 바로 이전 사람이 남긴 기억만 볼 수 있습니다.';
+            updateStatus();
+            showScreen('pass');
+        }
+
+        function submitRewrite() {
+            const text = rewriteInput.value.trim();
+            if (!text) {
+                alert('전달할 기억을 적어주세요.');
+                return;
+            }
+
+            memoryChain.push({
+                player: currentPlayer,
+                text,
+                role: '기억'
+            });
+
+            currentPlayer += 1;
+            if (currentPlayer < playerCount) {
+                currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
+                updateStatus();
+                showScreen('pass');
+                return;
+            }
+            revealRound();
+        }
+
+        function revealRound() {
+            const finalMemory = memoryChain[memoryChain.length - 1].text;
+            const score = getPreserveScore(currentScene, finalMemory);
+            roundScores.push(score);
+
+            preservePill.textContent = `보존율 ${score}%`;
+            originalResult.textContent = currentScene;
+            finalResult.textContent = finalMemory;
+            historyList.innerHTML = '';
+
+            memoryChain.forEach((entry) => {
+                const row = document.createElement('div');
+                row.className = 'history-row';
+                row.innerHTML = `
+                    <div class="history-top">
+                        <div class="history-player">${entry.role === '원본' ? '원본 장면' : getPlayerLabel(entry.player)}</div>
+                        <div>${entry.role}</div>
+                    </div>
+                    <div class="history-desc">${entry.text}</div>
+                `;
+                historyList.appendChild(row);
+            });
+
+            nextBtn.textContent = currentRound >= totalRounds ? '처음부터 다시' : '다음 실험';
+            currentPlayer = playerCount;
+            updateStatus();
+            showScreen('result');
+        }
+
+        function nextStep() {
+            if (currentRound >= totalRounds) {
+                clearInterval(previewTimer);
+                showScreen('setup');
+                return;
+            }
+            startRound();
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>
