@@ -69,7 +69,7 @@
             background: rgba(168, 85, 247, 0.14);
             color: #ddd6fe;
         }
-        .pass-card, .memory-card, .rewrite-card, .result-card, .final-card { text-align: center; }
+        .pass-card, .memory-card, .peek-card, .rewrite-card, .result-card, .final-card { text-align: center; }
         .player-name {
             font-size: clamp(2rem, 7vw, 2.9rem);
             font-weight: 900;
@@ -238,12 +238,9 @@
                 <div class="panel rewrite-card">
                     <div class="status-strip">
                         <span class="pill" id="rewrite-player-label">플레이어 2</span>
-                        <span class="pill">방금 본 기억만 다시 적으세요</span>
+                        <span class="pill">이제 기억만 남은 상태입니다</span>
                     </div>
-                    <div class="scene-box">
-                        <div class="scene-title">전달받은 기억</div>
-                        <div class="scene-text" id="memory-source"></div>
-                    </div>
+                    <div class="helper-copy">방금 20초 동안 본 장면만 떠올려 다시 적으세요. 이전 문장은 이제 보이지 않습니다.</div>
                     <div class="field" style="margin-top: 1rem; text-align: left;">
                         <label for="rewrite-input">다음 사람에게 넘길 기억</label>
                         <textarea id="rewrite-input" maxlength="150" placeholder="방금 본 내용을 자기 말로 다시 적으세요."></textarea>
@@ -251,6 +248,28 @@
                     </div>
                     <div class="controls">
                         <button class="button" type="button" onclick="submitRewrite()">다음 사람에게 넘기기</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="peek-screen" class="screen">
+                <div class="panel peek-card">
+                    <div class="status-strip">
+                        <span class="pill">전달받은 기억</span>
+                        <span class="pill" id="peek-player-label">플레이어 2</span>
+                    </div>
+                    <div class="scene-box">
+                        <div class="scene-title">20초 동안만 볼 수 있는 기억</div>
+                        <div class="scene-text" id="memory-source"></div>
+                    </div>
+                    <div class="timer-ring" id="peek-timer-ring" style="--progress:100;">
+                        <div>
+                            <div class="timer-seconds" id="peek-timer-seconds">20</div>
+                            <div class="timer-caption">남은 시간</div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="button" type="button" onclick="finishPeek()">이제 적을게요</button>
                     </div>
                 </div>
             </section>
@@ -294,6 +313,7 @@
             setup: document.getElementById('setup-screen'),
             pass: document.getElementById('pass-screen'),
             scene: document.getElementById('scene-screen'),
+            peek: document.getElementById('peek-screen'),
             rewrite: document.getElementById('rewrite-screen'),
             result: document.getElementById('result-screen')
         };
@@ -307,6 +327,9 @@
         const sceneText = document.getElementById('scene-text');
         const timerRing = document.getElementById('timer-ring');
         const timerSeconds = document.getElementById('timer-seconds');
+        const peekPlayerLabel = document.getElementById('peek-player-label');
+        const peekTimerRing = document.getElementById('peek-timer-ring');
+        const peekTimerSeconds = document.getElementById('peek-timer-seconds');
         const rewritePlayerLabel = document.getElementById('rewrite-player-label');
         const memorySource = document.getElementById('memory-source');
         const rewriteInput = document.getElementById('rewrite-input');
@@ -322,6 +345,7 @@
         let currentPlayer = 0;
         let previewTimer = null;
         let remainingSeconds = 8;
+        let previewDuration = 8;
         let currentScene = '';
         let memoryChain = [];
         let roundScores = [];
@@ -384,7 +408,7 @@
             currentScene = generateScene();
             memoryChain = [{ player: 0, text: currentScene, role: '원본' }];
             roundLabel.textContent = `${currentRound} / ${totalRounds} 실험`;
-            passCopy.textContent = '첫 플레이어는 원본 장면을 보고, 나머지는 이전 기억을 다시 적습니다.';
+            passCopy.textContent = '첫 플레이어는 원본 장면을 보고, 나머지는 이전 기억을 20초만 본 뒤 빈 화면에서 다시 적습니다.';
             currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
             updateStatus();
             showScreen('pass');
@@ -393,42 +417,50 @@
         function openStep() {
             if (currentPlayer === 0) {
                 sceneText.textContent = currentScene;
-                remainingSeconds = 8;
-                updateTimer();
-                startTimer();
+                startCountdown(8, timerRing, timerSeconds);
                 showScreen('scene');
                 return;
             }
 
-            rewritePlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            peekPlayerLabel.textContent = getPlayerLabel(currentPlayer);
             memorySource.textContent = memoryChain[memoryChain.length - 1].text;
-            rewriteInput.value = '';
-            showScreen('rewrite');
+            startCountdown(20, peekTimerRing, peekTimerSeconds);
+            showScreen('peek');
         }
 
-        function startTimer() {
+        function startCountdown(seconds, ring, label) {
             clearInterval(previewTimer);
+            remainingSeconds = seconds;
+            previewDuration = seconds;
+            updateTimer(ring, label);
             previewTimer = setInterval(() => {
                 remainingSeconds -= 1;
-                updateTimer();
+                updateTimer(ring, label);
                 if (remainingSeconds <= 0) {
                     clearInterval(previewTimer);
                 }
             }, 1000);
         }
 
-        function updateTimer() {
-            timerSeconds.textContent = String(Math.max(remainingSeconds, 0));
-            timerRing.style.setProperty('--progress', String((Math.max(remainingSeconds, 0) / 8) * 100));
+        function updateTimer(ring, label) {
+            label.textContent = String(Math.max(remainingSeconds, 0));
+            ring.style.setProperty('--progress', String((Math.max(remainingSeconds, 0) / previewDuration) * 100));
         }
 
         function finishPreview() {
             clearInterval(previewTimer);
             currentPlayer = 1;
             currentPlayerLabel.textContent = getPlayerLabel(currentPlayer);
-            passCopy.textContent = '이제부터는 바로 이전 사람이 남긴 기억만 볼 수 있습니다.';
+            passCopy.textContent = '이제부터는 이전 기억을 20초만 본 뒤, 보이지 않는 상태에서 다시 적습니다.';
             updateStatus();
             showScreen('pass');
+        }
+
+        function finishPeek() {
+            clearInterval(previewTimer);
+            rewritePlayerLabel.textContent = getPlayerLabel(currentPlayer);
+            rewriteInput.value = '';
+            showScreen('rewrite');
         }
 
         function submitRewrite() {
