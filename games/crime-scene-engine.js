@@ -242,14 +242,14 @@ function buildClueSection(s, r) {
     r.personalClues.forEach((c, i) => {
       let regAttr = '';
       if(gameStarted) {
-        const regIdx = _regClue('개인 증거 · ' + c.tag, c.name, c.desc, () => makePersonalSVG(r.id, i));
+        const regIdx = _regClue('개인 증거 · ' + c.tag, c.name, c.desc, () => makePersonalSVG(r.id, i, s.id));
         regAttr = `data-clue-reg="${regIdx}"`;
       }
 
       html += `<div class="clue-card personal-clue-card ${gameStarted ? 'unlocked' : ''}" ${regAttr}>
         <div class="clue-inner">
           <div class="clue-img-wrap">
-            ${makePersonalSVG(r.id, i)}
+            ${makePersonalSVG(r.id, i, s.id)}
             ${!gameStarted ? `<div class="clue-locked-overlay">
               <div class="lock-icon">🔒</div>
               <div class="lock-countdown">게임 시작 후<br>공개</div>
@@ -272,14 +272,14 @@ function buildClueSection(s, r) {
   <div class="clue-grid-wrapper" id="clue-grid-wrapper">`;
 
   s.clues.forEach((c, i) => {
-    html += buildClueCard(c, i, elapsed);
+    html += buildClueCard(c, i, elapsed, s.id);
   });
 
   html += `</div></div>`;
   return html;
 }
 
-function buildClueCard(c, idx, elapsedSec) {
+function buildClueCard(c, idx, elapsedSec, sId) {
   const unlockMin = CLUE_UNLOCK[idx];
   const elapsedMin = elapsedSec < 0 ? -1 : Math.floor(elapsedSec / 60);
   const unlocked = elapsedSec >= 0 && elapsedMin >= unlockMin;
@@ -288,14 +288,14 @@ function buildClueCard(c, idx, elapsedSec) {
   let regAttr = '';
   if(unlocked) {
     const desc = c.meaning + (c.where ? '\n\n📍 ' + c.where : '');
-    const regIdx = _regClue('#' + c.num + ' ' + c.tag, c.name, desc, () => makeClueSVG(idx + 1));
+    const regIdx = _regClue('#' + c.num + ' ' + c.tag, c.name, desc, () => makeClueSVG(idx + 1, sId));
     regAttr = `data-clue-reg="${regIdx}"`;
   }
 
   return `<div class="clue-card ${unlocked ? 'unlocked' : ''}" data-clue-idx="${idx}" ${regAttr}>
     <div class="clue-inner">
       <div class="clue-img-wrap">
-        ${makeClueSVG(idx + 1)}
+        ${makeClueSVG(idx + 1, sId)}
         ${!unlocked ? `<div class="clue-locked-overlay">
           <div class="lock-icon">🔒</div>
           <div class="lock-countdown">${elapsedSec < 0 ? '게임 시작 후\n공개' : remainMin + '분 후\n공개'}</div>

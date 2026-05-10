@@ -1,5 +1,8 @@
 // Public clues SVG generator
-function makeClueSVG(idx) {
+function makeClueSVG(idx, scenarioId = 1) {
+  if (scenarioId === 2) {
+    return `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="100" fill="#12100c"/><text x="60" y="55" font-size="8" fill="#3a2a18" text-anchor="middle">#${idx}</text></svg>`;
+  }
   const svgs = [
     // 1: 위스키 잔
     `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
@@ -135,7 +138,162 @@ function makeClueSVG(idx) {
 }
 
 // Personal secrets SVG generator
-function makePersonalSVG(roleId, clueIdx) {
+function makePersonalSVG(roleId, clueIdx, scenarioId = 1) {
+  if (scenarioId === 2) {
+    const data2 = {
+      ryumin: [
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#0a0c10"/>
+          <rect x="14" y="10" width="92" height="80" rx="3" fill="#1a2030" stroke="#2a3040" stroke-width="1.5"/>
+          <text x="60" y="23" font-size="4" fill="#7ab8e0" text-anchor="middle">인터넷 주문 내역</text>
+          <line x1="18" y1="27" x2="102" y2="27" stroke="#2a3040" stroke-width=".8"/>
+          <text x="22" y="36" font-size="3" fill="#5a8ab0">주문자: 류민아</text>
+          <text x="22" y="43" font-size="3" fill="#5a8ab0">품목: 시안화나트륨 (실험용)</text>
+          <rect x="18" y="49" width="84" height="8" rx="1" fill="#2a1008" stroke="#c44820" stroke-width=".5"/>
+          <text x="60" y="54.5" font-size="3.2" fill="#ff9a7a" text-anchor="middle">청산가리 계열 — 맹독성</text>
+          <text x="22" y="66" font-size="3" fill="#5a8ab0">주문일: 사건 8일 전</text>
+          <text x="22" y="73" font-size="3" fill="#5a8ab0">배송지: 자택</text>
+          <text x="22" y="82" font-size="2.8" fill="#c44820">수령 서명: 류민아</text>
+        </svg>`,
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#100e0a"/>
+          <rect x="14" y="8" width="92" height="84" rx="2" fill="#1e1a14" stroke="#2e2a18" stroke-width="1.5"/>
+          <text x="60" y="21" font-size="4" fill="#c9a84c" text-anchor="middle">원고 6장 — 해당 챕터</text>
+          <line x1="18" y1="25" x2="102" y2="25" stroke="#2e2a18" stroke-width=".8"/>
+          <rect x="18" y="29" width="84" height="44" rx="2" fill="#f5f0e8" opacity=".08"/>
+          <text x="22" y="38" font-size="2.8" fill="#a09070" font-style="italic">"출판계에서 그녀는</text>
+          <text x="22" y="44" font-size="2.8" fill="#a09070" font-style="italic"> 타인의 원고를 자신의</text>
+          <text x="22" y="50" font-size="2.8" fill="#a09070" font-style="italic"> 이름으로 발표하고</text>
+          <text x="22" y="56" font-size="2.8" fill="#a09070" font-style="italic"> 데뷔한 편집자였다."</text>
+          <rect x="18" y="62" width="84" height="8" rx="1" fill="#2a1808" stroke="#c44820" stroke-width=".5"/>
+          <text x="60" y="67.5" font-size="3" fill="#c44820" text-anchor="middle">류민아 = 실제 모델 확정</text>
+          <text x="60" y="83" font-size="2.8" fill="#5a4a30" text-anchor="middle">출간 시 명예훼손 초과 — 경력 파멸</text>
+        </svg>`
+      ],
+      oseo: [
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#100e0a"/>
+          <rect x="16" y="8" width="88" height="84" rx="2" fill="#f5f0e8" stroke="#d0c8b0" stroke-width="1"/>
+          <rect x="16" y="8" width="88" height="12" rx="2" fill="#1a130a"/>
+          <text x="60" y="17.5" font-size="4" fill="#c44820" text-anchor="middle">위자료 이행촉구 공문</text>
+          <text x="26" y="30" font-size="3.2" fill="#5a4a30">채권자: 오서진</text>
+          <text x="26" y="38" font-size="3.2" fill="#5a4a30">채무자: 윤재혁</text>
+          <rect x="20" y="44" width="80" height="8" rx="1" fill="#ffeaea"/>
+          <text x="60" y="49.5" font-size="3.2" fill="#c44820" text-anchor="middle">미지급 위자료: 4억 2천만원</text>
+          <line x1="20" y1="56" x2="100" y2="56" stroke="#d0c8b0" stroke-width=".6"/>
+          <text x="26" y="65" font-size="3" fill="#8a7a60">발송일: 사건 2주 전</text>
+          <text x="26" y="73" font-size="3" fill="#8a7a60">법원 강제집행 신청 예정</text>
+          <text x="26" y="83" font-size="2.8" fill="#c44820">※ 윤재혁이 계속 미루고 있었음</text>
+        </svg>`,
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#100e0a"/>
+          <rect x="16" y="8" width="88" height="84" rx="2" fill="#f5f0e8" stroke="#d0c8b0" stroke-width="1"/>
+          <rect x="16" y="8" width="88" height="12" rx="2" fill="#2a1a30"/>
+          <text x="60" y="17.5" font-size="4" fill="#c090e0" text-anchor="middle">수면제 처방전</text>
+          <text x="26" y="30" font-size="3.2" fill="#5a4a30">환자명: 오서진</text>
+          <text x="26" y="38" font-size="3.2" fill="#5a4a30">처방약: 졸피뎀 2mg×14</text>
+          <text x="26" y="46" font-size="3.2" fill="#5a4a30">처방일: 사건 당일</text>
+          <rect x="20" y="52" width="80" height="8" rx="1" fill="#fff0e0"/>
+          <text x="60" y="57.5" font-size="3.2" fill="#8b3012" text-anchor="middle">처방 후 만찬 참석</text>
+          <line x1="20" y1="64" x2="100" y2="64" stroke="#d0c8b0" stroke-width=".6"/>
+          <text x="26" y="73" font-size="3" fill="#8a7a60">음주+수면제 병용 시</text>
+          <text x="26" y="80" font-size="3" fill="#c44820">기억력 저하 가능성</text>
+        </svg>`
+      ],
+      handong: [
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#100e0a"/>
+          <rect x="14" y="8" width="92" height="84" rx="2" fill="#1e1a14" stroke="#2e2a18" stroke-width="1.5"/>
+          <text x="60" y="21" font-size="4" fill="#c9a84c" text-anchor="middle">원고 비교 분석</text>
+          <line x1="18" y1="25" x2="102" y2="25" stroke="#2e2a18" stroke-width=".8"/>
+          <rect x="18" y="29" width="40" height="44" rx="2" fill="#f5f0e8" opacity=".1"/>
+          <rect x="62" y="29" width="40" height="44" rx="2" fill="#f5f0e8" opacity=".08"/>
+          <text x="38" y="39" font-size="3" fill="#c9a84c" text-anchor="middle">스승 초고</text>
+          <text x="38" y="45" font-size="2.5" fill="#8a7a50" text-anchor="middle">"그날 밤 창문에</text>
+          <text x="38" y="50" font-size="2.5" fill="#8a7a50" text-anchor="middle">빗소리가 내렸다"</text>
+          <text x="82" y="39" font-size="3" fill="#7ab8e0" text-anchor="middle">한동욱 원고</text>
+          <text x="82" y="45" font-size="2.5" fill="#6a8ab0" text-anchor="middle">"그날 밤 창문에</text>
+          <text x="82" y="50" font-size="2.5" fill="#6a8ab0" text-anchor="middle">빗소리가 울렸다"</text>
+          <rect x="18" y="78" width="84" height="6" rx="1" fill="#2a1808" stroke="#c44820" stroke-width=".5"/>
+          <text x="60" y="82.5" font-size="2.8" fill="#c44820" text-anchor="middle">핵심 구절 72% 일치 — 표절 의혹</text>
+        </svg>`,
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#0a0c10"/>
+          <rect x="22" y="8" width="76" height="84" rx="10" fill="#1a1e2a" stroke="#2a3040" stroke-width="1.5"/>
+          <rect x="26" y="14" width="68" height="70" rx="6" fill="#0e1018"/>
+          <rect x="26" y="14" width="68" height="10" rx="6" fill="#1a2030"/>
+          <text x="60" y="21" font-size="3.5" fill="#5a6a80" text-anchor="middle">윤재혁 (스승) ▾</text>
+          <rect x="30" y="30" width="56" height="12" rx="5" fill="#1e2535"/>
+          <text x="58" y="38" font-size="3" fill="#7ab8e0" text-anchor="middle">"네 원고 봤어.</text>
+          <rect x="36" y="45" width="50" height="12" rx="5" fill="#1e2535"/>
+          <text x="61" y="53" font-size="3" fill="#7ab8e0" text-anchor="middle">이건 내 글이야.</text>
+          <rect x="36" y="60" width="50" height="12" rx="5" fill="#1e2535"/>
+          <text x="61" y="68" font-size="3" fill="#7ab8e0" text-anchor="middle">더는 내 제자가 아니야."</text>
+          <text x="60" y="83" font-size="3" fill="#c44820" text-anchor="middle">사건 3일 전 발송됨</text>
+        </svg>`
+      ],
+      baekji: [
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#100e0a"/>
+          <rect x="14" y="8" width="92" height="84" rx="2" fill="#f5f0e8" stroke="#d0c8b0" stroke-width="1"/>
+          <rect x="14" y="8" width="92" height="12" rx="2" fill="#1a130a"/>
+          <text x="60" y="17.5" font-size="4" fill="#c44820" text-anchor="middle">내용증명: 저작권 계약 취소</text>
+          <line x1="18" y1="24" x2="106" y2="24" stroke="#d0c8b0" stroke-width=".6"/>
+          <text x="22" y="33" font-size="3.2" fill="#5a4a30">수신: 백지수</text>
+          <text x="22" y="41" font-size="3.2" fill="#5a4a30">발신: 윤재혁 (법률대리인)</text>
+          <rect x="18" y="47" width="84" height="22" rx="2" fill="#ffeaea"/>
+          <text x="60" y="53" font-size="3" fill="#c44820" text-anchor="middle">단편 모음집 수익 무단 독점에 따른</text>
+          <text x="60" y="60" font-size="3" fill="#c44820" text-anchor="middle">계약 취소 및 손해배상 청구</text>
+          <text x="60" y="66" font-size="3.5" fill="#c44820" text-anchor="middle" font-weight="bold">청구액: 3억원</text>
+          <line x1="18" y1="73" x2="106" y2="73" stroke="#d0c8b0" stroke-width=".6"/>
+          <text x="22" y="82" font-size="2.8" fill="#8a7a60">1주 전 수신. 수락 또는 법적 소송.</text>
+        </svg>`,
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#0a0c10"/>
+          <rect x="14" y="10" width="92" height="80" rx="3" fill="#1a2030" stroke="#2a3040" stroke-width="1.5"/>
+          <text x="60" y="23" font-size="4" fill="#7ab8e0" text-anchor="middle">통화 기록 내역</text>
+          <line x1="18" y1="27" x2="102" y2="27" stroke="#2a3040" stroke-width=".8"/>
+          <text x="22" y="36" font-size="3" fill="#5a8ab0">대상자: 백지수 휴대폰</text>
+          <rect x="18" y="42" width="84" height="8" rx="1" fill="#2a1008" stroke="#c44820" stroke-width=".5"/>
+          <text x="22" y="47.5" font-size="3.2" fill="#ff9a7a">발신</text>
+          <text x="45" y="47.5" font-size="3.2" fill="#ff9a7a">윤재혁 (수신)</text>
+          <text x="95" y="47.5" font-size="3.2" fill="#ff9a7a" text-anchor="end">17:42</text>
+          <text x="60" y="62" font-size="4" fill="#c44820" text-anchor="middle" font-weight="bold">통화 시간: 18분 23초</text>
+          <text x="60" y="74" font-size="3" fill="#5a8ab0" text-anchor="middle">만찬 직전 긴 통화.</text>
+          <text x="60" y="82" font-size="2.8" fill="#5a8ab0" text-anchor="middle">합의 요청 및 다툼이 있었을 것으로 추정.</text>
+        </svg>`
+      ],
+      yuntae: [
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#0e1116"/>
+          <rect x="25" y="10" width="70" height="80" rx="1" fill="#f5f0e8" stroke="#d0c8b0" stroke-width="1"/>
+          <text x="60" y="25" font-size="5" fill="#1a1a1a" font-weight="bold" text-anchor="middle">유 언 장</text>
+          <line x1="35" y1="30" x2="85" y2="30" stroke="#1a1a1a" stroke-width="1"/>
+          <text x="35" y="45" font-size="3" fill="#3a3a3a">1. 전 재산 및 저작권을</text>
+          <text x="40" y="52" font-size="3.5" fill="#c44820" font-weight="bold">동생 윤태경에게 상속한다.</text>
+          <text x="35" y="62" font-size="3" fill="#3a3a3a">2. 전처 오서진, 조수 한동욱에</text>
+          <text x="40" y="69" font-size="3" fill="#3a3a3a">대한 상속 및 증여는 없다.</text>
+          <text x="60" y="85" font-size="3" fill="#a05050" font-weight="bold" text-anchor="middle">작성일: 올해 1월</text>
+        </svg>`,
+        `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="100" fill="#100e0a"/>
+          <rect x="14" y="8" width="92" height="84" rx="2" fill="#1e1a14" stroke="#2e2a18" stroke-width="1.5"/>
+          <text x="60" y="21" font-size="4" fill="#c9a84c" text-anchor="middle">아나필락시스 위험 고지</text>
+          <line x1="18" y1="25" x2="102" y2="25" stroke="#2e2a18" stroke-width=".8"/>
+          <rect x="18" y="29" width="84" height="44" rx="2" fill="#f5f0e8" opacity=".1"/>
+          <text x="60" y="38" font-size="3.5" fill="#c44820" font-weight="bold" text-anchor="middle">★ 극도의 꿀벌 알레르기 ★</text>
+          <text x="22" y="48" font-size="2.8" fill="#a09070">"환자는 꿀벌 자상 시 급성</text>
+          <text x="22" y="54" font-size="2.8" fill="#a09070"> 아나필락시스 쇼크 발현됨.</text>
+          <text x="22" y="60" font-size="2.8" fill="#a09070"> 에피네프린 즉시 투여 필요."</text>
+          <rect x="18" y="76" width="84" height="8" rx="1" fill="#2a1808" stroke="#c44820" stroke-width=".5"/>
+          <text x="60" y="81.5" font-size="3" fill="#c44820" text-anchor="middle">윤태경이 유일하게 아는 사실.</text>
+          <text x="60" y="88" font-size="2.8" fill="#c44820" text-anchor="middle">장식 꿀병을 바꿔치기한 진짜 범인.</text>
+        </svg>`
+      ]
+    };
+    return data2[roleId] ? data2[roleId][clueIdx] || '' : '';
+  }
+
   const data = {
     kang: [
       `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
