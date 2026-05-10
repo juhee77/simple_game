@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>네온 크라임씬 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0f172a; font-family: 'Outfit', sans-serif; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+        h1 { font-size: 1.8rem; margin: 40px 0 5px; background: linear-gradient(135deg, #f43f5e, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+        
+        .screen { display: none; text-align: center; width: 90%; max-width: 500px; margin-top: 20px; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; }
+        
+        .card { background: rgba(255, 255, 255, 0.05); padding: 30px 20px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin: 15px 0; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .setup-input { width: 80%; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; color: #fff; font-size: 1rem; margin: 10px 0; text-align: center; }
+        .btn { background: linear-gradient(135deg, #f43f5e, #8b5cf6); border: none; color: #fff; padding: 14px 40px; font-size: 1.1rem; font-weight: 700; border-radius: 50px; cursor: pointer; margin: 10px 0; transition: transform 0.2s, opacity 0.2s; width: 80%; max-width: 300px; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        
+        .pass-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        
+        .role-title { font-size: 2rem; font-weight: 800; margin-bottom: 15px; }
+        .role-criminal { color: #f43f5e; }
+        .role-innocent { color: #2ed573; }
+        
+        .clue-box { background: rgba(0,0,0,0.3); border-left: 4px solid #8b5cf6; padding: 15px; text-align: left; margin: 15px 0; border-radius: 0 10px 10px 0; }
+        .clue-title { color: #a78bfa; font-weight: 700; margin-bottom: 5px; font-size: 0.9rem; }
+        .clue-desc { color: #cbd5e1; font-size: 1.05rem; line-height: 1.4; }
+        
+        .timer { font-size: 3rem; font-weight: 900; font-variant-numeric: tabular-nums; color: #fbc531; margin: 20px 0; }
+        
+        .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin: 20px 0; }
+        .vote-btn { padding: 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .vote-btn:hover { border-color: #f43f5e; background: rgba(244, 63, 94, 0.1); }
+        
+        .result-title { font-size: 2.5rem; font-weight: 900; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>🔍 네온 크라임씬</h1>
+
+    <!-- Setup Screen -->
+    <div id="screen-setup" class="screen active">
+        <div class="card">
+            <h2 style="margin-bottom: 15px;">네온 저택 살인사건</h2>
+            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; text-align: left;">
+                "오늘 밤, 네온 저택의 주인이 시체로 발견되었습니다. 
+                용의자는 저택에 있던 여러분뿐입니다. 
+                이 중 단 한 명만이 진범입니다. 서로를 심문하여 범인을 찾아내세요!"
+            </p>
+            <p style="color: #e2e8f0; font-weight: bold; margin-bottom: 10px;">참가자 수 (4~6명)</p>
+            <input type="number" id="player-count" class="setup-input" min="4" max="6" value="4">
+            <button class="btn" onclick="startGame()">사건 조사 시작</button>
+        </div>
+    </div>
+
+    <!-- Pass Overlay -->
+    <div id="pass-overlay" class="pass-overlay">
+        <p style="font-size: 1.5rem; color: #94a3b8; margin-bottom: 20px;">📱 폰 넘기기</p>
+        <p id="pass-label" style="font-size: 2.5rem; font-weight: 800; color: #fff; margin-bottom: 30px;">플레이어 1</p>
+        <button class="btn" onclick="showRole()">내 정보 확인 (혼자 보세요!)</button>
+    </div>
+
+    <!-- Role Reveal Screen -->
+    <div id="screen-role" class="screen">
+        <p id="player-turn-label" style="color: #a78bfa; font-weight: 700; font-size: 1.2rem; margin-bottom: 10px;"></p>
+        <div class="card">
+            <div id="role-title" class="role-title"></div>
+            
+            <div class="clue-box">
+                <div class="clue-title">당신의 알리바이 (다른 사람에게 말하세요)</div>
+                <div id="alibi-text" class="clue-desc"></div>
+            </div>
+            
+            <div class="clue-box">
+                <div class="clue-title">당신이 알고 있는 단서 (추리할 때 활용하세요)</div>
+                <div id="clue-text" class="clue-desc"></div>
+            </div>
+            
+            <p id="secret-mission" style="color: #f43f5e; font-weight: bold; margin-top: 15px; font-size: 0.9rem;"></p>
+        </div>
+        <button class="btn" onclick="nextPlayer()">확인 완료</button>
+    </div>
+
+    <!-- Discussion Screen -->
+    <div id="screen-discuss" class="screen">
+        <h2 style="font-size: 1.8rem; margin-bottom: 10px;">🗣️ 심문 및 토론</h2>
+        <p style="color: #94a3b8;">각자의 알리바이를 말하고 단서를 공유하여 범인을 찾아내세요!</p>
+        <div class="card">
+            <div id="timer-display" class="timer">03:00</div>
+        </div>
+        <button class="btn" onclick="startVoting()" style="background: #2ed573;">토론 종료 및 투표</button>
+    </div>
+
+    <!-- Voting Screen -->
+    <div id="screen-vote" class="screen">
+        <h2 style="font-size: 1.8rem; margin-bottom: 10px;">🗳️ 범인 지목</h2>
+        <p style="color: #94a3b8;">가장 의심스러운 사람에게 투표하세요. 동점 시 무효 처리됩니다.</p>
+        <div class="card">
+            <h3 id="voting-turn" style="color: #a78bfa; margin-bottom: 15px;">플레이어 1의 투표</h3>
+            <div id="vote-grid" class="vote-grid"></div>
+        </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="screen-result" class="screen">
+        <div id="result-title" class="result-title"></div>
+        <div class="card">
+            <p style="color: #94a3b8; margin-bottom: 5px;">진범은</p>
+            <p id="criminal-name" style="font-size: 2rem; font-weight: bold; color: #f43f5e; margin-bottom: 20px;"></p>
+            <p id="vote-summary" style="font-size: 1rem; color: #cbd5e1; line-height: 1.5; text-align: left; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;"></p>
+        </div>
+        <button class="btn" onclick="location.reload()">새로운 사건 하기</button>
+    </div>
+
+    <script>
+        const scenarios = {
+            4: {
+                roles: [
+                    { name: '요리사 (무죄)', alibi: '사건 시각에 주방에서 스테이크를 굽고 있었습니다.', clue: '정원사는 사건 시각에 거실로 가는 것을 보았습니다.', isCriminal: false },
+                    { name: '정원사 (무죄)', alibi: '사건 시각에 거실 화분에 물을 주고 있었습니다.', clue: '운전기사는 사건 시각에 차에 없었습니다.', isCriminal: false },
+                    { name: '운전기사 (무죄)', alibi: '사건 시각에 차고에서 세차를 하고 있었습니다.', clue: '범행 도구는 주방에서 쓰던 칼이었습니다.', isCriminal: false },
+                    { name: '비서 (범인)', alibi: '사건 시각에 2층 서재에서 서류를 정리하고 있었습니다.', clue: '당신은 거짓말을 해야 합니다! 요리사나 정원사에게 누명을 씌우세요.', isCriminal: true }
+                ]
+            },
+            5: {
+                roles: [
+                    { name: '요리사 (무죄)', alibi: '주방에서 요리 중이었습니다.', clue: '정원사는 거실로 갔습니다.', isCriminal: false },
+                    { name: '정원사 (무죄)', alibi: '거실에서 일하고 있었습니다.', clue: '운전기사는 차고에 없었습니다.', isCriminal: false },
+                    { name: '운전기사 (무죄)', alibi: '차고에서 세차 중이었습니다.', clue: '가정부는 사건 시각에 비명소리를 들었다고 합니다.', isCriminal: false },
+                    { name: '가정부 (무죄)', alibi: '1층 복도를 청소 중이었습니다.', clue: '비서가 서재에서 급히 내려오는 것을 보았습니다.', isCriminal: false },
+                    { name: '비서 (범인)', alibi: '서재에서 일하고 있었습니다.', clue: '가정부의 증언을 반박하고 운전기사를 의심하게 만드세요!', isCriminal: true }
+                ]
+            },
+            6: {
+                roles: [
+                    { name: '요리사 (무죄)', alibi: '주방에서 요리 중이었습니다.', clue: '정원사는 거실로 갔습니다.', isCriminal: false },
+                    { name: '정원사 (무죄)', alibi: '거실에서 일하고 있었습니다.', clue: '주치의는 약병을 들고 2층으로 갔습니다.', isCriminal: false },
+                    { name: '운전기사 (무죄)', alibi: '차고에서 세차 중이었습니다.', clue: '비서는 오늘따라 불안해 보였습니다.', isCriminal: false },
+                    { name: '가정부 (무죄)', alibi: '1층 복도를 청소 중이었습니다.', clue: '비서가 서재에서 급히 내려오는 것을 보았습니다.', isCriminal: false },
+                    { name: '주치의 (무죄)', alibi: '2층 빈 객실에서 쉬고 있었습니다.', clue: '피해자는 독살이 아니라 흉기에 찔렸습니다.', isCriminal: false },
+                    { name: '비서 (범인)', alibi: '서재에서 일하고 있었습니다.', clue: '주치의의 약병 이야기를 활용해 독살로 위장하려다 실패한 것처럼 꾸미세요.', isCriminal: true }
+                ]
+            }
+        };
+
+        let playerCount = 4;
+        let players = []; // { id, name, roleData }
+        let currentPlayerIndex = 0;
+        let criminalIndex = -1;
+        let votes = [];
+        let votingPlayerIndex = 0;
+        let timerInterval = null;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            playerCount = parseInt(document.getElementById('player-count').value);
+            if (playerCount < 4 || playerCount > 6) playerCount = 4;
+            
+            const scenarioRoles = JSON.parse(JSON.stringify(scenarios[playerCount].roles));
+            shuffle(scenarioRoles);
+            
+            players = scenarioRoles.map((role, i) => {
+                if (role.isCriminal) criminalIndex = i;
+                return {
+                    id: i,
+                    name: `플레이어 ${i + 1}`,
+                    roleData: role
+                };
+            });
+            
+            currentPlayerIndex = 0;
+            showPassOverlay();
+        }
+
+        function showPassOverlay() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('pass-overlay').style.display = 'flex';
+            document.getElementById('pass-label').textContent = players[currentPlayerIndex].name;
+        }
+
+        function showRole() {
+            document.getElementById('pass-overlay').style.display = 'none';
+            switchScreen('screen-role');
+            
+            const p = players[currentPlayerIndex];
+            document.getElementById('player-turn-label').textContent = p.name + '의 역할 카드';
+            
+            const roleTitle = document.getElementById('role-title');
+            const secretMission = document.getElementById('secret-mission');
+            
+            if (p.roleData.isCriminal) {
+                roleTitle.textContent = `당신은 ${p.roleData.name}입니다!`;
+                roleTitle.className = 'role-title role-criminal';
+                secretMission.textContent = '목표: 정체를 숨기고 다른 사람에게 누명을 씌우세요!';
+            } else {
+                roleTitle.textContent = `당신은 ${p.roleData.name}입니다.`;
+                roleTitle.className = 'role-title role-innocent';
+                secretMission.textContent = '목표: 진범을 찾아내세요!';
+            }
+            
+            document.getElementById('alibi-text').textContent = p.roleData.alibi;
+            document.getElementById('clue-text').textContent = p.roleData.clue;
+        }
+
+        function nextPlayer() {
+            currentPlayerIndex++;
+            if (currentPlayerIndex < playerCount) {
+                showPassOverlay();
+            } else {
+                startDiscussion();
+            }
+        }
+
+        function startDiscussion() {
+            switchScreen('screen-discuss');
+            let timeLeft = 180; // 3 minutes
+            
+            const updateTimerDisplay = () => {
+                const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                const s = (timeLeft % 60).toString().padStart(2, '0');
+                const display = document.getElementById('timer-display');
+                display.textContent = `${m}:${s}`;
+                if (timeLeft <= 30) display.style.color = '#f43f5e';
+            };
+            
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    startVoting();
+                }
+            }, 1000);
+        }
+
+        function startVoting() {
+            if (timerInterval) clearInterval(timerInterval);
+            switchScreen('screen-vote');
+            votes = new Array(playerCount).fill(0);
+            votingPlayerIndex = 0;
+            renderVoteTurn();
+        }
+
+        function renderVoteTurn() {
+            document.getElementById('voting-turn').textContent = `${players[votingPlayerIndex].name}의 투표 (혼자 누르세요)`;
+            const grid = document.getElementById('vote-grid');
+            grid.innerHTML = '';
+            
+            players.forEach((p, i) => {
+                if (i !== votingPlayerIndex) {
+                    const btn = document.createElement('button');
+                    btn.className = 'vote-btn';
+                    btn.textContent = p.name;
+                    btn.onclick = () => castVote(i);
+                    grid.appendChild(btn);
+                }
+            });
+        }
+
+        function castVote(targetIndex) {
+            votes[targetIndex]++;
+            votingPlayerIndex++;
+            
+            if (votingPlayerIndex < playerCount) {
+                renderVoteTurn();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            switchScreen('screen-result');
+            
+            // Find max votes
+            let maxVotes = 0;
+            let maxIndices = [];
+            votes.forEach((v, i) => {
+                if (v > maxVotes) {
+                    maxVotes = v;
+                    maxIndices = [i];
+                } else if (v === maxVotes) {
+                    maxIndices.push(i);
+                }
+            });
+            
+            const resultTitle = document.getElementById('result-title');
+            
+            if (maxIndices.length === 1 && maxIndices[0] === criminalIndex) {
+                // Arrested criminal
+                resultTitle.innerHTML = '<span style="color: #2ed573;">🎉 범인 검거 성공!</span>';
+            } else {
+                // Failed
+                resultTitle.innerHTML = '<span style="color: #f43f5e;">💀 범인 검거 실패...</span>';
+            }
+            
+            const criminal = players[criminalIndex];
+            document.getElementById('criminal-name').textContent = `${criminal.name} (${criminal.roleData.name.split(' ')[0]})`;
+            
+            let summaryHTML = '<strong>투표 결과:</strong><br>';
+            players.forEach((p, i) => {
+                summaryHTML += `${p.name}: ${votes[i]}표<br>`;
+            });
+            document.getElementById('vote-summary').innerHTML = summaryHTML;
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+</html>
