@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starlight Tuners</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  :root {
+    --bg: #090a0f;
+    --fg: #e0e5ff;
+    --accent: #9d80ff;
+    --accent-hover: #b49eff;
+    --p0: #ff6b81;
+    --p1: #2ed573;
+    --empty: rgba(255, 255, 255, 0.05);
+    --border: rgba(157, 128, 255, 0.3);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Nanum Myeongjo', serif;
+    overflow-x: hidden;
+  }
+  .quicksand { font-family: 'Quicksand', sans-serif; }
+  h1, h2, h3 { margin: 0; }
+  button {
+    background: rgba(157, 128, 255, 0.1); color: var(--accent);
+    border: 1px solid var(--accent); padding: 8px 16px;
+    font-family: inherit; font-size: 1rem; border-radius: 20px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  button:hover:not(:disabled) { background: var(--accent); color: var(--bg); }
+  button:disabled { opacity: 0.3; cursor: not-allowed; border-color: #555; color: #555; }
+
+  /* Layout */
+  .game-container { display: flex; flex-direction: column; height: 100vh; padding: 20px; gap: 20px; max-width: 1400px; margin: 0 auto; }
+  .top-section { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+  
+  /* Orbit Track */
+  .orbit-container { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 10px; padding: 20px; position: relative; }
+  .orbit-track { display: flex; flex-wrap: wrap; gap: 4px; }
+  .orbit-cell { width: 30px; height: 30px; background: rgba(255,255,255,0.05); border-radius: 5px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: rgba(255,255,255,0.2); }
+  .orbit-cell.income { border: 1px solid var(--accent); background: rgba(157, 128, 255, 0.1); color: var(--accent); }
+  .marker { width: 20px; height: 20px; border-radius: 50%; position: absolute; transition: all 0.5s ease; box-shadow: 0 0 10px currentColor; z-index: 10; }
+  .marker.p0 { background: var(--p0); color: var(--p0); top: -5px; left: -5px; }
+  .marker.p1 { background: var(--p1); color: var(--p1); bottom: -5px; right: -5px; }
+  .marker.top { z-index: 11; transform: scale(1.2); }
+
+  /* Boards */
+  .main-area { display: flex; flex: 1; gap: 30px; min-height: 0; }
+  .player-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 2px solid transparent; transition: all 0.3s; }
+  .player-area.active { border-color: var(--accent); box-shadow: 0 0 30px rgba(157, 128, 255, 0.1); }
+  
+  .stats { display: flex; gap: 20px; margin: 15px 0; font-size: 1.2rem; }
+  .stat-item { display: flex; align-items: center; gap: 5px; }
+  
+  .grid-board { display: grid; grid-template-columns: repeat(9, 30px); grid-template-rows: repeat(9, 30px); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+  .grid-cell { width: 30px; height: 30px; background: #111; transition: background 0.2s; }
+  .grid-cell.filled.p0 { background: var(--p0); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+  .grid-cell.filled.p1 { background: var(--p1); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+  .grid-cell.preview-valid { background: rgba(255, 255, 255, 0.5); }
+  .grid-cell.preview-invalid { background: rgba(255, 0, 0, 0.5); }
+
+  /* Market */
+  .market-area { width: 350px; display: flex; flex-direction: column; gap: 15px; padding: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--border); overflow-y: auto; }
+  .market-item { padding: 15px; background: rgba(255,255,255,0.02); border: 1px solid var(--empty); border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; }
+  .market-item:hover { border-color: var(--accent); background: rgba(157, 128, 255, 0.05); }
+  .market-item.selected { border-color: var(--p0); box-shadow: 0 0 15px var(--p0); } /* Will dynamically change color based on active player */
+  .market-item-info { display: flex; gap: 15px; margin-top: 10px; font-size: 0.9rem; }
+  
+  /* Tile Preview SVG */
+  .svg-tile { overflow: visible; filter: drop-shadow(0 0 5px currentColor); }
+  .svg-block { stroke: rgba(255,255,255,0.5); stroke-width: 1px; }
+
+  /* Controls */
+  .controls { margin-top: 15px; display: flex; gap: 10px; justify-content: center; width: 100%; }
+
+  /* Modals */
+  .overlay-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .hidden { display: none !important; }
+
+  /* GDD */
+  #gdd-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto; }
+  .modal.open { display: block; }
+  .modal-content { background: #111; margin: 5% auto; padding: 30px; width: 90%; max-width: 800px; border: 1px solid var(--accent); position: relative; line-height: 1.6; }
+  .close { position: absolute; right: 20px; top: 15px; font-size: 2rem; cursor: pointer; color: var(--p0); }
+</style>
+</head>
+<body>
+
+  <!-- Overlay Screens -->
+  <div id="screen-intro" class="overlay-screen">
+    <h1 class="quicksand" style="font-size: 4rem; color: var(--accent); margin-bottom: 10px; text-shadow: 0 0 20px var(--accent);">STARLIGHT TUNERS</h1>
+    <p style="font-size: 1.5rem; color: rgba(255,255,255,0.6); margin-bottom: 50px;">별빛 조율사 : 부서진 밤하늘 복원</p>
+    <button onclick="startGame()" style="font-size: 1.5rem; padding: 15px 40px; border-radius: 30px;">조율 시작</button>
+  </div>
+
+  <div id="screen-end" class="overlay-screen hidden">
+    <h1 id="end-title" class="quicksand" style="font-size: 4rem; margin-bottom: 10px;"></h1>
+    <p id="end-desc" style="font-size: 1.5rem; color: rgba(255,255,255,0.6); margin-bottom: 50px;"></p>
+    <button onclick="location.reload()" style="font-size: 1.5rem; padding: 15px 40px; border-radius: 30px;">새로운 밤하늘</button>
+  </div>
+
+  <!-- GDD Button & Modal -->
+  <button id="gdd-btn" onclick="openGDD()">🔍 GDD</button>
+  <div id="gdd-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeGDD()">&times;</span>
+      <div id="gdd-content"></div>
+    </div>
+  </div>
+
+  <!-- Game UI -->
+  <div class="game-container">
+    
+    <!-- Top: Orbit -->
+    <div class="top-section">
+      <div style="text-align: center; width: 150px;">
+        <h2 id="turn-indicator" class="quicksand" style="color: var(--p0);">P1 TURN</h2>
+        <div style="font-size: 0.9rem; color: rgba(255,255,255,0.5);">시간 역전 방지</div>
+      </div>
+      <div class="orbit-container">
+        <div class="orbit-track" id="orbit-track">
+          <!-- 50 cells injected here -->
+        </div>
+        <div class="marker p0 top" id="marker-p0"></div>
+        <div class="marker p1" id="marker-p1"></div>
+      </div>
+    </div>
+
+    <!-- Main: Boards & Market -->
+    <div class="main-area">
+      <!-- Player 0 -->
+      <div class="player-area active" id="p0-area">
+        <h2 style="color: var(--p0);">적색 혜성 조율사</h2>
+        <div class="stats quicksand">
+          <div class="stat-item">✨ <span id="p0-stardust">5</span></div>
+          <div class="stat-item">🌟 <span id="p0-income">0</span></div>
+        </div>
+        <div class="grid-board" id="p0-board"></div>
+      </div>
+
+      <!-- Player 1 -->
+      <div class="player-area" id="p1-area">
+        <h2 style="color: var(--p1);">녹색 성운 조율사</h2>
+        <div class="stats quicksand">
+          <div class="stat-item">✨ <span id="p1-stardust">5</span></div>
+          <div class="stat-item">🌟 <span id="p1-income">0</span></div>
+        </div>
+        <div class="grid-board" id="p1-board"></div>
+      </div>
+
+      <!-- Market -->
+      <div class="market-area">
+        <h3 style="text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 10px;">별자리 상점</h3>
+        <div id="market-list"></div>
+        
+        <div class="controls">
+          <button id="btn-rotate" onclick="rotateSelectedTile()" disabled>🔄 회전</button>
+          <button id="btn-skip" onclick="skipTurn()">🏃 궤도 질주 (+✨)</button>
+        </div>
+        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); text-align: center; margin-top: 10px;">
+          타일을 선택하고 내 보드를 클릭해 배치하세요.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+// ==========================================
+// GAME DATA & SHAPES
+// ==========================================
+const INCOME_SPACES = [5, 11, 17, 23, 29, 35, 41, 47];
+const ORBIT_LENGTH = 50;
+
+const baseShapes = [
+  { m: [[1,1]], c: 2, t: 2, i: 0 },
+  { m: [[1,1,1]], c: 2, t: 3, i: 1 },
+  { m: [[1,1,1,1]], c: 3, t: 4, i: 1 },
+  { m: [[1,0],[1,1]], c: 1, t: 2, i: 0 },
+  { m: [[1,0,0],[1,1,1]], c: 4, t: 5, i: 2 },
+  { m: [[1,1],[1,1]], c: 3, t: 3, i: 1 },
+  { m: [[1,1,1],[0,1,0]], c: 5, t: 4, i: 2 },
+  { m: [[0,1,0],[1,1,1],[0,1,0]], c: 7, t: 6, i: 3 },
+  { m: [[1,1,0],[0,1,1]], c: 2, t: 3, i: 0 },
+  { m: [[1,0,1],[1,1,1]], c: 8, t: 6, i: 3 },
+  { m: [[1,1,1],[1,0,0],[1,0,0]], c: 4, t: 5, i: 1 },
+  { m: [[0,1,1],[1,1,0]], c: 3, t: 4, i: 1 },
+  { m: [[1,1],[1,0]], c: 1, t: 1, i: 0 },
+  { m: [[1,0,0,0],[1,1,1,1]], c: 6, t: 5, i: 2 },
+  { m: [[0,1,0],[1,1,1],[1,0,1]], c: 7, t: 6, i: 2 }
+];
+
+let deck = [];
+let market = [];
+let selectedMarketIdx = -1;
+
+const pData = [
+  { id: 0, color: 'var(--p0)', stardust: 5, income: 0, pos: 0, board: Array(9).fill().map(()=>Array(9).fill(0)), top: true },
+  { id: 1, color: 'var(--p1)', stardust: 5, income: 0, pos: 0, board: Array(9).fill().map(()=>Array(9).fill(0)), top: false }
+];
+let activeP = 0; // 0 or 1
+
+// ==========================================
+// INITIALIZATION
+// ==========================================
+function startGame() {
+  document.getElementById('screen-intro').classList.add('hidden');
+  
+  // Init Orbit
+  const track = document.getElementById('orbit-track');
+  for(let i=0; i<ORBIT_LENGTH; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'orbit-cell';
+    if(INCOME_SPACES.includes(i)) {
+      cell.classList.add('income');
+      cell.textContent = '🌟';
+    } else if(i === ORBIT_LENGTH-1) {
+      cell.textContent = '🏁';
+    } else if(i%5 === 0) {
+      cell.textContent = i;
+    }
+    track.appendChild(cell);
+  }
+  
+  // Init Boards
+  initGrid(0);
+  initGrid(1);
+  
+  // Generate Deck
+  for(let i=0; i<3; i++) {
+    deck = deck.concat(baseShapes.map(s => JSON.parse(JSON.stringify(s)))); // copy 3 sets
+  }
+  deck.sort(() => Math.random() - 0.5);
+  
+  refillMarket();
+  updateOrbitMarkers();
+  updateUI();
+}
+
+function initGrid(pId) {
+  const board = document.getElementById(`p${pId}-board`);
+  for(let r=0; r<9; r++) {
+    for(let c=0; c<9; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      // Events
+      cell.onmouseenter = () => handleHover(pId, r, c);
+      cell.onmouseleave = clearPreview;
+      cell.onclick = () => handlePlace(pId, r, c);
+      board.appendChild(cell);
+    }
+  }
+}
+
+// ==========================================
+// MARKET & TILES
+// ==========================================
+function refillMarket() {
+  while(market.length < 3 && deck.length > 0) {
+    market.push(deck.pop());
+  }
+  renderMarket();
+}
+
+function renderMarket() {
+  const list = document.getElementById('market-list');
+  list.innerHTML = '';
+  selectedMarketIdx = -1;
+  document.getElementById('btn-rotate').disabled = true;
+  
+  market.forEach((tile, idx) => {
+    const item = document.createElement('div');
+    item.className = 'market-item';
+    item.onclick = () => selectTile(idx, item);
+    
+    // Draw SVG
+    const svgSize = 20;
+    const w = tile.m[0].length * svgSize;
+    const h = tile.m.length * svgSize;
+    let path = '';
+    for(let r=0; r<tile.m.length; r++) {
+      for(let c=0; c<tile.m[r].length; c++) {
+        if(tile.m[r][c] === 1) {
+          path += `<rect x="${c*svgSize}" y="${r*svgSize}" width="${svgSize}" height="${svgSize}" class="svg-block" fill="currentColor"/>`;
+        }
+      }
+    }
+    
+    item.innerHTML = `
+      <svg width="${w}" height="${h}" class="svg-tile">${path}</svg>
+      <div class="market-item-info quicksand">
+        <div>✨ ${tile.c}</div>
+        <div>⏱️ ${tile.t}</div>
+        ${tile.i > 0 ? `<div>🌟 ${tile.i}</div>` : ''}
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function selectTile(idx, el) {
+  const p = pData[activeP];
+  const tile = market[idx];
+  
+  document.querySelectorAll('.market-item').forEach(i => {
+    i.classList.remove('selected');
+    i.style.borderColor = 'transparent';
+    i.style.boxShadow = 'none';
+  });
+  
+  selectedMarketIdx = idx;
+  el.classList.add('selected');
+  el.style.borderColor = p.color;
+  el.style.boxShadow = `0 0 15px ${p.color}`;
+  
+  document.getElementById('btn-rotate').disabled = false;
+}
+
+function rotateSelectedTile() {
+  if (selectedMarketIdx === -1) return;
+  const tile = market[selectedMarketIdx];
+  const rows = tile.m.length;
+  const cols = tile.m[0].length;
+  let newM = Array(cols).fill().map(() => Array(rows).fill(0));
+  
+  for(let r=0; r<rows; r++) {
+    for(let c=0; c<cols; c++) {
+      newM[c][rows - 1 - r] = tile.m[r][c];
+    }
+  }
+  tile.m = newM;
+  renderMarket();
+  // re-select
+  const newEl = document.getElementById('market-list').children[selectedMarketIdx];
+  selectTile(selectedMarketIdx, newEl);
+}
+
+// ==========================================
+// GRID PLACEMENT
+// ==========================================
+function getPreviewCells(r, c) {
+  if (selectedMarketIdx === -1) return null;
+  const tile = market[selectedMarketIdx];
+  let cells = [];
+  let isValid = true;
+  
+  for(let tr=0; tr<tile.m.length; tr++) {
+    for(let tc=0; tc<tile.m[tr].length; tc++) {
+      if(tile.m[tr][tc] === 1) {
+        const br = r + tr;
+        const bc = c + tc;
+        if(br >= 9 || bc >= 9 || br < 0 || bc < 0) {
+          isValid = false;
+        } else {
+          cells.push({r: br, c: bc});
+          if(pData[activeP].board[br][bc] !== 0) isValid = false;
+        }
+      }
+    }
+  }
+  return { cells, isValid };
+}
+
+function handleHover(pId, r, c) {
+  if (pId !== activeP) return;
+  clearPreview();
+  const pre = getPreviewCells(r, c);
+  if (!pre) return;
+  
+  const boardEl = document.getElementById(`p${pId}-board`);
+  pre.cells.forEach(cell => {
+    // Check bounds again to avoid JS error on childNodes index
+    if(cell.r < 9 && cell.c < 9) {
+      const el = boardEl.children[cell.r * 9 + cell.c];
+      el.classList.add(pre.isValid ? 'preview-valid' : 'preview-invalid');
+    }
+  });
+}
+
+function clearPreview() {
+  document.querySelectorAll('.preview-valid, .preview-invalid').forEach(el => {
+    el.classList.remove('preview-valid', 'preview-invalid');
+  });
+}
+
+function handlePlace(pId, r, c) {
+  if (pId !== activeP) return;
+  if (selectedMarketIdx === -1) return;
+  
+  const pre = getPreviewCells(r, c);
+  if (!pre || !pre.isValid) return; // Invalid placement
+  
+  const p = pData[activeP];
+  const tile = market[selectedMarketIdx];
+  
+  // Check affordability
+  if (p.stardust < tile.c) {
+    alert("별가루(Stardust)가 부족합니다.");
+    return;
+  }
+  
+  // Pay & Place
+  p.stardust -= tile.c;
+  p.income += tile.i;
+  
+  pre.cells.forEach(cell => {
+    p.board[cell.r][cell.c] = 1;
+    const el = document.getElementById(`p${pId}-board`).children[cell.r * 9 + cell.c];
+    el.classList.add('filled', `p${pId}`);
+  });
+  
+  // Remove from market
+  market.splice(selectedMarketIdx, 1);
+  selectedMarketIdx = -1;
+  clearPreview();
+  refillMarket();
+  
+  // Move Orbit
+  advanceOrbit(tile.t);
+}
+
+// ==========================================
+// ORBIT & TURNS
+// ==========================================
+function skipTurn() {
+  const p = pData[activeP];
+  const opp = pData[activeP === 0 ? 1 : 0];
+  
+  // Move 1 space ahead of opp
+  const targetPos = Math.min(opp.pos + 1, ORBIT_LENGTH - 1);
+  const steps = targetPos - p.pos;
+  
+  if (steps > 0) {
+    p.stardust += steps;
+    advanceOrbit(steps);
+  }
+}
+
+function advanceOrbit(steps) {
+  const p = pData[activeP];
+  const oldPos = p.pos;
+  p.pos = Math.min(p.pos + steps, ORBIT_LENGTH - 1);
+  
+  // Check income
+  for(let i=oldPos + 1; i<=p.pos; i++) {
+    if (INCOME_SPACES.includes(i)) {
+      p.stardust += p.income;
+    }
+  }
+  
+  updateOrbitMarkers();
+  determineNextTurn();
+}
+
+function updateOrbitMarkers() {
+  const track = document.getElementById('orbit-track');
+  const cells = track.children;
+  
+  for(let i=0; i<2; i++) {
+    const p = pData[i];
+    const targetCell = cells[p.pos];
+    const m = document.getElementById(`marker-p${i}`);
+    
+    // Position marker relative to cell
+    // Let's just append the marker into the cell visually using flex/absolute
+    // Actually, bounding box is better for smooth transition if track is responsive
+    const rect = targetCell.getBoundingClientRect();
+    const trackRect = track.getBoundingClientRect();
+    
+    m.style.transform = `translate(${rect.left - trackRect.left}px, ${rect.top - trackRect.top}px)`;
+  }
+}
+
+function determineNextTurn() {
+  const p0 = pData[0];
+  const p1 = pData[1];
+  
+  if (p0.pos === ORBIT_LENGTH - 1 && p1.pos === ORBIT_LENGTH - 1) {
+    calculateEndGame();
+    return;
+  }
+  
+  if (p0.pos < p1.pos) {
+    activeP = 0;
+    p0.top = false; p1.top = true;
+  } else if (p1.pos < p0.pos) {
+    activeP = 1;
+    p1.top = false; p0.top = true;
+  } else {
+    // Equal pos. The one who just arrived is now 'top' and does NOT go next.
+    // The one who was already there goes next.
+    // activeP just arrived, so activeP becomes top, opp goes next.
+    const opp = activeP === 0 ? 1 : 0;
+    pData[activeP].top = true;
+    pData[opp].top = false;
+    activeP = opp;
+    
+    // Special case: both at end
+    if (pData[activeP].pos === ORBIT_LENGTH - 1) {
+       activeP = opp; // force the other if one is trapped
+    }
+  }
+  
+  // Z-index styling
+  document.getElementById('marker-p0').classList.toggle('top', p0.top);
+  document.getElementById('marker-p1').classList.toggle('top', p1.top);
+  
+  updateUI();
+  
+  // Auto-skip if active player is at the end but opp is not
+  if (pData[activeP].pos === ORBIT_LENGTH - 1) {
+    activeP = activeP === 0 ? 1 : 0; // Hand turn back
+    updateUI();
+  }
+}
+
+function updateUI() {
+  document.getElementById('p0-area').classList.toggle('active', activeP === 0);
+  document.getElementById('p1-area').classList.toggle('active', activeP === 1);
+  
+  const ti = document.getElementById('turn-indicator');
+  ti.textContent = `P${activeP+1} TURN`;
+  ti.style.color = pData[activeP].color;
+  
+  document.getElementById('p0-stardust').textContent = pData[0].stardust;
+  document.getElementById('p0-income').textContent = pData[0].income;
+  document.getElementById('p1-stardust').textContent = pData[1].stardust;
+  document.getElementById('p1-income').textContent = pData[1].income;
+  
+  // Unselect market
+  selectedMarketIdx = -1;
+  document.querySelectorAll('.market-item').forEach(i => {
+    i.classList.remove('selected');
+    i.style.borderColor = 'transparent';
+    i.style.boxShadow = 'none';
+  });
+  document.getElementById('btn-rotate').disabled = true;
+  
+  // Disable skip if currently leading or at end
+  const p = pData[activeP];
+  const opp = pData[activeP === 0 ? 1 : 0];
+  document.getElementById('btn-skip').disabled = (p.pos > opp.pos) || (p.pos === ORBIT_LENGTH - 1);
+}
+
+function calculateEndGame() {
+  let scores = [];
+  for(let i=0; i<2; i++) {
+    const p = pData[i];
+    let emptyCount = 0;
+    for(let r=0; r<9; r++) {
+      for(let c=0; c<9; c++) {
+        if(p.board[r][c] === 0) emptyCount++;
+      }
+    }
+    const score = p.stardust - (emptyCount * 2);
+    scores.push({ id: i, score, emptyCount, stardust: p.stardust });
+  }
+  
+  document.getElementById('screen-end').classList.remove('hidden');
+  const title = document.getElementById('end-title');
+  const desc = document.getElementById('end-desc');
+  
+  if (scores[0].score > scores[1].score) {
+    title.textContent = "적색 혜성 승리!";
+    title.style.color = "var(--p0)";
+  } else if (scores[1].score > scores[0].score) {
+    title.textContent = "녹색 성운 승리!";
+    title.style.color = "var(--p1)";
+  } else {
+    title.textContent = "무승부 (완벽한 조율)";
+    title.style.color = "var(--fg)";
+  }
+  
+  desc.innerHTML = `
+    P1 점수: ${scores[0].score} (별가루 ${scores[0].stardust} - 빈칸 ${scores[0].emptyCount}x2)<br>
+    P2 점수: ${scores[1].score} (별가루 ${scores[1].stardust} - 빈칸 ${scores[1].emptyCount}x2)
+  `;
+}
+
+// ==========================================
+// GDD VIEWER
+// ==========================================
+async function openGDD() {
+  document.getElementById('gdd-modal').classList.add('open');
+  const contentDiv = document.getElementById('gdd-content');
+  if(!contentDiv.innerHTML) {
+    try {
+      const res = await fetch('docs/starlight-gdd.md');
+      if(!res.ok) throw new Error('File not found');
+      const text = await res.text();
+      contentDiv.innerHTML = marked.parse(text);
+    } catch(e) {
+      contentDiv.innerHTML = `<p style="color:var(--p0)">GDD 문서를 로드할 수 없습니다. (경로: docs/starlight-gdd.md)</p>`;
+    }
+  }
+}
+function closeGDD() { document.getElementById('gdd-modal').classList.remove('open'); }
+window.onclick = function(e) { if(e.target == document.getElementById('gdd-modal')) closeGDD(); }
+</script>
+</body>
+</html>

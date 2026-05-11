@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Lethe</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --fg: #00ffcc;
+    --fg-dim: #008866;
+    --danger: #ff3366;
+    --warning: #ffcc00;
+    --panel-bg: #111;
+    --border: #333;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+  }
+  .screen { display: none; padding: 20px; max-width: 800px; margin: 0 auto; }
+  .screen.active { display: block; }
+  
+  h1, h2, h3 { text-transform: uppercase; letter-spacing: 2px; }
+  button {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--fg);
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  button:hover { background: var(--fg); color: var(--bg); }
+  
+  /* Intro Screen */
+  #screen-intro { text-align: center; padding-top: 10vh; }
+  .role-btn { margin: 10px; padding: 20px; font-size: 1.5rem; display: block; width: 100%; max-width: 400px; margin: 10px auto; }
+  
+  /* Top Bar */
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--fg-dim); padding-bottom: 10px; margin-bottom: 20px;
+  }
+  .timer { font-size: 2.5rem; font-weight: bold; }
+  .strikes { color: var(--danger); font-size: 1.5rem; }
+  
+  /* Diver Modules */
+  .module {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    padding: 20px; margin-bottom: 20px;
+    position: relative;
+  }
+  .module.solved { border-color: var(--fg); box-shadow: 0 0 10px var(--fg); opacity: 0.8; pointer-events: none; }
+  .module-title { font-size: 1.2rem; color: var(--fg-dim); margin-bottom: 15px; border-bottom: 1px dashed var(--border); padding-bottom: 5px; }
+  
+  /* Mod 1 */
+  .slider-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .slider-group label { width: 50px; }
+  .slider-group input[type=range] { flex: 1; margin: 0 15px; cursor: pointer; }
+  .val-disp { width: 30px; text-align: right; }
+  
+  /* Mod 2 */
+  .symbol-display { font-size: 2.5rem; display: flex; justify-content: space-around; margin-bottom: 20px; background: #000; padding: 10px; }
+  .symbol-btn-group { display: flex; justify-content: space-around; }
+  .sym-btn { font-size: 1.5rem; width: 60px; height: 60px; }
+  .stage-dots { text-align: center; margin-top: 10px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--fg); margin: 0 5px; }
+  .dot.on { background: var(--fg); }
+  
+  /* Mod 3 */
+  .big-btn-wrap { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px 0; }
+  .big-btn {
+    width: 150px; height: 150px; border-radius: 50%;
+    font-size: 1.5rem; font-weight: bold; border: 4px solid #fff;
+    cursor: pointer; user-select: none;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    color: #fff;
+  }
+  .indicator-light { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #555; background: #222; }
+  
+  /* Operator Manual */
+  .manual-content { line-height: 1.6; font-size: 1.1rem; }
+  .manual-content h3 { color: var(--warning); margin-top: 30px; border-bottom: 1px solid var(--warning); padding-bottom: 5px; }
+  .manual-content ul { padding-left: 20px; }
+  .manual-content li { margin-bottom: 10px; }
+  
+  /* GDD Modal */
+  #gdd-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; border-radius: 20px; background: var(--bg); }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto; }
+  .modal.open { display: block; }
+  .modal-content { background: #1a1a1a; margin: 5% auto; padding: 30px; width: 90%; max-width: 800px; border: 1px solid var(--fg); position: relative; }
+  .close { position: absolute; right: 20px; top: 15px; font-size: 2rem; cursor: pointer; color: var(--danger); }
+
+  /* End Screen */
+  #screen-end { text-align: center; padding-top: 20vh; }
+  .end-msg { font-size: 3rem; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+  <!-- GDD Button & Modal -->
+  <button id="gdd-btn" onclick="openGDD()">🔍 GDD</button>
+  <div id="gdd-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeGDD()">&times;</span>
+      <div id="gdd-content"></div>
+    </div>
+  </div>
+
+  <!-- Intro Screen -->
+  <div id="screen-intro" class="screen active">
+    <h1 style="font-size: 3rem; margin-bottom: 10px;">PROJECT LETHE</h1>
+    <p style="color: var(--fg-dim); margin-bottom: 50px;">비대칭 협동 기억 복원 작전</p>
+    <button class="role-btn" onclick="startGame('diver')">다이버 (현장 요원)</button>
+    <button class="role-btn" onclick="startGame('operator')" style="border-color: var(--warning); color: var(--warning);">오퍼레이터 (본부 해커)</button>
+  </div>
+
+  <!-- Diver Screen -->
+  <div id="screen-diver" class="screen">
+    <div class="top-bar">
+      <div>환자 ID: <span id="patient-id" style="font-size: 1.5rem;">#0000</span></div>
+      <div class="timer" id="timer-display">05:00</div>
+      <div class="strikes" id="strike-display">충격: 0 / 3</div>
+    </div>
+
+    <!-- Mod 1: Sliders -->
+    <div class="module" id="mod1">
+      <div class="module-title">MODULE 1: 시냅스 주파수 정렬</div>
+      <div id="sliders-container"></div>
+      <button onclick="submitMod1()" style="width: 100%; margin-top: 15px;">주파수 동기화</button>
+    </div>
+
+    <!-- Mod 2: Symbols -->
+    <div class="module" id="mod2">
+      <div class="module-title">MODULE 2: 기억 파편 방화벽</div>
+      <div class="symbol-display" id="sym-disp"></div>
+      <div class="symbol-btn-group">
+        <button class="sym-btn" onclick="submitMod2(0)">1</button>
+        <button class="sym-btn" onclick="submitMod2(1)">2</button>
+        <button class="sym-btn" onclick="submitMod2(2)">3</button>
+        <button class="sym-btn" onclick="submitMod2(3)">4</button>
+      </div>
+      <div class="stage-dots" id="mod2-stages">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+    </div>
+
+    <!-- Mod 3: Button -->
+    <div class="module" id="mod3">
+      <div class="module-title">MODULE 3: 코어 오버라이드</div>
+      <div class="big-btn-wrap">
+        <button class="big-btn" id="core-btn">ABORT</button>
+        <div class="indicator-light" id="core-light"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operator Screen -->
+  <div id="screen-operator" class="screen">
+    <div class="top-bar" style="border-color: var(--warning);">
+      <h2 style="color: var(--warning); margin: 0;">신경망 해킹 매뉴얼 v1.02</h2>
+      <button onclick="location.reload()" style="font-size: 0.8rem; padding: 5px;">작전 포기</button>
+    </div>
+    <div class="manual-content">
+      <p><em>* 주의: 다이버에게 환자 ID와 보이는 화면의 상태를 정확히 묻고 지시할 것.</em></p>
+      
+      <h3>모듈 1: 시냅스 주파수 정렬</h3>
+      <p>다이버에게 환자 ID를 확인하라.</p>
+      <ul>
+        <li>환자 ID의 마지막 자리가 <strong>홀수</strong>라면:<br>빨강 슬라이더를 3, 파랑 슬라이더를 1에 맞추고 동기화하라. (나머지는 상관없음)</li>
+        <li>환자 ID의 마지막 자리가 <strong>짝수</strong>라면:<br>초록 슬라이더를 노랑 슬라이더보다 정확히 2단계 높게 맞추라. 단, 빨강은 무조건 5여야 한다. 동기화하라.</li>
+      </ul>
+
+      <h3>모듈 2: 기억 파편 방화벽</h3>
+      <p>다이버에게 패널에 나타난 4개의 심볼을 순서대로 확인하라. 아래 조건 중 가장 먼저 일치하는 행동을 지시하라.</p>
+      <ul>
+        <li>패널에 ⚡(번개) 심볼이 있다면: 가장 먼저 있는 <strong>⚡ 심볼의 위치(버튼)</strong>를 누르시오.</li>
+        <li>그렇지 않고 ⚙️(톱니) 심볼이 2개 이상 있다면: <strong>두 번째 버튼</strong>을 누르시오.</li>
+        <li>해당하는 조건이 없다면: <strong>네 번째(마지막) 버튼</strong>을 누르시오.</li>
+      </ul>
+      <p style="font-size: 0.9rem; color: #888;">* 3번 연속으로 올바른 버튼을 눌러야 모듈이 완전 해제된다. 실수하면 처음부터 다시.</p>
+
+      <h3>모듈 3: 코어 오버라이드</h3>
+      <p>다이버에게 거대한 버튼의 <strong>색상</strong>과 <strong>적힌 글자</strong>를 확인하라.</p>
+      <ul>
+        <li>버튼이 <strong>파란색</strong>이고 'EXTRACT'라고 적혀 있다면: <strong>즉시 짧게 클릭</strong>하고 떼시오.</li>
+        <li>버튼이 <strong>빨간색</strong>이라면: 버튼을 <strong>꾹 누른 채로 유지</strong>하시오.</li>
+        <li>그 외의 경우: <strong>즉시 짧게 클릭</strong>하고 떼시오.</li>
+      </ul>
+      <p style="color: var(--danger); margin-top: 15px;"><strong>[홀드 해제 타이밍]</strong> 버튼을 꾹 누르고 있을 때 우측에 켜지는 불빛 색상을 다이버에게 물어보라.</p>
+      <ul>
+        <li>불빛이 <strong>노란색</strong>이라면: 상단 타이머의 초 단위에 <strong>'5'</strong>가 들어갈 때(예: 45초, 05초) 떼시오.</li>
+        <li>불빛이 <strong>초록색</strong>이라면: 타이머의 초 단위에 <strong>'1'</strong>이 들어갈 때 떼시오.</li>
+        <li>그 외의 색상이라면: 아무 때나 떼시오.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- End Screen -->
+  <div id="screen-end" class="screen">
+    <div class="end-msg" id="end-title">MISSION FAILED</div>
+    <p id="end-desc" style="font-size: 1.2rem; color: var(--fg-dim);">환자의 시냅스가 완전히 붕괴되었습니다.</p>
+    <button onclick="location.reload()" style="margin-top: 30px;">재시작</button>
+  </div>
+
+<script>
+// ==========================================
+// GAME STATE
+// ==========================================
+let role = null;
+let timer = 300; // 5 mins
+let interval = null;
+let strikes = 0;
+let modulesSolved = [false, false, false];
+
+// Mod 1 Data
+let patientId = 0;
+const colors = [{id:'R', name:'빨강', hex:'#ff3366'}, {id:'B', name:'파랑', hex:'#3366ff'}, {id:'Y', name:'노랑', hex:'#ffcc00'}, {id:'G', name:'초록', hex:'#33cc66'}];
+
+// Mod 2 Data
+const symbolPool = ['👁️', '⚙️', '⚡', '💠', '🔺'];
+let mod2Stage = 0;
+let currentSymbols = [];
+
+// Mod 3 Data
+let btnColor = '';
+let btnLabel = '';
+let lightColor = '';
+let expectedHold = false;
+let holdStartTime = 0;
+let isHolding = false;
+
+// ==========================================
+// INITIALIZATION
+// ==========================================
+function startGame(selectedRole) {
+  role = selectedRole;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + role).classList.add('active');
+  
+  if (role === 'diver') {
+    initDiver();
+    interval = setInterval(tick, 1000);
+  }
+}
+
+function initDiver() {
+  // Common
+  patientId = Math.floor(Math.random() * 9000) + 1000;
+  document.getElementById('patient-id').textContent = '#' + patientId;
+  
+  // Mod 1
+  const sCont = document.getElementById('sliders-container');
+  colors.forEach(c => {
+    sCont.innerHTML += `
+      <div class="slider-group" style="color: ${c.hex}">
+        <label>${c.name}</label>
+        <input type="range" min="1" max="5" value="1" id="sl-${c.id}" oninput="document.getElementById('val-${c.id}').textContent=this.value">
+        <div class="val-disp" id="val-${c.id}">1</div>
+      </div>
+    `;
+  });
+
+  // Mod 2
+  generateMod2();
+
+  // Mod 3
+  const bColors = [{c:'red', h:'#cc0000'}, {c:'blue', h:'#0044cc'}, {c:'white', h:'#dddddd'}];
+  const bLabels = ['EXTRACT', 'DUMP'];
+  const lColors = [{c:'yellow', h:'#ffcc00'}, {c:'green', h:'#33cc66'}, {c:'purple', h:'#9933cc'}];
+  
+  const rc = bColors[Math.floor(Math.random()*bColors.length)];
+  btnColor = rc.c;
+  btnLabel = bLabels[Math.floor(Math.random()*bLabels.length)];
+  lightColor = lColors[Math.floor(Math.random()*lColors.length)];
+  
+  const cBtn = document.getElementById('core-btn');
+  cBtn.style.backgroundColor = rc.h;
+  cBtn.style.color = btnColor === 'white' ? '#000' : '#fff';
+  cBtn.textContent = btnLabel;
+  
+  if (btnColor === 'blue' && btnLabel === 'EXTRACT') expectedHold = false;
+  else if (btnColor === 'red') expectedHold = true;
+  else expectedHold = false;
+
+  cBtn.addEventListener('mousedown', handleBtnDown);
+  cBtn.addEventListener('mouseup', handleBtnUp);
+  cBtn.addEventListener('mouseleave', () => { if(isHolding) handleBtnUp(); });
+  
+  // Touch support
+  cBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleBtnDown(); }, {passive: false});
+  cBtn.addEventListener('touchend', (e) => { e.preventDefault(); handleBtnUp(); }, {passive: false});
+}
+
+function tick() {
+  timer--;
+  const m = Math.floor(timer/60).toString().padStart(2, '0');
+  const s = (timer%60).toString().padStart(2, '0');
+  document.getElementById('timer-display').textContent = `${m}:${s}`;
+  
+  if (timer <= 0) gameOver(false, "제한 시간 초과. 시냅스 완전 붕괴.");
+}
+
+function addStrike() {
+  strikes++;
+  document.getElementById('strike-display').textContent = `충격: ${strikes} / 3`;
+  // Flash screen
+  document.body.style.backgroundColor = '#500';
+  setTimeout(() => document.body.style.backgroundColor = 'var(--bg)', 200);
+  
+  if (strikes >= 3) gameOver(false, "과부하 누적. 시냅스 완전 붕괴.");
+}
+
+function checkWin() {
+  if (modulesSolved.every(v => v)) {
+    gameOver(true, "모든 모듈 해제 완료. 환자의 기억을 지켜냈습니다.");
+  }
+}
+
+function gameOver(win, msg) {
+  clearInterval(interval);
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-end').classList.add('active');
+  const title = document.getElementById('end-title');
+  title.textContent = win ? "MISSION ACCOMPLISHED" : "MISSION FAILED";
+  title.style.color = win ? "var(--fg)" : "var(--danger)";
+  document.getElementById('end-desc').textContent = msg;
+}
+
+function solveModule(idx) {
+  modulesSolved[idx] = true;
+  document.getElementById('mod' + (idx+1)).classList.add('solved');
+  checkWin();
+}
+
+// ==========================================
+// MOD 1 LOGIC
+// ==========================================
+function submitMod1() {
+  const r = parseInt(document.getElementById('sl-R').value);
+  const b = parseInt(document.getElementById('sl-B').value);
+  const y = parseInt(document.getElementById('sl-Y').value);
+  const g = parseInt(document.getElementById('sl-G').value);
+  
+  let isOdd = (patientId % 2) !== 0;
+  let correct = false;
+  if (isOdd) {
+    if (r === 3 && b === 1) correct = true;
+  } else {
+    if (g === y + 2 && r === 5) correct = true;
+  }
+  
+  if (correct) solveModule(0);
+  else addStrike();
+}
+
+// ==========================================
+// MOD 2 LOGIC
+// ==========================================
+function generateMod2() {
+  currentSymbols = [];
+  for(let i=0; i<4; i++) {
+    currentSymbols.push(symbolPool[Math.floor(Math.random()*symbolPool.length)]);
+  }
+  document.getElementById('sym-disp').textContent = currentSymbols.join(' ');
+}
+
+function submitMod2(btnIdx) {
+  // Calculate correct
+  let ans = -1;
+  const lightningIdx = currentSymbols.indexOf('⚡');
+  const gearCount = currentSymbols.filter(x => x === '⚙️').length;
+  
+  if (lightningIdx !== -1) ans = lightningIdx;
+  else if (gearCount >= 2) ans = 1;
+  else ans = 3;
+  
+  if (btnIdx === ans) {
+    mod2Stage++;
+    const dots = document.getElementById('mod2-stages').children;
+    for(let i=0; i<mod2Stage; i++) dots[i].classList.add('on');
+    
+    if (mod2Stage >= 3) {
+      solveModule(1);
+    } else {
+      generateMod2(); // new puzzle for next stage
+    }
+  } else {
+    addStrike();
+    mod2Stage = 0; // reset
+    Array.from(document.getElementById('mod2-stages').children).forEach(d => d.classList.remove('on'));
+    generateMod2();
+  }
+}
+
+// ==========================================
+// MOD 3 LOGIC
+// ==========================================
+function handleBtnDown() {
+  isHolding = true;
+  holdStartTime = Date.now();
+  if (expectedHold) {
+    document.getElementById('core-light').style.backgroundColor = lightColor.h;
+  }
+}
+
+function handleBtnUp() {
+  if (!isHolding) return;
+  isHolding = false;
+  document.getElementById('core-light').style.backgroundColor = '#222';
+  
+  const holdDuration = Date.now() - holdStartTime;
+  const wasClick = holdDuration < 500;
+  
+  if (!expectedHold) {
+    if (wasClick) solveModule(2);
+    else addStrike();
+  } else {
+    if (wasClick) {
+      addStrike();
+    } else {
+      // Check release time
+      const secStr = (timer%60).toString().padStart(2, '0');
+      let correct = false;
+      if (lightColor.c === 'yellow' && secStr.includes('5')) correct = true;
+      else if (lightColor.c === 'green' && secStr.includes('1')) correct = true;
+      else if (lightColor.c === 'purple') correct = true;
+      
+      if (correct) solveModule(2);
+      else addStrike();
+    }
+  }
+}
+
+// ==========================================
+// GDD VIEWER
+// ==========================================
+async function openGDD() {
+  document.getElementById('gdd-modal').classList.add('open');
+  const contentDiv = document.getElementById('gdd-content');
+  if(!contentDiv.innerHTML) {
+    try {
+      const res = await fetch('docs/lethe-gdd.md');
+      if(!res.ok) throw new Error('File not found');
+      const text = await res.text();
+      contentDiv.innerHTML = marked.parse(text);
+    } catch(e) {
+      contentDiv.innerHTML = `<p style="color:var(--danger)">GDD 문서를 로드할 수 없습니다. (경로: docs/lethe-gdd.md)</p>`;
+    }
+  }
+}
+function closeGDD() { document.getElementById('gdd-modal').classList.remove('open'); }
+window.onclick = function(e) { if(e.target == document.getElementById('gdd-modal')) closeGDD(); }
+</script>
+</body>
+</html>

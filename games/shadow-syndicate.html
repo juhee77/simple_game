@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Shadow Syndicate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  :root {
+    --bg: #1a1512;
+    --fg: #d4c4a8;
+    --brown: #5c4033;
+    --yellow: #b89f3b;
+    --blue: #2c4c6e;
+    --red: #8b2525;
+    --green: #2d5a2d;
+    --border: #8a7351;
+    --p0: #b33939;
+    --p1: #227093;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Noto Serif KR', serif;
+    overflow-x: hidden;
+  }
+  h1, h2, h3 { font-family: 'Cinzel', serif; text-transform: uppercase; letter-spacing: 2px; }
+  button {
+    background: #2a201a; color: var(--fg);
+    border: 1px solid var(--border); padding: 10px 20px;
+    font-family: inherit; font-size: 1.1rem;
+    cursor: pointer; transition: all 0.2s;
+  }
+  button:hover:not(:disabled) { background: var(--border); color: #000; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Layout */
+  .game-container { display: flex; height: 100vh; }
+  .side-panel { width: 300px; padding: 20px; background: rgba(0,0,0,0.5); border-left: 2px solid var(--border); border-right: 2px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
+  .center-board { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow: hidden; }
+
+  /* Player Stats */
+  .player-card { padding: 15px; margin-bottom: 20px; border: 2px solid #444; border-radius: 8px; background: #222; transition: all 0.3s; }
+  .player-card.active { border-color: var(--yellow); box-shadow: 0 0 15px rgba(184, 159, 59, 0.3); transform: scale(1.02); }
+  .p0-card { border-top: 5px solid var(--p0); }
+  .p1-card { border-top: 5px solid var(--p1); }
+  .p-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; }
+  .stat-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 1.1rem; }
+  .resource-icon { display: inline-block; width: 20px; text-align: center; }
+
+  /* Threat Track */
+  .threat-track { width: 100%; height: 60px; background: #111; border: 2px solid var(--border); border-radius: 30px; position: relative; margin-bottom: 30px; display: flex; align-items: center; }
+  .threat-zone { flex: 1; height: 100%; border-right: 1px dashed #444; display: flex; justify-content: center; align-items: center; opacity: 0.3; }
+  .threat-marker { position: absolute; width: 40px; height: 40px; background: radial-gradient(circle, #fff, #aaa); border-radius: 50%; top: 8px; left: 50%; transform: translateX(-50%); transition: left 0.5s ease; box-shadow: 0 0 10px #000; z-index: 10; border: 3px solid #333; }
+
+  /* Card Pyramid */
+  .pyramid-container { position: relative; width: 600px; height: 600px; }
+  .card {
+    position: absolute; width: 80px; height: 120px;
+    border-radius: 8px; border: 2px solid var(--border);
+    background: #333; color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 2px 5px 10px rgba(0,0,0,0.5);
+    transition: all 0.3s; cursor: pointer; user-select: none;
+    transform-origin: center;
+  }
+  .card.face-down { background: repeating-linear-gradient(45deg, #222, #222 10px, #111 10px, #111 20px); border-color: #444; }
+  .card.covered { filter: brightness(0.5); cursor: not-allowed; }
+  .card:not(.covered):not(.face-down):hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(184, 159, 59, 0.4); border-color: var(--yellow); }
+  
+  .card-cost { position: absolute; top: 5px; left: 5px; font-size: 0.8rem; display: flex; flex-direction: column; gap: 2px; }
+  .card-cost div { background: rgba(0,0,0,0.8); padding: 2px 4px; border-radius: 4px; }
+  .card-effect { font-size: 1.5rem; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+  .card-name { position: absolute; bottom: 5px; font-size: 0.7rem; text-align: center; width: 100%; }
+
+  /* Action Modal */
+  #action-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 30px; border: 2px solid var(--yellow); box-shadow: 0 0 30px #000; z-index: 2000; text-align: center; border-radius: 10px; }
+  .action-btns { display: flex; gap: 15px; margin-top: 20px; justify-content: center; }
+
+  /* GDD Modal */
+  #gdd-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; border-radius: 20px; background: var(--bg); }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto; }
+  .modal.open { display: block; }
+  .modal-content { background: #1a1a1a; margin: 5% auto; padding: 30px; width: 90%; max-width: 800px; border: 1px solid var(--border); position: relative; line-height: 1.6; }
+  .close { position: absolute; right: 20px; top: 15px; font-size: 2rem; cursor: pointer; color: var(--red); }
+
+  /* Intro / End Screens */
+  .overlay-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+  <!-- Overlay Screens -->
+  <div id="screen-intro" class="overlay-screen">
+    <h1 style="font-size: 4rem; margin-bottom: 0; color: var(--yellow);">THE SHADOW SYNDICATE</h1>
+    <p style="font-size: 1.5rem; color: var(--border); margin-bottom: 50px;">에덴 시티 암흑가 장악전</p>
+    <button onclick="startGame()" style="font-size: 1.5rem; padding: 15px 40px;">조직 전쟁 시작</button>
+  </div>
+
+  <div id="screen-end" class="overlay-screen hidden">
+    <h1 id="end-title" style="font-size: 4rem; margin-bottom: 0;"></h1>
+    <p id="end-desc" style="font-size: 1.5rem; color: var(--border); margin-bottom: 50px;"></p>
+    <button onclick="location.reload()" style="font-size: 1.5rem; padding: 15px 40px;">새 게임</button>
+  </div>
+
+  <!-- GDD Button & Modal -->
+  <button id="gdd-btn" onclick="openGDD()">🔍 GDD</button>
+  <div id="gdd-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeGDD()">&times;</span>
+      <div id="gdd-content"></div>
+    </div>
+  </div>
+
+  <!-- Action Modal -->
+  <div id="action-modal">
+    <h3 id="am-title">카드 액션</h3>
+    <div id="am-cost" style="margin-bottom: 15px; color: var(--border);"></div>
+    <div class="action-btns">
+      <button id="btn-buy" onclick="buyCard()" style="background: var(--green); border-color: #0f0;">고용 (자원 지불)</button>
+      <button onclick="discardCard()" style="background: var(--yellow); color: #000;">처분 (검은돈 +2)</button>
+      <button onclick="closeActionModal()">취소</button>
+    </div>
+  </div>
+
+  <!-- Game UI -->
+  <div class="game-container">
+    <!-- Player 0 Stats -->
+    <div class="side-panel">
+      <div id="p0-panel" class="player-card p0-card active">
+        <div class="p-name">🌹 붉은 장미파</div>
+        <div class="stat-row"><span><span class="resource-icon">💵</span> 검은돈</span> <span id="p0-money">5</span></div>
+        <div class="stat-row"><span><span class="resource-icon">📦</span> 밀수품</span> <span id="p0-box">0</span></div>
+        <div class="stat-row"><span><span class="resource-icon">🕵️</span> 정보</span> <span id="p0-intel">0</span></div>
+        <hr style="border-color: #444;">
+        <div class="stat-row"><span><span class="resource-icon">★</span> 영향력</span> <span id="p0-vp">0</span></div>
+        <div class="stat-row"><span><span class="resource-icon">💎</span> 독점권</span> <span id="p0-mono">-</span></div>
+      </div>
+      <div style="text-align: center; color: var(--border);">
+        <h2 id="era-display" style="margin: 0;">ERA 1</h2>
+        <p id="turn-indicator" style="color: var(--p0); font-weight: bold;">붉은 장미파 턴</p>
+      </div>
+    </div>
+
+    <!-- Center Board -->
+    <div class="center-board">
+      <div class="threat-track" id="threat-track">
+        <!-- 21 slots (-10 to 10) -->
+        <div class="threat-marker" id="threat-marker"></div>
+      </div>
+      
+      <div class="pyramid-container" id="pyramid">
+        <!-- Cards injected here -->
+      </div>
+    </div>
+
+    <!-- Player 1 Stats -->
+    <div class="side-panel">
+      <div id="p1-panel" class="player-card p1-card">
+        <div class="p-name">🦅 검은 독수리파</div>
+        <div class="stat-row"><span><span class="resource-icon">💵</span> 검은돈</span> <span id="p1-money">5</span></div>
+        <div class="stat-row"><span><span class="resource-icon">📦</span> 밀수품</span> <span id="p1-box">0</span></div>
+        <div class="stat-row"><span><span class="resource-icon">🕵️</span> 정보</span> <span id="p1-intel">0</span></div>
+        <hr style="border-color: #444;">
+        <div class="stat-row"><span><span class="resource-icon">★</span> 영향력</span> <span id="p1-vp">0</span></div>
+        <div class="stat-row"><span><span class="resource-icon">💎</span> 독점권</span> <span id="p1-mono">-</span></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ==========================================
+// GAME STATE & DATA
+// ==========================================
+const players = [
+  { id: 0, name: '붉은 장미파', color: 'var(--p0)', money: 5, box: 0, intel: 0, vp: 0, monopolies: new Set() },
+  { id: 1, name: '검은 독수리파', color: 'var(--p1)', money: 5, box: 0, intel: 0, vp: 0, monopolies: new Set() }
+];
+let currP = 0;
+let era = 1;
+let threat = 0; // -10 (P0 win) to 10 (P1 win). Wait, let's say -10 is P0 end, 10 is P1 end.
+// Visual map: Left (-10) is P0 territory, Right (+10) is P1 territory. 
+// If P0 plays red card, threat decreases (moves left). If P1 plays red, threat increases (moves right).
+let deck = [];
+let pyramidNodes = []; // { id, card, coveredBy: [], isFaceDown, el }
+let selectedCardNodeId = null;
+const monoSymbols = ['🍷', '🎰', '🔫', '💊', '👮'];
+
+const cTypes = {
+  BROWN: { color: 'var(--brown)', name: '기반' },
+  YELLOW: { color: 'var(--yellow)', name: '세탁' },
+  BLUE: { color: 'var(--blue)', name: '사업' },
+  RED: { color: 'var(--red)', name: '무력' },
+  GREEN: { color: 'var(--green)', name: '독점' }
+};
+
+// Generate balanced deck
+function generateDeck(eraNum) {
+  let cards = [];
+  const addCard = (type, cM, cB, cI, eM, eB, eI, eV, eT, eMo) => {
+    cards.push({ type, cost: {m:cM, b:cB, i:cI}, effect: {m:eM, b:eB, i:eI, vp:eV, t:eT, mono:eMo} });
+  };
+  
+  if (eraNum === 1) {
+    // 15 cards. Cost max 1 res. 
+    for(let i=0;i<4;i++) addCard('BROWN', 0,0,0, 0,1,0, 0,0,null); // +Box
+    for(let i=0;i<3;i++) addCard('BROWN', 1,0,0, 0,0,1, 0,0,null); // +Intel
+    for(let i=0;i<3;i++) addCard('YELLOW', 0,0,0, 4,0,0, 0,0,null); // +4 Money
+    for(let i=0;i<2;i++) addCard('BLUE', 0,1,0, 0,0,0, 3,0,null); // +3 VP
+    for(let i=0;i<2;i++) addCard('RED', 0,0,1, 0,0,0, 0,1,null); // +1 Threat
+    addCard('GREEN', 2,0,0, 0,0,0, 0,0, monoSymbols[0]); // Mono
+  } else if (eraNum === 2) {
+    for(let i=0;i<2;i++) addCard('BROWN', 0,0,0, 0,2,0, 0,0,null); // +2 Box
+    for(let i=0;i<2;i++) addCard('BROWN', 0,0,0, 0,0,2, 0,0,null); // +2 Intel
+    for(let i=0;i<2;i++) addCard('YELLOW', 0,1,1, 6,0,0, 0,0,null); // +6 Money
+    for(let i=0;i<3;i++) addCard('BLUE', 0,1,1, 0,0,0, 5,0,null); // +5 VP
+    for(let i=0;i<3;i++) addCard('RED', 0,2,0, 0,0,0, 0,2,null); // +2 Threat
+    addCard('GREEN', 0,1,0, 0,0,0, 0,0, monoSymbols[1]);
+    addCard('GREEN', 0,0,1, 0,0,0, 0,0, monoSymbols[2]);
+    addCard('GREEN', 0,1,1, 0,0,0, 0,0, monoSymbols[3]);
+  } else {
+    for(let i=0;i<4;i++) addCard('BLUE', 0,2,2, 0,0,0, 7,0,null); // +7 VP
+    for(let i=0;i<4;i++) addCard('RED', 0,3,1, 0,0,0, 0,3,null); // +3 Threat
+    for(let i=0;i<3;i++) addCard('YELLOW', 0,0,0, 8,0,0, 0,0,null); // +8 Money
+    addCard('GREEN', 0,2,1, 0,0,0, 0,0, monoSymbols[4]);
+    addCard('GREEN', 0,1,2, 0,0,0, 0,0, monoSymbols[0]);
+    addCard('GREEN', 0,0,3, 0,0,0, 0,0, monoSymbols[1]);
+    addCard('GREEN', 0,3,0, 0,0,0, 0,0, monoSymbols[2]);
+  }
+  
+  // Shuffle
+  return cards.sort(() => Math.random() - 0.5).slice(0, 15);
+}
+
+// ==========================================
+// PYRAMID LOGIC
+// ==========================================
+function setupEra(eraNum) {
+  document.getElementById('era-display').textContent = `ERA ${eraNum}`;
+  deck = generateDeck(eraNum);
+  pyramidNodes = [];
+  const cont = document.getElementById('pyramid');
+  cont.innerHTML = '';
+  
+  // Create 15 nodes. Row 0(1), Row 1(2), Row 2(3), Row 3(4), Row 4(5)
+  // Era 1 & 3: Standard pyramid. Era 2: Inverted pyramid.
+  const isInverted = (eraNum === 2);
+  let id = 0;
+  
+  for(let r=0; r<5; r++) {
+    const cardsInRow = isInverted ? (5-r) : (r+1);
+    const y = r * 60 + 50; // overlap vertically
+    for(let c=0; c<cardsInRow; c++) {
+      // center align
+      const x = (300 - (cardsInRow * 45)) + (c * 90);
+      
+      // Face down logic (alternating rows)
+      const isFaceDown = (r % 2 !== 0);
+      
+      pyramidNodes.push({
+        id: id, row: r, col: c, x, y,
+        card: deck[id],
+        isFaceDown: isFaceDown,
+        coveredBy: [], // populated next
+        el: null
+      });
+      id++;
+    }
+  }
+  
+  // Compute dependencies (who covers whom)
+  for(let i=0; i<15; i++) {
+    const node = pyramidNodes[i];
+    if (isInverted) {
+      // Inverted: Row r covers Row r+1. Node(r, c) is covered by Node(r-1, c) and Node(r-1, c+1)
+      if (node.row > 0) {
+        const parentRowOffset = (5 - (node.row - 1)); // number of cards in row above
+        // This is complex, let's search by row/col
+        const c1 = pyramidNodes.find(n => n.row === node.row - 1 && n.col === node.col);
+        const c2 = pyramidNodes.find(n => n.row === node.row - 1 && n.col === node.col + 1);
+        if (c1) node.coveredBy.push(c1.id);
+        if (c2) node.coveredBy.push(c2.id);
+      }
+    } else {
+      // Standard: Row r is covered by Row r+1. Node(r, c) is covered by Node(r+1, c) and Node(r+1, c+1)
+      const c1 = pyramidNodes.find(n => n.row === node.row + 1 && n.col === node.col);
+      const c2 = pyramidNodes.find(n => n.row === node.row + 1 && n.col === node.col + 1);
+      if (c1) node.coveredBy.push(c1.id);
+      if (c2) node.coveredBy.push(c2.id);
+    }
+  }
+
+  // Render
+  pyramidNodes.forEach(node => {
+    const div = document.createElement('div');
+    div.className = `card ${node.isFaceDown ? 'face-down' : ''}`;
+    div.style.left = node.x + 'px';
+    div.style.top = node.y + 'px';
+    div.style.zIndex = node.row;
+    div.onclick = () => handleCardClick(node.id);
+    node.el = div;
+    cont.appendChild(div);
+  });
+  
+  updatePyramidVis();
+}
+
+function updatePyramidVis() {
+  let cardsLeft = 0;
+  pyramidNodes.forEach(node => {
+    if (!node.el) return;
+    cardsLeft++;
+    // Check if covered
+    const isCovered = node.coveredBy.some(covId => pyramidNodes[covId].el !== null);
+    if (isCovered) {
+      node.el.classList.add('covered');
+    } else {
+      node.el.classList.remove('covered');
+      // Flip face up if it was down
+      if (node.isFaceDown) {
+        node.isFaceDown = false;
+        node.el.classList.remove('face-down');
+      }
+    }
+    
+    // Render content if face up
+    if (!node.isFaceDown) {
+      const c = node.card;
+      const typeStr = cTypes[c.type];
+      node.el.style.backgroundColor = typeStr.color;
+      
+      let costHtml = '';
+      if(c.cost.m > 0) costHtml += `<div>${c.cost.m}💵</div>`;
+      if(c.cost.b > 0) costHtml += `<div>${c.cost.b}📦</div>`;
+      if(c.cost.i > 0) costHtml += `<div>${c.cost.i}🕵️</div>`;
+      
+      let effHtml = '';
+      if(c.effect.m > 0) effHtml = `+${c.effect.m}💵`;
+      if(c.effect.b > 0) effHtml = `+${c.effect.b}📦`;
+      if(c.effect.i > 0) effHtml = `+${c.effect.i}🕵️`;
+      if(c.effect.vp > 0) effHtml = `+${c.effect.vp}★`;
+      if(c.effect.t > 0) effHtml = `+${c.effect.t}⚔️`;
+      if(c.effect.mono) effHtml = c.effect.mono;
+
+      node.el.innerHTML = `
+        <div class="card-cost">${costHtml}</div>
+        <div class="card-effect">${effHtml}</div>
+        <div class="card-name">${typeStr.name}</div>
+      `;
+    }
+  });
+
+  if (cardsLeft === 0) {
+    if (era < 3) {
+      era++;
+      setTimeout(() => setupEra(era), 1500);
+    } else {
+      endGameByVP();
+    }
+  }
+}
+
+// ==========================================
+// ACTIONS
+// ==========================================
+function getCardCostDetails(c, pId) {
+  const p = players[pId];
+  let missingB = Math.max(0, c.cost.b - p.box);
+  let missingI = Math.max(0, c.cost.i - p.intel);
+  let totalMoneyCost = c.cost.m + (missingB * 2) + (missingI * 2);
+  return { affordable: p.money >= totalMoneyCost, costStr: `${totalMoneyCost}💵 지불 필요` };
+}
+
+function handleCardClick(nodeId) {
+  const node = pyramidNodes[nodeId];
+  if (node.el.classList.contains('covered') || node.isFaceDown) return;
+  
+  selectedCardNodeId = nodeId;
+  const cDetails = getCardCostDetails(node.card, currP);
+  
+  document.getElementById('am-cost').textContent = cDetails.costStr;
+  document.getElementById('btn-buy').disabled = !cDetails.affordable;
+  document.getElementById('action-modal').style.display = 'block';
+}
+
+function closeActionModal() {
+  document.getElementById('action-modal').style.display = 'none';
+  selectedCardNodeId = null;
+}
+
+function buyCard() {
+  const node = pyramidNodes[selectedCardNodeId];
+  const p = players[currP];
+  const cDetails = getCardCostDetails(node.card, currP);
+  
+  p.money -= parseInt(cDetails.costStr); // Hacky extract, but safe since it's formatting
+  
+  applyCardEffect(node.card, currP);
+  finalizeAction();
+}
+
+function discardCard() {
+  players[currP].money += 2;
+  finalizeAction();
+}
+
+function applyCardEffect(c, pId) {
+  const p = players[pId];
+  p.money += c.effect.m;
+  p.box += c.effect.b;
+  p.intel += c.effect.i;
+  p.vp += c.effect.vp;
+  
+  if (c.effect.t > 0) {
+    // Threat movement. P0 moves left (negative), P1 moves right (positive)
+    const dir = pId === 0 ? -1 : 1;
+    threat += (c.effect.t * dir);
+    updateThreatUI();
+  }
+  
+  if (c.effect.mono) {
+    p.monopolies.add(c.effect.mono);
+    if (p.monopolies.size >= 5) {
+      endGame(pId, "독점 승리 (에덴 시티 경제 장악)");
+    }
+  }
+}
+
+function finalizeAction() {
+  closeActionModal();
+  // Remove card from board
+  const node = pyramidNodes[selectedCardNodeId];
+  node.el.remove();
+  node.el = null;
+  
+  updatePyramidVis();
+  updateUI();
+  
+  if (Math.abs(threat) >= 10) {
+    endGame(threat <= -10 ? 0 : 1, "암살 승리 (상대 조직 궤멸)");
+    return;
+  }
+  
+  // Next turn
+  currP = currP === 0 ? 1 : 0;
+  document.getElementById('p0-panel').classList.toggle('active');
+  document.getElementById('p1-panel').classList.toggle('active');
+  document.getElementById('turn-indicator').textContent = `${players[currP].name} 턴`;
+  document.getElementById('turn-indicator').style.color = players[currP].color;
+}
+
+function updateUI() {
+  for(let i=0; i<2; i++) {
+    const p = players[i];
+    document.getElementById(`p${i}-money`).textContent = p.money;
+    document.getElementById(`p${i}-box`).textContent = p.box;
+    document.getElementById(`p${i}-intel`).textContent = p.intel;
+    document.getElementById(`p${i}-vp`).textContent = p.vp;
+    document.getElementById(`p${i}-mono`).textContent = Array.from(p.monopolies).join(' ');
+  }
+}
+
+function updateThreatUI() {
+  // Threat -10 to 10. CSS Left 0% to 100%. -10 => 0%, 0 => 50%, 10 => 100%
+  // Margin for ball width (40px)
+  let clamp = Math.max(-10, Math.min(10, threat));
+  let pct = ((clamp + 10) / 20) * 100;
+  document.getElementById('threat-marker').style.left = `calc(${pct}% - 20px)`;
+}
+
+function endGameByVP() {
+  // calculate total VP (VP + 1 for every 3 money)
+  let p0Total = players[0].vp + Math.floor(players[0].money / 3);
+  let p1Total = players[1].vp + Math.floor(players[1].money / 3);
+  
+  if (p0Total > p1Total) endGame(0, `영향력 승리 (${p0Total} 대 ${p1Total})`);
+  else if (p1Total > p0Total) endGame(1, `영향력 승리 (${p1Total} 대 ${p0Total})`);
+  else endGame(-1, "무승부 (영향력 동점)");
+}
+
+function endGame(winnerId, reason) {
+  document.getElementById('screen-end').classList.remove('hidden');
+  document.getElementById('end-title').textContent = winnerId === -1 ? "무승부" : `${players[winnerId].name} 승리!`;
+  document.getElementById('end-title').style.color = winnerId === -1 ? "#fff" : players[winnerId].color;
+  document.getElementById('end-desc').textContent = reason;
+}
+
+function startGame() {
+  document.getElementById('screen-intro').classList.add('hidden');
+  
+  // Threat track zones
+  const tt = document.getElementById('threat-track');
+  for(let i=0; i<20; i++) {
+    const z = document.createElement('div');
+    z.className = 'threat-zone';
+    if(i < 10) z.style.backgroundColor = 'rgba(204,51,51,0.1)';
+    else z.style.backgroundColor = 'rgba(51,102,204,0.1)';
+    tt.appendChild(z);
+  }
+  
+  setupEra(1);
+  updateUI();
+  updateThreatUI();
+}
+
+// ==========================================
+// GDD VIEWER
+// ==========================================
+async function openGDD() {
+  document.getElementById('gdd-modal').classList.add('open');
+  const contentDiv = document.getElementById('gdd-content');
+  if(!contentDiv.innerHTML) {
+    try {
+      const res = await fetch('docs/syndicate-gdd.md');
+      if(!res.ok) throw new Error('File not found');
+      const text = await res.text();
+      contentDiv.innerHTML = marked.parse(text);
+    } catch(e) {
+      contentDiv.innerHTML = `<p style="color:var(--red)">GDD 문서를 로드할 수 없습니다. (경로: docs/syndicate-gdd.md)</p>`;
+    }
+  }
+}
+function closeGDD() { document.getElementById('gdd-modal').classList.remove('open'); }
+window.onclick = function(e) { if(e.target == document.getElementById('gdd-modal')) closeGDD(); }
+</script>
+</body>
+</html>
