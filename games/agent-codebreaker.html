@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>첩보원: 암호 해독</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-tan: #d97706; /* civilian color */
+            --accent-black: #111827; /* assassin */
+            --accent-blue: #3b82f6;
+            --tile-bg: #334155;
+            --tile-hover: #475569;
+            --border-radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            background: var(--panel-bg);
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .status-value.green { color: var(--accent-green); }
+        .status-value.blue { color: var(--accent-blue); }
+
+        /* Board */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 800px;
+            padding: 0 20px;
+            margin-bottom: 30px;
+        }
+
+        .tile {
+            background-color: var(--tile-bg);
+            border-radius: 8px;
+            aspect-ratio: 4/3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            user-select: none;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+
+        .tile:active:not(.revealed-full) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.2);
+        }
+
+        .tile:hover:not(.revealed-full) {
+            background-color: var(--tile-hover);
+        }
+
+        /* Tile States */
+        .tile.found {
+            background-color: var(--accent-green);
+            color: white;
+            box-shadow: none;
+            transform: translateY(4px);
+            cursor: default;
+        }
+
+        .tile.assassin {
+            background-color: var(--accent-black);
+            color: #ef4444; /* Red text for assassin */
+            border: 2px solid #ef4444;
+            box-shadow: none;
+            transform: translateY(4px);
+            cursor: default;
+        }
+
+        /* Civilian tokens (small badges) */
+        .token-p1, .token-p2 {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: var(--accent-tan);
+            border: 2px solid white;
+            display: none;
+        }
+
+        .token-p1 { top: 5px; left: 5px; } /* P1 hinter -> P2 guessed wrong */
+        .token-p2 { bottom: 5px; right: 5px; } /* P2 hinter -> P1 guessed wrong */
+
+        .tile.tan-p1 .token-p1 { display: block; }
+        .tile.tan-p2 .token-p2 { display: block; }
+
+        /* Keycard reveal mode */
+        body.show-keycard-p1 .tile::after,
+        body.show-keycard-p2 .tile::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 6px;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Dynamic classes injected by JS based on role */
+        .reveal-green::after { background-color: var(--accent-green); }
+        .reveal-tan::after { background-color: var(--accent-tan); }
+        .reveal-black::after { background-color: var(--accent-black); border: 2px solid #ef4444;}
+
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 800px;
+            padding: 0 20px 40px;
+        }
+
+        .hinter-toggle {
+            display: flex;
+            background: var(--panel-bg);
+            border-radius: 30px;
+            overflow: hidden;
+        }
+
+        .hinter-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hinter-btn.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            border: none;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: var(--accent-blue); color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        
+        .btn-warning { background: var(--accent-tan); color: white; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover { background: rgba(255,255,255,0.2); }
+
+        /* Markdown Styles */
+        .markdown-body {
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+        .markdown-body h1, .markdown-body h2 {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+            margin-top: 24px;
+            margin-bottom: 16px;
+        }
+        .markdown-body p { margin-bottom: 16px; }
+        .markdown-body ul { margin-bottom: 16px; padding-left: 20px; }
+        .markdown-body li { margin-bottom: 4px; }
+        .markdown-body blockquote {
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 16px;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            padding: 10px 16px;
+            border-radius: 4px;
+        }
+
+        /* Overlay Messages (Win/Lose) */
+        .game-over-msg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(15, 23, 42, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .game-over-msg.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .game-over-msg h2 { font-size: 2.5rem; margin-bottom: 15px; }
+        .game-over-msg.win { border-color: var(--accent-green); color: var(--accent-green); }
+        .game-over-msg.lose { border-color: #ef4444; color: #ef4444; }
+        
+        @media (max-width: 600px) {
+            .board { grid-template-columns: repeat(5, 1fr); padding: 0 10px; gap: 5px; }
+            .tile { font-size: 0.9rem; border-radius: 6px; }
+            .status-bar { flex-direction: row; flex-wrap: wrap; gap: 10px; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><i class="ri-spy-fill"></i> 첩보원: 암호 해독</h1>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openGDD()" title="기획서 보기"><i class="ri-book-read-line"></i></button>
+            <button class="icon-btn" onclick="initGame()" title="게임 재시작"><i class="ri-refresh-line"></i></button>
+            <button class="icon-btn" onclick="location.href='../index.html'" title="로비로 돌아가기"><i class="ri-home-4-line"></i></button>
+        </div>
+    </header>
+
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-label">찾은 요원</span>
+            <span class="status-value green"><span id="found-count">0</span> / 15</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">남은 턴</span>
+            <span class="status-value blue" id="turns-left">9</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">현재 상태</span>
+            <span class="status-value" id="current-state" style="font-size: 1.2rem; color: var(--text-muted);">진행 중</span>
+        </div>
+    </div>
+
+    <div class="board" id="board">
+        <!-- Tiles will be generated here -->
+    </div>
+
+    <div class="controls">
+        <div class="hinter-toggle">
+            <button class="hinter-btn active" id="btn-p1-hinter" onclick="setHinter('P1')">P1이 힌트 주기</button>
+            <button class="hinter-btn" id="btn-p2-hinter" onclick="setHinter('P2')">P2가 힌트 주기</button>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-muted); text-align: center; margin-bottom: 5px;" id="hint-instruction">
+            [P1 힌트 주기] 상태입니다. P2가 타일을 클릭하여 맞히세요.
+        </p>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="btn-show-keycard" onmousedown="showKeycard()" onmouseup="hideKeycard()" onmouseleave="hideKeycard()" ontouchstart="showKeycard()" ontouchend="hideKeycard()">
+                <i class="ri-eye-line"></i> 정답 지도 보기 (꾹 누르기)
+            </button>
+            <button class="btn btn-warning" onclick="endTurn()">
+                <i class="ri-skip-forward-line"></i> 추리 종료 (턴 넘기기)
+            </button>
+        </div>
+    </div>
+
+    <!-- GDD Modal -->
+    <div class="modal-overlay" id="gdd-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeGDD()"><i class="ri-close-line"></i></button>
+            <div class="markdown-body" id="gdd-content">
+                불러오는 중...
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div class="game-over-msg" id="game-over-msg">
+        <h2 id="go-title">임무 실패!</h2>
+        <p id="go-desc" style="color: white; margin-bottom: 20px;">암살자와 접선했습니다.</p>
+        <button class="btn btn-primary" onclick="initGame()" style="width: 100%;">다시 도전하기</button>
+    </div>
+
+    <script>
+        // Word DB (100+)
+        const wordPool = ["사과", "바나나", "거북이", "우주", "피아노", "소설", "경찰", "소방관", "학교", "병원", "지구", "태양", "달", "바다", "산", "강", "사자", "호랑이", "독수리", "비행기", "기차", "자동차", "자전거", "컴퓨터", "스마트폰", "텔레비전", "냉장고", "책상", "의자", "가방", "시계", "안경", "신발", "모자", "장갑", "양말", "바지", "셔츠", "코트", "우산", "비", "눈", "바람", "구름", "번개", "천둥", "무지개", "봄", "여름", "가을", "겨울", "월요일", "금요일", "주말", "아침", "점심", "저녁", "밤", "새벽", "꿈", "사랑", "우정", "평화", "전쟁", "역사", "미래", "과거", "현재", "음악", "미술", "체육", "수학", "과학", "영어", "국어", "도서관", "박물관", "미술관", "공원", "놀이터", "동물원", "식물원", "수족관", "영화관", "극장", "식당", "카페", "빵집", "시장", "마트", "백화점", "편의점", "약국", "은행", "우체국", "경찰서", "소방서", "시청", "법원", "군대", "회사", "공장", "농장", "어촌", "산촌", "도시", "시골", "서울", "부산", "제주도"];
+
+        let tiles = [];
+        let activeHinter = 'P1';
+        let turnsLeft = 9;
+        let foundCount = 0;
+        let gameOver = false;
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex > 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            gameOver = false;
+            turnsLeft = 9;
+            foundCount = 0;
+            activeHinter = 'P1';
+            updateUI();
+            
+            document.getElementById('game-over-msg').classList.remove('active');
+            
+            // 1. Pick 25 random words
+            let selectedWords = shuffle([...wordPool]).slice(0, 25);
+
+            // 2. Generate roles based on Duet mapping (total 25)
+            let roles = [];
+            // 3 Mutual targets
+            for(let i=0; i<3; i++) roles.push({p1: 'green', p2: 'green'});
+            // 5 P1 targets, P2 innocent
+            for(let i=0; i<5; i++) roles.push({p1: 'green', p2: 'tan'});
+            // 5 P1 innocent, P2 targets
+            for(let i=0; i<5; i++) roles.push({p1: 'tan', p2: 'green'});
+            // 1 Mutual assassin
+            roles.push({p1: 'black', p2: 'black'});
+            // 1 P1 assassin, P2 target
+            roles.push({p1: 'black', p2: 'green'});
+            // 1 P1 target, P2 assassin
+            roles.push({p1: 'green', p2: 'black'});
+            // 1 P1 assassin, P2 innocent
+            roles.push({p1: 'black', p2: 'tan'});
+            // 1 P1 innocent, P2 assassin
+            roles.push({p1: 'tan', p2: 'black'});
+            // 7 Mutual innocents
+            for(let i=0; i<7; i++) roles.push({p1: 'tan', p2: 'tan'});
+
+            roles = shuffle(roles);
+
+            // 3. Create tile objects
+            tiles = selectedWords.map((word, idx) => ({
+                id: idx,
+                word: word,
+                p1: roles[idx].p1,
+                p2: roles[idx].p2,
+                isFound: false,
+                isTanP1: false,
+                isTanP2: false
+            }));
+
+            renderBoard();
+            setHinter('P1');
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+
+            tiles.forEach(tile => {
+                const el = document.createElement('div');
+                el.className = 'tile';
+                el.id = `tile-${tile.id}`;
+                el.innerHTML = `
+                    <span>${tile.word}</span>
+                    <div class="token-p1" title="P1이 힌트일 때 오답"></div>
+                    <div class="token-p2" title="P2가 힌트일 때 오답"></div>
+                `;
+                
+                if(tile.isFound) el.classList.add('found', 'revealed-full');
+                if(tile.isTanP1) el.classList.add('tan-p1');
+                if(tile.isTanP2) el.classList.add('tan-p2');
+                
+                el.onclick = () => handleTileClick(tile.id);
+                boardEl.appendChild(el);
+            });
+        }
+
+        function handleTileClick(id) {
+            if (gameOver) return;
+            let tile = tiles[id];
+            
+            // If already found or fully revealed assassin, ignore
+            if (tile.isFound) return;
+
+            // Determine whose keycard is being checked
+            // If P1 is hinter, P2 is guessing, so we check P1's keycard (tile.p1)
+            let checkColor = (activeHinter === 'P1') ? tile.p1 : tile.p2;
+
+            if (checkColor === 'green') {
+                tile.isFound = true;
+                foundCount++;
+                // Check win
+                if (foundCount >= 15) {
+                    endGame(true, "완벽한 임무 수행!");
+                }
+            } else if (checkColor === 'tan') {
+                if (activeHinter === 'P1') {
+                    if (tile.isTanP1) return; // already guessed
+                    tile.isTanP1 = true;
+                } else {
+                    if (tile.isTanP2) return; // already guessed
+                    tile.isTanP2 = true;
+                }
+                endTurn(); // Guessing wrong civilian ends turn automatically
+            } else if (checkColor === 'black') {
+                const el = document.getElementById(`tile-${id}`);
+                el.classList.add('assassin', 'revealed-full');
+                endGame(false, "암살자와 접선했습니다.");
+                return;
+            }
+
+            updateUI();
+            renderTile(tile);
+        }
+
+        function renderTile(tile) {
+            const el = document.getElementById(`tile-${tile.id}`);
+            if(tile.isFound) {
+                el.classList.add('found', 'revealed-full');
+            }
+            if(tile.isTanP1) {
+                el.classList.add('tan-p1');
+            }
+            if(tile.isTanP2) {
+                el.classList.add('tan-p2');
+            }
+        }
+
+        function endTurn() {
+            if (gameOver) return;
+            turnsLeft--;
+            updateUI();
+            
+            if (turnsLeft <= 0 && foundCount < 15) {
+                endGame(false, "제한 턴 초과! 통신이 두절되었습니다.");
+                return;
+            }
+            
+            // Auto switch hinter for convenience
+            setHinter(activeHinter === 'P1' ? 'P2' : 'P1');
+        }
+
+        function setHinter(hinter) {
+            if (gameOver) return;
+            activeHinter = hinter;
+            
+            document.getElementById('btn-p1-hinter').classList.toggle('active', hinter === 'P1');
+            document.getElementById('btn-p2-hinter').classList.toggle('active', hinter === 'P2');
+            
+            document.getElementById('hint-instruction').innerText = 
+                hinter === 'P1' ? "[P1 힌트 주기] 상태입니다. P2가 타일을 클릭하여 맞히세요." 
+                                : "[P2 힌트 주기] 상태입니다. P1이 타일을 클릭하여 맞히세요.";
+            
+            updateKeycardOverlayClasses();
+        }
+
+        function updateKeycardOverlayClasses() {
+            // Remove previous classes
+            tiles.forEach(tile => {
+                const el = document.getElementById(`tile-${tile.id}`);
+                el.classList.remove('reveal-green', 'reveal-tan', 'reveal-black');
+                
+                // Add new classes based on active hinter
+                let color = activeHinter === 'P1' ? tile.p1 : tile.p2;
+                if (!tile.isFound) {
+                    el.classList.add(`reveal-${color}`);
+                }
+            });
+        }
+
+        function showKeycard() {
+            if (gameOver) return;
+            updateKeycardOverlayClasses();
+            document.body.classList.add(activeHinter === 'P1' ? 'show-keycard-p1' : 'show-keycard-p2');
+        }
+
+        function hideKeycard() {
+            document.body.classList.remove('show-keycard-p1', 'show-keycard-p2');
+        }
+
+        function updateUI() {
+            document.getElementById('found-count').innerText = foundCount;
+            document.getElementById('turns-left').innerText = turnsLeft;
+        }
+
+        function endGame(isWin, desc) {
+            gameOver = true;
+            const msgEl = document.getElementById('game-over-msg');
+            msgEl.classList.remove('win', 'lose');
+            msgEl.classList.add(isWin ? 'win' : 'lose');
+            
+            document.getElementById('go-title').innerText = isWin ? '임무 성공!' : '임무 실패!';
+            document.getElementById('go-desc').innerText = desc;
+            
+            msgEl.classList.add('active');
+            
+            // Reveal all on board
+            document.body.classList.add('show-keycard-p1'); // just to show all colors slightly
+            tiles.forEach(tile => {
+                const el = document.getElementById(`tile-${tile.id}`);
+                el.classList.remove('reveal-green', 'reveal-tan', 'reveal-black');
+                if(!tile.isFound) {
+                    if(tile.p1 === 'black' || tile.p2 === 'black') el.classList.add('reveal-black');
+                    else if(tile.p1 === 'green' || tile.p2 === 'green') el.classList.add('reveal-green');
+                }
+            });
+        }
+
+        // --- GDD Modal Logic ---
+        async function openGDD() {
+            const modal = document.getElementById('gdd-modal');
+            const content = document.getElementById('gdd-content');
+            modal.classList.add('active');
+
+            try {
+                // Fetch the markdown file
+                const response = await fetch('./docs/agent-codebreaker-gdd.md');
+                if (response.ok) {
+                    const markdown = await response.text();
+                    content.innerHTML = marked.parse(markdown);
+                } else {
+                    content.innerHTML = '<p>기획 문서를 불러오지 못했습니다.</p>';
+                }
+            } catch (e) {
+                content.innerHTML = '<p>기획 문서를 불러오는 중 오류가 발생했습니다.</p>';
+            }
+        }
+
+        function closeGDD() {
+            document.getElementById('gdd-modal').classList.remove('active');
+        }
+
+        // Start game on load
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>

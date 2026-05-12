@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신들의 탑 - Tower of Gods</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --p1-color: #ef4444; /* Red */
+            --p2-color: #eab308; /* Yellow */
+            --highlight-move: rgba(74, 222, 128, 0.5);
+            --highlight-build: rgba(250, 204, 21, 0.5);
+            --highlight-select: rgba(59, 130, 246, 0.5);
+            --border-radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden; /* Prevent scroll on 3D transform */
+        }
+
+        /* Header */
+        header {
+            width: 100%; max-width: 800px; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+            z-index: 100; /* Above 3D scene */
+        }
+        h1 { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+
+        .header-actions { display: flex; gap: 15px; }
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: none; color: white;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            font-size: 1.2rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+
+        /* Status Bar */
+        .status-bar {
+            width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--panel-bg); padding: 15px 20px; border-radius: var(--border-radius);
+            margin-bottom: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); z-index: 100;
+        }
+
+        .status-badge {
+            padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 1.1rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .status-badge.p1 { background: rgba(239, 68, 68, 0.2); color: var(--p1-color); border: 1px solid var(--p1-color); }
+        .status-badge.p2 { background: rgba(234, 179, 8, 0.2); color: var(--p2-color); border: 1px solid var(--p2-color); }
+
+        .game-phase { font-size: 1.2rem; font-weight: 600; color: var(--text-muted); }
+
+        /* 3D Scene */
+        .scene {
+            perspective: 1200px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            padding-bottom: 50px;
+        }
+
+        .board {
+            transform-style: preserve-3d;
+            transform: rotateX(60deg) rotateZ(-45deg);
+            display: grid;
+            grid-template-columns: repeat(5, 70px);
+            grid-template-rows: repeat(5, 70px);
+            gap: 4px;
+            transition: transform 0.5s ease;
+        }
+
+        .cell {
+            width: 70px; height: 70px;
+            background: #22c55e; /* Base green ground */
+            border: 2px solid #16a34a;
+            border-radius: 4px;
+            position: relative;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Hover / Highlight effects */
+        .cell::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; border-radius: 2px; transition: all 0.2s ease;
+            transform: translateZ(0.1px); /* Slight bump to stay above ground */
+        }
+        
+        .cell.selectable:hover::after { background: var(--highlight-select); border: 2px solid #3b82f6; }
+        .cell.valid-move::after { background: var(--highlight-move); animation: pulse 1.5s infinite; }
+        .cell.valid-move:hover::after { background: rgba(74, 222, 128, 0.8); }
+        
+        .cell.valid-build::after { background: var(--highlight-build); animation: pulse 1.5s infinite; }
+        .cell.valid-build:hover::after { background: rgba(250, 204, 21, 0.8); }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Building Blocks */
+        .block {
+            position: absolute;
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.1), inset 2px 2px 6px rgba(255,255,255,0.8);
+            transform-style: preserve-3d;
+            pointer-events: none; /* Let clicks pass to the cell */
+        }
+        .block.lvl1 { width: 66px; height: 66px; left: 0; top: 0; transform: translateZ(20px); border-radius: 4px; }
+        .block.lvl2 { width: 56px; height: 56px; left: 5px; top: 5px; transform: translateZ(40px); border-radius: 4px; }
+        .block.lvl3 { width: 46px; height: 46px; left: 10px; top: 10px; transform: translateZ(60px); border-radius: 50%; }
+        
+        .dome {
+            position: absolute;
+            width: 36px; height: 36px; left: 15px; top: 15px;
+            background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb);
+            transform: translateZ(80px);
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Workers */
+        .worker {
+            position: absolute;
+            width: 24px; height: 44px;
+            left: 23px; top: 13px; /* Centered in 70x70 cell */
+            border-radius: 12px 12px 4px 4px;
+            /* To stand up vertically relative to camera: undo board rotation */
+            transform-origin: bottom center;
+            transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+            pointer-events: none;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .worker.p1 { background: linear-gradient(to bottom, #f87171, #b91c1c); border: 1px solid #7f1d1d; }
+        .worker.p2 { background: linear-gradient(to bottom, #fde047, #a16207); border: 1px solid #713f12; }
+        .worker.selected {
+            box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.8), 0 5px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: var(--panel-bg); width: 90%; max-width: 700px; max-height: 85vh;
+            border-radius: var(--border-radius); padding: 30px; overflow-y: auto;
+            position: relative; transform: translateY(20px); transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .close-modal {
+            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1);
+            border: none; color: white; width: 32px; height: 32px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .close-modal:hover { background: rgba(255,255,255,0.2); }
+
+        /* Markdown Styles */
+        .markdown-body { color: var(--text-main); line-height: 1.6; }
+        .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 24px; margin-bottom: 16px; }
+        .markdown-body p { margin-bottom: 16px; }
+        .markdown-body ul { margin-bottom: 16px; padding-left: 20px; }
+
+        /* Game Over Msg */
+        .game-over-msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(15, 23, 42, 0.95); padding: 40px; border-radius: 20px;
+            text-align: center; border: 2px solid; z-index: 100; opacity: 0; pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .game-over-msg.active { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+        .game-over-msg h2 { font-size: 2.5rem; margin-bottom: 15px; }
+        .game-over-msg.win { border-color: var(--accent-green); color: #4ade80; }
+        .btn-primary { background: var(--accent-blue); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; }
+
+        /* Help Text */
+        .help-text {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 1rem;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        @media (max-width: 600px) {
+            .board { transform: scale(0.8) rotateX(60deg) rotateZ(-45deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><i class="ri-bank-fill"></i> 신들의 탑</h1>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openGDD()" title="기획서 보기"><i class="ri-book-read-line"></i></button>
+            <button class="icon-btn" onclick="initGame()" title="게임 재시작"><i class="ri-refresh-line"></i></button>
+            <button class="icon-btn" onclick="location.href='../index.html'" title="로비로 돌아가기"><i class="ri-home-4-line"></i></button>
+        </div>
+    </header>
+
+    <div class="status-bar">
+        <div class="status-badge p1" id="turn-badge">
+            <i class="ri-user-fill"></i> <span id="turn-text">P1 턴</span>
+        </div>
+        <div class="game-phase" id="phase-text">일꾼 배치 (0/4)</div>
+    </div>
+
+    <div class="scene" id="scene">
+        <div class="board" id="board">
+            <!-- Cells generated by JS -->
+        </div>
+    </div>
+
+    <div class="help-text" id="help-text">
+        원하는 칸을 클릭하여 일꾼을 배치하세요.
+    </div>
+
+    <!-- GDD Modal -->
+    <div class="modal-overlay" id="gdd-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeGDD()"><i class="ri-close-line"></i></button>
+            <div class="markdown-body" id="gdd-content">불러오는 중...</div>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div class="game-over-msg" id="game-over-msg">
+        <h2 id="go-title">승리!</h2>
+        <p id="go-desc" style="color: white; margin-bottom: 20px;">신계의 지배자가 되었습니다.</p>
+        <button class="btn-primary" onclick="initGame()">다시 플레이</button>
+    </div>
+
+    <script>
+        const COLS = 5;
+        const ROWS = 5;
+        let board = [];
+        let state = 'SETUP'; // SETUP, SELECT_WORKER, MOVE, BUILD, GAMEOVER
+        let turn = 1; // 1 or 2
+        let workersPlaced = 0;
+        let selectedWorker = null; // { player, x, y }
+
+        const Z_LEVELS = [0, 20, 40, 60, 80]; // px heights for translateZ
+
+        function initGame() {
+            board = [];
+            state = 'SETUP';
+            turn = 1;
+            workersPlaced = 0;
+            selectedWorker = null;
+            document.getElementById('game-over-msg').classList.remove('active');
+
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+
+            for (let y = 0; y < ROWS; y++) {
+                board[y] = [];
+                for (let x = 0; x < COLS; x++) {
+                    board[y][x] = { level: 0, hasDome: false, worker: null };
+                    
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${x}-${y}`;
+                    cell.onclick = () => handleCellClick(x, y);
+                    boardEl.appendChild(cell);
+                }
+            }
+            updateUI();
+        }
+
+        function handleCellClick(x, y) {
+            if (state === 'GAMEOVER') return;
+            const cellData = board[y][x];
+
+            if (state === 'SETUP') {
+                if (cellData.worker) return; // occupied
+                let p = workersPlaced < 2 ? 1 : 2;
+                cellData.worker = { player: p, x, y };
+                workersPlaced++;
+                
+                if (workersPlaced === 2) turn = 2; // Switch to P2 placement
+                
+                if (workersPlaced === 4) {
+                    turn = 1;
+                    state = 'SELECT_WORKER';
+                }
+                updateUI();
+                renderAll();
+                return;
+            }
+
+            if (state === 'SELECT_WORKER') {
+                if (cellData.worker && cellData.worker.player === turn) {
+                    selectedWorker = cellData.worker;
+                    state = 'MOVE';
+                    updateUI();
+                    renderAll();
+                }
+                return;
+            }
+
+            if (state === 'MOVE') {
+                // If clicked on own worker again, switch selection
+                if (cellData.worker && cellData.worker.player === turn) {
+                    selectedWorker = cellData.worker;
+                    updateUI();
+                    renderAll();
+                    return;
+                }
+                
+                // Try to move
+                if (isValidMove(selectedWorker, x, y)) {
+                    // Move worker
+                    board[selectedWorker.y][selectedWorker.x].worker = null;
+                    selectedWorker.x = x;
+                    selectedWorker.y = y;
+                    cellData.worker = selectedWorker;
+                    
+                    renderAll(); // Animate movement
+
+                    // Check Win (Moved to Level 3)
+                    if (cellData.level === 3) {
+                        endGame(turn, "3층 꼭대기에 도달했습니다!");
+                        return;
+                    }
+
+                    state = 'BUILD';
+                    updateUI();
+                    renderAll();
+                }
+                return;
+            }
+
+            if (state === 'BUILD') {
+                if (isValidBuild(selectedWorker, x, y)) {
+                    // Build
+                    if (cellData.level === 3) {
+                        cellData.hasDome = true;
+                    } else {
+                        cellData.level++;
+                    }
+
+                    // Next Turn
+                    selectedWorker.selected = false;
+                    selectedWorker = null;
+                    turn = turn === 1 ? 2 : 1;
+                    state = 'SELECT_WORKER';
+                    
+                    renderAll();
+
+                    // Check if next player is trapped
+                    if (!hasValidMoves(turn)) {
+                        endGame(turn === 1 ? 2 : 1, "상대방이 갇혀 더 이상 움직일 수 없습니다!");
+                    } else {
+                        updateUI();
+                        renderAll(); // to update highlights
+                    }
+                }
+                return;
+            }
+        }
+
+        function isValidMove(worker, tx, ty) {
+            if (Math.abs(worker.x - tx) > 1 || Math.abs(worker.y - ty) > 1) return false;
+            if (worker.x === tx && worker.y === ty) return false;
+            let target = board[ty][tx];
+            if (target.worker || target.hasDome) return false;
+            let currentLevel = board[worker.y][worker.x].level;
+            if (target.level > currentLevel + 1) return false; // Too high
+            return true;
+        }
+
+        function isValidBuild(worker, tx, ty) {
+            if (Math.abs(worker.x - tx) > 1 || Math.abs(worker.y - ty) > 1) return false;
+            if (worker.x === tx && worker.y === ty) return false;
+            let target = board[ty][tx];
+            if (target.worker || target.hasDome) return false;
+            return true;
+        }
+
+        function hasValidMoves(player) {
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    let w = board[y][x].worker;
+                    if (w && w.player === player) {
+                        // Check 8 adjacent
+                        for (let dy = -1; dy <= 1; dy++) {
+                            for (let dx = -1; dx <= 1; dx++) {
+                                let tx = x + dx; let ty = y + dy;
+                                if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
+                                    if (isValidMove(w, tx, ty)) return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function updateUI() {
+            const badge = document.getElementById('turn-badge');
+            badge.className = `status-badge p${turn}`;
+            document.getElementById('turn-text').innerText = `P${turn} 턴`;
+
+            const phaseEl = document.getElementById('phase-text');
+            const helpEl = document.getElementById('help-text');
+            
+            if (state === 'SETUP') {
+                phaseEl.innerText = `일꾼 배치 (${workersPlaced}/4)`;
+                helpEl.innerText = `[P${turn}] 빈 칸을 클릭하여 일꾼을 배치하세요.`;
+            } else if (state === 'SELECT_WORKER') {
+                phaseEl.innerText = `이동할 일꾼 선택`;
+                helpEl.innerText = `[P${turn}] 움직일 자신의 일꾼을 클릭하세요.`;
+            } else if (state === 'MOVE') {
+                phaseEl.innerText = `이동 (1칸)`;
+                helpEl.innerText = `[P${turn}] 인접한 칸으로 이동하세요. (최대 1층 높게 등반 가능)`;
+            } else if (state === 'BUILD') {
+                phaseEl.innerText = `건설 (1층)`;
+                helpEl.innerText = `[P${turn}] 인접한 칸에 건물을 지으세요. (3층 위에는 지붕)`;
+            }
+        }
+
+        function renderAll() {
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    const cellEl = document.getElementById(`cell-${x}-${y}`);
+                    const cellData = board[y][x];
+                    
+                    // Clear cell UI state
+                    cellEl.innerHTML = '';
+                    cellEl.className = 'cell';
+
+                    // Render blocks
+                    for (let i = 1; i <= cellData.level; i++) {
+                        let block = document.createElement('div');
+                        block.className = `block lvl${i}`;
+                        cellEl.appendChild(block);
+                    }
+                    if (cellData.hasDome) {
+                        let dome = document.createElement('div');
+                        dome.className = `dome`;
+                        cellEl.appendChild(dome);
+                    }
+
+                    // Render worker
+                    if (cellData.worker) {
+                        let workerEl = document.createElement('div');
+                        workerEl.className = `worker p${cellData.worker.player}`;
+                        // Add translateZ based on level so it stands on top
+                        // Z_LEVELS: 0, 20, 40, 60. Worker translates relative to cell.
+                        workerEl.style.transform = `translateZ(${Z_LEVELS[cellData.level]}px) rotateZ(45deg) rotateX(-60deg)`;
+                        if (selectedWorker === cellData.worker) {
+                            workerEl.classList.add('selected');
+                        }
+                        cellEl.appendChild(workerEl);
+                    }
+
+                    // Render Highlights
+                    if (state === 'SELECT_WORKER' && cellData.worker && cellData.worker.player === turn) {
+                        cellEl.classList.add('selectable');
+                    } else if (state === 'MOVE' && selectedWorker && isValidMove(selectedWorker, x, y)) {
+                        cellEl.classList.add('valid-move');
+                    } else if (state === 'BUILD' && selectedWorker && isValidBuild(selectedWorker, x, y)) {
+                        cellEl.classList.add('valid-build');
+                    }
+                }
+            }
+        }
+
+        function endGame(winner, desc) {
+            state = 'GAMEOVER';
+            const msgEl = document.getElementById('game-over-msg');
+            msgEl.className = 'game-over-msg active win'; // Always green for winner
+            
+            document.getElementById('go-title').innerText = `Player ${winner} 승리!`;
+            document.getElementById('go-desc').innerText = desc;
+            document.getElementById('help-text').innerText = `게임 종료!`;
+        }
+
+        // --- GDD Modal Logic ---
+        async function openGDD() {
+            const modal = document.getElementById('gdd-modal');
+            const content = document.getElementById('gdd-content');
+            modal.classList.add('active');
+            try {
+                const response = await fetch('./docs/tower-of-gods-gdd.md');
+                if (response.ok) {
+                    content.innerHTML = marked.parse(await response.text());
+                } else {
+                    content.innerHTML = '<p>기획 문서를 불러오지 못했습니다.</p>';
+                }
+            } catch (e) {
+                content.innerHTML = '<p>기획 문서를 불러오는 중 오류가 발생했습니다.</p>';
+            }
+        }
+        function closeGDD() { document.getElementById('gdd-modal').classList.remove('active'); }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>

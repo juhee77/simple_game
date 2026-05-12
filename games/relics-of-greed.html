@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>탐욕의 유적 - Relics of Greed</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --table-color: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-gold: #fbbf24;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --border-radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; user-select: none; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        h1 { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 8px; color: var(--accent-gold); }
+        .header-actions { display: flex; gap: 10px; }
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: none; color: white;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            font-size: 1.1rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+
+        /* Game Area */
+        .game-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        }
+
+        /* Center Table Info */
+        .center-info {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            padding: 20px 40px;
+            border-radius: 50px;
+            border: 2px solid rgba(255,255,255,0.1);
+            z-index: 10;
+        }
+        .info-title { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .info-main { font-size: 1.5rem; font-weight: 800; margin-top: 5px; }
+        .info-sub { font-size: 1rem; color: var(--accent-gold); margin-top: 5px; font-weight: 600; }
+
+        /* Player Areas */
+        .player-area {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+        .player-area.eliminated { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
+        
+        /* Positions for 3 players */
+        .player-1 { bottom: 20px; left: 50%; transform: translateX(-50%); } /* Bottom */
+        .player-2 { top: 20px; left: 40px; } /* Top Left */
+        .player-3 { top: 20px; right: 40px; } /* Top Right */
+
+        /* Player Stats */
+        .player-stats {
+            background: rgba(0,0,0,0.6);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 2px solid transparent;
+        }
+        .player-area.active .player-stats { border-color: var(--accent-gold); box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
+        .player-name { font-weight: 800; font-size: 1.1rem; }
+        .player-1 .player-name { color: var(--accent-red); }
+        .player-2 .player-name { color: var(--accent-blue); }
+        .player-3 .player-name { color: var(--accent-green); }
+        .score-dots { display: flex; gap: 5px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
+        .dot.filled { background: var(--accent-gold); border-color: var(--accent-gold); box-shadow: 0 0 5px var(--accent-gold); }
+
+        /* Board Cards (Placed cards) */
+        .board-cards {
+            position: relative;
+            width: 80px; height: 80px;
+        }
+        .board-card {
+            position: absolute;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: #334155;
+            border: 3px solid #64748b;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        }
+        .board-card.clickable:hover { transform: scale(1.1) translateY(-10px) !important; box-shadow: 0 10px 15px rgba(251, 191, 36, 0.5); border-color: var(--accent-gold); }
+
+        /* Card Faces */
+        .card-back, .card-front {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 50%; backface-visibility: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card-back { background: radial-gradient(circle, #475569, #1e293b); }
+        .card-back::after { content: '🎴'; font-size: 2rem; opacity: 0.5; }
+        .card-front { background: #0f172a; transform: rotateY(180deg); }
+        
+        .board-card.revealed { transform: rotateY(180deg) !important; cursor: default; }
+        
+        .card-treasure .card-front { background: radial-gradient(circle, #fbbf24, #b45309); border: 2px solid #fef3c7; }
+        .card-treasure .card-front::after { content: '💎'; font-size: 2.5rem; }
+        
+        .card-skull .card-front { background: radial-gradient(circle, #ef4444, #7f1d1d); border: 2px solid #fee2e2; }
+        .card-skull .card-front::after { content: '💀'; font-size: 2.5rem; }
+
+        /* Hand Cards (Bottom center only for P1, but actually we use a modal for Hand to keep it secret) */
+        
+        /* Action Bar (Bottom) */
+        .action-bar {
+            padding: 20px;
+            background: var(--table-color);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex; justify-content: center; gap: 15px;
+            z-index: 100;
+        }
+        .btn {
+            padding: 14px 24px; border-radius: 30px; border: none;
+            font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: var(--accent-gold); color: #78350f; }
+        .btn-primary:hover:not(:disabled) { background: #fcd34d; transform: translateY(-2px); }
+        .btn-danger { background: var(--accent-red); color: white; }
+        .btn-danger:hover:not(:disabled) { background: #f87171; transform: translateY(-2px); }
+        .btn-outline { background: transparent; border: 2px solid var(--text-muted); color: white; }
+        .btn-outline:hover:not(:disabled) { border-color: white; }
+
+        /* Modals & Overlays */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .overlay.active { opacity: 1; pointer-events: all; }
+        
+        /* Turn Pass Overlay */
+        .pass-device { text-align: center; }
+        .pass-device h2 { font-size: 2.5rem; margin-bottom: 20px; color: var(--accent-gold); }
+        
+        /* Hand Selection Overlay */
+        .hand-selection { width: 100%; max-width: 500px; padding: 20px; text-align: center; }
+        .hand-cards { display: flex; justify-content: center; gap: 15px; margin: 30px 0; }
+        .hand-card {
+            width: 80px; height: 80px; border-radius: 50%;
+            cursor: pointer; transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .hand-card:hover { transform: translateY(-10px); }
+        
+        /* Bet Overlay */
+        .bet-selection { text-align: center; }
+        .bet-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; max-width: 300px; }
+        .bet-btn {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #334155; border: 2px solid #64748b; color: white;
+            font-size: 1.5rem; font-weight: bold; cursor: pointer;
+        }
+        .bet-btn:hover { background: var(--accent-gold); color: #78350f; border-color: var(--accent-gold); }
+
+        /* GDD Modal */
+        .modal-content {
+            background: var(--table-color); width: 90%; max-width: 700px; max-height: 85vh;
+            border-radius: var(--border-radius); padding: 30px; overflow-y: auto; position: relative;
+        }
+        .close-modal { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+        .markdown-body { color: var(--text-main); line-height: 1.6; }
+        .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 24px; margin-bottom: 16px; }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.1); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.1); }
+            70% { transform: scale(1); }
+        }
+        .heartbeat { animation: heartbeat 1s ease-in-out infinite; border-color: var(--accent-red) !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><i class="ri-skull-2-fill"></i> 탐욕의 유적</h1>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openGDD()" title="기획서 보기"><i class="ri-book-read-line"></i></button>
+            <button class="icon-btn" onclick="initGame()" title="게임 재시작"><i class="ri-refresh-line"></i></button>
+            <button class="icon-btn" onclick="location.href='../index.html'" title="로비로 돌아가기"><i class="ri-home-4-line"></i></button>
+        </div>
+    </header>
+
+    <div class="game-area" id="game-area">
+        <div class="center-info">
+            <div class="info-title" id="center-title">현재 상태</div>
+            <div class="info-main" id="center-main">게임 준비 중</div>
+            <div class="info-sub" id="center-sub"></div>
+        </div>
+
+        <div class="player-area player-1" id="pa-0">
+            <div class="board-cards" id="board-0"></div>
+            <div class="player-stats">
+                <span class="player-name">P1</span>
+                <div class="score-dots"><div class="dot" id="score-0-1"></div><div class="dot" id="score-0-2"></div></div>
+            </div>
+        </div>
+
+        <div class="player-area player-2" id="pa-1">
+            <div class="board-cards" id="board-1"></div>
+            <div class="player-stats">
+                <span class="player-name">P2</span>
+                <div class="score-dots"><div class="dot" id="score-1-1"></div><div class="dot" id="score-1-2"></div></div>
+            </div>
+        </div>
+
+        <div class="player-area player-3" id="pa-2">
+            <div class="board-cards" id="board-2"></div>
+            <div class="player-stats">
+                <span class="player-name">P3</span>
+                <div class="score-dots"><div class="dot" id="score-2-1"></div><div class="dot" id="score-2-2"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar" id="action-bar">
+        <button class="btn btn-outline" id="btn-hand" onclick="openHand()"><i class="ri-hand-coin-line"></i> 내 패 보기 및 내려놓기</button>
+        <button class="btn btn-danger" id="btn-bet" onclick="openBet()"><i class="ri-fire-fill"></i> 도전 (배팅) 시작</button>
+    </div>
+
+    <!-- Pass Device Overlay -->
+    <div class="overlay" id="pass-overlay">
+        <div class="pass-device">
+            <h2>기기를 <span id="pass-target-name" style="color:white;">P2</span> 에게 넘겨주세요</h2>
+            <p style="margin-bottom: 30px; color: var(--text-muted);">다른 사람은 화면을 보지 마세요.</p>
+            <button class="btn btn-primary" onclick="startTurn()"><i class="ri-check-line"></i> 준비 완료</button>
+        </div>
+    </div>
+
+    <!-- Hand Selection Overlay -->
+    <div class="overlay" id="hand-overlay">
+        <div class="hand-selection">
+            <h2 style="margin-bottom: 10px;">내 손패</h2>
+            <p style="color: var(--text-muted);">내려놓을 카드를 선택하세요.</p>
+            <div class="hand-cards" id="hand-cards-container">
+                <!-- Generated by JS -->
+            </div>
+            <button class="btn btn-outline" onclick="closeHand()">취소</button>
+        </div>
+    </div>
+
+    <!-- Bet Selection Overlay -->
+    <div class="overlay" id="bet-overlay">
+        <div class="bet-selection">
+            <h2 style="margin-bottom: 10px;">도전 배팅</h2>
+            <p style="color: var(--text-muted);">몇 장의 보물을 뒤집을 수 있습니까?</p>
+            <div class="bet-buttons" id="bet-buttons-container">
+                <!-- Generated by JS -->
+            </div>
+            <button class="btn btn-outline" id="btn-pass-bet" onclick="passBet()" style="width: 100%; margin-top: 10px;">포기 (Pass)</button>
+            <button class="btn btn-outline" onclick="closeBet()" id="btn-cancel-bet" style="width: 100%; margin-top: 10px; border:none;">취소</button>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div class="overlay" id="gameover-overlay">
+        <div class="pass-device">
+            <h2 id="go-title">게임 종료</h2>
+            <p id="go-desc" style="margin-bottom: 30px; color: white;">누군가 승리했습니다.</p>
+            <button class="btn btn-primary" onclick="initGame()">다시 플레이</button>
+        </div>
+    </div>
+
+    <!-- GDD Modal -->
+    <div class="overlay" id="gdd-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeGDD()"><i class="ri-close-line"></i></button>
+            <div class="markdown-body" id="gdd-content">불러오는 중...</div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let players = [];
+        let turnIndex = 0;
+        let phase = 'SET'; // SET, BET, REVEAL
+        let currentBet = 0;
+        let highestBettor = -1;
+        let revealedCount = 0;
+        let passCount = 0;
+        let totalCardsOnBoard = 0;
+        let targetRevealCount = 0;
+
+        function initGame() {
+            players = [
+                { id: 0, name: 'P1', color: 'var(--accent-red)', score: 0, hand: ['T','T','T','S'], board: [], passed: false, eliminated: false },
+                { id: 1, name: 'P2', color: 'var(--accent-blue)', score: 0, hand: ['T','T','T','S'], board: [], passed: false, eliminated: false },
+                { id: 2, name: 'P3', color: 'var(--accent-green)', score: 0, hand: ['T','T','T','S'], board: [], passed: false, eliminated: false }
+            ];
+            turnIndex = Math.floor(Math.random() * 3);
+            startRound();
+            document.getElementById('gameover-overlay').classList.remove('active');
+        }
+
+        function startRound() {
+            phase = 'SET';
+            currentBet = 0;
+            highestBettor = -1;
+            passCount = 0;
+            totalCardsOnBoard = 0;
+            
+            players.forEach(p => {
+                p.board = [];
+                p.passed = false;
+                updatePlayerUI(p.id);
+            });
+            
+            // Skip eliminated players
+            while(players[turnIndex].eliminated) {
+                turnIndex = (turnIndex + 1) % 3;
+            }
+
+            updateCenterInfo();
+            showPassDevice();
+        }
+
+        function showPassDevice() {
+            document.getElementById('pass-target-name').innerText = players[turnIndex].name;
+            document.getElementById('pass-target-name').style.color = players[turnIndex].color;
+            document.getElementById('pass-overlay').classList.add('active');
+            updateCenterInfo();
+            updatePlayerActiveState();
+        }
+
+        function startTurn() {
+            document.getElementById('pass-overlay').classList.remove('active');
+            updateActionBar();
+            
+            if (phase === 'REVEAL') {
+                document.getElementById('center-main').innerText = `카드 선택 중...`;
+                document.getElementById('center-sub').innerText = `목표: ${targetRevealCount}장 (현재 ${revealedCount}장 성공)`;
+                makeCardsClickable();
+            }
+        }
+
+        function updatePlayerActiveState() {
+            players.forEach(p => {
+                const el = document.getElementById(`pa-${p.id}`);
+                if (p.eliminated) el.classList.add('eliminated');
+                else el.classList.remove('eliminated');
+                
+                if (p.id === turnIndex) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+        }
+
+        function updateCenterInfo() {
+            const cp = players[turnIndex];
+            if (phase === 'SET') {
+                document.getElementById('center-title').innerText = `${cp.name} 턴`;
+                document.getElementById('center-main').innerText = `카드 세팅`;
+                document.getElementById('center-sub').innerText = `카드를 내려놓거나 도전을 시작하세요`;
+            } else if (phase === 'BET') {
+                document.getElementById('center-title').innerText = `${cp.name} 턴`;
+                document.getElementById('center-main').innerText = currentBet === 0 ? `배팅 시작` : `현재 최고 배팅: ${currentBet}`;
+                document.getElementById('center-sub').innerText = highestBettor !== -1 ? `(${players[highestBettor].name} 선언)` : '';
+            } else if (phase === 'REVEAL') {
+                document.getElementById('center-title').innerText = `${cp.name} 도전 중`;
+                document.getElementById('center-main').innerText = `카드 뒤집기`;
+                document.getElementById('center-sub').innerText = `목표: ${targetRevealCount}장`;
+            }
+        }
+
+        function updateActionBar() {
+            const btnHand = document.getElementById('btn-hand');
+            const btnBet = document.getElementById('btn-bet');
+            
+            if (phase === 'SET') {
+                btnHand.style.display = 'flex';
+                btnBet.style.display = 'flex';
+                // Can only bet if total cards on board > 0
+                btnBet.disabled = totalCardsOnBoard === 0;
+            } else if (phase === 'BET') {
+                btnHand.style.display = 'none';
+                btnBet.style.display = 'flex';
+                btnBet.disabled = false;
+                btnBet.innerHTML = '<i class="ri-fire-fill"></i> 배팅 / 포기';
+            } else if (phase === 'REVEAL') {
+                btnHand.style.display = 'none';
+                btnBet.style.display = 'none';
+            }
+        }
+
+        function updatePlayerUI(pid) {
+            const p = players[pid];
+            const boardEl = document.getElementById(`board-${pid}`);
+            boardEl.innerHTML = '';
+            
+            // Draw cards stacked
+            p.board.forEach((card, idx) => {
+                const cEl = document.createElement('div');
+                cEl.className = `board-card card-${card.type === 'T' ? 'treasure' : 'skull'}`;
+                // Stack offset
+                cEl.style.transform = `translateY(${idx * -15}px) scale(${1 - idx*0.05})`;
+                cEl.style.zIndex = idx;
+                
+                cEl.innerHTML = `
+                    <div class="card-back"></div>
+                    <div class="card-front"></div>
+                `;
+                
+                if (card.revealed) {
+                    cEl.classList.add('revealed');
+                    // Flat out the transform if revealed so we can see it clearly
+                    cEl.style.transform = `translateY(${idx * -15}px) scale(1) rotateY(180deg)`;
+                    cEl.style.zIndex = 100 + idx;
+                }
+                
+                cEl.id = `card-${pid}-${idx}`;
+                boardEl.appendChild(cEl);
+            });
+
+            // Score
+            document.getElementById(`score-${pid}-1`).classList.toggle('filled', p.score >= 1);
+            document.getElementById(`score-${pid}-2`).classList.toggle('filled', p.score >= 2);
+        }
+
+        // --- ACTIONS ---
+
+        function openHand() {
+            const p = players[turnIndex];
+            const container = document.getElementById('hand-cards-container');
+            container.innerHTML = '';
+            
+            p.hand.forEach((type, idx) => {
+                const el = document.createElement('div');
+                el.className = `hand-card card-${type === 'T' ? 'treasure' : 'skull'} revealed`;
+                el.style.transform = "rotateY(180deg)";
+                el.innerHTML = `<div class="card-back"></div><div class="card-front"></div>`;
+                el.onclick = () => playCard(idx);
+                container.appendChild(el);
+            });
+            
+            document.getElementById('hand-overlay').classList.add('active');
+        }
+
+        function closeHand() { document.getElementById('hand-overlay').classList.remove('active'); }
+
+        function playCard(handIdx) {
+            closeHand();
+            const p = players[turnIndex];
+            const type = p.hand.splice(handIdx, 1)[0];
+            p.board.push({ type, revealed: false });
+            totalCardsOnBoard++;
+            updatePlayerUI(p.id);
+            
+            nextTurnSet();
+        }
+
+        function nextTurnSet() {
+            // Find next player not eliminated
+            do {
+                turnIndex = (turnIndex + 1) % 3;
+            } while(players[turnIndex].eliminated);
+            
+            // If the next player has no cards in hand, they MUST start betting if cards exist, else skip.
+            if (players[turnIndex].hand.length === 0) {
+                // Force bet phase
+                phase = 'BET';
+            }
+            
+            showPassDevice();
+        }
+
+        function openBet() {
+            const container = document.getElementById('bet-buttons-container');
+            container.innerHTML = '';
+            
+            let minBet = currentBet + 1;
+            for(let i = minBet; i <= totalCardsOnBoard; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'bet-btn';
+                btn.innerText = i;
+                btn.onclick = () => placeBet(i);
+                container.appendChild(btn);
+            }
+            
+            document.getElementById('btn-pass-bet').style.display = currentBet > 0 ? 'block' : 'none';
+            document.getElementById('btn-cancel-bet').style.display = currentBet === 0 ? 'block' : 'none';
+            
+            document.getElementById('bet-overlay').classList.add('active');
+            phase = 'BET'; // In case they clicked it from SET phase
+        }
+
+        function closeBet() { 
+            if (currentBet === 0) phase = 'SET'; // Revert if cancelled
+            document.getElementById('bet-overlay').classList.remove('active'); 
+        }
+
+        function placeBet(amount) {
+            document.getElementById('bet-overlay').classList.remove('active');
+            currentBet = amount;
+            highestBettor = turnIndex;
+            nextTurnBet();
+        }
+
+        function passBet() {
+            document.getElementById('bet-overlay').classList.remove('active');
+            players[turnIndex].passed = true;
+            passCount++;
+            
+            // Count active players
+            const activeCount = players.filter(p => !p.eliminated).length;
+            
+            if (passCount >= activeCount - 1) {
+                // Everyone else passed, highest bettor wins the bid
+                startRevealPhase();
+            } else {
+                nextTurnBet();
+            }
+        }
+
+        function nextTurnBet() {
+            do {
+                turnIndex = (turnIndex + 1) % 3;
+            } while(players[turnIndex].eliminated || players[turnIndex].passed);
+            
+            // If the next player is the highest bettor, it means everyone else passed (handled above, but just in case)
+            if (turnIndex === highestBettor) {
+                startRevealPhase();
+            } else {
+                showPassDevice();
+            }
+        }
+
+        function startRevealPhase() {
+            phase = 'REVEAL';
+            turnIndex = highestBettor;
+            targetRevealCount = currentBet;
+            revealedCount = 0;
+            showPassDevice(); // Pass back to the highest bettor
+        }
+
+        function makeCardsClickable() {
+            // Rule: Must flip own cards first
+            const cp = players[turnIndex];
+            const ownUnrevealed = cp.board.filter(c => !c.revealed).length;
+            
+            players.forEach(p => {
+                p.board.forEach((card, idx) => {
+                    const el = document.getElementById(`card-${p.id}-${idx}`);
+                    el.classList.remove('clickable', 'heartbeat');
+                    el.onclick = null;
+                    
+                    if (!card.revealed) {
+                        // Only the TOP unrevealed card of any stack is clickable
+                        const isTop = idx === p.board.length - 1 || p.board[idx+1].revealed === true; 
+                        // Wait, they are pushed, so last element is TOP.
+                        // Actually, if we pop, we should reveal from end to start.
+                        const topUnrevealedIdx = p.board.findLastIndex(c => !c.revealed);
+                        
+                        if (idx === topUnrevealedIdx) {
+                            if (ownUnrevealed > 0) {
+                                // MUST click own
+                                if (p.id === turnIndex) {
+                                    el.classList.add('clickable', 'heartbeat');
+                                    el.onclick = () => revealCard(p.id, idx);
+                                }
+                            } else {
+                                // Can click any
+                                el.classList.add('clickable');
+                                el.onclick = () => revealCard(p.id, idx);
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function revealCard(pid, idx) {
+            // Play sound/animation logic here
+            const card = players[pid].board[idx];
+            card.revealed = true;
+            updatePlayerUI(pid);
+            
+            // Remove clickables temporarily
+            players.forEach(p => p.board.forEach((c, i) => {
+                const el = document.getElementById(`card-${p.id}-${i}`);
+                if(el) el.classList.remove('clickable', 'heartbeat');
+            }));
+
+            setTimeout(() => {
+                if (card.type === 'S') {
+                    // Fail!
+                    handleRevealFail();
+                } else {
+                    // Success!
+                    revealedCount++;
+                    if (revealedCount >= targetRevealCount) {
+                        handleRevealSuccess();
+                    } else {
+                        makeCardsClickable(); // Continue
+                        updateCenterInfo();
+                    }
+                }
+            }, 600); // Wait for flip animation
+        }
+
+        function handleRevealFail() {
+            const p = players[turnIndex];
+            // Lose a random card
+            if (p.hand.length > 0) {
+                const lossIdx = Math.floor(Math.random() * p.hand.length);
+                p.hand.splice(lossIdx, 1);
+            } else if (p.board.length > 0) {
+                // If they had no hand, they lose a card from board (which will go back to hand minus 1 anyway)
+                // Just let them lose one from their total pool.
+                // In our model, all unrevealed cards go back to hand.
+            }
+            
+            alert(`${p.name} 해골을 뽑았습니다! 카드를 1장 잃습니다.`);
+            
+            endRound(false);
+        }
+
+        function handleRevealSuccess() {
+            const p = players[turnIndex];
+            p.score++;
+            updatePlayerUI(p.id);
+            alert(`${p.name} 도전 성공! 승점 1점을 얻습니다.`);
+            
+            if (p.score >= 2) {
+                // Win game
+                document.getElementById('go-title').innerText = `${p.name} 최종 승리!`;
+                document.getElementById('go-desc').innerText = `탐욕을 이겨내고 2개의 보물을 얻었습니다.`;
+                document.getElementById('gameover-overlay').classList.add('active');
+            } else {
+                endRound(true);
+            }
+        }
+
+        function endRound(success) {
+            // Return cards to hand
+            players.forEach(p => {
+                p.board.forEach(c => {
+                    p.hand.push(c.type);
+                });
+                // Check elimination
+                if (p.hand.length === 0) {
+                    p.eliminated = true;
+                }
+            });
+            
+            const activeCount = players.filter(p => !p.eliminated).length;
+            if (activeCount <= 1) {
+                const winner = players.find(p => !p.eliminated);
+                document.getElementById('go-title').innerText = `${winner ? winner.name : '아무도'} 최종 승리!`;
+                document.getElementById('go-desc').innerText = `다른 모든 탐험가가 함정에 빠졌습니다.`;
+                document.getElementById('gameover-overlay').classList.add('active');
+                return;
+            }
+
+            // Next round starter: if success, the winner. If fail, the loser (current player).
+            // (Standard rule says if loser lost their last card, next player starts. Let's simplify and just use turnIndex)
+            if (players[turnIndex].eliminated) {
+                turnIndex = (turnIndex + 1) % 3;
+            }
+            
+            startRound();
+        }
+
+        // --- GDD Modal Logic ---
+        async function openGDD() {
+            const modal = document.getElementById('gdd-modal');
+            const content = document.getElementById('gdd-content');
+            modal.classList.add('active');
+            try {
+                const response = await fetch('./docs/relics-of-greed-gdd.md');
+                if (response.ok) content.innerHTML = marked.parse(await response.text());
+                else content.innerHTML = '<p>기획 문서를 불러오지 못했습니다.</p>';
+            } catch (e) {
+                content.innerHTML = '<p>기획 문서를 불러오는 중 오류가 발생했습니다.</p>';
+            }
+        }
+        function closeGDD() { document.getElementById('gdd-modal').classList.remove('active'); }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>

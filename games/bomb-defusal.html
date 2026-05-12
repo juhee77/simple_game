@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>폭탄 해체반 - Bomb Defusal Squad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bomb-body: #334155;
+            --border-radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* Header */
+        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.9); z-index: 100; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        h1 { font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px; color: var(--danger); }
+        .header-actions { display: flex; gap: 10px; }
+        .icon-btn { background: rgba(255, 255, 255, 0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+
+        /* Screen States */
+        .screen { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .screen.active { display: flex; }
+
+        /* Start Screen */
+        .role-selection { display: flex; gap: 20px; width: 100%; max-width: 800px; }
+        .role-card { flex: 1; background: var(--panel-bg); border: 2px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .role-card:hover { border-color: var(--danger); transform: translateY(-10px); background: rgba(239, 68, 68, 0.05); }
+        .role-icon { font-size: 4rem; color: var(--danger); margin-bottom: 20px; }
+        .role-card h2 { margin-bottom: 10px; font-weight: 800; }
+        .role-card p { color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Expert Screen (Bomb) */
+        .bomb-container { background: var(--bomb-body); padding: 30px; border-radius: 20px; border: 8px solid #1e293b; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 500px; position: relative; }
+        .timer-display { background: #000; color: #ff0000; font-family: 'JetBrains Mono', monospace; font-size: 4rem; text-align: center; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 4px solid #1e293b; text-shadow: 0 0 15px #ff0000; }
+        .strikes { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .strike { width: 24px; height: 24px; border: 2px solid #475569; border-radius: 4px; position: relative; }
+        .strike.active::before, .strike.active::after { content: ''; position: absolute; top: 50%; left: 50%; width: 80%; height: 2px; background: var(--danger); }
+        .strike.active::before { transform: translate(-50%, -50%) rotate(45deg); }
+        .strike.active::after { transform: translate(-50%, -50%) rotate(-45deg); }
+
+        .modules { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .module { background: #1e293b; border-radius: 8px; padding: 15px; min-height: 150px; position: relative; border: 2px solid #475569; }
+        .module.solved { border-color: var(--success); }
+        .module.solved::after { content: '✔️'; position: absolute; top: 5px; right: 5px; color: var(--success); font-weight: bold; }
+
+        /* Wire Module */
+        .wires { display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; height: 100%; }
+        .wire { width: 80%; height: 8px; border-radius: 4px; cursor: pointer; transition: opacity 0.2s; position: relative; }
+        .wire::before { content: ''; position: absolute; top: -4px; left: -10px; width: 10px; height: 16px; background: #000; border-radius: 2px; }
+        .wire::after { content: ''; position: absolute; top: -4px; right: -10px; width: 10px; height: 16px; background: #000; border-radius: 2px; }
+        .wire.cut { opacity: 0.2; pointer-events: none; }
+
+        /* Keypad Module */
+        .keypad-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; height: 100%; align-content: center; }
+        .key-btn { background: #334155; border: none; color: white; padding: 10px; border-radius: 4px; font-size: 1.2rem; cursor: pointer; }
+        .key-btn:hover { background: #475569; }
+
+        /* Analyst Screen (Manual) */
+        .manual-container { background: #fff; color: #000; width: 100%; max-width: 800px; height: 80vh; overflow-y: auto; padding: 40px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-family: serif; }
+        .manual-container h2 { border-bottom: 2px solid #000; margin-bottom: 20px; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        .rule-section { margin-bottom: 30px; }
+        .rule-section h3 { background: #000; color: #fff; display: inline-block; padding: 2px 10px; margin-bottom: 10px; }
+        .rule-list { list-style: disc; padding-left: 20px; }
+        .rule-list li { margin-bottom: 8px; line-height: 1.4; }
+
+        /* Overlay */
+        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .overlay.active { display: flex; }
+        .overlay h2 { font-size: 3rem; margin-bottom: 20px; color: var(--danger); }
+        .btn-retry { background: var(--danger); color: white; padding: 12px 30px; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; }
+
+        .back-btn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); padding: 5px 15px; border-radius: 20px; cursor: pointer; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><i class="ri-alarm-warning-fill"></i> 폭탄 해체반</h1>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openGDD()" title="기획서 보기"><i class="ri-book-read-line"></i></button>
+            <button class="icon-btn" onclick="resetGame()" title="게임 재시작"><i class="ri-refresh-line"></i></button>
+            <button class="icon-btn" onclick="location.href='../index.html'" title="로비로 돌아가기"><i class="ri-home-4-line"></i></button>
+        </div>
+    </header>
+
+    <!-- Role Selection -->
+    <div class="screen active" id="screen-start">
+        <div class="role-selection">
+            <div class="role-card" onclick="startAs('expert')">
+                <div class="role-icon"><i class="ri-tools-fill"></i></div>
+                <h2>해체 전문가</h2>
+                <p>폭탄을 직접 보고 조작합니다.<br>분석관의 지시를 따르세요.</p>
+            </div>
+            <div class="role-card" onclick="startAs('analyst')">
+                <div class="role-icon"><i class="ri-file-search-fill"></i></div>
+                <h2>정보 분석관</h2>
+                <p>해체 매뉴얼을 읽고 지시합니다.<br>폭탄을 볼 수 없습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expert Screen -->
+    <div class="screen" id="screen-expert">
+        <div class="bomb-container">
+            <div class="timer-display" id="timer">03:00</div>
+            <div class="strikes">
+                <div class="strike" id="strike-1"></div>
+                <div class="strike" id="strike-2"></div>
+                <div class="strike" id="strike-3"></div>
+            </div>
+            <div class="modules">
+                <div class="module" id="mod-wires">
+                    <div class="wires" id="wire-container"></div>
+                </div>
+                <div class="module" id="mod-keypad">
+                    <div class="keypad-grid" id="keypad-container"></div>
+                </div>
+            </div>
+        </div>
+        <button class="back-btn" onclick="showStartScreen()">역할 다시 선택</button>
+    </div>
+
+    <!-- Analyst Screen -->
+    <div class="screen" id="screen-analyst">
+        <div class="manual-container" id="manual-content">
+            <!-- Manual Content will be generated -->
+        </div>
+        <button class="back-btn" onclick="showStartScreen()">역할 다시 선택</button>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+        <h2 id="overlay-title">폭발!</h2>
+        <p id="overlay-desc" style="margin-bottom: 30px;">시간이 초과되었습니다.</p>
+        <button class="btn-retry" onclick="resetGame()">다시 도전</button>
+    </div>
+
+    <!-- GDD Modal -->
+    <div class="overlay" id="gdd-modal" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);">
+        <div class="modal-content" style="background: var(--panel-bg); color: var(--text-main); margin-bottom: 0;">
+            <button class="close-modal" onclick="closeGDD()"><i class="ri-close-line"></i></button>
+            <div class="markdown-body" id="gdd-content">불러오는 중...</div>
+        </div>
+    </div>
+
+    <script>
+        // Game Config
+        let timeLeft = 180;
+        let strikes = 0;
+        let solvedModules = 0;
+        let totalModules = 2;
+        let timerId = null;
+        let bombConfig = null;
+
+        function generateConfig() {
+            // Seed based on current time to match across devices if they start at the same time
+            // For a static site, we'll just random it for each session.
+            const colors = ['#ef4444', '#3b82f6', '#f59e0b', '#f8fafc', '#111827']; // Red, Blue, Yellow, White, Black
+            const colorNames = ['빨간색', '파란색', '노란색', '흰색', '검은색'];
+            
+            // Wire config
+            const numWires = 3 + Math.floor(Math.random() * 3); // 3-5 wires
+            let wires = [];
+            for(let i=0; i<numWires; i++) {
+                let r = Math.floor(Math.random() * 5);
+                wires.push({ color: colors[r], name: colorNames[r] });
+            }
+
+            // Target wire logic
+            let targetWireIndex = 0;
+            if (numWires === 3) {
+                if (!wires.find(w => w.name === '빨간색')) targetWireIndex = 1;
+                else if (wires[numWires-1].name === '흰색') targetWireIndex = 2;
+                else if (wires.filter(w => w.name === '파란색').length > 1) targetWireIndex = wires.findLastIndex(w => w.name === '파란색');
+                else targetWireIndex = 2;
+            } else if (numWires === 4) {
+                if (wires.filter(w => w.name === '빨간색').length > 1) targetWireIndex = wires.findLastIndex(w => w.name === '빨간색');
+                else if (wires[numWires-1].name === '노란색' && !wires.find(w => w.name === '빨간색')) targetWireIndex = 0;
+                else if (wires.filter(w => w.name === '파란색').length === 1) targetWireIndex = 0;
+                else targetWireIndex = 1;
+            } else {
+                if (wires[numWires-1].name === '검은색') targetWireIndex = 3;
+                else if (wires.filter(w => w.name === '빨간색').length === 1 && wires.filter(w => w.name === '노란색').length > 1) targetWireIndex = 0;
+                else if (!wires.find(w => w.name === '검은색')) targetWireIndex = 1;
+                else targetWireIndex = 3;
+            }
+
+            // Keypad config
+            const symbols = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ'];
+            let selectedSymbols = symbols.sort(() => Math.random() - 0.5).slice(0, 4);
+            let displayOrder = [...selectedSymbols].sort((a, b) => symbols.indexOf(a) - symbols.indexOf(b));
+
+            return {
+                wires: wires,
+                targetWire: targetWireIndex,
+                keypad: {
+                    all: selectedSymbols, // Shuffled for buttons
+                    order: displayOrder // Sorted based on original symbols array for manual
+                }
+            };
+        }
+
+        function startAs(role) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${role}`).classList.add('active');
+            
+            if (!timerId) {
+                timerId = setInterval(updateTimer, 1000);
+            }
+        }
+
+        function showStartScreen() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-start').classList.add('active');
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                explode("시간 초과!");
+                return;
+            }
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById('timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function explode(reason) {
+            clearInterval(timerId);
+            document.getElementById('overlay-title').innerText = "폭발!";
+            document.getElementById('overlay-desc').innerText = reason;
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function solve() {
+            solvedModules++;
+            if (solvedModules === totalModules) {
+                clearInterval(timerId);
+                document.getElementById('overlay-title').innerText = "해체 성공!";
+                document.getElementById('overlay-title').style.color = "var(--success)";
+                document.getElementById('overlay-desc').innerText = "무사히 임무를 마쳤습니다.";
+                document.getElementById('overlay').classList.add('active');
+            }
+        }
+
+        function addStrike() {
+            strikes++;
+            if (strikes <= 3) {
+                document.getElementById(`strike-${strikes}`).classList.add('active');
+            }
+            if (strikes >= 3) {
+                explode("조작 실수로 인한 과부하!");
+            }
+        }
+
+        function resetGame() {
+            clearInterval(timerId);
+            timerId = null;
+            timeLeft = 180;
+            strikes = 0;
+            solvedModules = 0;
+            bombConfig = generateConfig();
+            
+            document.getElementById('timer').innerText = "03:00";
+            document.querySelectorAll('.strike').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.module').forEach(m => m.classList.remove('solved'));
+            document.getElementById('overlay').classList.remove('active');
+            
+            renderBomb();
+            renderManual();
+            showStartScreen();
+        }
+
+        function renderBomb() {
+            // Wires
+            const wireCont = document.getElementById('wire-container');
+            wireCont.innerHTML = '';
+            bombConfig.wires.forEach((w, idx) => {
+                const el = document.createElement('div');
+                el.className = 'wire';
+                el.style.backgroundColor = w.color;
+                el.onclick = () => {
+                    if (el.classList.contains('cut')) return;
+                    el.classList.add('cut');
+                    if (idx === bombConfig.targetWire) {
+                        document.getElementById('mod-wires').classList.add('solved');
+                        solve();
+                    } else {
+                        addStrike();
+                    }
+                };
+                wireCont.appendChild(el);
+            });
+
+            // Keypad
+            const keypadCont = document.getElementById('keypad-container');
+            keypadCont.innerHTML = '';
+            let clickOrder = [];
+            bombConfig.keypad.all.forEach(sym => {
+                const btn = document.createElement('button');
+                btn.className = 'key-btn';
+                btn.innerText = sym;
+                btn.onclick = () => {
+                    if (btn.disabled) return;
+                    const expected = bombConfig.keypad.order[clickOrder.length];
+                    if (sym === expected) {
+                        btn.style.backgroundColor = "var(--success)";
+                        btn.disabled = true;
+                        clickOrder.push(sym);
+                        if (clickOrder.length === 4) {
+                            document.getElementById('mod-keypad').classList.add('solved');
+                            solve();
+                        }
+                    } else {
+                        addStrike();
+                    }
+                };
+                keypadCont.appendChild(btn);
+            });
+        }
+
+        function renderManual() {
+            const cont = document.getElementById('manual-content');
+            cont.innerHTML = `
+                <h2>폭탄 해체 매뉴얼 v1.0</h2>
+                <div class="rule-section">
+                    <h3>1. 전선 모듈</h3>
+                    <p>전선 묶음의 개수에 따라 아래 규칙을 적용하세요.</p>
+                    <p><strong>전선이 3개인 경우:</strong></p>
+                    <ul class="rule-list">
+                        <li>빨간색 전선이 없으면, 두 번째 전선을 자른다.</li>
+                        <li>그렇지 않고, 마지막 전선이 흰색이면 마지막 전선을 자른다.</li>
+                        <li>그렇지 않고, 파란색 전선이 한 개 이상이면 마지막 파란색 전선을 자른다.</li>
+                        <li>위의 모든 경우에 해당하지 않으면, 마지막 전선을 자른다.</li>
+                    </ul>
+                    <p><strong>전선이 4개인 경우:</strong></p>
+                    <ul class="rule-list">
+                        <li>빨간색 전선이 한 개보다 많으면, 마지막 빨간색 전선을 자른다.</li>
+                        <li>그렇지 않고, 마지막 전선이 노란색이고 빨간색 전선이 없으면 첫 번째 전선을 자른다.</li>
+                        <li>그렇지 않고, 파란색 전선이 정확히 한 개 있으면 첫 번째 전선을 자른다.</li>
+                        <li>그렇지 않으면 두 번째 전선을 자른다.</li>
+                    </ul>
+                    <p><strong>전선이 5개인 경우:</strong></p>
+                    <ul class="rule-list">
+                        <li>마지막 전선이 검은색이면 네 번째 전선을 자른다.</li>
+                        <li>그렇지 않고, 빨간색 전선이 한 개이고 노란색 전선이 한 개보다 많으면 첫 번째 전선을 자른다.</li>
+                        <li>그렇지 않고, 검은색 전선이 없으면 두 번째 전선을 자른다.</li>
+                        <li>그렇지 않으면 네 번째 전선을 자른다.</li>
+                    </ul>
+                </div>
+                <div class="rule-section">
+                    <h3>2. 기호 키패드</h3>
+                    <p>키패드에 표시된 4개의 기호를 확인하세요. 아래에 정의된 '사전순'에 따라 기호를 순서대로 눌러야 합니다.</p>
+                    <p><strong>기호 우선순위:</strong></p>
+                    <p style="font-size: 1.5rem; text-align: center; margin: 10px 0;">α > β > γ > δ > ε > ζ > η > θ</p>
+                    <p>(왼쪽에 있을수록 먼저 눌러야 함)</p>
+                </div>
+            `;
+        }
+
+        // --- GDD Modal Logic ---
+        async function openGDD() {
+            const modal = document.getElementById('gdd-modal');
+            const content = document.getElementById('gdd-content');
+            modal.classList.add('active');
+            try {
+                const response = await fetch('./docs/bomb-defusal-gdd.md');
+                if (response.ok) content.innerHTML = marked.parse(await response.text());
+                else content.innerHTML = '<p>기획 문서를 불러오지 못했습니다.</p>';
+            } catch (e) { content.innerHTML = '<p>오류 발생</p>'; }
+        }
+        function closeGDD() { document.getElementById('gdd-modal').classList.remove('active'); }
+
+        window.onload = resetGame;
+    </script>
+</body>
+</html>
