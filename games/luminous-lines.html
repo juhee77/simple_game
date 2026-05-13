@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>루미너스 라인 - Luminous Lines</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #05070a;
+            --p1-color: #00f2ff;
+            --p2-color: #ff007b;
+            --text-main: #f8fafc;
+            --grid-color: #1e293b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            touch-action: none;
+        }
+
+        /* Header */
+        header {
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+        h1 { font-size: 1.2rem; font-weight: 800; color: #fff; letter-spacing: 1px; }
+        .header-actions { display: flex; gap: 10px; }
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: none; color: white;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            font-size: 1.1rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Scoreboard */
+        .scoreboard {
+            display: flex; justify-content: space-around; padding: 15px;
+            background: rgba(15, 23, 42, 0.5); border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .player-info { text-align: center; padding: 10px 20px; border-radius: 12px; transition: all 0.3s; }
+        .player-info.p1.active { background: rgba(0, 242, 255, 0.15); box-shadow: 0 0 15px rgba(0, 242, 255, 0.3); border: 1px solid var(--p1-color); }
+        .player-info.p2.active { background: rgba(255, 0, 123, 0.15); box-shadow: 0 0 15px rgba(255, 0, 123, 0.3); border: 1px solid var(--p2-color); }
+        .p-name { font-size: 0.8rem; font-weight: 800; margin-bottom: 5px; opacity: 0.6; }
+        .active .p-name { opacity: 1; }
+        .p-score { font-size: 2rem; font-weight: 800; }
+        .p1 .p-score { color: var(--p1-color); }
+        .p2 .p-score { color: var(--p2-color); }
+
+        /* Game Board Area */
+        #board-container {
+            flex: 1;
+            position: relative;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+            padding: 10px;
+        }
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            touch-action: none;
+        }
+
+        /* Notifications */
+        #turn-msg {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            padding: 8px 20px; border-radius: 20px; background: rgba(0,0,0,0.7);
+            font-weight: 800; font-size: 0.9rem; pointer-events: none; opacity: 0; transition: opacity 0.3s;
+        }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+            z-index: 1000;
+        }
+        .overlay.active { display: flex; }
+        .modal-content {
+            background: #1e293b; width: 90%; max-width: 500px;
+            border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.1);
+            color: #cbd5e1; line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>LUMINOUS LINES</h1>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openGDD()" title="기획서 보기"><i class="ri-book-read-line"></i></button>
+            <button class="icon-btn" onclick="initGame()" title="게임 재시작"><i class="ri-refresh-line"></i></button>
+            <button class="icon-btn" onclick="location.href='../index.html'" title="로비로 돌아가기"><i class="ri-home-4-line"></i></button>
+        </div>
+    </header>
+
+    <div class="scoreboard">
+        <div class="player-info p1" id="info-p1">
+            <div class="p-name">PLAYER 1</div>
+            <div class="p-score" id="score-p1">0</div>
+        </div>
+        <div class="player-info p2" id="info-p2">
+            <div class="p-name">PLAYER 2</div>
+            <div class="p-score" id="score-p2">0</div>
+        </div>
+    </div>
+
+    <div id="board-container">
+        <canvas id="canvas"></canvas>
+        <div id="turn-msg">BONUS TURN!</div>
+    </div>
+
+    <!-- Modals -->
+    <div class="overlay" id="gdd-modal">
+        <div class="modal-content">
+            <div class="markdown-body" id="gdd-content">불러오는 중...</div>
+            <button onclick="closeGDD()" style="margin-top:20px; width:100%; padding:10px; border-radius:10px; background:var(--p1-color); border:none; font-weight:800; cursor:pointer;">확인</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="gameover-overlay">
+        <div style="text-align:center;">
+            <h2 id="winner-text" style="font-size:3rem; margin-bottom:10px;">P1 WINS!</h2>
+            <p style="color:#94a3b8; margin-bottom:20px;">영역 점유 대결이 끝났습니다.</p>
+            <button onclick="initGame()" style="padding:15px 40px; border-radius:50px; background:#fff; color:#000; border:none; font-weight:800; cursor:pointer;">다시 한 판!</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game Settings
+        const GRID_SIZE = 5; // 5x5 cells = 6x6 dots
+        const DOT_COUNT = GRID_SIZE + 1;
+        let CELL_SIZE;
+        let OFFSET_X, OFFSET_Y;
+        
+        let activePlayer = 1;
+        let scores = [0, 0];
+        let edges = []; // { p1: {r, c}, p2: {r, c}, owner: 0, hover: false }
+        let cells = []; // { r, c, owner: 0, items: null }
+        
+        let touchStart = null;
+        let touchEnd = null;
+
+        function initGame() {
+            scores = [0, 0];
+            activePlayer = 1;
+            edges = [];
+            cells = [];
+            document.getElementById('gameover-overlay').classList.remove('active');
+            
+            // Build edges
+            for (let r = 0; r < DOT_COUNT; r++) {
+                for (let c = 0; c < DOT_COUNT; c++) {
+                    if (c < GRID_SIZE) edges.push({ r1: r, c1: c, r2: r, c2: c + 1, owner: 0, type: 'h' });
+                    if (r < GRID_SIZE) edges.push({ r1: r, c1: c, r2: r + 1, c2: c, owner: 0, type: 'v' });
+                }
+            }
+            
+            // Build cells
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    let item = null;
+                    if (Math.random() < 0.2) item = 'x2';
+                    cells.push({ r, c, owner: 0, item });
+                }
+            }
+            
+            resize();
+            updateUI();
+            draw();
+        }
+
+        function resize() {
+            const container = document.getElementById('board-container');
+            const size = Math.min(container.clientWidth, container.clientHeight) * 0.9;
+            canvas.width = size;
+            canvas.height = size;
+            
+            CELL_SIZE = size / (DOT_COUNT + 1);
+            OFFSET_X = CELL_SIZE;
+            OFFSET_Y = CELL_SIZE;
+            draw();
+        }
+
+        function updateUI() {
+            document.getElementById('score-p1').innerText = scores[0];
+            document.getElementById('score-p2').innerText = scores[1];
+            document.getElementById('info-p1').classList.toggle('active', activePlayer === 1);
+            document.getElementById('info-p2').classList.toggle('active', activePlayer === 2);
+        }
+
+        // --- Interaction ---
+        canvas.addEventListener('touchstart', e => {
+            const rect = canvas.getBoundingClientRect();
+            touchStart = { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+        });
+
+        canvas.addEventListener('touchmove', e => {
+            const rect = canvas.getBoundingClientRect();
+            touchEnd = { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+            e.preventDefault();
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', () => {
+            if (!touchStart || !touchEnd) return;
+            
+            // Calculate swipe vector
+            const dx = touchEnd.x - touchStart.x;
+            const dy = touchEnd.y - touchStart.y;
+            const midX = (touchStart.x + touchEnd.x) / 2;
+            const midY = (touchStart.y + touchEnd.y) / 2;
+            
+            // Find closest edge to the midpoint of swipe
+            let closestEdge = null;
+            let minDist = Infinity;
+            
+            edges.forEach(edge => {
+                if (edge.owner !== 0) return;
+                const edgeMid = getEdgeMidpoint(edge);
+                const d = Math.hypot(edgeMid.x - midX, edgeMid.y - midY);
+                if (d < minDist && d < CELL_SIZE) {
+                    minDist = d;
+                    closestEdge = edge;
+                }
+            });
+            
+            if (closestEdge) {
+                makeMove(closestEdge);
+            }
+            
+            touchStart = null;
+            touchEnd = null;
+        });
+
+        // Mouse support for testing
+        canvas.addEventListener('mousedown', e => {
+            const rect = canvas.getBoundingClientRect();
+            touchStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        });
+        canvas.addEventListener('mouseup', e => {
+            const rect = canvas.getBoundingClientRect();
+            touchEnd = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            
+            // Re-use swipe logic
+            const midX = (touchStart.x + touchEnd.x) / 2;
+            const midY = (touchStart.y + touchEnd.y) / 2;
+            let closestEdge = null;
+            let minDist = Infinity;
+            edges.forEach(edge => {
+                if (edge.owner !== 0) return;
+                const edgeMid = getEdgeMidpoint(edge);
+                const d = Math.hypot(edgeMid.x - midX, edgeMid.y - midY);
+                if (d < minDist && d < CELL_SIZE) {
+                    minDist = d;
+                    closestEdge = edge;
+                }
+            });
+            if (closestEdge) makeMove(closestEdge);
+            touchStart = null; touchEnd = null;
+        });
+
+        function getEdgeMidpoint(edge) {
+            const x1 = OFFSET_X + edge.c1 * CELL_SIZE;
+            const y1 = OFFSET_Y + edge.r1 * CELL_SIZE;
+            const x2 = OFFSET_X + edge.c2 * CELL_SIZE;
+            const y2 = OFFSET_Y + edge.r2 * CELL_SIZE;
+            return { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
+        }
+
+        function makeMove(edge) {
+            edge.owner = activePlayer;
+            let captured = checkCapture();
+            
+            if (!captured) {
+                activePlayer = activePlayer === 1 ? 2 : 1;
+            } else {
+                showBonusMsg();
+            }
+            
+            updateUI();
+            draw();
+            checkGameOver();
+        }
+
+        function checkCapture() {
+            let capturedAny = false;
+            cells.forEach(cell => {
+                if (cell.owner !== 0) return;
+                
+                // Find all 4 edges of this cell
+                const top = edges.find(e => e.type === 'h' && e.r1 === cell.r && e.c1 === cell.c);
+                const bottom = edges.find(e => e.type === 'h' && e.r1 === cell.r + 1 && e.c1 === cell.c);
+                const left = edges.find(e => e.type === 'v' && e.r1 === cell.r && e.c1 === cell.c);
+                const right = edges.find(e => e.type === 'v' && e.r1 === cell.r && e.c1 === cell.c + 1);
+                
+                if (top.owner && bottom.owner && left.owner && right.owner) {
+                    cell.owner = activePlayer;
+                    scores[activePlayer - 1] += (cell.item === 'x2' ? 2 : 1);
+                    capturedAny = true;
+                }
+            });
+            return capturedAny;
+        }
+
+        function showBonusMsg() {
+            const msg = document.getElementById('turn-msg');
+            msg.style.opacity = 1;
+            setTimeout(() => msg.style.opacity = 0, 800);
+        }
+
+        function checkGameOver() {
+            if (cells.every(c => c.owner !== 0)) {
+                const overlay = document.getElementById('gameover-overlay');
+                const text = document.getElementById('winner-text');
+                overlay.classList.add('active');
+                if (scores[0] > scores[1]) {
+                    text.innerText = "PLAYER 1 WINS!";
+                    text.style.color = 'var(--p1-color)';
+                } else if (scores[1] > scores[0]) {
+                    text.innerText = "PLAYER 2 WINS!";
+                    text.style.color = 'var(--p2-color)';
+                } else {
+                    text.innerText = "DRAW!";
+                    text.style.color = '#fff';
+                }
+            }
+        }
+
+        // --- Rendering ---
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw Captured Cells
+            cells.forEach(cell => {
+                if (cell.owner === 0 && !cell.item) return;
+                
+                const x = OFFSET_X + cell.c * CELL_SIZE;
+                const y = OFFSET_Y + cell.r * CELL_SIZE;
+                
+                if (cell.owner !== 0) {
+                    ctx.fillStyle = cell.owner === 1 ? 'rgba(0, 242, 255, 0.2)' : 'rgba(255, 0, 123, 0.2)';
+                    ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                    
+                    // Draw Initials
+                    ctx.fillStyle = cell.owner === 1 ? varColor('--p1-color') : varColor('--p2-color');
+                    ctx.font = `800 ${CELL_SIZE * 0.4}px Outfit`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(cell.owner === 1 ? 'P1' : 'P2', x + CELL_SIZE/2, y + CELL_SIZE/2);
+                }
+
+                if (cell.item === 'x2' && cell.owner === 0) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.font = `800 ${CELL_SIZE * 0.3}px Outfit`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText('x2', x + CELL_SIZE/2, y + CELL_SIZE/2 + 5);
+                }
+            });
+
+            // Draw Edges
+            edges.forEach(edge => {
+                const x1 = OFFSET_X + edge.c1 * CELL_SIZE;
+                const y1 = OFFSET_Y + edge.r1 * CELL_SIZE;
+                const x2 = OFFSET_X + edge.c2 * CELL_SIZE;
+                const y2 = OFFSET_Y + edge.r2 * CELL_SIZE;
+                
+                ctx.lineWidth = 4;
+                if (edge.owner === 0) {
+                    ctx.strokeStyle = varColor('--grid-color');
+                    ctx.globalAlpha = 0.3;
+                } else {
+                    ctx.strokeStyle = edge.owner === 1 ? varColor('--p1-color') : varColor('--p2-color');
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = ctx.strokeStyle;
+                }
+                
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            });
+
+            // Draw Dots
+            for (let r = 0; r < DOT_COUNT; r++) {
+                for (let c = 0; c < DOT_COUNT; c++) {
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(OFFSET_X + c * CELL_SIZE, OFFSET_Y + r * CELL_SIZE, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function varColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        async function openGDD() {
+            const modal = document.getElementById('gdd-modal');
+            const content = document.getElementById('gdd-content');
+            modal.classList.add('active');
+            const response = await fetch('./docs/luminous-lines-gdd.md');
+            content.innerHTML = marked.parse(await response.text());
+        }
+        function closeGDD() { document.getElementById('gdd-modal').classList.remove('active'); }
+
+        window.onload = initGame;
+        window.addEventListener('resize', resize);
+    </script>
+</body>
+</html>
