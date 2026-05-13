@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스카이 도그파이트 - Sky Dogfight</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #020617;
+            --radar-grid: #1e293b;
+            --p1-color: #38bdf8;
+            --p2-color: #fbbf24;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --panel-bg: rgba(15, 23, 42, 0.8);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; letter-spacing: 2px; color: var(--p1-color); }
+        .header-actions { display: flex; gap: 10px; }
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: none; color: white;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            font-size: 1.1rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* Game Area */
+        #game-view {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            overflow: hidden;
+        }
+
+        canvas {
+            background-image: 
+                linear-gradient(var(--radar-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--radar-grid) 1px, transparent 1px);
+            background-size: 50px 50px;
+            box-shadow: 0 0 50px rgba(56, 189, 248, 0.1);
+        }
+
+        /* UI Overlays */
+        .status-panel {
+            position: absolute;
+            top: 20px;
+            padding: 15px 25px;
+            background: var(--panel-bg);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 40px;
+            backdrop-filter: blur(10px);
+        }
+        .hp-bar { width: 100px; height: 8px; background: #334155; border-radius: 4px; margin-top: 5px; position: relative; overflow: hidden; }
+        .hp-fill { height: 100%; transition: width 0.5s ease; }
+        .p1-hp { background: var(--p1-color); }
+        .p2-hp { background: var(--p2-color); }
+
+        /* Action Controls */
+        .controls-overlay {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 50;
+        }
+
+        .player-turn-info {
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 800;
+            color: var(--p1-color);
+            border: 2px solid var(--p1-color);
+        }
+        .turn-p2 { color: var(--p2-color); border-color: var(--p2-color); }
+
+        .maneuver-cards {
+            display: flex;
+            gap: 15px;
+        }
+        .card {
+            width: 100px; height: 140px;
+            background: var(--panel-bg);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            padding: 10px;
+        }
+        .card:hover { border-color: white; transform: translateY(-10px); background: rgba(255,255,255,0.1); }
+        .card.selected { border-color: var(--p1-color); box-shadow: 0 0 15px var(--p1-color); background: rgba(56, 189, 248, 0.1); }
+        .turn-p2 .card.selected { border-color: var(--p2-color); box-shadow: 0 0 15px var(--p2-color); background: rgba(251, 191, 36, 0.1); }
+
+        .card-icon { font-size: 2rem; margin-bottom: 10px; }
+        .card-name { font-weight: 800; font-size: 0.9rem; margin-bottom: 5px; }
+        .card-desc { font-size: 0.7rem; color: var(--text-muted); }
+
+        .btn-confirm {
+            background: white; color: black; border: none; padding: 12px 40px;
+            border-radius: 50px; font-weight: 800; font-size: 1.1rem; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-confirm:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Modals */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .overlay.active { opacity: 1; pointer-events: all; }
+        
+        .modal-content {
+            background: #0f172a; width: 90%; max-width: 700px; max-height: 85vh;
+            border-radius: 20px; padding: 30px; overflow-y: auto; position: relative;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+
+        /* Game Notifications */
+        .notify {
+            position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 4rem; font-family: 'Orbitron', sans-serif; font-weight: 900;
+            color: white; text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 100;
+        }
+
+        @media (max-width: 600px) {
+            .card { width: 80px; height: 110px; }
+            .card-icon { font-size: 1.5rem; }
+            .card-name { font-size: 0.8rem; }
+            .card-desc { display: none; }
+            .status-panel { gap: 20px; padding: 10px 15px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>SKY DOGFIGHT</h1>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openGDD()" title="기획서 보기"><i class="ri-book-read-line"></i></button>
+            <button class="icon-btn" onclick="initGame()" title="게임 재시작"><i class="ri-refresh-line"></i></button>
+            <button class="icon-btn" onclick="location.href='../index.html'" title="로비로 돌아가기"><i class="ri-home-4-line"></i></button>
+        </div>
+    </header>
+
+    <div id="game-view">
+        <div class="status-panel">
+            <div>
+                <div style="font-weight: 800; color: var(--p1-color);">PLAYER 1</div>
+                <div class="hp-bar"><div class="hp-fill p1-hp" id="p1-hp-fill" style="width: 100%;"></div></div>
+            </div>
+            <div>
+                <div style="font-weight: 800; color: var(--p2-color); text-align: right;">PLAYER 2</div>
+                <div class="hp-bar"><div class="hp-fill p2-hp" id="p2-hp-fill" style="width: 100%;"></div></div>
+            </div>
+        </div>
+
+        <div class="notify" id="notify">ENGAGED!</div>
+
+        <canvas id="canvas"></canvas>
+
+        <div class="controls-overlay" id="controls-overlay">
+            <div class="player-turn-info" id="turn-info">PLAYER 1: 기동 선택</div>
+            <div class="maneuver-cards" id="maneuver-cards">
+                <div class="card" onclick="selectCard('straight')">
+                    <div class="card-icon"><i class="ri-arrow-up-line"></i></div>
+                    <div class="card-name">직진</div>
+                    <div class="card-desc">앞으로 150px 이동</div>
+                </div>
+                <div class="card" onclick="selectCard('turn-left')">
+                    <div class="card-icon"><i class="ri-corner-up-left-line"></i></div>
+                    <div class="card-name">좌선회</div>
+                    <div class="card-desc">45도 왼쪽으로 회전</div>
+                </div>
+                <div class="card" onclick="selectCard('turn-right')">
+                    <div class="card-icon"><i class="ri-corner-up-right-line"></i></div>
+                    <div class="card-name">우선회</div>
+                    <div class="card-desc">45도 오른쪽으로 회전</div>
+                </div>
+            </div>
+            <button class="btn-confirm" id="confirm-btn" onclick="confirmMove()" disabled>기동 확정</button>
+        </div>
+    </div>
+
+    <!-- Pass Device Overlay -->
+    <div class="overlay" id="pass-overlay">
+        <div style="text-align: center;">
+            <h2 style="font-size: 2.5rem; margin-bottom: 10px; color: var(--p2-color);" id="pass-title">기기를 넘겨주세요</h2>
+            <p style="color: #94a3b8; margin-bottom: 30px;">상대방이 기동을 보지 못하게 하세요.</p>
+            <button class="btn-confirm" onclick="startTurn()">준비 완료</button>
+        </div>
+    </div>
+
+    <!-- GDD Modal -->
+    <div class="overlay" id="gdd-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeGDD()"><i class="ri-close-line"></i></button>
+            <div class="markdown-body" id="gdd-content">불러오는 중...</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const notifyEl = document.getElementById('notify');
+        const turnInfo = document.getElementById('turn-info');
+        const confirmBtn = document.getElementById('confirm-btn');
+        const passOverlay = document.getElementById('pass-overlay');
+        const passTitle = document.getElementById('pass-title');
+
+        let width, height;
+        let p1 = { x: 0, y: 0, angle: 0, hp: 100, color: '#38bdf8', nextMove: null, history: [] };
+        let p2 = { x: 0, y: 0, angle: 0, hp: 100, color: '#fbbf24', nextMove: null, history: [] };
+        let activePlayer = 1;
+        let gameState = 'PLANNING'; // PLANNING, ANIMATING, GAMEOVER
+        let particles = [];
+
+        function initGame() {
+            resize();
+            p1 = { x: width * 0.2, y: height * 0.5, angle: 0, hp: 100, color: '#38bdf8', nextMove: null, history: [] };
+            p2 = { x: width * 0.8, y: height * 0.5, angle: Math.PI, hp: 100, color: '#fbbf24', nextMove: null, history: [] };
+            activePlayer = 1;
+            gameState = 'PLANNING';
+            updateUI();
+            requestAnimationFrame(animate);
+        }
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function selectCard(move) {
+            if (gameState !== 'PLANNING') return;
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(c => c.classList.remove('selected'));
+            
+            let moveIdx = move === 'straight' ? 0 : (move === 'turn-left' ? 1 : 2);
+            cards[moveIdx].classList.add('selected');
+            
+            if (activePlayer === 1) p1.nextMove = move;
+            else p2.nextMove = move;
+            
+            confirmBtn.disabled = false;
+        }
+
+        function confirmMove() {
+            if (activePlayer === 1) {
+                activePlayer = 2;
+                passTitle.innerText = "PLAYER 2: 기기 전달";
+                passTitle.style.color = p2.color;
+                passOverlay.classList.add('active');
+            } else {
+                executeMoves();
+            }
+        }
+
+        function startTurn() {
+            passOverlay.classList.remove('active');
+            updateUI();
+        }
+
+        function updateUI() {
+            turnInfo.innerText = `PLAYER ${activePlayer}: 기동 선택`;
+            turnInfo.className = `player-turn-info ${activePlayer === 2 ? 'turn-p2' : ''}`;
+            confirmBtn.disabled = true;
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            
+            document.getElementById('p1-hp-fill').style.width = p1.hp + '%';
+            document.getElementById('p2-hp-fill').style.width = p2.hp + '%';
+        }
+
+        async function executeMoves() {
+            gameState = 'ANIMATING';
+            document.getElementById('controls-overlay').style.display = 'none';
+            
+            notifyEl.innerText = "MANEUVER!";
+            notifyEl.style.opacity = 1;
+            setTimeout(() => notifyEl.style.opacity = 0, 1000);
+
+            // Step 1: Record History & Calculate target positions
+            const steps = 60;
+            const p1Target = calculateTarget(p1);
+            const p2Target = calculateTarget(p2);
+
+            for (let i = 0; i < steps; i++) {
+                moveTowards(p1, p1Target, 1 / (steps - i));
+                moveTowards(p2, p2Target, 1 / (steps - i));
+                p1.history.push({x: p1.x, y: p1.y});
+                p2.history.push({x: p2.x, y: p2.y});
+                if (p1.history.length > 20) p1.history.shift();
+                if (p2.history.length > 20) p2.history.shift();
+                await new Promise(r => setTimeout(r, 16));
+            }
+
+            // Step 2: Combat Check
+            checkCombat();
+
+            // Step 3: Check Game Over
+            if (p1.hp <= 0 || p2.hp <= 0) {
+                gameState = 'GAMEOVER';
+                notifyEl.innerText = p1.hp <= 0 ? "P2 VICTORIOUS" : "P1 VICTORIOUS";
+                notifyEl.style.opacity = 1;
+            } else {
+                activePlayer = 1;
+                gameState = 'PLANNING';
+                document.getElementById('controls-overlay').style.display = 'flex';
+                updateUI();
+            }
+        }
+
+        function calculateTarget(p) {
+            let nextAngle = p.angle;
+            let dist = 150;
+            if (p.nextMove === 'turn-left') {
+                nextAngle -= Math.PI / 4;
+                dist = 100;
+            } else if (p.nextMove === 'turn-right') {
+                nextAngle += Math.PI / 4;
+                dist = 100;
+            }
+            return {
+                x: p.x + Math.cos(nextAngle) * dist,
+                y: p.y + Math.sin(nextAngle) * dist,
+                angle: nextAngle
+            };
+        }
+
+        function moveTowards(p, target, ratio) {
+            p.x += (target.x - p.x) * ratio;
+            p.y += (target.y - p.y) * ratio;
+            p.angle += (target.angle - p.angle) * ratio;
+            
+            // Keep in bounds
+            p.x = Math.max(20, Math.min(width - 20, p.x));
+            p.y = Math.max(20, Math.min(height - 20, p.y));
+        }
+
+        function checkCombat() {
+            const p1Attack = isAtkInRange(p1, p2);
+            const p2Attack = isAtkInRange(p2, p1);
+
+            if (p1Attack) {
+                p2.hp -= 20;
+                createParticles(p2.x, p2.y, p1.color);
+            }
+            if (p2Attack) {
+                p1.hp -= 20;
+                createParticles(p1.x, p1.y, p2.color);
+            }
+
+            if (p1Attack || p2Attack) {
+                notifyEl.innerText = "ENGAGED!";
+                notifyEl.style.opacity = 1;
+                setTimeout(() => notifyEl.style.opacity = 0, 1000);
+            }
+            updateUI();
+        }
+
+        function isAtkInRange(attacker, target) {
+            const dist = Math.hypot(target.x - attacker.x, target.y - attacker.y);
+            if (dist > 300) return false;
+            
+            const angleToTarget = Math.atan2(target.y - attacker.y, target.x - attacker.x);
+            let angleDiff = Math.abs(attacker.angle - angleToTarget);
+            while (angleDiff > Math.PI) angleDiff = Math.abs(angleDiff - 2 * Math.PI);
+            
+            return angleDiff < Math.PI / 6; // 30 degree cone
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x, y, 
+                    dx: (Math.random() - 0.5) * 10,
+                    dy: (Math.random() - 0.5) * 10,
+                    life: 1, color
+                });
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw Contrails
+            drawHistory(p1);
+            drawHistory(p2);
+
+            // Draw Planes
+            drawPlane(p1);
+            drawPlane(p2);
+
+            // Draw Particles
+            particles.forEach((p, i) => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+                p.x += p.dx; p.y += p.dy; p.life -= 0.02;
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+            ctx.globalAlpha = 1;
+
+            requestAnimationFrame(animate);
+        }
+
+        function drawPlane(p) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle);
+            
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+            ctx.fillStyle = p.color;
+            
+            // Simple triangle plane
+            ctx.beginPath();
+            ctx.moveTo(15, 0);
+            ctx.lineTo(-10, -10);
+            ctx.lineTo(-5, 0);
+            ctx.lineTo(-10, 10);
+            ctx.closePath();
+            ctx.fill();
+
+            // Wing line
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(-5, -15); ctx.lineTo(-5, 15); ctx.stroke();
+            
+            // Attack Cone (Only in planning)
+            if (gameState === 'PLANNING' && ((activePlayer === 1 && p === p1) || (activePlayer === 2 && p === p2))) {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = 0.1;
+                ctx.beginPath();
+                ctx.moveTo(0,0);
+                ctx.arc(0,0, 300, -Math.PI/6, Math.PI/6);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        function drawHistory(p) {
+            ctx.strokeStyle = p.color;
+            ctx.globalAlpha = 0.3;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            p.history.forEach((pos, i) => {
+                if (i === 0) ctx.moveTo(pos.x, pos.y);
+                else ctx.lineTo(pos.x, pos.y);
+            });
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        }
+
+        async function openGDD() {
+            const modal = document.getElementById('gdd-modal');
+            const content = document.getElementById('gdd-content');
+            modal.classList.add('active');
+            try {
+                const response = await fetch('./docs/sky-dogfight-gdd.md');
+                if (response.ok) {
+                    content.innerHTML = marked.parse(await response.text());
+                } else {
+                    content.innerHTML = '<p>기획 문서를 불러오지 못했습니다.</p>';
+                }
+            } catch (e) {
+                content.innerHTML = '<p>기획 문서를 불러오는 중 오류가 발생했습니다.</p>';
+            }
+        }
+        function closeGDD() { document.getElementById('gdd-modal').classList.remove('active'); }
+
+        window.onload = initGame;
+        window.addEventListener('resize', resize);
+    </script>
+</body>
+</html>

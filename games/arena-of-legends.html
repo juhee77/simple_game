@@ -27,7 +27,7 @@
 
         body {
             background-color: var(--bg-color); color: var(--text-main);
-            min-height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+            min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto;
         }
 
         /* Header */
@@ -165,6 +165,21 @@
             20%, 80% { transform: translate3d(2px, 0, 0); }
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 1rem; }
+            .game-container { padding: 5px; gap: 5px; }
+            .opponent-area, .player-area { padding: 10px; }
+            .hp-value { font-size: 1.4rem; }
+            .market-grid { grid-template-columns: repeat(2, 1fr); }
+            .card { width: 70px; min-width: 70px; height: 100px; padding: 5px; }
+            .card-name { font-size: 0.7rem; }
+            .card-desc { font-size: 0.6rem; }
+            .gold-display { font-size: 1rem; padding: 5px 15px; }
+            .btn-end-turn { padding: 10px; font-size: 1rem; }
+            .pass-device h2 { font-size: 1.8rem; }
+            .modal-content { padding: 20px; width: 95%; }
         }
     </style>
 </head>

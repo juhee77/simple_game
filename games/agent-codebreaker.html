@@ -40,6 +40,7 @@
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* Header */
@@ -378,9 +379,17 @@
         .game-over-msg.lose { border-color: #ef4444; color: #ef4444; }
         
         @media (max-width: 600px) {
-            .board { grid-template-columns: repeat(5, 1fr); padding: 0 10px; gap: 5px; }
-            .tile { font-size: 0.9rem; border-radius: 6px; }
-            .status-bar { flex-direction: row; flex-wrap: wrap; gap: 10px; padding: 10px; }
+            header h1 { font-size: 1.1rem; }
+            .board { grid-template-columns: repeat(5, 1fr); padding: 0 10px; gap: 5px; margin-bottom: 20px; }
+            .tile { font-size: 0.8rem; border-radius: 6px; }
+            .status-bar { flex-direction: row; flex-wrap: wrap; gap: 10px; padding: 10px; justify-content: space-around; }
+            .status-item { flex: 1; min-width: 80px; }
+            .status-value { font-size: 1.1rem; }
+            .hinter-btn { padding: 8px 12px; font-size: 0.8rem; }
+            .action-buttons { flex-direction: column; gap: 10px; }
+            .btn { padding: 12px; font-size: 0.9rem; }
+            .game-over-msg { width: 85%; padding: 20px; }
+            .game-over-msg h2 { font-size: 1.8rem; }
         }
     </style>
 </head>

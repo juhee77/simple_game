@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>네온 듀얼 - Neon Dual</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #05070a;
+            --p1-color: #00f2ff;
+            --p2-color: #ff007b;
+            --text-main: #f8fafc;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            touch-action: none; /* Disable default touch actions like scroll/zoom */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: fixed; /* Prevent mobile bounce */
+            width: 100%;
+        }
+
+        /* Header (Overlay) */
+        header {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+            pointer-events: none; /* Let clicks pass through to game except buttons */
+        }
+        h1 { 
+            font-size: 1.2rem; font-weight: 800; opacity: 0.5;
+            background: linear-gradient(90deg, var(--p1-color), var(--p2-color));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header-actions { display: flex; gap: 10px; pointer-events: auto; }
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: none; color: white;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            font-size: 1.1rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
+
+        /* Game Canvas */
+        #game-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            background: radial-gradient(circle at center, #0a0f1e 0%, #05070a 100%);
+            display: block;
+            box-shadow: inset 0 0 100px rgba(0, 242, 255, 0.05);
+        }
+
+        /* Score & UI Overlays */
+        .ui-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            text-align: center;
+            z-index: 50;
+        }
+        .score-board {
+            display: flex; gap: 40px; font-size: 4rem; font-weight: 800; opacity: 0.2;
+            margin-bottom: 10px;
+        }
+        .score-p1 { color: var(--p1-color); text-shadow: 0 0 20px var(--p1-color); }
+        .score-p2 { color: var(--p2-color); text-shadow: 0 0 20px var(--p2-color); }
+        
+        .countdown {
+            font-size: 6rem; font-weight: 800; color: white;
+            text-shadow: 0 0 30px rgba(255,255,255,0.5);
+            display: none;
+        }
+
+        /* Modals */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .overlay.active { opacity: 1; pointer-events: all; }
+        
+        .modal-content {
+            background: #1e293b; width: 90%; max-width: 600px; max-height: 80vh;
+            border-radius: 20px; padding: 30px; overflow-y: auto; position: relative;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+        .markdown-body { color: #cbd5e1; line-height: 1.6; }
+        .markdown-body h1, .markdown-body h2 { color: white; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 20px; }
+
+        /* Game Over */
+        .game-over { text-align: center; }
+        .game-over h2 { font-size: 3rem; margin-bottom: 10px; font-weight: 800; }
+        .winner-p1 { color: var(--p1-color); text-shadow: 0 0 20px var(--p1-color); }
+        .winner-p2 { color: var(--p2-color); text-shadow: 0 0 20px var(--p2-color); }
+        .btn-restart { 
+            background: white; color: black; border: none; padding: 15px 40px; 
+            border-radius: 50px; font-weight: 800; font-size: 1.2rem; cursor: pointer; margin-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>NEON DUAL</h1>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openGDD()" title="기획서 보기"><i class="ri-book-read-line"></i></button>
+            <button class="icon-btn" onclick="resetGame()" title="게임 재시작"><i class="ri-refresh-line"></i></button>
+            <button class="icon-btn" onclick="location.href='../index.html'" title="로비로 돌아가기"><i class="ri-home-4-line"></i></button>
+        </div>
+    </header>
+
+    <div id="game-container">
+        <div class="ui-overlay">
+            <div class="score-board">
+                <span class="score-p2" id="score-p2">0</span>
+                <span class="score-p1" id="score-p1">0</span>
+            </div>
+            <div class="countdown" id="countdown">3</div>
+        </div>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <!-- GDD Modal -->
+    <div class="overlay" id="gdd-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeGDD()"><i class="ri-close-line"></i></button>
+            <div class="markdown-body" id="gdd-content">불러오는 중...</div>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div class="overlay" id="gameover-overlay">
+        <div class="game-over">
+            <h2 id="winner-text">PLAYER 1 WINS</h2>
+            <p style="color: #94a3b8;">압도적인 실력차입니다!</p>
+            <button class="btn-restart" onclick="resetGame()">한 판 더!</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreP1El = document.getElementById('score-p1');
+        const scoreP2El = document.getElementById('score-p2');
+        const countdownEl = document.getElementById('countdown');
+        const gameoverOverlay = document.getElementById('gameover-overlay');
+        const winnerText = document.getElementById('winner-text');
+
+        // Game Constants
+        const PADDLE_RADIUS = 35;
+        const BALL_RADIUS = 12;
+        const WIN_SCORE = 5;
+        const BALL_START_SPEED = 5;
+        const BALL_MAX_SPEED = 12;
+
+        let width, height;
+        let p1 = { x: 0, y: 0, color: '#00f2ff', score: 0, touchId: null };
+        let p2 = { x: 0, y: 0, color: '#ff007b', score: 0, touchId: null };
+        let ball = { x: 0, y: 0, dx: 0, dy: 0, speed: BALL_START_SPEED };
+        let particles = [];
+        let ballHistory = [];
+        let gameState = 'START'; // START, PLAYING, SCORING, GAMEOVER
+
+        function init() {
+            resize();
+            resetGame();
+            animate();
+        }
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            // Reset paddle positions to their respective sides
+            p1.x = width / 2; p1.y = height - 100;
+            p2.x = width / 2; p2.y = 100;
+        }
+
+        function resetBall(winner) {
+            ball.x = width / 2;
+            ball.y = height / 2;
+            ball.speed = BALL_START_SPEED;
+            ballHistory = [];
+            
+            // Random direction
+            const angle = (Math.random() * Math.PI / 4) + (winner === 1 ? -Math.PI * 0.75 : Math.PI * 0.25);
+            ball.dx = Math.cos(angle) * ball.speed;
+            ball.dy = Math.sin(angle) * ball.speed;
+
+            if (gameState !== 'GAMEOVER') {
+                startCountdown();
+            }
+        }
+
+        function startCountdown() {
+            gameState = 'SCORING';
+            countdownEl.style.display = 'block';
+            let count = 3;
+            countdownEl.innerText = count;
+            
+            const timer = setInterval(() => {
+                count--;
+                if (count <= 0) {
+                    clearInterval(timer);
+                    countdownEl.style.display = 'none';
+                    gameState = 'PLAYING';
+                } else {
+                    countdownEl.innerText = count;
+                }
+            }, 800);
+        }
+
+        function resetGame() {
+            p1.score = 0;
+            p2.score = 0;
+            updateScoreUI();
+            gameoverOverlay.classList.remove('active');
+            gameState = 'START';
+            resetBall(Math.random() > 0.5 ? 1 : 2);
+        }
+
+        function updateScoreUI() {
+            scoreP1El.innerText = p1.score;
+            scoreP2El.innerText = p2.score;
+        }
+
+        // --- Interaction ---
+        function handleInteraction(id, x, y, isStart) {
+            if (gameState === 'GAMEOVER') return;
+
+            // Decide which paddle to control based on screen half
+            // P2 (Pink) is top half, P1 (Blue) is bottom half
+            if (y < height / 2) {
+                p2.x = x; p2.y = Math.max(PADDLE_RADIUS, Math.min(y, height / 2 - PADDLE_RADIUS));
+            } else {
+                p1.x = x; p1.y = Math.min(height - PADDLE_RADIUS, Math.max(y, height / 2 + PADDLE_RADIUS));
+            }
+        }
+
+        canvas.addEventListener('touchstart', e => {
+            Array.from(e.changedTouches).forEach(t => handleInteraction(t.identifier, t.clientX, t.clientY, true));
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', e => {
+            Array.from(e.touches).forEach(t => handleInteraction(t.identifier, t.clientX, t.clientY, false));
+        }, { passive: false });
+
+        // Mouse support for testing
+        canvas.addEventListener('mousemove', e => {
+            handleInteraction('mouse', e.clientX, e.clientY, false);
+        });
+
+        // --- Game Logic ---
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            // Move ball
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Ball History for Trail
+            ballHistory.push({x: ball.x, y: ball.y});
+            if (ballHistory.length > 10) ballHistory.shift();
+
+            // Wall Collision
+            if (ball.x - BALL_RADIUS < 0 || ball.x + BALL_RADIUS > width) {
+                ball.dx *= -1;
+                createParticles(ball.x, ball.y, '#fff', 5);
+            }
+
+            // Paddle Collision
+            checkPaddleCollision(p1);
+            checkPaddleCollision(p2);
+
+            // Goal Collision
+            if (ball.y < 0) {
+                p1.score++;
+                checkWin(1);
+            } else if (ball.y > height) {
+                p2.score++;
+                checkWin(2);
+            }
+
+            // Particles
+            particles.forEach((p, i) => {
+                p.x += p.dx; p.y += p.dy; p.life -= 0.02;
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+        }
+
+        function checkPaddleCollision(paddle) {
+            const dist = Math.hypot(ball.x - paddle.x, ball.y - paddle.y);
+            if (dist < PADDLE_RADIUS + BALL_RADIUS) {
+                // Collision detected!
+                const angle = Math.atan2(ball.y - paddle.y, ball.x - paddle.x);
+                
+                // Increase speed slightly
+                ball.speed = Math.min(ball.speed + 0.3, BALL_MAX_SPEED);
+                
+                ball.dx = Math.cos(angle) * ball.speed;
+                ball.dy = Math.sin(angle) * ball.speed;
+
+                // Move ball outside paddle to prevent sticking
+                ball.x = paddle.x + Math.cos(angle) * (PADDLE_RADIUS + BALL_RADIUS + 2);
+                ball.y = paddle.y + Math.sin(angle) * (PADDLE_RADIUS + BALL_RADIUS + 2);
+
+                createParticles(ball.x, ball.y, paddle.color, 15);
+            }
+        }
+
+        function createParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x, y, 
+                    dx: (Math.random() - 0.5) * 8, 
+                    dy: (Math.random() - 0.5) * 8, 
+                    life: 1, 
+                    color
+                });
+            }
+        }
+
+        function checkWin(lastWinner) {
+            updateScoreUI();
+            if (p1.score >= WIN_SCORE || p2.score >= WIN_SCORE) {
+                gameState = 'GAMEOVER';
+                gameoverOverlay.classList.add('active');
+                const winner = p1.score >= WIN_SCORE ? 1 : 2;
+                winnerText.innerText = `PLAYER ${winner} WINS`;
+                winnerText.className = winner === 1 ? 'winner-p1' : 'winner-p2';
+            } else {
+                resetBall(lastWinner);
+            }
+        }
+
+        // --- Rendering ---
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Half line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+
+            // Draw Ball Trail
+            ballHistory.forEach((pos, i) => {
+                const alpha = i / ballHistory.length * 0.3;
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, BALL_RADIUS * (i / ballHistory.length), 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw Ball
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#fff';
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Draw Particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            // Draw Paddles
+            drawPaddle(p1);
+            drawPaddle(p2);
+        }
+
+        function drawPaddle(paddle) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = paddle.color;
+            ctx.strokeStyle = paddle.color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(paddle.x, paddle.y, PADDLE_RADIUS, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = paddle.color;
+            ctx.globalAlpha = 0.2;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+        }
+
+        function animate() {
+            update();
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // --- GDD Modal Logic ---
+        async function openGDD() {
+            const modal = document.getElementById('gdd-modal');
+            const content = document.getElementById('gdd-content');
+            modal.classList.add('active');
+            try {
+                const response = await fetch('./docs/neon-dual-gdd.md');
+                if (response.ok) {
+                    content.innerHTML = marked.parse(await response.text());
+                } else {
+                    content.innerHTML = '<p>기획 문서를 불러오지 못했습니다.</p>';
+                }
+            } catch (e) {
+                content.innerHTML = '<p>기획 문서를 불러오는 중 오류가 발생했습니다.</p>';
+            }
+        }
+        function closeGDD() { document.getElementById('gdd-modal').classList.remove('active'); }
+
+        window.onload = init;
+        window.addEventListener('resize', resize);
+    </script>
+</body>
+</html>
