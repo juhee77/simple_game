@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>크로노-락 - Chrono-Lock</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --past-bg: #451a03;
+            --past-accent: #fbbf24;
+            --present-bg: #0f172a;
+            --present-accent: #38bdf8;
+            --text-main: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--present-bg);
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.8s ease;
+        }
+        body.past { background-color: var(--past-bg); }
+
+        /* Header */
+        header {
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+        .floor-info { font-family: 'Marcellus', serif; font-size: 1.2rem; letter-spacing: 2px; color: var(--present-accent); transition: 0.5s; }
+        body.past .floor-info { color: var(--past-accent); }
+
+        /* Game Map Area */
+        #game-container {
+            flex: 1;
+            position: relative;
+            display: flex; flex-direction: column;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 70px);
+            grid-template-rows: repeat(4, 70px);
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .tile {
+            width: 70px; height: 70px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tile.wall { background: #1e293b; cursor: default; }
+        .tile.exit { border: 2px dashed var(--present-accent); color: var(--present-accent); }
+        body.past .tile.exit { border-color: var(--past-accent); color: var(--past-accent); }
+        .tile.player { background: var(--present-accent); color: #000; z-index: 10; box-shadow: 0 0 15px var(--present-accent); }
+        body.past .tile.player { background: var(--past-accent); box-shadow: 0 0 15px var(--past-accent); }
+        
+        .tile.interactable { color: var(--past-accent); }
+        .tile .badge { position: absolute; top: -5px; right: -5px; background: red; border-radius: 50%; width: 10px; height: 10px; }
+
+        /* Time Switch Button */
+        .time-control {
+            margin: 30px 0;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .btn-shift {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 4px solid var(--present-accent);
+            color: var(--present-accent);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.5s;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+        body.past .btn-shift {
+            transform: rotate(180deg);
+            border-color: var(--past-accent);
+            color: var(--past-accent);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+
+        /* Message */
+        #msg { height: 40px; text-align: center; font-size: 0.9rem; color: #94a3b8; }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .overlay.active { display: flex; }
+        .modal { background: #1e293b; padding: 30px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; }
+        
+        @keyframes ripple {
+            from { transform: scale(0.8); opacity: 1; }
+            to { transform: scale(1.5); opacity: 0; }
+        }
+        .ripple {
+            position: absolute; width: 100%; height: 100%; border: 2px solid white; border-radius: 12px;
+            animation: ripple 1s ease-out infinite;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="floor-info" id="floor-display">FLOOR 01</div>
+        <div class="header-actions">
+            <button onclick="openGDD()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="ri-book-read-line"></i></button>
+            <button onclick="location.href='../index.html'" style="background:none; border:none; color:white; font-size:1.2rem; margin-left:15px;"><i class="ri-home-4-line"></i></button>
+        </div>
+    </header>
+
+    <div id="game-container">
+        <div id="msg">과거와 현재를 오가며 탈출구를 찾으세요.</div>
+        
+        <div class="map-grid" id="map">
+            <!-- Tiles generated by JS -->
+        </div>
+
+        <div class="time-control">
+            <button class="btn-shift" id="shift-btn" onclick="toggleTime()">
+                <i class="ri-history-line"></i>
+            </button>
+            <div id="time-label" style="font-weight: 800; letter-spacing: 2px;">PRESENT</div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="overlay" id="state-overlay">
+        <div class="modal">
+            <h2 id="modal-title" style="margin-bottom: 10px;">STAGE CLEAR</h2>
+            <p id="modal-desc" style="color: #94a3b8; margin-bottom: 25px;">인과관계를 성공적으로 조작했습니다.</p>
+            <button id="modal-btn" onclick="nextStage()" style="background:var(--present-accent); color:#000; border:none; padding:12px 30px; border-radius:50px; font-weight:800; cursor:pointer;">다음 층으로</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Logic ---
+        let currentFloor = 1;
+        let isPast = false;
+        let playerPos = { r: 3, c: 0 };
+        let worldState = {
+            seedPlanted: false,
+            waterFilled: false,
+            machineFixed: false,
+            wallCracked: false
+        };
+
+        const MAP_DATA = {
+            1: {
+                start: { r: 3, c: 0 },
+                exit: { r: 0, c: 3 },
+                walls: [{ r: 1, c: 1 }, { r: 1, c: 2 }, { r: 2, c: 1 }],
+                items: [
+                    { r: 2, c: 2, type: 'button', pastOnly: true, desc: '과거: 이 버튼이 현재의 문을 조작합니다.' }
+                ]
+            },
+            2: {
+                start: { r: 3, c: 0 },
+                exit: { r: 0, c: 0 },
+                walls: [{ r: 1, c: 0 }, { r: 1, c: 1 }, { r: 1, c: 2 }, { r: 0, c: 2 }],
+                items: [
+                    { r: 2, c: 0, type: 'seed', pastOnly: true, desc: '과거: 씨앗을 심으면 미래에 거대한 나무가 됩니다.' }
+                ]
+            },
+            3: {
+                start: { r: 3, c: 3 },
+                exit: { r: 0, c: 0 },
+                walls: [{ r: 1, c: 0 }, { r: 1, c: 1 }, { r: 2, c: 1 }, { r: 2, c: 2 }],
+                items: [
+                    { r: 3, c: 0, type: 'water', pastOnly: true, desc: '과거: 수도꼭지를 틀어 방을 침수시킵니다.' }
+                ]
+            }
+        };
+
+        function initFloor(floor) {
+            currentFloor = floor;
+            const data = MAP_DATA[floor];
+            playerPos = { ...data.start };
+            isPast = false;
+            document.body.classList.remove('past');
+            document.getElementById('floor-display').innerText = `FLOOR 0${floor}`;
+            document.getElementById('time-label').innerText = "PRESENT";
+            renderMap();
+        }
+
+        function renderMap() {
+            const grid = document.getElementById('map');
+            grid.innerHTML = '';
+            const data = MAP_DATA[currentFloor];
+
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    
+                    // Wall Logic
+                    let isWall = data.walls.some(w => w.r === r && w.c === c);
+                    
+                    // Causality Wall Rules
+                    if (currentFloor === 2 && r === 1 && c === 0 && worldState.seedPlanted && !isPast) {
+                        isWall = false; // Tree grows in future, replacing wall or creating path
+                        tile.innerHTML = '<i class="ri-leaf-line" style="color:var(--present-accent)"></i>';
+                    }
+                    if (currentFloor === 3 && r === 1 && c === 1 && worldState.waterFilled && !isPast) {
+                        isWall = false; // Flooded, walkable
+                        tile.innerHTML = '<i class="ri-drop-line" style="color:var(--present-accent)"></i>';
+                    }
+
+                    if (isWall) tile.classList.add('wall');
+
+                    // Exit
+                    if (data.exit.r === r && data.exit.c === c) {
+                        tile.classList.add('exit');
+                        tile.innerHTML = '<i class="ri-door-lock-line"></i>';
+                    }
+
+                    // Items
+                    const item = data.items.find(i => i.r === r && i.c === c);
+                    if (item && (isPast || !item.pastOnly)) {
+                        tile.classList.add('interactable');
+                        if (item.type === 'seed') tile.innerHTML = worldState.seedPlanted ? '<i class="ri-plant-line"></i>' : '<i class="ri-seedling-line"></i>';
+                        if (item.type === 'button') tile.innerHTML = '<i class="ri-toggle-line"></i>';
+                        if (item.type === 'water') tile.innerHTML = '<i class="ri-temp-cold-line"></i>';
+                    }
+
+                    // Player
+                    if (playerPos.r === r && playerPos.c === c) {
+                        tile.classList.add('player');
+                        tile.innerHTML = '<i class="ri-user-3-fill"></i>';
+                    }
+
+                    tile.onclick = () => movePlayer(r, c);
+                    grid.appendChild(tile);
+                }
+            }
+        }
+
+        function movePlayer(r, c) {
+            // Check adjacency
+            const dr = Math.abs(r - playerPos.r);
+            const dc = Math.abs(c - playerPos.c);
+            if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
+                // Check walls
+                const data = MAP_DATA[currentFloor];
+                let isWall = data.walls.some(w => w.r === r && w.c === c);
+                
+                // Causality exceptions
+                if (currentFloor === 2 && r === 1 && c === 0 && worldState.seedPlanted && !isPast) isWall = false;
+                if (currentFloor === 3 && r === 1 && c === 1 && worldState.waterFilled && !isPast) isWall = false;
+
+                if (!isWall) {
+                    playerPos = { r, c };
+                    renderMap();
+                    checkTileEvent(r, c);
+                }
+            }
+        }
+
+        function checkTileEvent(r, c) {
+            const data = MAP_DATA[currentFloor];
+            const item = data.items.find(i => i.r === r && i.c === c);
+            
+            if (item && isPast) {
+                if (item.type === 'seed') worldState.seedPlanted = true;
+                if (item.type === 'water') worldState.waterFilled = true;
+                if (item.type === 'button') worldState.wallCracked = true;
+                showMsg(item.desc + " 인과관계가 변했습니다.");
+                renderMap();
+            }
+
+            if (data.exit.r === r && data.exit.c === c) {
+                if (!isPast) {
+                    showOverlay("STAGE CLEAR", "시간의 벽을 넘어 탈출에 성공했습니다.");
+                } else {
+                    showMsg("과거에서는 탈출할 수 없습니다. 현재로 돌아가세요.");
+                }
+            }
+        }
+
+        function toggleTime() {
+            isPast = !isPast;
+            document.body.classList.toggle('past', isPast);
+            document.getElementById('time-label').innerText = isPast ? "PAST" : "PRESENT";
+            showMsg(isPast ? "과거로 이동했습니다. 원인을 만드세요." : "현재로 돌아왔습니다. 결과를 확인하세요.");
+            renderMap();
+        }
+
+        function showMsg(txt) {
+            document.getElementById('msg').innerText = txt;
+        }
+
+        function showOverlay(title, desc) {
+            document.getElementById('state-overlay').classList.add('active');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+        }
+
+        function nextStage() {
+            if (currentFloor < 3) {
+                document.getElementById('state-overlay').classList.remove('active');
+                initFloor(currentFloor + 1);
+            } else {
+                alert("축하합니다! 모든 층을 돌파하여 시간의 굴레에서 벗어났습니다.");
+                location.href = '../index.html';
+            }
+        }
+
+        async function openGDD() {
+            const gdd = await fetch('./docs/chrono-lock-gdd.md').then(r => r.text());
+            alert("상세 기획서는 로비의 GDD 메뉴에서 확인 가능합니다.");
+        }
+
+        window.onload = () => initFloor(1);
+    </script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>고독한 기억 - Solitary Memory</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;800&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #020617;
+            --text-main: #f8fafc;
+            --accent: #38bdf8;
+            --panel-bg: #0f172a;
+            --danger: #ef4444;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.5);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+        .zone-title { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--accent); letter-spacing: 2px; }
+        .header-actions { display: flex; gap: 10px; }
+        .icon-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; }
+
+        /* Game Scene */
+        #scene-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene {
+            width: 100%; height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            display: none;
+            background-size: cover;
+            background-position: center;
+        }
+        .scene.active { display: block; animation: fadeIn 1s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Interactive Objects */
+        .obj {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .obj:hover { transform: scale(1.05); }
+        .obj i { font-size: 2rem; color: rgba(255,255,255,0.4); }
+        .obj.highlight i { color: var(--accent); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+
+        /* Inventory Bar */
+        #inventory {
+            height: 80px;
+            background: #000;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 10px;
+            overflow-x: auto;
+        }
+        .inv-slot {
+            width: 60px; height: 60px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .inv-slot.selected { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .inv-slot i { font-size: 1.5rem; }
+
+        /* Message Box */
+        #msg-box {
+            position: absolute;
+            bottom: 100px; left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            background: rgba(0,0,0,0.8);
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            display: none;
+            z-index: 500;
+        }
+
+        /* Modals & Puzzles */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+        .overlay.active { display: flex; }
+        .puzzle-content {
+            background: var(--panel-bg);
+            width: 90%; max-width: 400px;
+            border-radius: 16px; padding: 30px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .close-overlay { position: absolute; top: 20px; right: 20px; font-size: 2rem; color: white; cursor: pointer; }
+
+        /* Custom Puzzle Styles */
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .num-btn { background: #334155; border: none; color: white; padding: 15px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; }
+        .num-display { background: #000; color: var(--accent); padding: 10px; margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; border-radius: 4px; }
+
+        /* Memory Log UI */
+        .memory-log { font-size: 0.85rem; color: #94a3b8; font-style: italic; margin-top: 15px; text-align: left; border-top: 1px solid var(--border); padding-top: 10px; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="zone-title" id="zone-display">ZONE 1: 봉인된 병실</div>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openGDD()"><i class="ri-book-read-line"></i></button>
+            <button class="icon-btn" onclick="location.href='../index.html'"><i class="ri-home-4-line"></i></button>
+        </div>
+    </header>
+
+    <div id="scene-container">
+        <!-- Zone 1: Ward -->
+        <div class="scene active" id="scene-ward" style="background-image: radial-gradient(circle at center, #1e293b 0%, #020617 100%);">
+            <div class="obj" style="top: 60%; left: 10%;" onclick="interact('bed')"><i class="ri-hotel-bed-line"></i></div>
+            <div class="obj" style="top: 30%; left: 70%;" onclick="interact('wall_clock')"><i class="ri-time-line"></i></div>
+            <div class="obj" style="top: 20%; left: 45%;" onclick="interact('vent')"><i class="ri-grid-line"></i></div>
+            <div class="obj" style="top: 55%; left: 80%;" onclick="interact('ward_door')"><i class="ri-door-lock-line"></i></div>
+        </div>
+
+        <!-- Zone 2: Data Center -->
+        <div class="scene" id="scene-data" style="background-image: radial-gradient(circle at center, #0c4a6e 0%, #020617 100%);">
+            <div class="obj" style="top: 40%; left: 50%;" onclick="interact('main_server')"><i class="ri-server-line"></i></div>
+            <div class="obj" style="top: 70%; left: 20%;" onclick="interact('toolbox')"><i class="ri-tools-line"></i></div>
+            <div class="obj" style="top: 10%; left: 10%;" onclick="changeZone(1)"><i class="ri-arrow-left-line"></i></div>
+            <div class="obj" style="top: 50%; left: 90%;" onclick="interact('core_door')"><i class="ri-door-open-line"></i></div>
+        </div>
+
+        <!-- Zone 3: Core -->
+        <div class="scene" id="scene-core" style="background-image: radial-gradient(circle at center, #450a0a 0%, #020617 100%);">
+            <div class="obj" style="top: 40%; left: 40%;" onclick="interact('memory_core')"><i class="ri-cpu-line"></i></div>
+            <div class="obj" style="top: 10%; left: 10%;" onclick="changeZone(2)"><i class="ri-arrow-left-line"></i></div>
+        </div>
+
+        <div id="msg-box"></div>
+    </div>
+
+    <div id="inventory">
+        <!-- Items will appear here -->
+    </div>
+
+    <!-- Overlays -->
+    <div class="overlay" id="puzzle-overlay">
+        <div class="close-overlay" onclick="closeOverlay()">&times;</div>
+        <div class="puzzle-content" id="puzzle-inner">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+
+    <div class="overlay" id="gdd-modal">
+        <div class="close-overlay" onclick="document.getElementById('gdd-modal').classList.remove('active')">&times;</div>
+        <div class="puzzle-content" id="gdd-content" style="text-align:left; max-width: 600px;"></div>
+    </div>
+
+    <script>
+        // --- Game State ---
+        let state = {
+            currentZone: 1,
+            inventory: [],
+            selectedItem: null,
+            solved: {
+                ward_code: false,
+                vent_open: false,
+                server_fixed: false,
+                core_synced: false
+            },
+            flags: {
+                has_key: false,
+                has_usb: false,
+                has_tape: false,
+                diary_read: false
+            }
+        };
+
+        const ITEMS = {
+            'diary': { name: '찢어진 일기장', icon: 'ri-file-paper-line', desc: '12월 04일... 시간이 멈춘 것 같다.' },
+            'key': { name: '환풍구 열쇠', icon: 'ri-key-line', desc: '녹슨 열쇠. 어디에 쓰는 걸까?' },
+            'usb': { name: '데이터 드라이브', icon: 'ri-usb-line', desc: '중요한 데이터가 담긴 듯한 USB.' },
+            'tape': { name: '절연 테이프', icon: 'ri-tape-line', desc: '전선을 수리할 수 있을 것 같다.' }
+        };
+
+        // --- Core Functions ---
+        function showMsg(text) {
+            const box = document.getElementById('msg-box');
+            box.innerText = text;
+            box.style.display = 'block';
+            setTimeout(() => { box.style.display = 'none'; }, 3000);
+        }
+
+        function interact(target) {
+            switch(target) {
+                case 'bed':
+                    if (!state.flags.diary_read) {
+                        showMsg("침대 밑에서 찢어진 종이를 발견했습니다.");
+                        addItem('diary');
+                        state.flags.diary_read = true;
+                    } else {
+                        showMsg("평범한 병원 침대입니다. 차갑습니다.");
+                    }
+                    break;
+                case 'wall_clock':
+                    showOverlay('numpad', { 
+                        title: "디지털 시계", 
+                        desc: "시간이 12:04에 멈춰 있습니다. 아래에 4자리 코드를 입력하는 칸이 있네요.",
+                        check: (val) => val === "1204",
+                        onSuccess: () => {
+                            state.solved.ward_code = true;
+                            showMsg("딸깍 소리와 함께 문 잠금이 해제되었습니다!");
+                        }
+                    });
+                    break;
+                case 'vent':
+                    if (state.selectedItem === 'key') {
+                        showMsg("열쇠가 딱 맞습니다! 환풍구 안에서 USB를 발견했습니다.");
+                        removeItem('key');
+                        addItem('usb');
+                        state.flags.has_usb = true;
+                    } else {
+                        showMsg("높은 곳에 환풍구가 있습니다. 손이 닿지 않고 열쇠 구멍이 보입니다.");
+                    }
+                    break;
+                case 'ward_door':
+                    if (state.solved.ward_code) {
+                        changeZone(2);
+                    } else {
+                        showMsg("문이 굳게 잠겨 있습니다. 전자식 잠금 장치가 보입니다.");
+                    }
+                    break;
+                case 'toolbox':
+                    if (!state.flags.has_tape) {
+                        showMsg("공구함에서 절연 테이프를 챙겼습니다.");
+                        addItem('tape');
+                        state.flags.has_tape = true;
+                    }
+                    break;
+                case 'main_server':
+                    if (state.selectedItem === 'tape') {
+                        showMsg("테이프로 끊어진 전선을 수리했습니다. 서버가 기동합니다.");
+                        state.solved.server_fixed = true;
+                        removeItem('tape');
+                    } else if (state.solved.server_fixed && state.selectedItem === 'usb') {
+                        showMsg("데이터 전송 완료. 코어 룸으로 가는 경로가 승인되었습니다.");
+                        state.solved.core_synced = true;
+                        removeItem('usb');
+                    } else {
+                        showMsg(state.solved.server_fixed ? "서버는 작동 중입니다. 데이터 입력이 필요합니다." : "서버의 전선이 끊어져 있습니다.");
+                    }
+                    break;
+                case 'core_door':
+                    if (state.solved.core_synced) {
+                        changeZone(3);
+                    } else {
+                        showMsg("서버 인증이 필요합니다.");
+                    }
+                    break;
+                case 'memory_core':
+                    showOverlay('final', { title: "메모리 코어", desc: "모든 기억이 이곳에 응축되어 있습니다. 마지막 동기화를 시작합니까?" });
+                    break;
+            }
+        }
+
+        // --- Inventory Logic ---
+        function addItem(id) {
+            state.inventory.push(id);
+            renderInventory();
+        }
+
+        function removeItem(id) {
+            state.inventory = state.inventory.filter(item => item !== id);
+            if (state.selectedItem === id) state.selectedItem = null;
+            renderInventory();
+        }
+
+        function renderInventory() {
+            const inv = document.getElementById('inventory');
+            inv.innerHTML = '';
+            state.inventory.forEach(id => {
+                const item = ITEMS[id];
+                const slot = document.createElement('div');
+                slot.className = `inv-slot ${state.selectedItem === id ? 'selected' : ''}`;
+                slot.innerHTML = `<i class="${item.icon}"></i>`;
+                slot.onclick = () => {
+                    state.selectedItem = (state.selectedItem === id) ? null : id;
+                    renderInventory();
+                    if (state.selectedItem) showMsg(`${item.name}: ${item.desc}`);
+                };
+                inv.appendChild(slot);
+            });
+        }
+
+        // --- Zone Management ---
+        function changeZone(z) {
+            state.currentZone = z;
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            const titles = ["", "ZONE 1: 봉인된 병실", "ZONE 2: 데이터 센터", "ZONE 3: 코어 챔버"];
+            document.getElementById('zone-display').innerText = titles[z];
+            
+            if (z === 1) document.getElementById('scene-ward').classList.add('active');
+            if (z === 2) document.getElementById('scene-data').classList.add('active');
+            if (z === 3) document.getElementById('scene-core').classList.add('active');
+            
+            showMsg(`${titles[z]}에 진입했습니다.`);
+        }
+
+        // --- Overlay & Puzzles ---
+        function showOverlay(type, data) {
+            const overlay = document.getElementById('puzzle-overlay');
+            const inner = document.getElementById('puzzle-inner');
+            overlay.classList.add('active');
+            
+            if (type === 'numpad') {
+                inner.innerHTML = `
+                    <h3>${data.title}</h3>
+                    <p style="font-size:0.8rem; margin:10px 0;">${data.desc}</p>
+                    <div class="num-display" id="num-val">____</div>
+                    <div class="numpad">
+                        ${[1,2,3,4,5,6,7,8,9,0].map(n => `<button class="num-btn" onclick="pressNum('${n}')">${n}</button>`).join('')}
+                        <button class="num-btn" style="grid-column: span 2; background:var(--danger);" onclick="pressNum('C')">Clear</button>
+                    </div>
+                `;
+                window.currentPuzzle = data;
+                window.currentVal = "";
+            } else if (type === 'final') {
+                inner.innerHTML = `
+                    <h3>${data.title}</h3>
+                    <p>${data.desc}</p>
+                    <div class="memory-log">
+                        로그 #1: 실험체 77호, 기억 소거 완료.<br>
+                        로그 #2: 인격 동기화 오류 발생...<br>
+                        로그 #3: 자아 유지 장치 가동 중.
+                    </div>
+                    <button class="btn-main" onclick="finishGame()" style="background:var(--accent); color:#000; border:none; padding:15px; margin-top:20px; width:100%; border-radius:8px; font-weight:800;">기억 복구 및 탈출</button>
+                `;
+            }
+        }
+
+        function pressNum(n) {
+            if (n === 'C') {
+                window.currentVal = "";
+            } else {
+                if (window.currentVal.length < 4) window.currentVal += n;
+            }
+            document.getElementById('num-val').innerText = window.currentVal.padEnd(4, '_');
+            
+            if (window.currentVal.length === 4) {
+                if (window.currentPuzzle.check(window.currentVal)) {
+                    window.currentPuzzle.onSuccess();
+                    closeOverlay();
+                } else {
+                    showMsg("코드가 틀렸습니다.");
+                    window.currentVal = "";
+                    document.getElementById('num-val').innerText = "____";
+                }
+            }
+        }
+
+        function closeOverlay() { document.getElementById('puzzle-overlay').classList.remove('active'); }
+
+        function finishGame() {
+            alert("축하합니다! 당신은 자신의 기억을 되찾고 실험실을 탈출했습니다.");
+            location.href = '../index.html';
+        }
+
+        async function openGDD() {
+            const modal = document.getElementById('gdd-modal');
+            const content = document.getElementById('gdd-content');
+            modal.classList.add('active');
+            const response = await fetch('./docs/solitary-memory-gdd.md');
+            content.innerHTML = marked.parse(await response.text());
+        }
+
+        window.onload = () => {
+            renderInventory();
+            showMsg("지독한 두통과 함께 눈을 떴습니다. 이곳은 어디일까요?");
+        };
+    </script>
+</body>
+</html>

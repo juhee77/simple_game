@@ -24,9 +24,15 @@
             </h1>
             <p class="subtitle">53가지 재미있는 게임을 즐겨보세요!</p>
         </header>
-
         <!-- 1단계: 카테고리 뷰 -->
         <div id="category-view" class="category-grid">
+            <div class="category-card" data-category="solo">
+                <div class="category-icon">🧠</div>
+                <h2 class="category-title">Solo & Mystery</h2>
+                <p class="category-desc">혼자서 즐기는 미스터리 방탈출과 퍼즐</p>
+                <div class="game-badge">Solo & Mystery</div>
+            </div>
+
             <div class="category-card" data-category="multi">
                 <div class="category-icon">👥</div>
                 <h2 class="category-title">다수 인원용</h2>
@@ -73,6 +79,21 @@
             </div>
 
             <main class="games-grid" id="games-container">
+                <!-- 1인용 게임 -->
+                <a href="games/solitary-memory.html" class="game-card" data-category="solo">
+                    <div class="game-icon">🧠</div>
+                    <h2 class="game-title">고독한 기억</h2>
+                    <p class="game-description">폐쇄된 실험실에서의 기억 추적 방탈출</p>
+                    <div class="game-badge">추리/방탈출</div>
+                </a>
+
+                <a href="games/chrono-lock.html" class="game-card" data-category="solo">
+                    <div class="game-icon">⏳</div>
+                    <h2 class="game-title">크로노-락</h2>
+                    <p class="game-description">과거와 현재를 오가는 시간 조작 퍼즐</p>
+                    <div class="game-badge">논리/퍼즐</div>
+                </a>
+
                 <!-- 다수 인원용 -->
                 <a href="games/omok.html" class="game-card" data-category="multi duo">
                     <div class="game-icon">⚫⚪</div>
