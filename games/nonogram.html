@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>노노그램 - Nonogram Matrix</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(22, 28, 45, 0.6);
+            --border-color: rgba(56, 189, 248, 0.2);
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --neon-fill: #38bdf8;
+            --neon-x: #fb7185;
+            --glass-glow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; user-select: none; }
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 27, 75, 0.4) 0, transparent 50%),
+                radial-gradient(at 50% 0%, rgba(15, 23, 42, 0.5) 0, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(13, 148, 136, 0.2) 0, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        header {
+            width: 100%; max-width: 600px; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+        h1 { font-family: 'Share Tech Mono', monospace; font-size: 1.5rem; letter-spacing: 2px; color: var(--neon-fill); text-shadow: var(--glass-glow); }
+
+        .btn-icon {
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { background: rgba(56, 189, 248, 0.1); transform: scale(1.05); }
+
+        /* Game Settings Panel */
+        .settings-panel {
+            width: 90%; max-width: 500px;
+            background: var(--panel-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color); border-radius: 16px;
+            padding: 20px; margin-bottom: 15px;
+            display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .selector-row { display: flex; gap: 10px; }
+        .btn-select {
+            flex: 1; padding: 10px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+            color: white; cursor: pointer; font-weight: 600; transition: all 0.2s;
+        }
+        .btn-select.active {
+            background: rgba(56, 189, 248, 0.15); border-color: var(--neon-fill);
+            color: var(--neon-fill); text-shadow: var(--glass-glow);
+        }
+
+        /* Nonogram Main Layout */
+        .nonogram-container {
+            position: relative;
+            display: grid;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            margin: 10px 0;
+            overflow: visible;
+        }
+
+        /* Hints and Grid Setup in JS */
+        .row-hints-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding-right: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: bold;
+        }
+        .row-hint {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            height: 35px;
+        }
+        .row-hint span.solved { color: var(--text-muted); opacity: 0.3; text-decoration: line-through; }
+        .row-hint span.active { color: var(--neon-fill); text-shadow: var(--glass-glow); }
+
+        .col-hints-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding-bottom: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: bold;
+        }
+        .col-hint {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            width: 35px;
+        }
+        .col-hint span.solved { color: var(--text-muted); opacity: 0.3; text-decoration: line-through; }
+        .col-hint span.active { color: var(--neon-fill); text-shadow: var(--glass-glow); }
+
+        .grid {
+            display: grid;
+            gap: 2px;
+            background: rgba(255,255,255,0.05);
+            padding: 2px;
+            border-radius: 4px;
+        }
+        .cell {
+            width: 35px; height: 35px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s ease;
+        }
+        /* Thick lines for 5x5 blocks on larger grids */
+        .cell.border-right-bold { border-right: 2px solid rgba(56, 189, 248, 0.4); }
+        .cell.border-bottom-bold { border-bottom: 2px solid rgba(56, 189, 248, 0.4); }
+
+        .cell.filled {
+            background: var(--neon-fill);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+            border-color: transparent;
+        }
+        .cell.marked-x::before {
+            content: "\eb99";
+            font-family: 'remixicon';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--neon-x);
+            font-size: 1.1rem;
+        }
+
+        /* Controls */
+        .tool-bar {
+            display: flex; gap: 15px; margin-top: 15px; width: 90%; max-width: 400px;
+        }
+        .btn-tool {
+            flex: 1; padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: white; font-weight: 800;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-tool.active {
+            background: var(--neon-fill); color: #000;
+            box-shadow: var(--glass-glow); border-color: transparent;
+        }
+        .btn-tool#tool-x.active {
+            background: var(--neon-x); color: #000;
+            box-shadow: 0 0 15px rgba(251, 113, 133, 0.4);
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(11, 15, 25, 0.9); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .overlay.active { display: flex; }
+        .modal {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            padding: 30px; border-radius: 20px; width: 85%; max-width: 400px;
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .modal h2 { font-size: 2rem; color: var(--neon-fill); text-shadow: var(--glass-glow); margin-bottom: 10px; }
+        .modal p { color: var(--text-muted); margin-bottom: 25px; }
+        .btn-main {
+            background: var(--neon-fill); color: #000; border: none;
+            padding: 12px 35px; border-radius: 50px; font-weight: 800;
+            font-size: 1.1rem; cursor: pointer; transition: transform 0.2s;
+        }
+        .btn-main:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="btn-icon" onclick="location.href='../index.html'"><i class="ri-home-4-line"></i></button>
+        <h1>NONOGRAM</h1>
+        <button class="btn-icon" onclick="resetGame()"><i class="ri-refresh-line"></i></button>
+    </header>
+
+    <div class="settings-panel">
+        <div style="font-size: 0.9rem; color: var(--text-muted); text-align: center;">퍼즐 테마 및 크기 선택</div>
+        <div class="selector-row">
+            <button class="btn-select active" onclick="changeSize(5, this)">5 X 5 (Easy)</button>
+            <button class="btn-select" onclick="changeSize(10, this)">10 X 10 (Normal)</button>
+        </div>
+        <div class="selector-row" id="puzzle-selector">
+            <!-- Puzzle levels will be injected here -->
+        </div>
+    </div>
+
+    <!-- Main Game Board Grid layout containing hints and cells -->
+    <div id="game-board-wrapper" style="display: flex; flex-direction: column; align-items: center;">
+        <!-- Container constructed dynamically -->
+        <div id="nonogram-outer" class="nonogram-container">
+            <!-- Will contain col hints, row hints, and game grid -->
+        </div>
+    </div>
+
+    <div class="tool-bar">
+        <button class="btn-tool active" id="tool-fill" onclick="setTool('fill')">
+            <i class="ri-checkbox-blank-fill"></i> 칠하기
+        </button>
+        <button class="btn-tool" id="tool-x" onclick="setTool('x')">
+            <i class="ri-close-fill"></i> X 표시
+        </button>
+    </div>
+
+    <!-- Clear Modal -->
+    <div class="overlay" id="clear-overlay">
+        <div class="modal">
+            <h2>MATRIX CLEAR</h2>
+            <p>신호 복원에 성공했습니다!</p>
+            <button class="btn-main" onclick="closeClearModal()">완료</button>
+        </div>
+    </div>
+
+    <script>
+        const PUZZLES = {
+            5: [
+                {
+                    name: "하트 (Heart)",
+                    grid: [
+                        [0, 1, 0, 1, 0],
+                        [1, 1, 1, 1, 1],
+                        [1, 1, 1, 1, 1],
+                        [0, 1, 1, 1, 0],
+                        [0, 0, 1, 0, 0]
+                    ]
+                },
+                {
+                    name: "스마일 (Smile)",
+                    grid: [
+                        [1, 0, 0, 0, 1],
+                        [0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 1],
+                        [0, 1, 1, 1, 0],
+                        [0, 0, 0, 0, 0]
+                    ]
+                },
+                {
+                    name: "나무 (Tree)",
+                    grid: [
+                        [0, 0, 1, 0, 0],
+                        [0, 1, 1, 1, 0],
+                        [1, 1, 1, 1, 1],
+                        [0, 0, 1, 0, 0],
+                        [0, 0, 1, 0, 0]
+                    ]
+                }
+            ],
+            10: [
+                {
+                    name: "우주선 (Rocket)",
+                    grid: [
+                        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                        [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+                        [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                        [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                        [0, 1, 1, 0, 1, 1, 0, 1, 1, 0],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                        [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+                        [0, 0, 1, 1, 0, 0, 1, 1, 0, 0]
+                    ]
+                },
+                {
+                    name: "강아지 (Puppy)",
+                    grid: [
+                        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+                        [0, 0, 1, 1, 1, 1, 1, 1, 1, 0],
+                        [0, 0, 0, 1, 1, 1, 1, 1, 0, 1],
+                        [0, 0, 0, 1, 1, 1, 1, 1, 0, 1],
+                        [0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+                        [0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
+                        [0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+                        [0, 0, 0, 1, 1, 0, 1, 1, 0, 0]
+                    ]
+                }
+            ]
+        };
+
+        let currentSize = 5;
+        let puzzleIndex = 0;
+        let activeTool = 'fill'; // 'fill' or 'x'
+        let boardState = []; // 0: empty, 1: filled, 2: X-marked
+        let isMouseDown = false;
+        let dragMode = null; // 'fill', 'empty', 'x'
+
+        function setTool(tool) {
+            activeTool = tool;
+            document.getElementById('tool-fill').classList.toggle('active', tool === 'fill');
+            document.getElementById('tool-x').classList.toggle('active', tool === 'x');
+        }
+
+        function changeSize(size, btn) {
+            document.querySelectorAll('.btn-select').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentSize = size;
+            puzzleIndex = 0;
+            initPuzzleSelector();
+            loadPuzzle();
+        }
+
+        function initPuzzleSelector() {
+            const selector = document.getElementById('puzzle-selector');
+            selector.innerHTML = '';
+            PUZZLES[currentSize].forEach((p, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-select' + (idx === puzzleIndex ? ' active' : '');
+                btn.innerText = p.name;
+                btn.onclick = () => {
+                    document.querySelectorAll('#puzzle-selector .btn-select').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    puzzleIndex = idx;
+                    loadPuzzle();
+                };
+                selector.appendChild(btn);
+            });
+        }
+
+        function generateHints(solution) {
+            const rowHints = [];
+            const colHints = [];
+
+            // Row hints
+            for (let r = 0; r < currentSize; r++) {
+                const row = solution[r];
+                const hints = [];
+                let count = 0;
+                for (let c = 0; c < currentSize; c++) {
+                    if (row[c] === 1) {
+                        count++;
+                    } else if (count > 0) {
+                        hints.push(count);
+                        count = 0;
+                    }
+                }
+                if (count > 0) hints.push(count);
+                rowHints.push(hints.length > 0 ? hints : [0]);
+            }
+
+            // Col hints
+            for (let c = 0; c < currentSize; c++) {
+                const hints = [];
+                let count = 0;
+                for (let r = 0; r < currentSize; r++) {
+                    if (solution[r][c] === 1) {
+                        count++;
+                    } else if (count > 0) {
+                        hints.push(count);
+                        count = 0;
+                    }
+                }
+                if (count > 0) hints.push(count);
+                colHints.push(hints.length > 0 ? hints : [0]);
+            }
+
+            return { rowHints, colHints };
+        }
+
+        function loadPuzzle() {
+            const puzzle = PUZZLES[currentSize][puzzleIndex];
+            const { rowHints, colHints } = generateHints(puzzle.grid);
+            
+            // Initialize board state
+            boardState = Array(currentSize).fill(null).map(() => Array(currentSize).fill(0));
+
+            // Construct Nonogram DOM
+            const outer = document.getElementById('nonogram-outer');
+            outer.innerHTML = '';
+
+            // Layout styling
+            outer.style.gridTemplateColumns = `100px ${currentSize * 37}px`;
+            outer.style.gridTemplateRows = `auto ${currentSize * 37}px`;
+
+            // Top-left corner (empty)
+            const tl = document.createElement('div');
+            outer.appendChild(tl);
+
+            // Col hints header
+            const colHeader = document.createElement('div');
+            colHeader.className = 'col-hints-container';
+            colHeader.style.gridTemplateColumns = `repeat(${currentSize}, 35px)`;
+            colHints.forEach(hints => {
+                const colHint = document.createElement('div');
+                colHint.className = 'col-hint';
+                hints.forEach(h => {
+                    const span = document.createElement('span');
+                    span.innerText = h;
+                    span.className = h === 0 ? '' : 'active';
+                    colHint.appendChild(span);
+                });
+                colHeader.appendChild(colHint);
+            });
+            outer.appendChild(colHeader);
+
+            // Row hints header
+            const rowHeader = document.createElement('div');
+            rowHeader.className = 'row-hints-container';
+            rowHints.forEach(hints => {
+                const rowHint = document.createElement('div');
+                rowHint.className = 'row-hint';
+                hints.forEach(h => {
+                    const span = document.createElement('span');
+                    span.innerText = h;
+                    span.className = h === 0 ? '' : 'active';
+                    rowHint.appendChild(span);
+                });
+                rowHeader.appendChild(rowHint);
+            });
+            outer.appendChild(rowHeader);
+
+            // Grid Container
+            const grid = document.createElement('div');
+            grid.className = 'grid';
+            grid.style.gridTemplateColumns = `repeat(${currentSize}, 35px)`;
+            grid.style.gridTemplateRows = `repeat(${currentSize}, 35px)`;
+
+            for (let r = 0; r < currentSize; r++) {
+                for (let c = 0; c < currentSize; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    // Borders separating 5x5 sub-grids (for 10x10)
+                    if (currentSize === 10) {
+                        if (c === 4) cell.classList.add('border-right-bold');
+                        if (r === 4) cell.classList.add('border-bottom-bold');
+                    }
+
+                    // Touch / Mouse events for drawing
+                    cell.addEventListener('pointerdown', (e) => {
+                        e.preventDefault();
+                        isMouseDown = true;
+                        cell.releasePointerCapture(e.pointerId); // Support slide drawing
+                        handleInteraction(r, c);
+                    });
+
+                    cell.addEventListener('pointerenter', (e) => {
+                        if (isMouseDown) {
+                            handleInteraction(r, c, true);
+                        }
+                    });
+
+                    grid.appendChild(cell);
+                }
+            }
+            outer.appendChild(grid);
+        }
+
+        function handleInteraction(r, c, isDrag = false) {
+            const current = boardState[r][c];
+
+            if (!isDrag) {
+                // Set drag mode based on initial cell touch
+                if (activeTool === 'fill') {
+                    dragMode = current === 1 ? 'empty' : 'fill';
+                } else {
+                    dragMode = current === 2 ? 'empty' : 'x';
+                }
+            }
+
+            if (dragMode === 'fill') {
+                boardState[r][c] = 1;
+            } else if (dragMode === 'x') {
+                boardState[r][c] = 2;
+            } else if (dragMode === 'empty') {
+                boardState[r][c] = 0;
+            }
+
+            updateCellUI(r, c);
+            checkSolution();
+        }
+
+        function updateCellUI(r, c) {
+            const gridIdx = r * currentSize + c;
+            const grid = document.querySelector('.grid');
+            const cell = grid.children[gridIdx];
+            const state = boardState[r][c];
+
+            cell.classList.remove('filled', 'marked-x');
+            if (state === 1) cell.classList.add('filled');
+            if (state === 2) cell.classList.add('marked-x');
+        }
+
+        function checkSolution() {
+            const puzzle = PUZZLES[currentSize][puzzleIndex];
+            let isSolved = true;
+
+            for (let r = 0; r < currentSize; r++) {
+                for (let c = 0; c < currentSize; c++) {
+                    const sol = puzzle.grid[r][c];
+                    const player = boardState[r][c] === 1 ? 1 : 0;
+                    if (sol !== player) {
+                        isSolved = false;
+                        break;
+                    }
+                }
+                if (!isSolved) break;
+            }
+
+            if (isSolved) {
+                // Success!
+                document.getElementById('clear-overlay').classList.add('active');
+            }
+        }
+
+        function closeClearModal() {
+            document.getElementById('clear-overlay').classList.remove('active');
+        }
+
+        function resetGame() {
+            loadPuzzle();
+        }
+
+        // Global mouseup to stop dragging
+        window.addEventListener('pointerup', () => {
+            isMouseDown = false;
+            dragMode = null;
+        });
+
+        // Initialize first puzzle
+        initPuzzleSelector();
+        loadPuzzle();
+
+    </script>
+</body>
+</html>

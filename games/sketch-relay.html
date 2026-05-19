@@ -157,7 +157,8 @@
         let currentPlayer = 1;
         let currentWord = "";
         
-        let canvas, ctx;
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
         let isDrawing = false;
         let drawTimer = null;
         let timeLeft = 0;
@@ -181,9 +182,6 @@
             
             currentPlayer = 1;
             
-            // Setup canvas
-            canvas = document.getElementById('game-canvas');
-            ctx = canvas.getContext('2d');
             // Make canvas high res
             canvas.width = 800;
             canvas.height = 800;
@@ -310,7 +308,6 @@
         window.addEventListener('pointerup', () => {
             if (isDrawing) {
                 isDrawing = false;
-                ctx.closePath();
             }
         });
 

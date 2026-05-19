@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>미니 생태계 - Ecosystem Sim</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #060913;
+            --panel-bg: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(56, 189, 248, 0.2);
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --color-grass: #10b981;
+            --color-rabbit: #38bdf8;
+            --color-fox: #f43f5e;
+            --glass-glow: 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.1) 0, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 10px;
+        }
+
+        header {
+            width: 100%; max-width: 650px; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+        h1 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--color-rabbit); text-shadow: var(--glass-glow); }
+
+        .btn-icon {
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { background: rgba(56, 189, 248, 0.1); transform: scale(1.05); }
+
+        /* Game Board grid */
+        .simulation-container {
+            width: 100%; max-width: 650px;
+            background: var(--panel-bg); backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color); border-radius: 20px;
+            padding: 15px; display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .grid-canvas {
+            width: 100%; height: 320px; background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;
+        }
+
+        /* Status indicators */
+        .ecosystem-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;
+        }
+        .stat-card {
+            background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .stat-card.grass { border-color: var(--color-grass); }
+        .stat-card.rabbit { border-color: var(--color-rabbit); }
+        .stat-card.fox { border-color: var(--color-fox); }
+
+        .stat-num { font-family: 'Share Tech Mono', monospace; font-size: 1.8rem; font-weight: bold; }
+        .stat-lbl { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+        /* Realtime population chart mini-canvas */
+        .chart-container {
+            height: 80px; width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* Controls Panel */
+        .controls-row {
+            display: flex; gap: 10px; align-items: center; justify-content: center;
+        }
+        .btn-control {
+            flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.05); color: white; font-weight: 800;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-control:hover { background: rgba(56, 189, 248, 0.1); }
+        .btn-control.active { background: var(--color-rabbit); color: #000; font-weight: 800; border-color: transparent; }
+
+        .btn-add {
+            padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; color:#000;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="btn-icon" onclick="location.href='../index.html'"><i class="ri-home-4-line"></i></button>
+        <h1>ECOSYSTEM SIM</h1>
+        <button class="btn-icon" onclick="resetSim()"><i class="ri-refresh-line"></i></button>
+    </header>
+
+    <div class="simulation-container">
+        <!-- Grid Canvas -->
+        <canvas class="grid-canvas" id="grid-canvas"></canvas>
+
+        <!-- Stats -->
+        <div class="ecosystem-stats">
+            <div class="stat-card grass">
+                <div class="stat-num" id="count-grass" style="color: var(--color-grass);">0</div>
+                <div class="stat-lbl">풀 (Grass)</div>
+                <button class="btn-add" style="background: var(--color-grass); margin-top:5px;" onclick="spawnEntity('grass', 30)">+30</button>
+            </div>
+            <div class="stat-card rabbit">
+                <div class="stat-num" id="count-rabbit" style="color: var(--color-rabbit);">0</div>
+                <div class="stat-lbl">토끼 (Rabbit)</div>
+                <button class="btn-add" style="background: var(--color-rabbit); margin-top:5px;" onclick="spawnEntity('rabbit', 10)">+10</button>
+            </div>
+            <div class="stat-card fox">
+                <div class="stat-num" id="count-fox" style="color: var(--color-fox);">0</div>
+                <div class="stat-lbl">여우 (Fox)</div>
+                <button class="btn-add" style="background: var(--color-fox); margin-top:5px;" onclick="spawnEntity('fox', 5)">+5</button>
+            </div>
+        </div>
+
+        <!-- Realtime Graph -->
+        <div style="font-size:0.8rem; color:var(--text-muted); display:flex; justify-content:space-between;">
+            <span>실시간 개체수 그래프</span>
+            <span id="gen-count">세대: 0</span>
+        </div>
+        <div class="chart-container">
+            <canvas id="chart-canvas" style="width:100%; height:100%;"></canvas>
+        </div>
+
+        <!-- Actions -->
+        <div class="controls-row">
+            <button class="btn-control active" id="btn-play" onclick="togglePlay()">
+                <i class="ri-pause-fill" id="play-icon"></i> <span id="play-lbl">일시 정지</span>
+            </button>
+            <button class="btn-control" onclick="stepSimulation()">
+                <i class="ri-skip-forward-fill"></i> 1세대 이동
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const GRID_ROWS = 28;
+        const GRID_COLS = 50;
+
+        let grid = Array(GRID_ROWS).fill(null).map(() => Array(GRID_COLS).fill(null));
+        let generations = 0;
+        let isPlaying = true;
+        let simInterval = null;
+
+        // Chart history array
+        let history = [];
+
+        // DOM elements
+        const canvas = document.getElementById('grid-canvas');
+        const ctx = canvas.getContext('2d');
+        const chartCanvas = document.getElementById('chart-canvas');
+        const chartCtx = chartCanvas.getContext('2d');
+
+        function initSimulation() {
+            grid = Array(GRID_ROWS).fill(null).map(() => Array(GRID_COLS).fill(null));
+            generations = 0;
+            history = [];
+
+            // Spawn initials
+            spawnEntity('grass', 150);
+            spawnEntity('rabbit', 45);
+            spawnEntity('fox', 15);
+
+            drawGrid();
+            drawChart();
+        }
+
+        function spawnEntity(type, count) {
+            for (let i = 0; i < count; i++) {
+                let attempts = 0;
+                while (attempts < 100) {
+                    const r = Math.floor(Math.random() * GRID_ROWS);
+                    const c = Math.floor(Math.random() * GRID_COLS);
+                    if (grid[r][c] === null) {
+                        grid[r][c] = {
+                            type,
+                            energy: type === 'rabbit' ? 12 : (type === 'fox' ? 25 : 0),
+                            age: 0
+                        };
+                        break;
+                    }
+                    attempts++;
+                }
+            }
+            updateStats();
+        }
+
+        function updateStats() {
+            let grass = 0, rabbit = 0, fox = 0;
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    if (grid[r][c]) {
+                        if (grid[r][c].type === 'grass') grass++;
+                        if (grid[r][c].type === 'rabbit') rabbit++;
+                        if (grid[r][c].type === 'fox') fox++;
+                    }
+                }
+            }
+
+            document.getElementById('count-grass').innerText = grass;
+            document.getElementById('count-rabbit').innerText = rabbit;
+            document.getElementById('count-fox').innerText = fox;
+            document.getElementById('gen-count').innerText = "세대: " + generations;
+
+            // Push history
+            history.push({ grass, rabbit, fox });
+            if (history.length > 200) history.shift();
+        }
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cw = canvas.width / GRID_COLS;
+            const ch = canvas.height / GRID_ROWS;
+
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    const cell = grid[r][c];
+                    if (cell) {
+                        ctx.beginPath();
+                        ctx.rect(c * cw + 1, r * ch + 1, cw - 2, ch - 2);
+                        
+                        if (cell.type === 'grass') {
+                            ctx.fillStyle = '#10b981';
+                        } else if (cell.type === 'rabbit') {
+                            ctx.fillStyle = '#38bdf8';
+                        } else if (cell.type === 'fox') {
+                            ctx.fillStyle = '#f43f5e';
+                        }
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+
+        function drawChart() {
+            chartCtx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+            if (history.length < 2) return;
+
+            const cw = chartCanvas.width / 200;
+            const maxVal = Math.max(...history.map(h => Math.max(h.grass, h.rabbit * 3, h.fox * 5))) || 1;
+
+            const drawLine = (prop, color) => {
+                chartCtx.beginPath();
+                chartCtx.lineWidth = 2;
+                chartCtx.strokeStyle = color;
+
+                history.forEach((h, idx) => {
+                    const x = idx * cw;
+                    const y = chartCanvas.height - (h[prop] / maxVal) * (chartCanvas.height - 10) - 5;
+                    if (idx === 0) {
+                        chartCtx.moveTo(x, y);
+                    } else {
+                        chartCtx.lineTo(x, y);
+                    }
+                });
+                chartCtx.stroke();
+            };
+
+            drawLine('grass', '#10b981');
+            drawLine('rabbit', '#38bdf8');
+            drawLine('fox', '#f43f5e');
+        }
+
+        function getNeighbors(r, c) {
+            const neighbors = [];
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    const nr = r + dr;
+                    const nc = c + dc;
+                    if (nr >= 0 && nr < GRID_ROWS && nc >= 0 && nc < GRID_COLS) {
+                        neighbors.push({ r: nr, c: nc });
+                    }
+                }
+            }
+            return neighbors;
+        }
+
+        function stepSimulation() {
+            generations++;
+            let nextGrid = Array(GRID_ROWS).fill(null).map(() => Array(GRID_COLS).fill(null));
+
+            // Populate static copies first to avoid fast propagation loops
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    if (grid[r][c]) {
+                        nextGrid[r][c] = { ...grid[r][c], moved: false };
+                    }
+                }
+            }
+
+            // Loop actions
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    const cell = nextGrid[r][c];
+                    if (!cell || cell.moved) continue;
+
+                    cell.age++;
+
+                    if (cell.type === 'grass') {
+                        // Grass growth logic: spreads occasionally to neighboring empty tiles
+                        if (Math.random() < 0.08) {
+                            const neighbors = getNeighbors(r, c);
+                            const empty = neighbors.filter(n => nextGrid[n.r][n.c] === null);
+                            if (empty.length > 0) {
+                                const target = empty[Math.floor(Math.random() * empty.length)];
+                                nextGrid[target.r][target.c] = { type: 'grass', energy: 0, age: 0, moved: true };
+                            }
+                        }
+                    } else if (cell.type === 'rabbit') {
+                        cell.energy--;
+                        if (cell.energy <= 0 || cell.age > 45) {
+                            nextGrid[r][c] = null; // Starved / Aged
+                            continue;
+                        }
+
+                        // Search neighbors for grass
+                        const neighbors = getNeighbors(r, c);
+                        const grass = neighbors.filter(n => nextGrid[n.r][n.c] && nextGrid[n.r][n.c].type === 'grass');
+
+                        if (grass.length > 0) {
+                            // Eat grass
+                            const target = grass[Math.floor(Math.random() * grass.length)];
+                            nextGrid[target.r][target.c] = null; // Consume grass
+                            cell.energy += 8;
+
+                            // Move to target
+                            nextGrid[r][c] = null;
+                            cell.moved = true;
+                            nextGrid[target.r][target.c] = cell;
+
+                            // Reproduction
+                            if (cell.energy >= 20) {
+                                cell.energy -= 10;
+                                const empty = neighbors.filter(n => nextGrid[n.r][n.c] === null);
+                                if (empty.length > 0) {
+                                    const birth = empty[Math.floor(Math.random() * empty.length)];
+                                    nextGrid[birth.r][birth.c] = { type: 'rabbit', energy: 8, age: 0, moved: true };
+                                }
+                            }
+                        } else {
+                            // Move randomly
+                            const empty = neighbors.filter(n => nextGrid[n.r][n.c] === null);
+                            if (empty.length > 0 && Math.random() < 0.7) {
+                                const target = empty[Math.floor(Math.random() * empty.length)];
+                                nextGrid[r][c] = null;
+                                cell.moved = true;
+                                nextGrid[target.r][target.c] = cell;
+                            }
+                        }
+                    } else if (cell.type === 'fox') {
+                        cell.energy--;
+                        if (cell.energy <= 0 || cell.age > 60) {
+                            nextGrid[r][c] = null;
+                            continue;
+                        }
+
+                        // Search neighbors for rabbits
+                        const neighbors = getNeighbors(r, c);
+                        const rabbits = neighbors.filter(n => nextGrid[n.r][n.c] && nextGrid[n.r][n.c].type === 'rabbit');
+
+                        if (rabbits.length > 0) {
+                            // Eat rabbit
+                            const target = rabbits[Math.floor(Math.random() * rabbits.length)];
+                            nextGrid[target.r][target.c] = null;
+                            cell.energy += 16;
+
+                            // Move to target
+                            nextGrid[r][c] = null;
+                            cell.moved = true;
+                            nextGrid[target.r][target.c] = cell;
+
+                            // Reproduction
+                            if (cell.energy >= 40) {
+                                cell.energy -= 20;
+                                const empty = neighbors.filter(n => nextGrid[n.r][n.c] === null);
+                                if (empty.length > 0) {
+                                    const birth = empty[Math.floor(Math.random() * empty.length)];
+                                    nextGrid[birth.r][birth.c] = { type: 'fox', energy: 15, age: 0, moved: true };
+                                }
+                            }
+                        } else {
+                            // Move randomly
+                            const empty = neighbors.filter(n => nextGrid[n.r][n.c] === null);
+                            if (empty.length > 0 && Math.random() < 0.7) {
+                                const target = empty[Math.floor(Math.random() * empty.length)];
+                                nextGrid[r][c] = null;
+                                cell.moved = true;
+                                nextGrid[target.r][target.c] = cell;
+                            }
+                        }
+                    }
+                }
+            }
+
+            grid = nextGrid;
+            updateStats();
+            drawGrid();
+            drawChart();
+        }
+
+        function togglePlay() {
+            const btn = document.getElementById('btn-play');
+            const icon = document.getElementById('play-icon');
+            const lbl = document.getElementById('play-lbl');
+
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                btn.classList.add('active');
+                icon.className = 'ri-pause-fill';
+                lbl.innerText = "일시 정지";
+                startSimLoop();
+            } else {
+                btn.classList.remove('active');
+                icon.className = 'ri-play-fill';
+                lbl.innerText = "자동 실행";
+                stopSimLoop();
+            }
+        }
+
+        function startSimLoop() {
+            if (simInterval) clearInterval(simInterval);
+            simInterval = setInterval(stepSimulation, 250);
+        }
+
+        function stopSimLoop() {
+            if (simInterval) {
+                clearInterval(simInterval);
+                simInterval = null;
+            }
+        }
+
+        function resetSim() {
+            initSimulation();
+        }
+
+        // Setup Canvas Resolution
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        chartCanvas.width = chartCanvas.clientWidth;
+        chartCanvas.height = chartCanvas.clientHeight;
+
+        initSimulation();
+        startSimLoop();
+
+    </script>
+</body>
+</html>

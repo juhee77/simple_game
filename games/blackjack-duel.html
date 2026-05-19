@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>블랙잭 듀얼 - Blackjack Duel</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #072013; /* Deep Green Casino Felt */
+            --panel-bg: rgba(6, 36, 21, 0.6);
+            --border-color: rgba(16, 185, 129, 0.3);
+            --text-main: #ecfdf5;
+            --text-muted: #a7f3d0;
+            --neon-gold: #f59e0b;
+            --neon-red: #ef4444;
+            --glass-glow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(6, 78, 59, 0.6) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(4, 120, 87, 0.4) 0, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 10px;
+        }
+
+        header {
+            width: 100%; max-width: 600px; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+        h1 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; letter-spacing: 1px; color: var(--neon-gold); text-shadow: 0 0 10px rgba(245, 158, 11, 0.4); }
+
+        .btn-icon {
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { background: rgba(16, 185, 129, 0.1); transform: scale(1.05); }
+
+        /* Main Game Layout */
+        .casino-table {
+            width: 100%; max-width: 600px;
+            background: var(--panel-bg); backdrop-filter: blur(15px);
+            border: 2px solid var(--border-color); border-radius: 24px;
+            padding: 20px; display: flex; flex-direction: column; gap: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 0 40px rgba(16, 185, 129, 0.1);
+            position: relative;
+        }
+
+        /* Player Areas */
+        .player-row {
+            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex; flex-direction: column; gap: 10px;
+            transition: all 0.3s;
+        }
+        .player-row.active {
+            border-color: var(--neon-gold);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+        }
+
+        .player-info {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .player-name { font-weight: 800; font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .player-chips { font-weight: 600; color: var(--neon-gold); }
+        .score-badge {
+            background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;
+        }
+
+        /* Cards list container */
+        .hand-container {
+            display: flex; gap: 8px; min-height: 110px; align-items: center; flex-wrap: nowrap; overflow-x: auto;
+            padding: 5px 0;
+        }
+
+        /* Card 3D elements */
+        .card-view {
+            width: 70px; height: 100px;
+            background: white; border-radius: 8px;
+            border: 2px solid #fff;
+            color: #000;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 8px; font-family: 'Outfit', sans-serif; font-weight: 800;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            position: relative;
+            flex-shrink: 0;
+            transition: transform 0.2s;
+        }
+        .card-view.red { color: var(--neon-red); }
+        .card-view.face-down {
+            background: radial-gradient(circle, #ef4444 0%, #7f1d1d 100%);
+            border: 2px solid white;
+            color: transparent;
+        }
+        .card-view.face-down::after {
+            content: "♣";
+            font-size: 2rem; color: rgba(255,255,255,0.15);
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .card-suit { font-size: 1.3rem; align-self: flex-end; }
+
+        /* Betting / Round indicator */
+        .center-pot {
+            display: flex; justify-content: space-around; align-items: center;
+            background: rgba(0,0,0,0.4); border-radius: 12px; padding: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .pot-label { text-align: center; }
+        .pot-val { font-size: 1.3rem; font-weight: 800; color: var(--neon-gold); }
+
+        /* Game Controls */
+        .controls-row {
+            display: flex; gap: 10px; margin-top: 10px;
+        }
+        .btn-casino {
+            flex: 1; padding: 14px; border: none; border-radius: 12px;
+            font-size: 1.05rem; font-weight: 800; cursor: pointer;
+            transition: all 0.2s; text-align: center;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-casino.hit { background: linear-gradient(135deg, #10b981, #047857); color: white; }
+        .btn-casino.stand { background: linear-gradient(135deg, #6b7280, #374151); color: white; }
+        .btn-casino:hover { transform: translateY(-2px); }
+        .btn-casino:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
+
+        /* Setup / Bet overlay */
+        .bet-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0;
+        }
+        .btn-chip {
+            background: var(--panel-bg); border: 2px dashed var(--neon-gold);
+            border-radius: 50%; width: 70px; height: 70px; margin: 0 auto;
+            color: var(--neon-gold); font-weight: 800; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .btn-chip:hover { transform: scale(1.1) rotate(15deg); }
+
+        /* Overlay */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(7, 32, 19, 0.95); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .overlay.active { display: flex; }
+        .modal {
+            background: var(--panel-bg); border: 2px solid var(--border-color);
+            padding: 30px; border-radius: 20px; width: 85%; max-width: 400px;
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .modal h2 { font-size: 2rem; color: var(--neon-gold); text-shadow: 0 0 10px rgba(245,158,11,0.4); }
+        .modal p.winner-desc { font-size: 1.2rem; font-weight: bold; margin: 10px 0; color: #fff; }
+        .btn-main {
+            background: var(--neon-gold); color: #000; border: none;
+            padding: 12px 35px; border-radius: 50px; font-weight: 800;
+            font-size: 1.1rem; cursor: pointer; transition: transform 0.2s;
+        }
+        .btn-main:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="btn-icon" onclick="location.href='../index.html'"><i class="ri-home-4-line"></i></button>
+        <h1>BLACKJACK DUEL</h1>
+        <button class="btn-icon" onclick="resetGame()"><i class="ri-refresh-line"></i></button>
+    </header>
+
+    <div class="casino-table">
+        <!-- Center Game Status -->
+        <div class="center-pot">
+            <div class="pot-label">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">현재 베팅 액</span><br>
+                <span class="pot-val" id="pot-amount">0 CHIPS</span>
+            </div>
+            <div class="pot-label">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">라운드</span><br>
+                <span class="pot-val" id="round-indicator" style="color:#fff;">ROUND 1</span>
+            </div>
+        </div>
+
+        <!-- PLAYER 2 (Top or Opponent) Area -->
+        <div class="player-row" id="p2-row">
+            <div class="player-info">
+                <div class="player-name">
+                    <i class="ri-user-star-line" style="color: var(--neon-gold);"></i> 플레이어 2
+                </div>
+                <div class="player-chips" id="p2-chips-display">100 CHIPS</div>
+            </div>
+            <div class="score-badge" id="p2-score-display">핸드 합계: 계산 중...</div>
+            <div class="hand-container" id="p2-hand">
+                <!-- Cards will go here -->
+            </div>
+        </div>
+
+        <!-- PLAYER 1 (Bottom or User) Area -->
+        <div class="player-row" id="p1-row">
+            <div class="player-info">
+                <div class="player-name">
+                    <i class="ri-user-fill"></i> 플레이어 1
+                </div>
+                <div class="player-chips" id="p1-chips-display">100 CHIPS</div>
+            </div>
+            <div class="score-badge" id="p1-score-display">핸드 합계: 계산 중...</div>
+            <div class="hand-container" id="p1-hand">
+                <!-- Cards will go here -->
+            </div>
+        </div>
+
+        <!-- Action Panel -->
+        <div class="controls-row" id="game-controls">
+            <button class="btn-casino hit" id="btn-hit" onclick="playerHit()">HIT</button>
+            <button class="btn-casino stand" id="btn-stand" onclick="playerStand()">STAND</button>
+        </div>
+    </div>
+
+    <!-- Bet Selection Overlay -->
+    <div class="overlay" id="bet-overlay">
+        <div class="modal">
+            <h2>PLACE YOUR BETS</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem;">플레이어 1 & 플레이어 2 공동 베팅액을 설정하세요.</p>
+            <div class="bet-grid">
+                <button class="btn-chip" onclick="placeBet(10)">$10</button>
+                <button class="btn-chip" onclick="placeBet(20)">$20</button>
+                <button class="btn-chip" onclick="placeBet(50)">$50</button>
+            </div>
+            <p style="font-size:0.9rem; color:var(--neon-gold);" id="bet-p1-chips-hint">플레이어 1 잔여: 100</p>
+            <p style="font-size:0.9rem; color:var(--neon-gold);" id="bet-p2-chips-hint">플레이어 2 잔여: 100</p>
+        </div>
+    </div>
+
+    <!-- Round Result Overlay -->
+    <div class="overlay" id="result-overlay">
+        <div class="modal">
+            <h2 id="result-winner-lbl">ROUND OVER</h2>
+            <p class="winner-desc" id="result-desc">플레이어 1 승리!</p>
+            <button class="btn-main" onclick="nextRoundSetup()">다음 판 진행</button>
+        </div>
+    </div>
+
+    <script>
+        const SUITS = ['♠', '♥', '♦', '♣'];
+        const VALUES = [
+            { name: '2', value: 2 }, { name: '3', value: 3 }, { name: '4', value: 4 },
+            { name: '5', value: 5 }, { name: '6', value: 6 }, { name: '7', value: 7 },
+            { name: '8', value: 8 }, { name: '9', value: 9 }, { name: '10', value: 10 },
+            { name: 'J', value: 10 }, { name: 'Q', value: 10 }, { name: 'K', value: 10 },
+            { name: 'A', value: 11 }
+        ];
+
+        let p1 = { name: 'P1', hand: [], chips: 100, score: 0, status: 'active' };
+        let p2 = { name: 'P2', hand: [], chips: 100, score: 0, status: 'active' };
+        
+        let deck = [];
+        let currentRound = 1;
+        let activePlayer = 'p1'; // 'p1' or 'p2' or 'finished'
+        let currentBet = 0;
+        let hideFirstCard = true; // Turn is hidden/shown during betting and action phases
+
+        function createDeck() {
+            deck = [];
+            for (let suit of SUITS) {
+                for (let val of VALUES) {
+                    deck.push({ suit, name: val.name, val: val.value });
+                }
+            }
+            // Shuffle
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function drawCard() {
+            if (deck.length === 0) createDeck();
+            return deck.pop();
+        }
+
+        function placeBet(amount) {
+            if (p1.chips < amount || p2.chips < amount) {
+                alert('칩이 부족합니다!');
+                return;
+            }
+            p1.chips -= amount;
+            p2.chips -= amount;
+            currentBet = amount * 2;
+
+            document.getElementById('pot-amount').innerText = currentBet + " CHIPS";
+            document.getElementById('p1-chips-display').innerText = p1.chips + " CHIPS";
+            document.getElementById('p2-chips-display').innerText = p2.chips + " CHIPS";
+
+            document.getElementById('bet-overlay').classList.remove('active');
+
+            // Deal hands
+            dealInitialCards();
+        }
+
+        function dealInitialCards() {
+            p1.hand = [drawCard(), drawCard()];
+            p2.hand = [drawCard(), drawCard()];
+
+            p1.status = 'active';
+            p2.status = 'active';
+            activePlayer = 'p1';
+
+            hideFirstCard = true;
+            updateUI();
+        }
+
+        function getHandScore(hand) {
+            let score = 0;
+            let aces = 0;
+            for (let c of hand) {
+                score += c.val;
+                if (c.name === 'A') aces++;
+            }
+            while (score > 21 && aces > 0) {
+                score -= 10;
+                aces--;
+            }
+            return score;
+        }
+
+        function updateUI() {
+            // Update active player highlight
+            document.getElementById('p1-row').classList.toggle('active', activePlayer === 'p1');
+            document.getElementById('p2-row').classList.toggle('active', activePlayer === 'p2');
+
+            // Enable/disable action controls
+            document.getElementById('btn-hit').disabled = (activePlayer === 'finished');
+            document.getElementById('btn-stand').disabled = (activePlayer === 'finished');
+
+            // Render hands
+            renderHand('p1-hand', p1.hand, activePlayer === 'p2' && hideFirstCard);
+            renderHand('p2-hand', p2.hand, activePlayer === 'p1' && hideFirstCard);
+
+            // Display scores
+            if (activePlayer === 'p1') {
+                document.getElementById('p1-score-display').innerText = "핸드 합계: " + getHandScore(p1.hand);
+                document.getElementById('p2-score-display').innerText = "상대 핸드 확인 대기 중...";
+            } else if (activePlayer === 'p2') {
+                document.getElementById('p2-score-display').innerText = "핸드 합계: " + getHandScore(p2.hand);
+                document.getElementById('p1-score-display').innerText = "상대 핸드 확인 대기 중...";
+            } else {
+                // Show both
+                document.getElementById('p1-score-display').innerText = "핸드 합계: " + getHandScore(p1.hand);
+                document.getElementById('p2-score-display').innerText = "핸드 합계: " + getHandScore(p2.hand);
+            }
+        }
+
+        function renderHand(elementId, hand, isOpponentTurn) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            hand.forEach((card, idx) => {
+                const el = document.createElement('div');
+                const isRed = (card.suit === '♥' || card.suit === '♦');
+                
+                // Hide opponent's first card on their inactive turn to prevent cheating
+                if (isOpponentTurn && idx === 0) {
+                    el.className = 'card-view face-down';
+                } else {
+                    el.className = 'card-view' + (isRed ? ' red' : '');
+                    el.innerHTML = `
+                        <div style="font-size:1.1rem;">${card.name}</div>
+                        <div class="card-suit">${card.suit}</div>
+                    `;
+                }
+                container.appendChild(el);
+            });
+        }
+
+        function playerHit() {
+            if (activePlayer === 'p1') {
+                p1.hand.push(drawCard());
+                if (getHandScore(p1.hand) > 21) {
+                    p1.status = 'bust';
+                    // Auto Stand and shift
+                    activePlayer = 'p2';
+                    alert('플레이어 1 버스트(Bust)!');
+                }
+            } else if (activePlayer === 'p2') {
+                p2.hand.push(drawCard());
+                if (getHandScore(p2.hand) > 21) {
+                    p2.status = 'bust';
+                    // Auto Stand and evaluate
+                    activePlayer = 'finished';
+                    evaluateRound();
+                }
+            }
+            updateUI();
+        }
+
+        function playerStand() {
+            if (activePlayer === 'p1') {
+                activePlayer = 'p2';
+            } else if (activePlayer === 'p2') {
+                activePlayer = 'finished';
+                evaluateRound();
+            }
+            updateUI();
+        }
+
+        function evaluateRound() {
+            hideFirstCard = false;
+            updateUI();
+
+            const s1 = getHandScore(p1.hand);
+            const s2 = getHandScore(p2.hand);
+
+            let winner = '';
+            let winDesc = '';
+
+            if (p1.status === 'bust' && p2.status === 'bust') {
+                winner = 'tie';
+                winDesc = '양측 모두 버스트! 비겼습니다.';
+                p1.chips += currentBet / 2;
+                p2.chips += currentBet / 2;
+            } else if (p1.status === 'bust') {
+                winner = 'p2';
+                winDesc = '플레이어 1 버스트로 플레이어 2 승리!';
+                p2.chips += currentBet;
+            } else if (p2.status === 'bust') {
+                winner = 'p1';
+                winDesc = '플레이어 2 버스트로 플레이어 1 승리!';
+                p1.chips += currentBet;
+            } else {
+                // Both survived, compare scores
+                if (s1 > s2) {
+                    winner = 'p1';
+                    winDesc = `플레이어 1 (${s1}점) 대 플레이어 2 (${s2}점)로 플레이어 1 승리!`;
+                    p1.chips += currentBet;
+                } else if (s2 > s1) {
+                    winner = 'p2';
+                    winDesc = `플레이어 2 (${s2}점) 대 플레이어 1 (${s1}점)로 플레이어 2 승리!`;
+                    p2.chips += currentBet;
+                } else {
+                    winner = 'tie';
+                    winDesc = `두 플레이어 모두 ${s1}점으로 무승부!`;
+                    p1.chips += currentBet / 2;
+                    p2.chips += currentBet / 2;
+                }
+            }
+
+            document.getElementById('result-winner-lbl').innerText = winner === 'tie' ? 'PUSH / TIE' : 'WINNER!';
+            document.getElementById('result-desc').innerText = winDesc;
+            document.getElementById('result-overlay').classList.add('active');
+        }
+
+        function nextRoundSetup() {
+            document.getElementById('result-overlay').classList.remove('active');
+            
+            if (p1.chips <= 0) {
+                alert('플레이어 1이 파산했습니다! 플레이어 2의 최종 승리!');
+                resetGame();
+                return;
+            }
+            if (p2.chips <= 0) {
+                alert('플레이어 2가 파산했습니다! 플레이어 1의 최종 승리!');
+                resetGame();
+                return;
+            }
+
+            currentRound++;
+            document.getElementById('round-indicator').innerText = "ROUND " + currentRound;
+            
+            // Show Bet overlay again
+            showBetOverlay();
+        }
+
+        function showBetOverlay() {
+            document.getElementById('bet-p1-chips-hint').innerText = `플레이어 1 칩: ${p1.chips}`;
+            document.getElementById('bet-p2-chips-hint').innerText = `플레이어 2 칩: ${p2.chips}`;
+            document.getElementById('bet-overlay').classList.add('active');
+        }
+
+        function resetGame() {
+            p1 = { name: 'P1', hand: [], chips: 100, score: 0, status: 'active' };
+            p2 = { name: 'P2', hand: [], chips: 100, score: 0, status: 'active' };
+            currentRound = 1;
+            document.getElementById('round-indicator').innerText = "ROUND 1";
+            createDeck();
+            showBetOverlay();
+        }
+
+        // Init Game
+        createDeck();
+        showBetOverlay();
+
+    </script>
+</body>
+</html>
