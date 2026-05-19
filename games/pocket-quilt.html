@@ -27,8 +27,9 @@
             background-color: var(--bg-main);
             color: var(--text-main);
             font-family: 'Pretendard', 'Fredoka', sans-serif;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             user-select: none;
@@ -192,6 +193,15 @@
             cursor: pointer;
         }
         .btn-pass:active { background: #dbeafe; }
+
+        .rot-btn {
+            position: absolute; top: 5px; right: 5px;
+            background: #cbd5e1; border: none; border-radius: 50%;
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            color: #1e293b; cursor: pointer; z-index: 10; font-size: 1.2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .rot-btn:active { background: #94a3b8; transform: scale(0.9); }
 
         /* Draggable Element */
         #drag-ghost {
@@ -472,8 +482,21 @@
                     card.appendChild(document.createElement('div'));
                 }
 
+                // Rotate Button
+                const rotBtn = document.createElement('button');
+                rotBtn.innerHTML = '<i class="ri-refresh-line"></i>';
+                rotBtn.className = 'rot-btn';
+                rotBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    rotatePatch(patch);
+                    drawPatchMini(preview, patch);
+                };
+                card.appendChild(rotBtn);
+
                 // Drag Logic
-                card.addEventListener('touchstart', e => handleTouchStart(e, idx, patch, card));
+                card.addEventListener('touchstart', e => { e.preventDefault(); handleDragStart(e, idx, patch); }, {passive: false});
+                card.addEventListener('mousedown', e => { e.preventDefault(); handleDragStart(e, idx, patch); });
                 
                 shop.appendChild(card);
             });
@@ -508,49 +531,47 @@
         }
 
         // --- Drag & Drop Logic ---
-        function handleTouchStart(e, idx, patch, card) {
+        function handleDragStart(e, idx, patch) {
             if (activePlayer.btn < patch.cost) return; // Cannot afford
             
-            e.preventDefault();
-            const touch = e.touches[0];
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             
             dragPatch = {
                 idx: idx,
                 patch: JSON.parse(JSON.stringify(patch)),
-                startX: touch.clientX,
-                startY: touch.clientY,
+                startX: clientX,
+                startY: clientY,
                 isTap: true,
                 validPos: null
             };
             
             updateGhostShape();
             ghostEl.style.display = 'block';
-            moveGhost(touch.clientX, touch.clientY);
+            moveGhost(clientX, clientY);
         }
 
-        window.addEventListener('touchmove', e => {
+        function handleDragMove(e) {
             if (!dragPatch) return;
             e.preventDefault();
-            const touch = e.touches[0];
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             
-            // Check if moved enough to not be a tap
-            if (Math.hypot(touch.clientX - dragPatch.startX, touch.clientY - dragPatch.startY) > 10) {
+            if (Math.hypot(clientX - dragPatch.startX, clientY - dragPatch.startY) > 10) {
                 dragPatch.isTap = false;
             }
             
-            moveGhost(touch.clientX, touch.clientY);
-            checkBoardSnap(touch.clientX, touch.clientY);
-        }, {passive: false});
+            moveGhost(clientX, clientY);
+            checkBoardSnap(clientX, clientY);
+        }
 
-        window.addEventListener('touchend', e => {
+        function handleDragEnd(e) {
             if (!dragPatch) return;
             
             if (dragPatch.isTap) {
-                // Rotate
+                // Rotate on tap is still supported as a fallback
                 rotatePatch(dragPatch.patch);
                 updateGhostShape();
-                // Update shop visually? Too complex, just keep it in ghost for now
-                // Actually, let's update the underlying shop array so it stays rotated if dropped
                 patchesInShop[dragPatch.idx].shape = dragPatch.patch.shape;
                 renderShop();
                 ghostEl.style.display = 'none';
@@ -558,17 +579,20 @@
                 return;
             }
             
-            // Try place
             if (dragPatch.validPos) {
                 placePatch(dragPatch.validPos.r, dragPatch.validPos.c);
             }
             
             ghostEl.style.display = 'none';
-            // Clear hover highlights
             Array.from(boardEl.children).forEach(c => c.style.backgroundColor = c.classList.contains('filled') ? c.style.backgroundColor : '');
             
             dragPatch = null;
-        });
+        }
+
+        window.addEventListener('touchmove', handleDragMove, {passive: false});
+        window.addEventListener('touchend', handleDragEnd);
+        window.addEventListener('mousemove', handleDragMove);
+        window.addEventListener('mouseup', handleDragEnd);
 
         function moveGhost(x, y) {
             // Offset y so finger doesn't block (Offset by 80px UP)

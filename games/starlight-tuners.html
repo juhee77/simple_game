@@ -67,9 +67,11 @@
 
   /* Market */
   .market-area { width: 350px; display: flex; flex-direction: column; gap: 15px; padding: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid var(--border); overflow-y: auto; }
-  .market-item { padding: 15px; background: rgba(255,255,255,0.02); border: 1px solid var(--empty); border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; }
+  .market-item { padding: 15px; background: rgba(255,255,255,0.02); border: 1px solid var(--empty); border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; touch-action: none; }
   .market-item:hover { border-color: var(--accent); background: rgba(157, 128, 255, 0.05); }
-  .market-item.selected { border-color: var(--p0); box-shadow: 0 0 15px var(--p0); } /* Will dynamically change color based on active player */
+  .market-item.selected { border-color: var(--p0); box-shadow: 0 0 15px var(--p0); transform: scale(1.05); z-index: 100; position: relative; }
+  .market-item.affordable { opacity: 1; border-color: rgba(255,255,255,0.3); }
+  .market-item.unaffordable { opacity: 0.4; filter: grayscale(1); }
   .market-item-info { display: flex; gap: 15px; margin-top: 10px; font-size: 0.9rem; }
   
   /* Tile Preview SVG */
@@ -82,6 +84,35 @@
   /* Modals */
   .overlay-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
   .hidden { display: none !important; }
+
+  @media (max-width: 800px) {
+    body { overflow: hidden; touch-action: none; }
+    .game-container { height: 100vh; padding: 5px; gap: 5px; justify-content: space-between; }
+    .top-section { flex-direction: row; gap: 5px; align-items: center; justify-content: space-between; }
+    .top-section > div { width: auto !important; }
+    #turn-indicator { font-size: 1.2rem; }
+    
+    .orbit-container { padding: 5px; flex: none; display: flex; justify-content: center; }
+    .orbit-cell { width: 16px; height: 16px; font-size: 0; }
+    .marker { width: 12px; height: 12px; }
+    
+    .main-area { flex-direction: row; gap: 5px; flex: 1; min-height: 0; align-items: stretch; }
+    .player-area { flex: 1; padding: 5px; justify-content: center; min-width: 0; }
+    .player-area h2 { font-size: 0.9rem; margin-bottom: 5px; }
+    .stats { font-size: 0.8rem; margin: 0 0 10px 0; gap: 10px; justify-content: center; }
+    
+    .grid-board { grid-template-columns: repeat(9, 14px); grid-template-rows: repeat(9, 14px); gap: 0; margin: 0 auto; }
+    .grid-cell { width: 14px; height: 14px; }
+    
+    .market-area { width: 100%; height: 120px; padding: 5px; flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+    #market-list { display: flex; flex-direction: row; gap: 10px; width: max-content; }
+    .market-item { padding: 5px; width: 80px; justify-content: space-between; }
+    .market-item svg { width: 40px; height: 40px; }
+    .market-item-info { gap: 5px; margin-top: 5px; font-size: 0.8rem; }
+    
+    #screen-intro h1, #screen-end h1 { font-size: 2.5rem !important; }
+    #screen-intro p, #screen-end p { font-size: 1.2rem !important; }
+  }
 
   /* GDD */
   #gdd-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
@@ -255,7 +286,12 @@ function initGrid(pId) {
       // Events
       cell.onmouseenter = () => handleHover(pId, r, c);
       cell.onmouseleave = clearPreview;
-      cell.onclick = () => handlePlace(pId, r, c);
+      cell.addEventListener('pointerup', () => {
+        if(isDragging) {
+           handlePlace(pId, r, c);
+           isDragging = false;
+        }
+      });
       board.appendChild(cell);
     }
   }
@@ -536,12 +572,23 @@ function updateUI() {
   document.getElementById('p1-stardust').textContent = pData[1].stardust;
   document.getElementById('p1-income').textContent = pData[1].income;
   
-  // Unselect market
+  // Unselect market and highlight affordable items
   selectedMarketIdx = -1;
-  document.querySelectorAll('.market-item').forEach(i => {
+  document.querySelectorAll('.market-item').forEach((i, idx) => {
     i.classList.remove('selected');
-    i.style.borderColor = 'transparent';
+    i.style.borderColor = '';
     i.style.boxShadow = 'none';
+    
+    const itemData = market[idx];
+    if (itemData) {
+      if (pData[activeP].stardust >= itemData.c) {
+        i.classList.add('affordable');
+        i.classList.remove('unaffordable');
+      } else {
+        i.classList.add('unaffordable');
+        i.classList.remove('affordable');
+      }
+    }
   });
   document.getElementById('btn-rotate').disabled = true;
   

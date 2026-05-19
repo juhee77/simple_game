@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>텔레파시 스케치 릴레이</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --bg: #F7FFF7;
+            --text: #2D3142;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Jua', sans-serif; user-select: none; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; font-size: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; }
+        
+        .container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
+
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; text-align: center; }
+        .screen.active { display: flex; }
+
+        h1 { font-size: 2.5rem; margin-bottom: 20px; color: var(--primary); }
+        h2 { font-size: 2rem; margin-bottom: 15px; }
+        p { font-size: 1.2rem; margin-bottom: 20px; color: #555; }
+
+        .input-group { margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        label { font-size: 1.2rem; }
+        input[type="number"], input[type="text"] { font-size: 1.5rem; padding: 10px; width: 150px; text-align: center; border: 2px solid var(--secondary); border-radius: 10px; outline: none; }
+        input[type="text"] { width: 250px; }
+
+        button { background: var(--secondary); color: white; border: none; padding: 15px 30px; font-size: 1.5rem; border-radius: 50px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        button:hover { transform: scale(1.05); }
+        button:active { transform: scale(0.95); }
+
+        /* Canvas Area */
+        .canvas-container { position: relative; width: 100%; max-width: 400px; aspect-ratio: 1; background: white; border: 4px solid var(--primary); border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        canvas { width: 100%; height: 100%; touch-action: none; }
+        
+        #timer { font-size: 3rem; color: var(--primary); margin-bottom: 10px; font-weight: bold; }
+        
+        .word-display { font-size: 4rem; color: var(--primary); margin: 30px 0; animation: pop 0.5s ease-out; }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        #result-text { font-size: 2rem; margin-bottom: 20px; }
+        .correct { color: #4ECDC4; }
+        .wrong { color: #FF6B6B; }
+    </style>
+</head>
+<body>
+
+    <header>텔레파시 스케치 릴레이 🎨</header>
+
+    <div class="container">
+        <!-- Screen 0: Setup -->
+        <div class="screen active" id="screen-setup">
+            <h1>스케치 릴레이</h1>
+            <p>한 캔버스에 이어서 그림을 그리고,<br>마지막 사람이 정답을 맞혀보세요!</p>
+            
+            <div class="input-group">
+                <label>참가 인원 (그리는 사람 + 맞히는 사람 1명)</label>
+                <input type="number" id="input-players" value="4" min="3" max="10">
+            </div>
+            <div class="input-group">
+                <label>1인당 그리는 시간 (초)</label>
+                <input type="number" id="input-time" value="5" min="3" max="20">
+            </div>
+            
+            <button onclick="startGame()">게임 시작</button>
+            <button onclick="location.href='../index.html'" style="background:#ccc; margin-top:15px; font-size:1rem; padding:10px 20px;">로비로 돌아가기</button>
+        </div>
+
+        <!-- Screen 1: Pass to Player 1 -->
+        <div class="screen" id="screen-word-ready">
+            <h2>Player 1, 준비되었나요?</h2>
+            <p>다른 사람에게 화면을 보여주지 마세요.<br>제시어를 확인하고 외우세요!</p>
+            <button onclick="showWord()">제시어 확인</button>
+        </div>
+
+        <!-- Screen 1.5: Show Word -->
+        <div class="screen" id="screen-word-show">
+            <h2>당신이 그릴 단어는...</h2>
+            <div class="word-display" id="target-word">사과</div>
+            <p>잠시 후 그림 그리기가 시작됩니다.</p>
+        </div>
+
+        <!-- Screen 2: Pass Device -->
+        <div class="screen" id="screen-pass">
+            <h2 id="pass-title">Player 2</h2>
+            <p>기기를 넘겨받으세요.<br>앞사람이 그린 그림에 이어서 그려야 합니다!</p>
+            <button onclick="startDrawingTurn()">그리기 시작</button>
+        </div>
+
+        <!-- Screen 3: Drawing Canvas -->
+        <div class="screen" id="screen-draw">
+            <h2 id="draw-player-name">Player X</h2>
+            <div id="timer">5</div>
+            <div class="canvas-container">
+                <canvas id="game-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Screen 4: Guessing Ready -->
+        <div class="screen" id="screen-guess-ready">
+            <h2>마지막 플레이어!</h2>
+            <p>그림이 완성되었습니다.<br>과연 이 그림은 무엇을 의미할까요?</p>
+            <button onclick="showGuessing()">그림 보기 및 정답 맞히기</button>
+        </div>
+
+        <!-- Screen 5: Guessing -->
+        <div class="screen" id="screen-guess">
+            <h2 style="margin-bottom:5px;">이 그림은 무엇일까요?</h2>
+            <div class="canvas-container" style="max-width: 300px; margin-bottom: 20px;">
+                <img id="final-image" style="width:100%; height:100%;">
+            </div>
+            <div class="input-group">
+                <input type="text" id="guess-input" placeholder="정답 입력">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="checkGuess()">정답 확인</button>
+                <button onclick="giveUp()" style="background:#FF6B6B;">포기</button>
+            </div>
+        </div>
+
+        <!-- Screen 6: Result -->
+        <div class="screen" id="screen-result">
+            <h2 id="result-title">결과</h2>
+            <div id="result-text"></div>
+            <p>원래 제시어: <strong id="result-word" style="color:var(--primary); font-size:1.5rem;"></strong></p>
+            
+            <div class="canvas-container" style="max-width: 250px; margin-bottom: 20px;">
+                <img id="result-image" style="width:100%; height:100%;">
+            </div>
+
+            <button onclick="resetGame()">다시 하기</button>
+            <button onclick="location.href='../index.html'" style="background:#ccc; margin-top:15px; font-size:1rem; padding:10px 20px;">나가기</button>
+        </div>
+    </div>
+
+    <script>
+        const WORDS = [
+            '사과', '피자', '에펠탑', '코끼리', '자전거', '노트북', '햄버거', '비행기', 
+            '경찰차', '아이스크림', '호랑이', '오징어', '거북이', '자유의 여신상', 
+            '모나리자', '우주선', '눈사람', '피아노', '기타', '냉장고', '선풍기', 
+            '무인도', '스마트폰', '텔레비전', '강아지', '고양이', '사자', '펭귄'
+        ];
+
+        let totalPlayers = 4;
+        let drawTime = 5;
+        let currentPlayer = 1;
+        let currentWord = "";
+        
+        let canvas, ctx;
+        let isDrawing = false;
+        let drawTimer = null;
+        let timeLeft = 0;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function startGame() {
+            totalPlayers = parseInt(document.getElementById('input-players').value);
+            drawTime = parseInt(document.getElementById('input-time').value);
+            
+            if (totalPlayers < 3) {
+                alert("최소 3명 이상 필요합니다.");
+                return;
+            }
+
+            // Pick random word
+            currentWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+            
+            currentPlayer = 1;
+            
+            // Setup canvas
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+            // Make canvas high res
+            canvas.width = 800;
+            canvas.height = 800;
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = "#000";
+            ctx.lineWidth = 10;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+
+            showScreen('screen-word-ready');
+        }
+
+        function showWord() {
+            document.getElementById('target-word').innerText = currentWord;
+            showScreen('screen-word-show');
+            
+            setTimeout(() => {
+                showScreen('screen-draw');
+                startDrawingTurn(true);
+            }, 3000);
+        }
+
+        function nextTurn() {
+            currentPlayer++;
+            if (currentPlayer >= totalPlayers) {
+                // Last player (guesser)
+                showScreen('screen-guess-ready');
+            } else {
+                document.getElementById('pass-title').innerText = `Player ${currentPlayer}`;
+                showScreen('screen-pass');
+            }
+        }
+
+        function startDrawingTurn(isFirst = false) {
+            if (!isFirst) showScreen('screen-draw');
+            
+            document.getElementById('draw-player-name').innerText = `Player ${currentPlayer} 의 턴`;
+            timeLeft = drawTime;
+            document.getElementById('timer').innerText = timeLeft;
+
+            drawTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(drawTimer);
+                    isDrawing = false;
+                    nextTurn();
+                }
+            }, 1000);
+        }
+
+        function showGuessing() {
+            // Convert canvas to image
+            const dataUrl = canvas.toDataURL();
+            document.getElementById('final-image').src = dataUrl;
+            document.getElementById('result-image').src = dataUrl;
+            document.getElementById('guess-input').value = "";
+            showScreen('screen-guess');
+        }
+
+        function checkGuess() {
+            const guess = document.getElementById('guess-input').value.trim();
+            if (!guess) return;
+
+            const isCorrect = guess === currentWord;
+            showResult(isCorrect, guess);
+        }
+
+        function giveUp() {
+            showResult(false, "포기");
+        }
+
+        function showResult(isCorrect, guess) {
+            const resultText = document.getElementById('result-text');
+            if (isCorrect) {
+                document.getElementById('result-title').innerText = "🎉 텔레파시 성공! 🎉";
+                resultText.innerHTML = `<span class="correct">정답입니다!</span>`;
+            } else {
+                document.getElementById('result-title').innerText = "💥 텔레파시 실패 💥";
+                resultText.innerHTML = `<span class="wrong">오답: ${guess}</span>`;
+            }
+            document.getElementById('result-word').innerText = currentWord;
+            showScreen('screen-result');
+        }
+
+        function resetGame() {
+            showScreen('screen-setup');
+        }
+
+        // Canvas Drawing Logic
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        canvas.addEventListener('pointerdown', (e) => {
+            if (timeLeft <= 0) return;
+            isDrawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!isDrawing || timeLeft <= 0) return;
+            e.preventDefault(); // Prevent scrolling
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        });
+
+        window.addEventListener('pointerup', () => {
+            if (isDrawing) {
+                isDrawing = false;
+                ctx.closePath();
+            }
+        });
+
+    </script>
+</body>
+</html>

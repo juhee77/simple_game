@@ -17,9 +17,10 @@
             --present-bg: #0f172a;
             --present-accent: #38bdf8;
             --text-main: #f8fafc;
+            --attack-color: #ef4444;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
         body {
             background-color: var(--present-bg);
             color: var(--text-main);
@@ -31,6 +32,14 @@
             transition: background 0.8s ease;
         }
         body.past { background-color: var(--past-bg); }
+
+        /* Warp Animation */
+        @keyframes warp {
+            0% { filter: blur(0px) contrast(1); transform: scale(1); }
+            50% { filter: blur(8px) contrast(1.5); transform: scale(1.05); }
+            100% { filter: blur(0px) contrast(1); transform: scale(1); }
+        }
+        .warping { animation: warp 0.6s ease-in-out; }
 
         /* Header */
         header {
@@ -67,7 +76,7 @@
             background: rgba(255,255,255,0.03);
             border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             cursor: pointer;
             position: relative;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -75,11 +84,10 @@
         .tile.wall { background: #1e293b; cursor: default; }
         .tile.exit { border: 2px dashed var(--present-accent); color: var(--present-accent); }
         body.past .tile.exit { border-color: var(--past-accent); color: var(--past-accent); }
-        .tile.player { background: var(--present-accent); color: #000; z-index: 10; box-shadow: 0 0 15px var(--present-accent); }
+        .tile.player { background: var(--present-accent); color: #000; z-index: 10; box-shadow: 0 0 15px var(--present-accent); transform: scale(1.1); }
         body.past .tile.player { background: var(--past-accent); box-shadow: 0 0 15px var(--past-accent); }
         
         .tile.interactable { color: var(--past-accent); }
-        .tile .badge { position: absolute; top: -5px; right: -5px; background: red; border-radius: 50%; width: 10px; height: 10px; }
 
         /* Time Switch Button */
         .time-control {
@@ -92,7 +100,7 @@
             background: linear-gradient(145deg, #1e293b, #0f172a);
             border: 4px solid var(--present-accent);
             color: var(--present-accent);
-            font-size: 2rem;
+            font-size: 2.5rem;
             cursor: pointer;
             transition: all 0.5s;
             display: flex; align-items: center; justify-content: center;
@@ -106,7 +114,7 @@
         }
 
         /* Message */
-        #msg { height: 40px; text-align: center; font-size: 0.9rem; color: #94a3b8; }
+        #msg { height: 40px; text-align: center; font-size: 1rem; color: #94a3b8; font-weight: 600; }
 
         /* Overlays */
         .overlay {
@@ -115,16 +123,10 @@
             display: none; align-items: center; justify-content: center; z-index: 1000;
         }
         .overlay.active { display: flex; }
-        .modal { background: #1e293b; padding: 30px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; }
+        .modal { background: #1e293b; padding: 30px; border-radius: 20px; width: 85%; max-width: 450px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        @keyframes ripple {
-            from { transform: scale(0.8); opacity: 1; }
-            to { transform: scale(1.5); opacity: 0; }
-        }
-        .ripple {
-            position: absolute; width: 100%; height: 100%; border: 2px solid white; border-radius: 12px;
-            animation: ripple 1s ease-out infinite;
-        }
+        .btn-main { background:var(--present-accent); color:#000; border:none; padding:12px 40px; border-radius:50px; font-weight:800; cursor:pointer; font-size:1.1rem; transition: transform 0.2s; }
+        .btn-main:hover { transform: scale(1.05); }
 
     </style>
 </head>
@@ -133,8 +135,7 @@
     <header>
         <div class="floor-info" id="floor-display">FLOOR 01</div>
         <div class="header-actions">
-            <button onclick="openGDD()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="ri-book-read-line"></i></button>
-            <button onclick="location.href='../index.html'" style="background:none; border:none; color:white; font-size:1.2rem; margin-left:15px;"><i class="ri-home-4-line"></i></button>
+            <button onclick="location.href='../index.html'" style="background:none; border:none; color:white; font-size:1.5rem;"><i class="ri-home-4-line"></i></button>
         </div>
     </header>
 
@@ -149,16 +150,39 @@
             <button class="btn-shift" id="shift-btn" onclick="toggleTime()">
                 <i class="ri-history-line"></i>
             </button>
-            <div id="time-label" style="font-weight: 800; letter-spacing: 2px;">PRESENT</div>
+            <div id="time-label" style="font-weight: 800; letter-spacing: 2px; font-size: 1.2rem;">PRESENT</div>
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Intro Overlay -->
+    <div class="overlay active" id="intro-overlay">
+        <div class="modal">
+            <h1 style="color:var(--present-accent); margin-bottom:15px; font-family:'Marcellus', serif; font-size: 2.5rem;">CHRONO-LOCK</h1>
+            <p style="color:#94a3b8; margin-bottom:15px; line-height: 1.6; text-align: left;">
+                당신은 시공간 감옥에 갇힌 연구원입니다.<br><br>
+                <b>현재(Present)</b>에서는 출구가 막혀 탈출할 수 없습니다.<br>
+                하지만 하단의 시계 장치를 이용해 <b>과거(Past)</b>로 돌아가 원인을 조작하면, 현재의 결과를 바꿀 수 있습니다.
+            </p>
+            <p style="color:var(--past-accent); margin-bottom:25px; font-weight:800; font-size: 1.1rem;">과거의 행동으로 현재를 열어 탈출하세요!</p>
+            <button class="btn-main" onclick="startGame()">감옥 진입</button>
+        </div>
+    </div>
+
+    <!-- Story Overlay -->
+    <div class="overlay" id="story-overlay">
+        <div class="modal">
+            <h2 id="story-title" style="margin-bottom: 15px; font-family:'Marcellus', serif; font-size: 2rem; color: var(--present-accent);">FLOOR</h2>
+            <p id="story-desc" style="color: #cbd5e1; margin-bottom: 25px; line-height: 1.6; white-space: pre-line; text-align: left; font-size: 1.05rem;"></p>
+            <button class="btn-main" onclick="closeStory()">탐색 시작</button>
+        </div>
+    </div>
+
+    <!-- End Overlay -->
     <div class="overlay" id="state-overlay">
         <div class="modal">
-            <h2 id="modal-title" style="margin-bottom: 10px;">STAGE CLEAR</h2>
+            <h2 id="modal-title" style="margin-bottom: 10px; font-size: 2rem; color: var(--present-accent);">STAGE CLEAR</h2>
             <p id="modal-desc" style="color: #94a3b8; margin-bottom: 25px;">인과관계를 성공적으로 조작했습니다.</p>
-            <button id="modal-btn" onclick="nextStage()" style="background:var(--present-accent); color:#000; border:none; padding:12px 30px; border-radius:50px; font-weight:800; cursor:pointer;">다음 층으로</button>
+            <button class="btn-main" id="modal-btn" onclick="nextStage()">다음 층으로</button>
         </div>
     </div>
 
@@ -168,38 +192,72 @@
         let isPast = false;
         let playerPos = { r: 3, c: 0 };
         let worldState = {
-            seedPlanted: false,
-            waterFilled: false,
-            machineFixed: false,
-            wallCracked: false
+            f1_button: false,
+            f2_seed: false,
+            f3_water: false,
+            f4_bomb: false,
+            f5_seed: false,
+            f5_water: false
         };
 
         const MAP_DATA = {
             1: {
                 start: { r: 3, c: 0 },
                 exit: { r: 0, c: 3 },
-                walls: [{ r: 1, c: 1 }, { r: 1, c: 2 }, { r: 2, c: 1 }],
-                items: [
-                    { r: 2, c: 2, type: 'button', pastOnly: true, desc: '과거: 이 버튼이 현재의 문을 조작합니다.' }
-                ]
+                walls: [{ r: 1, c: 1 }, { r: 1, c: 2 }, { r: 2, c: 1 }, { r: 0, c: 2 }, {r: 2, c: 3}],
+                items: [{ r: 2, c: 0, type: 'button', pastOnly: true, desc: '과거: 낡은 스위치를 켰습니다.' }],
+                story: "시간 감옥의 최하층.\n길이 막혀있지만, 옆에 녹슨 스위치가 보인다. \n과거로 돌아가 스위치를 미리 켜둔다면, 현재의 문이 열려있지 않을까?"
             },
             2: {
                 start: { r: 3, c: 0 },
-                exit: { r: 0, c: 0 },
-                walls: [{ r: 1, c: 0 }, { r: 1, c: 1 }, { r: 1, c: 2 }, { r: 0, c: 2 }],
-                items: [
-                    { r: 2, c: 0, type: 'seed', pastOnly: true, desc: '과거: 씨앗을 심으면 미래에 거대한 나무가 됩니다.' }
-                ]
+                exit: { r: 0, c: 3 },
+                walls: [{ r: 0, c: 1 }, { r: 1, c: 1 }, { r: 2, c: 1 }, { r: 3, c: 1 }],
+                items: [{ r: 2, c: 0, type: 'seed', pastOnly: true, desc: '과거: 메마른 땅에 씨앗을 심었습니다.' }],
+                story: "거대한 절벽이 앞을 가로막고 있다. \n수백 년 전 과거로 돌아가 절벽 근처에 씨앗을 심는다면, 현재에는 벽을 넘어갈 만큼 거대한 나무 다리가 자라있을 것이다."
             },
             3: {
                 start: { r: 3, c: 3 },
                 exit: { r: 0, c: 0 },
-                walls: [{ r: 1, c: 0 }, { r: 1, c: 1 }, { r: 2, c: 1 }, { r: 2, c: 2 }],
+                walls: [{ r: 2, c: 0 }, { r: 2, c: 1 }, { r: 2, c: 2 }],
+                items: [{ r: 0, c: 3, type: 'water', pastOnly: true, desc: '과거: 지하수 밸브를 열었습니다.' }],
+                story: "부서진 잔해들이 길을 완전히 막고 있다. \n과거로 돌아가 지하수 밸브를 열고 방을 물에 잠기게 만들면, 현재엔 부력으로 떠오른 잔해들이 새로운 길이 되어줄 것이다."
+            },
+            4: {
+                start: { r: 3, c: 0 },
+                exit: { r: 0, c: 0 },
+                walls: [{ r: 1, c: 0 }, { r: 1, c: 1 }, { r: 1, c: 2 }],
+                items: [{ r: 3, c: 3, type: 'bomb', pastOnly: true, desc: '과거: 시한폭탄을 설치했습니다.' }],
+                story: "두꺼운 강철 벽이 가로막고 있어 도저히 부술 수 없다. \n과거로 돌아가 벽 앞에 특수 폭탄을 설치해두자. 오랜 세월이 지나면 강철 벽도 파괴되어 있을 것이다."
+            },
+            5: {
+                start: { r: 3, c: 0 },
+                exit: { r: 0, c: 3 },
+                walls: [{ r: 0, c: 2 }, { r: 1, c: 2 }, { r: 2, c: 2 }, { r: 3, c: 2 }],
                 items: [
-                    { r: 3, c: 0, type: 'water', pastOnly: true, desc: '과거: 수도꼭지를 틀어 방을 침수시킵니다.' }
-                ]
+                    { r: 3, c: 1, type: 'seed', pastOnly: true, desc: '과거: 바위 틈새에 씨앗을 심었습니다.' },
+                    { r: 0, c: 1, type: 'water', pastOnly: true, desc: '과거: 밸브를 열어 씨앗에 물을 공급합니다.' }
+                ],
+                story: "시간 감옥의 최상층. 누구도 뚫을 수 없는 절대적인 장벽이 길을 막고 있다. \n단순히 씨앗을 심는 것만으로는 나무가 자라지 않는다. 과거에서 씨앗을 심고 밸브를 열어 물까지 완벽히 공급해야만 장벽을 뚫고 거대한 숲이 자라날 것이다."
             }
         };
+
+        function checkIsWall(f, r, c, past) {
+            const data = MAP_DATA[f];
+            let wall = data.walls.some(w => w.r === r && w.c === c);
+            if (!past) {
+                if (f === 1 && r === 0 && c === 2 && worldState.f1_button) wall = false;
+                if (f === 2 && r === 1 && c === 1 && worldState.f2_seed) wall = false;
+                if (f === 3 && r === 2 && c === 1 && worldState.f3_water) wall = false;
+                if (f === 4 && r === 1 && c === 2 && worldState.f4_bomb) wall = false;
+                if (f === 5 && r === 2 && c === 2 && worldState.f5_seed && worldState.f5_water) wall = false;
+            }
+            return wall;
+        }
+
+        function startGame() {
+            document.getElementById('intro-overlay').classList.remove('active');
+            initFloor(1);
+        }
 
         function initFloor(floor) {
             currentFloor = floor;
@@ -210,6 +268,16 @@
             document.getElementById('floor-display').innerText = `FLOOR 0${floor}`;
             document.getElementById('time-label').innerText = "PRESENT";
             renderMap();
+            
+            // Show story dialog
+            document.getElementById('story-overlay').classList.add('active');
+            document.getElementById('story-title').innerText = `FLOOR 0${floor}`;
+            document.getElementById('story-desc').innerText = data.story;
+            showMsg("과거와 현재를 오가며 탈출구를 찾으세요.");
+        }
+
+        function closeStory() {
+            document.getElementById('story-overlay').classList.remove('active');
         }
 
         function renderMap() {
@@ -222,20 +290,17 @@
                     const tile = document.createElement('div');
                     tile.className = 'tile';
                     
-                    // Wall Logic
-                    let isWall = data.walls.some(w => w.r === r && w.c === c);
+                    let isWall = checkIsWall(currentFloor, r, c, isPast);
                     
-                    // Causality Wall Rules
-                    if (currentFloor === 2 && r === 1 && c === 0 && worldState.seedPlanted && !isPast) {
-                        isWall = false; // Tree grows in future, replacing wall or creating path
-                        tile.innerHTML = '<i class="ri-leaf-line" style="color:var(--present-accent)"></i>';
+                    if (isWall) {
+                        tile.classList.add('wall');
+                    } else if (data.walls.some(w => w.r === r && w.c === c)) {
+                        // Was a wall, now causality removed it
+                        if (currentFloor === 1) tile.innerHTML = '<i class="ri-door-open-fill" style="color:var(--present-accent)"></i>';
+                        if (currentFloor === 2 || currentFloor === 5) tile.innerHTML = '<i class="ri-leaf-fill" style="color:var(--present-accent)"></i>';
+                        if (currentFloor === 3) tile.innerHTML = '<i class="ri-drop-fill" style="color:var(--present-accent)"></i>';
+                        if (currentFloor === 4) tile.innerHTML = '<i class="ri-fire-fill" style="color:var(--attack-color)"></i>';
                     }
-                    if (currentFloor === 3 && r === 1 && c === 1 && worldState.waterFilled && !isPast) {
-                        isWall = false; // Flooded, walkable
-                        tile.innerHTML = '<i class="ri-drop-line" style="color:var(--present-accent)"></i>';
-                    }
-
-                    if (isWall) tile.classList.add('wall');
 
                     // Exit
                     if (data.exit.r === r && data.exit.c === c) {
@@ -247,9 +312,10 @@
                     const item = data.items.find(i => i.r === r && i.c === c);
                     if (item && (isPast || !item.pastOnly)) {
                         tile.classList.add('interactable');
-                        if (item.type === 'seed') tile.innerHTML = worldState.seedPlanted ? '<i class="ri-plant-line"></i>' : '<i class="ri-seedling-line"></i>';
-                        if (item.type === 'button') tile.innerHTML = '<i class="ri-toggle-line"></i>';
-                        if (item.type === 'water') tile.innerHTML = '<i class="ri-temp-cold-line"></i>';
+                        if (item.type === 'seed') tile.innerHTML = (currentFloor===2 ? worldState.f2_seed : worldState.f5_seed) ? '<i class="ri-plant-fill"></i>' : '<i class="ri-seedling-line"></i>';
+                        if (item.type === 'button') tile.innerHTML = worldState.f1_button ? '<i class="ri-toggle-fill"></i>' : '<i class="ri-toggle-line"></i>';
+                        if (item.type === 'water') tile.innerHTML = (currentFloor===3 ? worldState.f3_water : worldState.f5_water) ? '<i class="ri-drop-fill"></i>' : '<i class="ri-temp-cold-line"></i>';
+                        if (item.type === 'bomb') tile.innerHTML = worldState.f4_bomb ? '<i class="ri-fire-fill" style="color:var(--attack-color)"></i>' : '<i class="ri-bomb-line"></i>';
                     }
 
                     // Player
@@ -265,17 +331,10 @@
         }
 
         function movePlayer(r, c) {
-            // Check adjacency
             const dr = Math.abs(r - playerPos.r);
             const dc = Math.abs(c - playerPos.c);
             if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
-                // Check walls
-                const data = MAP_DATA[currentFloor];
-                let isWall = data.walls.some(w => w.r === r && w.c === c);
-                
-                // Causality exceptions
-                if (currentFloor === 2 && r === 1 && c === 0 && worldState.seedPlanted && !isPast) isWall = false;
-                if (currentFloor === 3 && r === 1 && c === 1 && worldState.waterFilled && !isPast) isWall = false;
+                let isWall = checkIsWall(currentFloor, r, c, isPast);
 
                 if (!isWall) {
                     playerPos = { r, c };
@@ -290,27 +349,39 @@
             const item = data.items.find(i => i.r === r && i.c === c);
             
             if (item && isPast) {
-                if (item.type === 'seed') worldState.seedPlanted = true;
-                if (item.type === 'water') worldState.waterFilled = true;
-                if (item.type === 'button') worldState.wallCracked = true;
+                if (item.type === 'seed') {
+                    if (currentFloor === 2) worldState.f2_seed = true;
+                    if (currentFloor === 5) worldState.f5_seed = true;
+                }
+                if (item.type === 'water') {
+                    if (currentFloor === 3) worldState.f3_water = true;
+                    if (currentFloor === 5) worldState.f5_water = true;
+                }
+                if (item.type === 'button') worldState.f1_button = true;
+                if (item.type === 'bomb') worldState.f4_bomb = true;
+                
                 showMsg(item.desc + " 인과관계가 변했습니다.");
                 renderMap();
             }
 
             if (data.exit.r === r && data.exit.c === c) {
                 if (!isPast) {
-                    showOverlay("STAGE CLEAR", "시간의 벽을 넘어 탈출에 성공했습니다.");
+                    showOverlay("STAGE CLEAR", "시간의 장벽을 넘어 탈출했습니다.");
                 } else {
-                    showMsg("과거에서는 탈출할 수 없습니다. 현재로 돌아가세요.");
+                    showMsg("과거에서는 문이 닫혀있습니다. 현재로 돌아가세요.");
                 }
             }
         }
 
         function toggleTime() {
+            // Screen warp effect
+            document.body.classList.add('warping');
+            setTimeout(() => document.body.classList.remove('warping'), 600);
+            
             isPast = !isPast;
             document.body.classList.toggle('past', isPast);
             document.getElementById('time-label').innerText = isPast ? "PAST" : "PRESENT";
-            showMsg(isPast ? "과거로 이동했습니다. 원인을 만드세요." : "현재로 돌아왔습니다. 결과를 확인하세요.");
+            showMsg(isPast ? "수백 년 전 과거로 이동했습니다. 원인을 만드세요." : "현재로 돌아왔습니다. 결과를 확인하세요.");
             renderMap();
         }
 
@@ -325,21 +396,15 @@
         }
 
         function nextStage() {
-            if (currentFloor < 3) {
+            if (currentFloor < 5) {
                 document.getElementById('state-overlay').classList.remove('active');
                 initFloor(currentFloor + 1);
             } else {
-                alert("축하합니다! 모든 층을 돌파하여 시간의 굴레에서 벗어났습니다.");
+                alert("축하합니다! 모든 층을 돌파하여 시간 감옥에서 무사히 탈출했습니다.");
                 location.href = '../index.html';
             }
         }
 
-        async function openGDD() {
-            const gdd = await fetch('./docs/chrono-lock-gdd.md').then(r => r.text());
-            alert("상세 기획서는 로비의 GDD 메뉴에서 확인 가능합니다.");
-        }
-
-        window.onload = () => initFloor(1);
     </script>
 </body>
 </html>

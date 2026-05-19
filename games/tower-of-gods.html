@@ -27,7 +27,9 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
 
         body {
-            background-color: var(--bg-color);
+            background: linear-gradient(135deg, #0f172a, #1e1b4b, #312e81, #0f172a);
+            background-size: 300% 300%;
+            animation: bgShift 15s ease infinite;
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -35,6 +37,12 @@
             align-items: center;
             overflow-x: hidden;
             overflow-y: auto;
+        }
+        
+        @keyframes bgShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* Header */
@@ -90,17 +98,25 @@
             grid-template-rows: repeat(5, 70px);
             gap: 4px;
             transition: transform 0.5s ease;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,255,255,0.05);
         }
 
         .cell {
             width: 70px; height: 70px;
-            background: #22c55e; /* Base green ground */
-            border: 2px solid #16a34a;
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
             position: relative;
             transform-style: preserve-3d;
             cursor: pointer;
             transition: all 0.2s ease;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1), 0 2px 5px rgba(0,0,0,0.2);
         }
 
         /* Hover / Highlight effects */
@@ -126,45 +142,45 @@
         /* Building Blocks */
         .block {
             position: absolute;
-            background-color: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.1), inset 2px 2px 6px rgba(255,255,255,0.8);
+            background: rgba(241, 245, 249, 0.85);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.2), inset 2px 2px 6px rgba(255,255,255,0.8), 0 5px 15px rgba(0,0,0,0.4);
             transform-style: preserve-3d;
             pointer-events: none; /* Let clicks pass to the cell */
         }
-        .block.lvl1 { width: 66px; height: 66px; left: 0; top: 0; transform: translateZ(20px); border-radius: 4px; }
-        .block.lvl2 { width: 56px; height: 56px; left: 5px; top: 5px; transform: translateZ(40px); border-radius: 4px; }
-        .block.lvl3 { width: 46px; height: 46px; left: 10px; top: 10px; transform: translateZ(60px); border-radius: 50%; }
+        .block.lvl1 { width: 66px; height: 66px; left: 0px; top: 0px; transform: translateZ(20px); border-radius: 6px; }
+        .block.lvl2 { width: 54px; height: 54px; left: 6px; top: 6px; transform: translateZ(40px); border-radius: 6px; }
+        .block.lvl3 { width: 42px; height: 42px; left: 12px; top: 12px; transform: translateZ(60px); border-radius: 50%; }
         
         .dome {
             position: absolute;
-            width: 36px; height: 36px; left: 15px; top: 15px;
-            background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb);
+            width: 32px; height: 32px; left: 19px; top: 19px;
+            background: radial-gradient(circle at 30% 30%, #38bdf8, #0369a1);
             transform: translateZ(80px);
             border-radius: 50%;
             pointer-events: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 15px rgba(56, 189, 248, 0.5), inset -2px -2px 6px rgba(0,0,0,0.3);
         }
 
         /* Workers */
         .worker {
             position: absolute;
-            width: 24px; height: 44px;
-            left: 23px; top: 13px; /* Centered in 70x70 cell */
-            border-radius: 12px 12px 4px 4px;
-            /* To stand up vertically relative to camera: undo board rotation */
+            width: 20px; height: 45px;
+            left: 25px; top: 12px;
+            border-radius: 10px 10px 2px 2px;
             transform-origin: bottom center;
             transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg);
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
             pointer-events: none;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.5), inset 2px 2px 5px rgba(255,255,255,0.4);
             z-index: 10;
         }
 
-        .worker.p1 { background: linear-gradient(to bottom, #f87171, #b91c1c); border: 1px solid #7f1d1d; }
-        .worker.p2 { background: linear-gradient(to bottom, #fde047, #a16207); border: 1px solid #713f12; }
+        .worker.p1 { background: linear-gradient(135deg, #fca5a5, #dc2626); border: 1px solid #991b1b; }
+        .worker.p2 { background: linear-gradient(135deg, #fef08a, #ca8a04); border: 1px solid #854d0e; }
         .worker.selected {
-            box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.8), 0 5px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 0 20px 8px rgba(255, 255, 255, 0.6), inset -2px -2px 5px rgba(0,0,0,0.5);
         }
 
         /* Modal */

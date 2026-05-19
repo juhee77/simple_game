@@ -397,7 +397,29 @@
                 currentGold -= card.cost;
                 // Add to discard
                 players[turn].discard.push(cardId);
-                // Visual feedback could be added here
+                
+                // Visual feedback to explain deckbuilding mechanics
+                const toast = document.createElement('div');
+                toast.style.position = 'fixed';
+                toast.style.top = '20px';
+                toast.style.left = '50%';
+                toast.style.transform = 'translateX(-50%)';
+                toast.style.background = 'var(--gold-color)';
+                toast.style.color = '#78350f';
+                toast.style.padding = '10px 20px';
+                toast.style.borderRadius = '30px';
+                toast.style.fontWeight = 'bold';
+                toast.style.zIndex = '9999';
+                toast.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)';
+                toast.innerText = `[${card.name}] 구매! (버린 카드 더미에 추가됨. 덱이 리필될 때 등장합니다.)`;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.style.transition = 'opacity 0.5s';
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 500);
+                }, 2000);
+
                 updateUI();
             }
         }
@@ -496,12 +518,8 @@
             if (onClick) {
                 el.onclick = () => {
                     if (!el.classList.contains('disabled')) {
-                        if (isHand) {
-                            el.classList.add('playing');
-                            setTimeout(onClick, 150); // wait for animation
-                        } else {
-                            onClick();
-                        }
+                        // Action happens instantly to prevent fast-click bugs
+                        onClick();
                     }
                 };
             }

@@ -193,11 +193,16 @@
         .hand-selection { width: 100%; max-width: 500px; padding: 20px; text-align: center; }
         .hand-cards { display: flex; justify-content: center; gap: 15px; margin: 30px 0; }
         .hand-card {
+            position: relative;
             width: 80px; height: 80px; border-radius: 50%;
+            background: #334155;
+            border: 3px solid #64748b;
             cursor: pointer; transition: all 0.2s ease;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transform-style: preserve-3d;
         }
-        .hand-card:hover { transform: translateY(-10px); }
+        .hand-card.revealed { transform: rotateY(180deg); }
+        .hand-card.revealed:hover { transform: rotateY(180deg) scale(1.1) translateY(-10px); box-shadow: 0 10px 15px rgba(251, 191, 36, 0.5); border-color: var(--accent-gold); }
         
         /* Bet Overlay */
         .bet-selection { text-align: center; }
@@ -512,7 +517,6 @@
             p.hand.forEach((type, idx) => {
                 const el = document.createElement('div');
                 el.className = `hand-card card-${type === 'T' ? 'treasure' : 'skull'} revealed`;
-                el.style.transform = "rotateY(180deg)";
                 el.innerHTML = `<div class="card-back"></div><div class="card-front"></div>`;
                 el.onclick = () => playCard(idx);
                 container.appendChild(el);
