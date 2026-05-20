@@ -89,6 +89,30 @@
             margin-top: 0.35rem;
         }
 
+        /* Tactical Cards styling */
+        .tactic-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 0.75rem 0.6rem;
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tactic-btn:hover {
+            background: rgba(255, 255, 255, 0.09);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .tactic-btn.active {
+            background: rgba(251, 191, 36, 0.16) !important;
+            border-color: #f59e0b !important;
+            color: #fde68a !important;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+        }
+
         .status-strip {
             display: flex;
             justify-content: space-between;
@@ -451,6 +475,16 @@
                 <div class="panel player-card">
                     <div class="bid-copy" id="bid-copy">자신만 보고 선택하세요. 낮게 부를수록 직접 설명할 확률이 높습니다.</div>
                     <div class="player-name" id="bid-player-label">플레이어 1</div>
+                    
+                    <!-- Special Tactical Cards Selection -->
+                    <div class="tactic-section" style="margin: 1.25rem 0; padding: 1.2rem; background: rgba(15, 23, 42, 0.85); border-radius: 20px; border: 1px dashed rgba(251, 191, 36, 0.25);">
+                        <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.8rem;">🎭 이번 라운드 비밀 전술 카드 선택 (택 1)</div>
+                        <div class="tactic-grid" id="tactic-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; max-width: 480px; margin: 0 auto;">
+                            <!-- Tactics injected here -->
+                        </div>
+                        <div id="tactic-desc" style="font-size: 0.82rem; color: #cbd5e1; margin-top: 0.8rem; min-height: 1.2rem;">카드를 선택하면 특별 능력이 활성화됩니다.</div>
+                    </div>
+
                     <div class="bid-grid" id="bid-grid"></div>
                 </div>
             </section>
@@ -473,6 +507,10 @@
                 <div class="panel play-card">
                     <div class="subtitle-copy" id="play-player-copy">플레이어 1이 설명합니다.</div>
                     <div class="play-word-limit" id="play-word-limit">3단어 제한</div>
+                    
+                    <!-- Tactical active card display -->
+                    <div id="play-active-tactic" style="display:none; margin: 0.5rem auto; padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 800; font-size: 0.88rem; max-width: max-content;"></div>
+                    
                     <div class="target-word" id="play-target-word">오로라</div>
                     <div class="countdown-ring" id="countdown-ring" style="--progress:100;">
                         <div class="countdown-center">
@@ -572,6 +610,7 @@
         let countdownTimer = null;
         let remainingSeconds = 30;
         let availableWords = [];
+        let playerTactics = []; // Tactical card selected by each player for this round
 
         function showScreen(name) {
             Object.values(screens).forEach((screen) => screen.classList.remove('active'));
@@ -682,6 +721,7 @@
             currentPlayer = 0;
             currentWord = pickWord();
             bids = Array.from({ length: playerCount }, () => null);
+            playerTactics = Array.from({ length: playerCount }, () => 'none');
             winningBid = 0;
             activeBidders = Array.from({ length: playerCount }, (_, index) => index);
             tieBreakMode = false;
@@ -696,6 +736,48 @@
             renderBidOptions();
             updateBidTurn();
             showScreen('bid');
+        }
+
+        function renderTacticOptions() {
+            const grid = document.getElementById('tactic-grid');
+            grid.innerHTML = '';
+            
+            const list = [
+                { id: 'none', name: '🚫 전술 없음', emoji: '🚫', desc: '아무런 특수 카드를 사용하지 않고 일반 설명합니다.' },
+                { id: 'shield', name: '🛡️ 침묵의 방패', emoji: '🛡️', desc: '설명 실패 시 안전장치로 위로금 1점을 획득합니다.' },
+                { id: 'double', name: '⚡ 더블 타겟', emoji: '⚡', desc: '성공 시 점수 2배! 단, 실패하면 벌점 -1점을 받습니다.' },
+                { id: 'no_gesture', name: '🗣️ 몸짓 금지', emoji: '🗣️', desc: '말(단어)로만 설명하고 몸짓 금지. 성공 시 보너스 1점 추가!' },
+                { id: 'spy', name: '👁️ 스파이 입찰', emoji: '👁️', desc: '현재까지 제출된 다른 유저들의 최저 입찰 단어 수를 몰래 봅니다.' }
+            ];
+
+            const playerIndex = activeBidders[currentPlayer];
+            const currentSelected = playerTactics[playerIndex] || 'none';
+
+            list.forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `tactic-btn ${currentSelected === item.id ? 'active' : ''}`;
+                btn.innerText = item.name;
+                btn.addEventListener('click', () => {
+                    playerTactics[playerIndex] = item.id;
+                    document.getElementById('tactic-desc').innerText = item.desc;
+                    
+                    // Spy mechanism
+                    if (item.id === 'spy') {
+                        const previousBids = bids.filter((b, idx) => b !== null && idx !== playerIndex);
+                        if (previousBids.length > 0) {
+                            const minPrev = Math.min(...previousBids);
+                            document.getElementById('tactic-desc').innerText = `👁️ 스파이 가동: 현재 다른 유저의 최저 입찰가는 [${minPrev}단어]입니다!`;
+                        } else {
+                            document.getElementById('tactic-desc').innerText = `👁️ 스파이 가동: 당신이 첫 번째 입찰자라 스파이 정보가 없습니다!`;
+                        }
+                    }
+                    
+                    // Re-render to show active
+                    renderTacticOptions();
+                });
+                grid.appendChild(btn);
+            });
         }
 
         function renderBidOptions() {
@@ -723,6 +805,8 @@
             bidCopy.textContent = tieBreakMode
                 ? `동점자끼리 다시 부릅니다. 같은 가격이 또 나오면 추첨으로 설명자를 정합니다.`
                 : '자신만 보고 선택하세요. 낮게 부를수록 직접 설명할 확률이 높습니다.';
+                
+            renderTacticOptions();
         }
 
         function submitBid(bid) {
@@ -735,6 +819,14 @@
             }
 
             resolveAuction();
+        }
+
+        function getTacticLabel(tacticId) {
+            if (tacticId === 'shield') return '🛡️ 침묵의 방패';
+            if (tacticId === 'double') return '⚡ 더블 타겟';
+            if (tacticId === 'no_gesture') return '🗣️ 몸짓 금지';
+            if (tacticId === 'spy') return '👁️ 스파이 입찰';
+            return '일반';
         }
 
         function resolveAuction() {
@@ -752,9 +844,13 @@
             }
 
             explainerIndex = tiedPlayers[Math.floor(Math.random() * tiedPlayers.length)];
+            
+            const tactic = playerTactics[explainerIndex];
+            const tacticText = tactic && tactic !== 'none' ? ` [${getTacticLabel(tactic)}]` : '';
+
             winnerPill.textContent = tiedPlayers.length > 1
-                ? `동점 추첨: ${getPlayerLabel(explainerIndex)}`
-                : `설명자: ${getPlayerLabel(explainerIndex)}`;
+                ? `동점 추첨: ${getPlayerLabel(explainerIndex)}${tacticText}`
+                : `설명자: ${getPlayerLabel(explainerIndex)}${tacticText}`;
             auctionCopy.textContent = tiedPlayers.length > 1
                 ? `최저 입찰이 다시 같아 추첨으로 설명자를 정했습니다.`
                 : '가장 낮게 부른 플레이어가 설명합니다.';
@@ -763,11 +859,17 @@
             bids.forEach((bid, index) => {
                 const row = document.createElement('div');
                 row.className = `auction-row ${index === explainerIndex ? 'winner' : ''}`;
+                
+                const pTactic = playerTactics[index];
+                const tacticTag = pTactic && pTactic !== 'none'
+                    ? `<span style="font-size:0.78rem; font-weight:700; color:#fde68a; margin-left:0.5rem;">(${getTacticLabel(pTactic)})</span>`
+                    : '';
+
                 const teamTag = playMode === 'team'
                     ? `<span class="team-tag ${getTeamClass(playerTeams[index])}">${getTeamLabel(playerTeams[index])}</span>`
                     : '';
                 row.innerHTML = `
-                    <div class="auction-player">${getPlayerLabel(index)}</div>
+                    <div class="auction-player">${getPlayerLabel(index)}${tacticTag}</div>
                     ${teamTag}
                     <div class="auction-bid">${bid}단어</div>
                 `;
@@ -783,6 +885,27 @@
             playWordLimit.textContent = `${winningBid}단어 제한`;
             playTargetWord.textContent = currentWord;
             remainingSeconds = 30;
+
+            // Render active tactic badge
+            const activeBadge = document.getElementById('play-active-tactic');
+            const tactic = playerTactics[explainerIndex];
+            if (tactic && tactic !== 'none') {
+                activeBadge.style.display = 'block';
+                let tacticName = '';
+                let bg = '';
+                if (tactic === 'shield') { tacticName = '🛡️ 침묵의 방패 활성 (실패 위로금 +1점)'; bg = 'rgba(251, 191, 36, 0.2)'; }
+                else if (tactic === 'double') { tacticName = '⚡ 더블 타겟 활성 (성공 2배 / 실패 -1점 감점)'; bg = 'rgba(239, 68, 68, 0.2)'; }
+                else if (tactic === 'no_gesture') { tacticName = '🗣️ 몸짓 금지 활성 (성공 시 +1점 보너스)'; bg = 'rgba(56, 189, 248, 0.2)'; }
+                else if (tactic === 'spy') { tacticName = '👁️ 스파이 입찰 사용됨'; bg = 'rgba(139, 92, 246, 0.2)'; }
+                
+                activeBadge.innerText = tacticName;
+                activeBadge.style.background = bg;
+                activeBadge.style.border = `1px solid ${bg.replace('0.2', '0.6')}`;
+                activeBadge.style.color = '#fff';
+            } else {
+                activeBadge.style.display = 'none';
+            }
+
             updateCountdownUI();
             startTimer();
             showScreen('play');
@@ -808,15 +931,38 @@
         function finishRound(success) {
             clearInterval(countdownTimer);
 
+            const tactic = playerTactics[explainerIndex];
+
             if (success) {
                 const bonus = winningBid <= 2 ? 3 : winningBid <= 4 ? 2 : winningBid <= 6 ? 1 : 0;
-                const earned = 1 + bonus;
+                let earned = 1 + bonus;
+                let descAdd = '';
+
+                if (tactic === 'no_gesture') {
+                    earned += 1;
+                    descAdd += '<br>🗣️ <strong>몸짓 금지</strong> 성공 보너스로 +1점 추가!';
+                }
+
+                if (tactic === 'double') {
+                    earned *= 2;
+                    descAdd += '<br>⚡ <strong>더블 타겟</strong> 적용으로 최종 점수가 <strong>2배</strong>로 증가합니다!';
+                }
+
                 scores[explainerIndex] += earned;
                 resultTitle.textContent = '👏 설명 성공';
-                resultDetail.innerHTML = `${getPlayerLabel(explainerIndex)}이 <strong>${winningBid}단어</strong> 안에 설명을 마쳤습니다.<br>기본 1점 + 저단어 보너스 ${earned - 1}점으로 총 <strong>${earned}점</strong>을 획득합니다.${playMode === 'team' ? '<br>팀전이므로 이 점수는 팀 합산에도 바로 반영됩니다.' : ''}`;
+                resultDetail.innerHTML = `${getPlayerLabel(explainerIndex)}이 <strong>${winningBid}단어</strong> 안에 설명을 마쳤습니다.<br>기본 1점 + 저단어 보너스 ${bonus}점${descAdd}으로 총 <strong>${earned}점</strong>을 획득합니다.${playMode === 'team' ? '<br>팀전이므로 이 점수는 팀 합산에도 바로 반영됩니다.' : ''}`;
             } else {
+                let descAdd = '';
+                if (tactic === 'double') {
+                    scores[explainerIndex] = Math.max(0, scores[explainerIndex] - 1);
+                    descAdd = '<br>⚡ <strong>더블 타겟</strong> 실패 패널티로 점수가 <strong>1점</strong> 감점됩니다!';
+                } else if (tactic === 'shield') {
+                    scores[explainerIndex] += 1;
+                    descAdd = '<br>🛡️ <strong>침묵의 방패</strong> 위로금 혜택으로 <strong>1점</strong>을 방어/획득했습니다!';
+                }
+
                 resultTitle.textContent = '💥 설명 실패';
-                resultDetail.innerHTML = `${getPlayerLabel(explainerIndex)}이 제한 안에 설명하지 못했습니다.<br>이번 라운드는 점수 없이 종료됩니다.`;
+                resultDetail.innerHTML = `${getPlayerLabel(explainerIndex)}이 제한 안에 설명하지 못했습니다.${descAdd}<br>점수 획득 없이 종료됩니다.`;
             }
 
             if (currentRound >= totalRounds) {
