@@ -17,6 +17,14 @@
             --neon-fill: #38bdf8;
             --neon-x: #fb7185;
             --glass-glow: 0 0 15px rgba(56, 189, 248, 0.3);
+            --cell-size: 35px;
+            --hints-width: 100px;
+        }
+        @media (max-width: 480px) {
+            :root {
+                --cell-size: 26px;
+                --hints-width: 60px;
+            }
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; user-select: none; }
@@ -91,6 +99,7 @@
             padding-right: 10px;
             font-family: 'Share Tech Mono', monospace;
             font-weight: bold;
+            width: var(--hints-width);
         }
         .row-hint {
             display: flex;
@@ -98,7 +107,7 @@
             align-items: center;
             font-size: 0.9rem;
             color: var(--text-muted);
-            height: 35px;
+            height: var(--cell-size);
         }
         .row-hint span.solved { color: var(--text-muted); opacity: 0.3; text-decoration: line-through; }
         .row-hint span.active { color: var(--neon-fill); text-shadow: var(--glass-glow); }
@@ -118,7 +127,7 @@
             align-items: center;
             font-size: 0.9rem;
             color: var(--text-muted);
-            width: 35px;
+            width: var(--cell-size);
         }
         .col-hint span.solved { color: var(--text-muted); opacity: 0.3; text-decoration: line-through; }
         .col-hint span.active { color: var(--neon-fill); text-shadow: var(--glass-glow); }
@@ -131,7 +140,7 @@
             border-radius: 4px;
         }
         .cell {
-            width: 35px; height: 35px;
+            width: var(--cell-size); height: var(--cell-size);
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.05);
             border-radius: 4px;
@@ -407,8 +416,8 @@
             outer.innerHTML = '';
 
             // Layout styling
-            outer.style.gridTemplateColumns = `100px ${currentSize * 37}px`;
-            outer.style.gridTemplateRows = `auto ${currentSize * 37}px`;
+            outer.style.gridTemplateColumns = `var(--hints-width) max-content`;
+            outer.style.gridTemplateRows = `auto max-content`;
 
             // Top-left corner (empty)
             const tl = document.createElement('div');
@@ -417,7 +426,7 @@
             // Col hints header
             const colHeader = document.createElement('div');
             colHeader.className = 'col-hints-container';
-            colHeader.style.gridTemplateColumns = `repeat(${currentSize}, 35px)`;
+            colHeader.style.gridTemplateColumns = `repeat(${currentSize}, var(--cell-size))`;
             colHints.forEach(hints => {
                 const colHint = document.createElement('div');
                 colHint.className = 'col-hint';
@@ -450,8 +459,8 @@
             // Grid Container
             const grid = document.createElement('div');
             grid.className = 'grid';
-            grid.style.gridTemplateColumns = `repeat(${currentSize}, 35px)`;
-            grid.style.gridTemplateRows = `repeat(${currentSize}, 35px)`;
+            grid.style.gridTemplateColumns = `repeat(${currentSize}, var(--cell-size))`;
+            grid.style.gridTemplateRows = `repeat(${currentSize}, var(--cell-size))`;
 
             for (let r = 0; r < currentSize; r++) {
                 for (let c = 0; c < currentSize; c++) {
