@@ -119,6 +119,36 @@
         let lastFrame = 0;
         let time = 0;
 
+        // Visual improvements additions
+        let smoothCameraOffset = 0;
+        let screenShake = 0;
+        let stars = [];
+        let floatingTexts = [];
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < 45; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.5,
+                    brightness: Math.random(),
+                    speed: Math.random() * 8 + 3
+                });
+            }
+        }
+
+        function addFloatingText(text, color) {
+            floatingTexts.push({
+                text,
+                color,
+                x: canvas.width / 2,
+                y: canvas.height / 2 - 40,
+                alpha: 1.0,
+                vy: -1.8
+            });
+        }
+
         function isoPoint(x, z, y, cameraOffset) {
             return {
                 x: canvas.width / 2 + (x - z) * 1.1,
@@ -166,6 +196,10 @@
             }];
             combo = 0;
             time = 0;
+            smoothCameraOffset = 0;
+            screenShake = 0;
+            floatingTexts = [];
+            if (stars.length === 0) initStars();
             generateActiveBlock();
             updateStats();
             drawScene();
@@ -217,6 +251,16 @@
             const movementError = Math.abs((activeStart + activeEnd) / 2 - (baseStart + baseEnd) / 2);
             combo = movementError < 4 ? combo + 1 : 0;
 
+            if (movementError < 4) {
+                screenShake = 12;
+                addFloatingText(`PERFECT! 🔥 ${combo} COMBO`, '#38bdf8');
+            } else {
+                screenShake = 5;
+                if (combo > 0) {
+                    addFloatingText('GOOD! ✨', '#a7f3d0');
+                }
+            }
+
             trimBlock(overlapStart, overlapEnd);
             tower.push({
                 x: activeBlock.x,
@@ -248,24 +292,13 @@
             const bottomC = isoPoint(block.x + block.w, block.z + block.d, y0, cameraOffset);
             const bottomD = isoPoint(block.x, block.z + block.d, y0, cameraOffset);
 
-            const topColor = `hsl(${block.colorHue} 90% ${highlight ? 74 : 62}%)`;
+            const pulse = highlight ? Math.sin(time * 12) * 5 : 0;
+            const topColor = `hsl(${block.colorHue} 95% ${highlight ? 70 + pulse : 62}%)`;
             const leftColor = `hsl(${block.colorHue} 70% 42%)`;
             const rightColor = `hsl(${block.colorHue} 74% 32%)`;
 
             ctx.lineWidth = 1.5;
             ctx.lineJoin = 'round';
-
-            // Top Face
-            ctx.beginPath();
-            ctx.moveTo(topA.x, topA.y);
-            ctx.lineTo(topB.x, topB.y);
-            ctx.lineTo(topC.x, topC.y);
-            ctx.lineTo(topD.x, topD.y);
-            ctx.closePath();
-            ctx.fillStyle = topColor;
-            ctx.fill();
-            ctx.strokeStyle = `hsl(${block.colorHue} 100% 85%)`;
-            ctx.stroke();
 
             // Left Face
             ctx.beginPath();
@@ -276,7 +309,7 @@
             ctx.closePath();
             ctx.fillStyle = leftColor;
             ctx.fill();
-            ctx.strokeStyle = `hsl(${block.colorHue} 80% 60%)`;
+            ctx.strokeStyle = `hsl(${block.colorHue} 80% 55%)`;
             ctx.stroke();
 
             // Right Face
@@ -288,7 +321,19 @@
             ctx.closePath();
             ctx.fillStyle = rightColor;
             ctx.fill();
-            ctx.strokeStyle = `hsl(${block.colorHue} 80% 50%)`;
+            ctx.strokeStyle = `hsl(${block.colorHue} 80% 45%)`;
+            ctx.stroke();
+
+            // Top Face
+            ctx.beginPath();
+            ctx.moveTo(topA.x, topA.y);
+            ctx.lineTo(topB.x, topB.y);
+            ctx.lineTo(topC.x, topC.y);
+            ctx.lineTo(topD.x, topD.y);
+            ctx.closePath();
+            ctx.fillStyle = topColor;
+            ctx.fill();
+            ctx.strokeStyle = `hsl(${block.colorHue} 100% 85%)`;
             ctx.stroke();
         }
 
@@ -314,31 +359,91 @@
                 activeBlock.z = base.z + activeBlock.offset;
                 activeBlock.x = base.x;
             }
+
+            // Smooth camera transition
+            const targetCameraOffset = Math.max(0, (tower.length - 7) * BLOCK_HEIGHT);
+            smoothCameraOffset += (targetCameraOffset - smoothCameraOffset) * 0.1;
+
+            // Screen shake decay
+            if (screenShake > 0) {
+                screenShake -= delta * 15;
+                if (screenShake < 0) screenShake = 0;
+            }
+
+            // Update drifting stars
+            stars.forEach(star => {
+                star.y += star.speed * delta;
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+            });
+
+            // Update floating texts
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const ft = floatingTexts[i];
+                ft.y += ft.vy;
+                ft.alpha -= delta * 1.5;
+                if (ft.alpha <= 0) {
+                    floatingTexts.splice(i, 1);
+                }
+            }
         }
 
         function drawScene() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw deep space background
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#1e1b4b');
-            gradient.addColorStop(1, '#020617');
+            gradient.addColorStop(0, '#0a0a23');
+            gradient.addColorStop(1, '#020208');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const cameraOffset = Math.max(0, (tower.length - 7) * BLOCK_HEIGHT);
+            // Draw drifting stars
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness * (0.3 + 0.7 * Math.sin(time * 3 + star.x))})`;
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+            });
 
-            ctx.fillStyle = 'rgba(99, 102, 241, 0.08)';
+            // Apply screen shake
+            ctx.save();
+            if (screenShake > 0) {
+                const dx = (Math.random() - 0.5) * screenShake;
+                const dy = (Math.random() - 0.5) * screenShake;
+                ctx.translate(dx, dy);
+            }
+
+            // Draw light horizontal grids
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.05)';
             for (let i = 0; i < 8; i++) {
-                const point = isoPoint(-120, i * 30, 0, cameraOffset);
+                const point = isoPoint(-120, i * 30, 0, smoothCameraOffset);
                 ctx.fillRect(0, point.y, canvas.width, 1);
             }
 
-            tower.forEach((block) => drawBlock(block, cameraOffset));
+            // Draw blocks with smoothCameraOffset
+            tower.forEach((block) => drawBlock(block, smoothCameraOffset));
             if (activeBlock) {
-                drawBlock(activeBlock, cameraOffset, true);
+                drawBlock(activeBlock, smoothCameraOffset, true);
             }
 
+            ctx.restore();
+
+            // Draw floating perfect combo texts
+            floatingTexts.forEach(ft => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, ft.alpha);
+                ctx.fillStyle = ft.color;
+                ctx.font = '800 24px Outfit';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = ft.color;
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+            });
+
             if (!running) {
-                ctx.fillStyle = 'rgba(2, 6, 23, 0.46)';
+                ctx.fillStyle = 'rgba(2, 6, 23, 0.6)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#f8fafc';
                 ctx.font = '700 28px Outfit';
