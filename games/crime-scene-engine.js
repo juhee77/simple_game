@@ -462,4 +462,14 @@ function goTo(viewId) {
 // Init
 window.addEventListener('DOMContentLoaded', () => {
   renderLobby();
+  
+  // Direct link support for scenarios
+  const params = new URLSearchParams(window.location.search);
+  const scenarioId = params.get('scenario');
+  if (scenarioId) {
+    const sId = parseInt(scenarioId, 10);
+    if (!isNaN(sId)) {
+      openScenario(sId);
+    }
+  }
 });

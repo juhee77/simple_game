@@ -23,6 +23,11 @@
                 <span class="title-subtitle">Mini Game Paradise</span>
             </h1>
             <p class="subtitle">60가지 재미있는 게임을 즐겨보세요!</p>
+            <div class="search-container">
+                <input type="text" id="game-search" placeholder="게임 이름, 설명 또는 태그 검색..." autocomplete="off">
+                <span class="search-icon">🔍</span>
+                <button id="clear-search" class="clear-btn" style="display: none;">✕</button>
+            </div>
         </header>
         <!-- 1단계: 카테고리 뷰 -->
         <div id="category-view" class="category-grid">
@@ -457,15 +462,17 @@
 
                 <!-- 폰 넘기기 -->
                 <a href="games/relics-of-greed.html" class="game-card" data-category="pass multi">
-                    <div class="game-icon"><i class="ri-treasure-map-fill" style="color: #fbbf24;"></i></div>
+                    <div class="game-icon">👑</div>
                     <h2 class="game-title">탐욕의 유적</h2>
-                    <p class="game-desc">한정된 자원을 두고 벌이는 2인 심리 블러핑 보드게임.</p>
+                    <p class="game-description">한정된 자원을 두고 벌이는 2인 심리 블러핑 보드게임</p>
+                    <div class="game-badge">심리/대결</div>
                 </a>
                 
                 <a href="games/sketch-relay.html" class="game-card" data-category="pass multi">
-                    <div class="game-icon"><i class="ri-brush-fill" style="color: #FF6B6B;"></i></div>
+                    <div class="game-icon">🎨</div>
                     <h2 class="game-title">텔레파시 스케치 릴레이</h2>
-                    <p class="game-desc">단어를 보고 번갈아가며 그림을 그려 마지막 사람이 정답을 맞히는 파티 게임!</p>
+                    <p class="game-description">단어를 보고 번갈아가며 그림을 그려 마지막 사람이 정답을 맞히는 파티 게임!</p>
+                    <div class="game-badge">드로잉/파티</div>
                 </a>
 
                 <a href="games/two-truths.html" class="game-card" data-category="pass multi">
@@ -482,11 +489,18 @@
                     <div class="game-badge">추정/상식</div>
                 </a>
 
-                <a href="games/crime-scene.html" class="game-card" data-category="pass multi">
-                    <div class="game-icon">🔍</div>
-                    <h2 class="game-title">네온 크라임씬</h2>
-                    <p class="game-description">단서를 모아 범인을 찾아내세요</p>
-                    <div class="game-badge">역할극</div>
+                <a href="games/crime-scene.html?scenario=1" class="game-card" data-category="pass multi">
+                    <div class="game-icon">🏨</div>
+                    <h2 class="game-title">크라임씬: 호텔 1408호의 비밀</h2>
+                    <p class="game-description">재벌 회장이 1408호 스위트룸에서 사망. 남겨진 위스키 두 잔의 비밀을 밝히세요</p>
+                    <div class="game-badge">추리/역할극</div>
+                </a>
+
+                <a href="games/crime-scene.html?scenario=2" class="game-card" data-category="pass multi">
+                    <div class="game-icon">📚</div>
+                    <h2 class="game-title">크라임씬: 잠긴 서재의 독살</h2>
+                    <p class="game-description">소설가가 잠긴 서재에서 청산가리로 변사. 와인 잔과 미세 벌침 속 가려진 진실을 추리하세요</p>
+                    <div class="game-badge">추리/역할극</div>
                 </a>
 
                 <a href="games/relay-drawing.html" class="game-card" data-category="pass">
@@ -614,6 +628,13 @@
                     <p class="game-description">상자를 열어 꽝을 피하세요</p>
                     <div class="game-badge">복불복</div>
                 </a>
+
+                <!-- No Results Placeholder -->
+                <div id="no-results" class="view-hidden" style="text-align: center; padding: 4rem 2rem; width: 100%; grid-column: 1 / -1; background: rgba(30, 35, 60, 0.2); border-radius: 24px; border: 1px dashed rgba(255, 255, 255, 0.1);">
+                    <div style="font-size: 3.5rem; margin-bottom: 1rem; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4));">🔍</div>
+                    <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem; font-weight: 700; color: #fff;">일치하는 게임이 없습니다</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">다른 검색어로 입력해 보세요.</p>
+                </div>
             </main>
         </div>
 

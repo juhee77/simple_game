@@ -49,6 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryView.classList.remove('view-hidden');
         window.scrollTo({ top: 0, behavior: 'smooth' });
         clearCategoryState();
+        
+        // Reset search on returning to category list
+        if (searchInput) {
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            noResultsPlaceholder.classList.add('view-hidden');
+        }
     });
 
     const initialHash = window.location.hash.substring(1);
@@ -85,6 +92,82 @@ document.addEventListener('DOMContentLoaded', () => {
             void c.offsetWidth;
             c.classList.add('fadeInUp');
         });
+    }
+
+    // Search logic implementation
+    const searchInput = document.getElementById('game-search');
+    const clearSearchBtn = document.getElementById('clear-search');
+    const noResultsPlaceholder = document.getElementById('no-results');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim().toLowerCase();
+            
+            if (query.length > 0) {
+                clearSearchBtn.style.display = 'block';
+                currentCategoryTitle.textContent = `검색 결과: "${searchInput.value}"`;
+                
+                categoryView.classList.add('view-hidden');
+                gameView.classList.remove('view-hidden');
+                backBtn.style.display = 'none'; // Hide back btn to prevent nested state confusion
+                
+                let matchedCount = 0;
+                
+                gameCards.forEach(card => {
+                    const title = card.querySelector('.game-title')?.textContent.toLowerCase() || '';
+                    const desc = card.querySelector('.game-description')?.textContent.toLowerCase() || '';
+                    const badge = card.querySelector('.game-badge')?.textContent.toLowerCase() || '';
+                    
+                    if (title.includes(query) || desc.includes(query) || badge.includes(query)) {
+                        card.style.display = 'flex';
+                        matchedCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                if (matchedCount === 0) {
+                    noResultsPlaceholder.classList.remove('view-hidden');
+                } else {
+                    noResultsPlaceholder.classList.add('view-hidden');
+                    
+                    const visibleCards = Array.from(gameCards).filter(c => c.style.display !== 'none');
+                    visibleCards.forEach((c, i) => {
+                        c.style.animationDelay = `${Math.min(i * 0.05, 0.4)}s`;
+                        c.classList.remove('fadeInUp');
+                        void c.offsetWidth;
+                        c.classList.add('fadeInUp');
+                    });
+                }
+            } else {
+                resetSearch();
+            }
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            resetSearch();
+        });
+
+        function resetSearch() {
+            clearSearchBtn.style.display = 'none';
+            noResultsPlaceholder.classList.add('view-hidden');
+            backBtn.style.display = 'block';
+            
+            const rememberedCategory = localStorage.getItem(LAST_CATEGORY_KEY);
+            if (rememberedCategory) {
+                const card = getCategoryCard(rememberedCategory);
+                if (card) {
+                    showCategory(rememberedCategory, getCardTitle(card));
+                    return;
+                }
+            }
+            
+            // Return to categories if no prior state
+            gameView.classList.add('view-hidden');
+            categoryView.classList.remove('view-hidden');
+            clearCategoryState();
+        }
     }
 
     [...gameCards, ...categoryCards].forEach(card => {
