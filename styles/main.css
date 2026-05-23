@@ -208,21 +208,13 @@ body {
 
 /* Filter System */
 .filter-container {
-    display: none; /* Only visible in game view */
+    display: flex;
     flex-wrap: wrap;
     gap: 1.5rem;
     margin: 1.5rem auto 0;
     max-width: 800px;
     justify-content: center;
     animation: fadeInDown 0.8s ease-out;
-}
-
-.view-hidden ~ .filter-container,
-#game-view:not(.view-hidden) ~ * .filter-container { /* We will toggle a class instead */ }
-
-/* Let's manage visibility via JS by toggling a class on the body or container */
-body.show-filters .filter-container {
-    display: flex;
 }
 
 .filter-group {

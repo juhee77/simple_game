@@ -66,6 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
             backBtn.style.display = 'flex';
             localStorage.setItem(LAST_CATEGORY_KEY, state.category);
             history.replaceState(null, '', `#${state.category}`);
+        } else if (state.players !== 'all' || state.time !== 'all') {
+            isGameView = true;
+            currentCategoryTitle.textContent = `조건에 맞는 게임`;
+            backBtn.style.display = 'flex';
+            clearCategoryState();
         } else {
             isGameView = false;
             clearCategoryState();
@@ -74,13 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isGameView) {
             gameView.classList.add('view-hidden');
             categoryView.classList.remove('view-hidden');
-            document.body.classList.remove('show-filters');
             return;
         }
 
         categoryView.classList.add('view-hidden');
         gameView.classList.remove('view-hidden');
-        document.body.classList.add('show-filters');
 
         // Apply filters
         gameCards.forEach(card => {
@@ -162,6 +165,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     backBtn.addEventListener('click', () => {
         state.category = null;
+        state.searchQuery = '';
+        state.players = 'all';
+        state.time = 'all';
+        if(searchInput) searchInput.value = '';
+        if(clearSearchBtn) clearSearchBtn.style.display = 'none';
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.dataset.filterValue === 'all') {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        
         updateDisplay();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
