@@ -6,7 +6,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const backBtn = document.getElementById('back-to-categories');
     const gameCards = document.querySelectorAll('.game-card');
     const currentCategoryTitle = document.getElementById('current-category-title');
+    
+    const searchInput = document.getElementById('game-search');
+    const clearSearchBtn = document.getElementById('clear-search');
+    const noResultsPlaceholder = document.getElementById('no-results');
+    
+    const filterBtns = document.querySelectorAll('.filter-btn');
+
     const LAST_CATEGORY_KEY = 'lastCategory';
+    
+    let state = {
+        category: null,
+        searchQuery: '',
+        players: 'all',
+        time: 'all'
+    };
+
+    // Initialize state
+    const initialHash = window.location.hash.substring(1);
+    const rememberedCategory = localStorage.getItem(LAST_CATEGORY_KEY);
+    if (initialHash || rememberedCategory) {
+        state.category = initialHash || rememberedCategory;
+    }
 
     function getCardTitle(card) {
         return card?.querySelector('.category-title')?.textContent || '게임';
@@ -17,158 +38,170 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function clearCategoryState() {
+        state.category = null;
         localStorage.removeItem(LAST_CATEGORY_KEY);
         history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
     }
 
-    function openCategory(card) {
-        const category = card.dataset.category;
-        const title = getCardTitle(card);
-        localStorage.setItem(LAST_CATEGORY_KEY, category);
-        showCategory(category, title);
+    function parsePlayers(p) {
+        if (!p) return [1, 100];
+        if (p.endsWith('+')) return [parseInt(p), 100];
+        return [parseInt(p), parseInt(p)];
     }
 
+    // --- Core Display Logic ---
+    function updateDisplay() {
+        let isGameView = false;
+        let matchedCount = 0;
+        
+        // Determine view mode
+        if (state.searchQuery.length > 0) {
+            isGameView = true;
+            currentCategoryTitle.textContent = `검색 결과: "${state.searchQuery}"`;
+            backBtn.style.display = 'none';
+        } else if (state.category) {
+            isGameView = true;
+            const catCard = getCategoryCard(state.category);
+            currentCategoryTitle.textContent = getCardTitle(catCard);
+            backBtn.style.display = 'flex';
+            localStorage.setItem(LAST_CATEGORY_KEY, state.category);
+            history.replaceState(null, '', `#${state.category}`);
+        } else {
+            isGameView = false;
+            clearCategoryState();
+        }
+
+        if (!isGameView) {
+            gameView.classList.add('view-hidden');
+            categoryView.classList.remove('view-hidden');
+            document.body.classList.remove('show-filters');
+            return;
+        }
+
+        categoryView.classList.add('view-hidden');
+        gameView.classList.remove('view-hidden');
+        document.body.classList.add('show-filters');
+
+        // Apply filters
+        gameCards.forEach(card => {
+            let show = true;
+            
+            // 1. Category check
+            if (!state.searchQuery && state.category) {
+                const cardCategories = card.dataset.category.split(' ');
+                if (!cardCategories.includes(state.category)) show = false;
+            }
+            
+            // 2. Search check
+            if (state.searchQuery) {
+                const title = card.querySelector('.game-title')?.textContent.toLowerCase() || '';
+                const desc = card.querySelector('.game-description')?.textContent.toLowerCase() || '';
+                const badge = card.querySelector('.game-badge')?.textContent.toLowerCase() || '';
+                if (!(title.includes(state.searchQuery) || desc.includes(state.searchQuery) || badge.includes(state.searchQuery))) {
+                    show = false;
+                }
+            }
+            
+            // 3. Player filter check
+            if (show && state.players !== 'all') {
+                const [minP, maxP] = parsePlayers(card.dataset.players);
+                if (state.players === '1' && !(minP <= 1 && maxP >= 1)) show = false;
+                else if (state.players === '2' && !(minP <= 2 && maxP >= 2)) show = false;
+                else if (state.players === '3-4' && !(minP <= 4 && maxP >= 3)) show = false;
+                else if (state.players === '5+' && !(maxP >= 5)) show = false;
+            }
+
+            // 4. Time filter check
+            if (show && state.time !== 'all') {
+                const t = parseInt(card.dataset.time || '0', 10);
+                if (state.time === '5' && t > 5) show = false;
+                else if (state.time === '15' && (t <= 5 || t > 15)) show = false;
+                else if (state.time === '30+' && t <= 15) show = false;
+            }
+
+            card.style.display = show ? 'flex' : 'none';
+            if (show) matchedCount++;
+        });
+
+        if (matchedCount === 0) {
+            noResultsPlaceholder.classList.remove('view-hidden');
+        } else {
+            noResultsPlaceholder.classList.add('view-hidden');
+            // Animate visible cards
+            const visibleCards = Array.from(gameCards).filter(c => c.style.display !== 'none');
+            visibleCards.forEach((c, i) => {
+                c.style.animationDelay = `${Math.min(i * 0.05, 0.4)}s`;
+                c.classList.remove('fadeInUp');
+                void c.offsetWidth;
+                c.classList.add('fadeInUp');
+            });
+        }
+    }
+
+    // --- Event Listeners ---
+    
     categoryCards.forEach(card => {
         card.tabIndex = 0;
         card.setAttribute('role', 'button');
-
-        card.addEventListener('click', () => {
-            openCategory(card);
-        });
-
+        const trigger = () => {
+            state.category = card.dataset.category;
+            state.searchQuery = '';
+            if(searchInput) searchInput.value = '';
+            if(clearSearchBtn) clearSearchBtn.style.display = 'none';
+            updateDisplay();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        card.addEventListener('click', trigger);
         card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                openCategory(card);
+                trigger();
             }
         });
     });
 
     backBtn.addEventListener('click', () => {
-        gameView.classList.add('view-hidden');
-        categoryView.classList.remove('view-hidden');
+        state.category = null;
+        updateDisplay();
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        clearCategoryState();
-        
-        // Reset search on returning to category list
-        if (searchInput) {
-            searchInput.value = '';
-            clearSearchBtn.style.display = 'none';
-            noResultsPlaceholder.classList.add('view-hidden');
-        }
     });
-
-    const initialHash = window.location.hash.substring(1);
-    const rememberedCategory = localStorage.getItem(LAST_CATEGORY_KEY);
-    const initialCategory = initialHash || rememberedCategory;
-
-    if (initialCategory) {
-        const card = getCategoryCard(initialCategory);
-        if (card) {
-            showCategory(initialCategory, getCardTitle(card));
-        } else {
-            clearCategoryState();
-        }
-    }
-
-    function showCategory(category, title) {
-        currentCategoryTitle.textContent = title;
-        localStorage.setItem(LAST_CATEGORY_KEY, category);
-        history.replaceState(null, '', `#${category}`);
-        
-        gameCards.forEach(card => {
-            const cardCategories = card.dataset.category.split(' ');
-            card.style.display = cardCategories.includes(category) ? 'flex' : 'none';
-        });
-
-        categoryView.classList.add('view-hidden');
-        gameView.classList.remove('view-hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        const visibleCards = Array.from(gameCards).filter(c => c.style.display !== 'none');
-        visibleCards.forEach((c, i) => {
-            c.style.animationDelay = `${i * 0.1}s`;
-            c.classList.remove('fadeInUp');
-            void c.offsetWidth;
-            c.classList.add('fadeInUp');
-        });
-    }
-
-    // Search logic implementation
-    const searchInput = document.getElementById('game-search');
-    const clearSearchBtn = document.getElementById('clear-search');
-    const noResultsPlaceholder = document.getElementById('no-results');
 
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            const query = searchInput.value.trim().toLowerCase();
-            
-            if (query.length > 0) {
-                clearSearchBtn.style.display = 'block';
-                currentCategoryTitle.textContent = `검색 결과: "${searchInput.value}"`;
-                
-                categoryView.classList.add('view-hidden');
-                gameView.classList.remove('view-hidden');
-                backBtn.style.display = 'none'; // Hide back btn to prevent nested state confusion
-                
-                let matchedCount = 0;
-                
-                gameCards.forEach(card => {
-                    const title = card.querySelector('.game-title')?.textContent.toLowerCase() || '';
-                    const desc = card.querySelector('.game-description')?.textContent.toLowerCase() || '';
-                    const badge = card.querySelector('.game-badge')?.textContent.toLowerCase() || '';
-                    
-                    if (title.includes(query) || desc.includes(query) || badge.includes(query)) {
-                        card.style.display = 'flex';
-                        matchedCount++;
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-                
-                if (matchedCount === 0) {
-                    noResultsPlaceholder.classList.remove('view-hidden');
-                } else {
-                    noResultsPlaceholder.classList.add('view-hidden');
-                    
-                    const visibleCards = Array.from(gameCards).filter(c => c.style.display !== 'none');
-                    visibleCards.forEach((c, i) => {
-                        c.style.animationDelay = `${Math.min(i * 0.05, 0.4)}s`;
-                        c.classList.remove('fadeInUp');
-                        void c.offsetWidth;
-                        c.classList.add('fadeInUp');
-                    });
-                }
-            } else {
-                resetSearch();
-            }
+            state.searchQuery = searchInput.value.trim().toLowerCase();
+            clearSearchBtn.style.display = state.searchQuery.length > 0 ? 'block' : 'none';
+            updateDisplay();
         });
 
         clearSearchBtn.addEventListener('click', () => {
             searchInput.value = '';
-            resetSearch();
-        });
-
-        function resetSearch() {
+            state.searchQuery = '';
             clearSearchBtn.style.display = 'none';
-            noResultsPlaceholder.classList.add('view-hidden');
-            backBtn.style.display = 'block';
             
-            const rememberedCategory = localStorage.getItem(LAST_CATEGORY_KEY);
-            if (rememberedCategory) {
-                const card = getCategoryCard(rememberedCategory);
-                if (card) {
-                    showCategory(rememberedCategory, getCardTitle(card));
-                    return;
-                }
+            const remembered = localStorage.getItem(LAST_CATEGORY_KEY);
+            if (remembered && getCategoryCard(remembered)) {
+                state.category = remembered;
+            } else {
+                state.category = null;
             }
-            
-            // Return to categories if no prior state
-            gameView.classList.add('view-hidden');
-            categoryView.classList.remove('view-hidden');
-            clearCategoryState();
-        }
+            updateDisplay();
+        });
     }
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.filterType;
+            const val = btn.dataset.filterValue;
+            
+            document.querySelectorAll(`.filter-btn[data-filter-type="${type}"]`).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            if (type === 'players') state.players = val;
+            if (type === 'time') state.time = val;
+            
+            updateDisplay();
+        });
+    });
 
     [...gameCards, ...categoryCards].forEach(card => {
         card.addEventListener('click', (e) => {
@@ -190,4 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => ripple.remove(), 600);
         });
     });
+
+    // Initial render
+    updateDisplay();
 });

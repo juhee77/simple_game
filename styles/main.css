@@ -206,6 +206,84 @@ body {
     transform: translateY(-50%) scale(1.1);
 }
 
+/* Filter System */
+.filter-container {
+    display: none; /* Only visible in game view */
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin: 1.5rem auto 0;
+    max-width: 800px;
+    justify-content: center;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.view-hidden ~ .filter-container,
+#game-view:not(.view-hidden) ~ * .filter-container { /* We will toggle a class instead */ }
+
+/* Let's manage visibility via JS by toggling a class on the body or container */
+body.show-filters .filter-container {
+    display: flex;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(30, 35, 60, 0.4);
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    border-radius: 50px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.filter-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.filter-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    padding: 0.4rem 1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--text-primary);
+}
+
+.filter-btn.active {
+    background: var(--accent-primary);
+    color: white;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+}
+
+@media (max-width: 600px) {
+    .filter-group {
+        padding: 0.8rem;
+        border-radius: 16px;
+        width: 100%;
+    }
+    .filter-label {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        justify-content: center;
+    }
+}
+
 /* Views Logic */
 .view-hidden {
     display: none !important;
