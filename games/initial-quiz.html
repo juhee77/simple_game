@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>초성 퀴즈 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .category-select-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .category-card.selected {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+        }
+
+        .category-icon {
+            font-size: 2rem;
+        }
+
+        .category-name {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .quiz-arena {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .quiz-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .quiz-category-tag {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 10px rgba(168, 85, 247, 0.4);
+        }
+
+        .initial-consonants {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: 0.5rem;
+            margin: 2rem 0;
+            color: transparent;
+            background: linear-gradient(135deg, #fff, #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+        }
+
+        .answer-reveal {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #10b981;
+            margin: 2rem 0;
+            display: none;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .timer-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #10b981, #ef4444);
+            transition: width 0.1s linear;
+        }
+
+        .score-board {
+            width: 100%;
+            max-width: 600px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .player-row:last-child {
+            border-bottom: none;
+        }
+
+        .player-name {
+            font-weight: 600;
+        }
+
+        .score-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .score-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .score-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .player-score {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--accent-primary);
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .player-setup {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .player-input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .player-input {
+            flex: 1;
+            padding: 0.75rem 1.25rem;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .player-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .player-chip {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid var(--accent-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .player-chip span {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .player-chip button {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .controls button {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">🔠 초성 퀴즈</h1>
+            <p class="game-description">다양한 카테고리의 단어를 초성만 보고 가장 먼저 맞추세요!</p>
+        </div>
+
+        <div class="game-board">
+            <!-- SETUP SCREEN -->
+            <div id="setup-screen">
+                <div class="player-setup">
+                    <div class="filter-title">👥 참여 플레이어 등록</div>
+                    <div class="player-input-group">
+                        <input type="text" id="player-name-input" class="player-input" placeholder="플레이어 이름 입력" onkeypress="if(event.key === 'Enter') addPlayer()">
+                        <button class="button" onclick="addPlayer()">등록</button>
+                    </div>
+                    <div class="player-chips" id="player-chips"></div>
+                </div>
+
+                <div class="category-select-container">
+                    <div class="filter-title">🏷️ 카테고리 다중 선택</div>
+                    <div class="category-grid">
+                        <div class="category-card selected" data-category="movie" onclick="toggleCategory(this)">
+                            <div class="category-icon">🎬</div>
+                            <div class="category-name">영화/드라마</div>
+                        </div>
+                        <div class="category-card selected" data-category="kpop" onclick="toggleCategory(this)">
+                            <div class="category-icon">🎵</div>
+                            <div class="category-name">K-Pop/음악</div>
+                        </div>
+                        <div class="category-card selected" data-category="food" onclick="toggleCategory(this)">
+                            <div class="category-icon">🍕</div>
+                            <div class="category-name">음식/디저트</div>
+                        </div>
+                        <div class="category-card selected" data-category="proverb" onclick="toggleCategory(this)">
+                            <div class="category-icon">📚</div>
+                            <div class="category-name">속담/사자성어</div>
+                        </div>
+                        <div class="category-card selected" data-category="life" onclick="toggleCategory(this)">
+                            <div class="category-icon">🐶</div>
+                            <div class="category-name">동물/일상</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="button w-100" onclick="startGame()">게임 시작! 🚀</button>
+            </div>
+
+            <!-- PLAY ARENA -->
+            <div id="quiz-arena" class="quiz-arena">
+                <div class="quiz-card">
+                    <div class="quiz-category-tag" id="quiz-category">-</div>
+                    <div class="initial-consonants" id="quiz-initial">ㄱㄴㄷ</div>
+                    <div class="answer-reveal" id="quiz-answer">가나다</div>
+                    <div class="timer-container">
+                        <div class="timer-bar" id="timer-bar"></div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="button" id="reveal-btn" onclick="revealAnswer()">정답 공개 👀</button>
+                    <button class="button" id="next-btn" onclick="nextQuestion()" style="display:none; background: linear-gradient(135deg, #10b981, #059669);">다음 문제 ➡️</button>
+                </div>
+
+                <!-- SCOREBOARD -->
+                <div class="score-board">
+                    <div class="filter-title" style="margin-bottom: 0.5rem;">🏆 실시간 점수</div>
+                    <div id="score-rows"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database
+        const quizDatabase = {
+            movie: [
+                { q: "ㅂㅈㅇㄷㅅ", a: "범죄도시" },
+                { q: "ㄱㅅㅊ", a: "기생충" },
+                { q: "ㅇㅂㅈㅅ", a: "어벤져스" },
+                { q: "ㅇㅌㅅㅌㄹ", a: "인터스텔라" },
+                { q: "ㅅㄹㅇㅂㅅ", a: "사랑의 불시착" },
+                { q: "ㅇㅈㅇㄱㅇ", a: "오징어 게임" },
+                { q: "ㅎㄹㅍㅌ", a: "해리포터" },
+                { q: "ㅌㅇㅌㄴ", a: "타이타닉" },
+                { q: "ㅈㅂㅅㄴ", a: "재벌집 막내아들" },
+                { q: "ㄷㅌㅅㄹ", a: "더 글로리" },
+                { q: "ㅇㅅㅇㅇㅌ", a: "이상한 변호사 우영우" },
+                { q: "ㅂㄹㅇㅂㄹ", a: "벼랑 위의 포뇨" },
+                { q: "ㅎㅇㅇㅁㅈㅅ", a: "하울의 움직이는 성" },
+                { q: "ㅅㄴㅇㅇㅎ", a: "신의 한 수" },
+                { q: "ㅂㅅㅎ", a: "부산행" },
+                { q: "ㄱㄹㄷㅇㅌ", a: "극한직업" },
+                { q: "ㅋㄹㅂㅇㅎㅈ", a: "캐리비안의 해적" },
+                { q: "ㅅㄹㅇㅇㄹ", a: "슬기로운 의사생활" },
+                { q: "ㄴㄹㅇㅁㄹㅇ", a: "너의 이름은." },
+                { q: "ㄱㅈㄷㅇㅇ", a: "공조" }
+            ],
+            kpop: [
+                { q: "ㅂㅌㅅㄴㄷ", a: "방탄소년단" },
+                { q: "ㅂㄹㅍㅋ", a: "블랙핑크" },
+                { q: "ㄴㅈㅅ", a: "뉴진스" },
+                { q: "ㅇㅇㅂ", a: "아이브" },
+                { q: "ㅇㅅㅍ", a: "에스파" },
+                { q: "ㅅㄴㅅㄷ", a: "소녀시대" },
+                { q: "ㅂㅂ", a: "빅뱅" },
+                { q: "ㅌㅇㅇㅅ", a: "트와이스" },
+                { q: "ㅅㅂㅌ", a: "세븐틴" },
+                { q: "ㅇㅇㅇ", a: "아이유" },
+                { q: "ㄷㄴㅁㅇㅌ", a: "다이너마이트" },
+                { q: "ㅎㅇㅍㅂㅇ", a: "하이프 보이" },
+                { q: "ㄹㄷㅂㅂ", a: "레드벨벳" },
+                { q: "ㅁㅁㅁ", a: "마마무" },
+                { q: "ㅇㅅ", a: "엑소" },
+                { q: "ㅈㅋ", a: "지코" },
+                { q: "ㅅㅍㅅㅇ", a: "수퍼 샤이" },
+                { q: "ㄹㅂㄷㅇㅂ", a: "러브 다이브" },
+                { q: "ㄷㅌ", a: "디토" },
+                { q: "ㄱㄴㅅㅌㅇ", a: "강남스타일" }
+            ],
+            food: [
+                { q: "ㄸㅂㅇ", a: "떡볶이" },
+                { q: "ㅅㄱㅅ", a: "삼겹살" },
+                { q: "ㅉㅈㅁ", a: "짜장면" },
+                { q: "ㅊㅋ", a: "치킨" },
+                { q: "ㅂㅂㅂ", a: "비빔밥" },
+                { q: "ㅁㄹㅌ", a: "마라탕" },
+                { q: "ㄷㅋㅊ", a: "돈카츠" },
+                { q: "ㅍㅈ", a: "피자" },
+                { q: "ㅎㅂㄱ", a: "햄버거" },
+                { q: "ㅅ🍣", a: "초밥" },
+                { q: "ㄹㅁ", a: "라면" },
+                { q: "ㄲㅂㄹㅇ", a: "꿔바로우" },
+                { q: "ㅍㅌㅇ", a: "팟타이" },
+                { q: "ㄲㅂ/ㅇㄷ", a: "김밥/우동" },
+                { q: "ㅂㅅ", a: "빙수" },
+                { q: "ㅋㄹ", a: "카레" },
+                { q: "ㅅㅌㅇㅋ", a: "스테이크" },
+                { q: "ㅂㄷㅉㄱ", a: "부대찌개" },
+                { q: "ㄱㅂ", a: "갈비탕" },
+                { q: "ㅁㅋㄹ", a: "마카롱" }
+            ],
+            proverb: [
+                { q: "ㄱㅅㅈㅊ", a: "고진감래" },
+                { q: "ㄴㄱㅂㄱㅇ", a: "눈 가리고 아웅" },
+                { q: "ㄷㅂㅁㅇㅎ", a: "동문서답" },
+                { q: "ㅁㄹㅁㅅㅈ", a: "모르는 게 약" },
+                { q: "ㅂㄷㄱㅇㄱ", a: "바늘 도둑이 소 도둑 된다" },
+                { q: "ㅅㄱㅍㅈㅂ", a: "수박 겉 핥기" },
+                { q: "ㅇㅁㅇㄱㄱ", a: "우물 안 개구리" },
+                { q: "ㅌㅅㅁㅇㅌ", a: "티끌 모아 태산" },
+                { q: "ㅎㄹㄱㄹㄱ", a: "하늘의 별 따기" },
+                { q: "ㄱㅈㄱㅁㄹ", a: "가지 많은 나무에 바람 잘 날 없다" },
+                { q: "ㄷㄹㄷㅂㄱ", a: "되로 주고 말로 받는다" },
+                { q: "ㄷㄹㄷㄷㄹ", a: "돌다리도 두들겨 보고 건너라" },
+                { q: "ㅁㄹㄴㅎㄴ", a: "마른하늘에 날벼락" },
+                { q: "ㅂㄱㅂㅈㄷ", a: "보기 좋은 떡이 먹기도 좋다" },
+                { q: "ㅅㄱㅇㅁㄹ", a: "세 살 버릇 여든까지 간다" },
+                { q: "ㅇㅂㅇㄱㅊ", a: "약방의 감초" },
+                { q: "ㅈㄴㅁㄴㅂ", a: "가는 날이 장날" },
+                { q: "ㄱㄹㅂㅇㄷ", a: "고래 싸움에 새우 등 터진다" },
+                { q: "ㄴㅅㄱㄴㄹ", a: "낮말은 새가 듣고 밤말은 쥐가 듣는다" },
+                { q: "ㅎㄹㄱㅁㅅ", a: "호랑이도 제 말 하면 온다" }
+            ],
+            life: [
+                { q: "ㄱㅇㅇ", a: "고양이" },
+                { q: "ㄱㅇㅈ", a: "강아지" },
+                { q: "ㅋㄲㄹ", a: "코끼리" },
+                { q: "ㄷㄹㄴ", a: "도롱뇽" },
+                { q: "ㄷㄹㅈ", a: "다람쥐" },
+                { q: "ㅋㅇㄹ", a: "코알라" },
+                { q: "ㅍㄷ", a: "판다" },
+                { q: "ㅋㅍㅌ", a: "컴퓨터" },
+                { q: "ㅅㅁㅌㅍ", a: "스마트폰" },
+                { q: "ㅊㅅ", a: "책상" },
+                { q: "ㅈㅈㄱ", a: "자전거" },
+                { q: "ㄴㅈㄱ", a: "냉장고" },
+                { q: "ㅅㅌㄱ", a: "세탁기" },
+                { q: "ㅌㄹㅂㅈ", a: "텔레비전" },
+                { q: "ㅈㅎㅊ", a: "지하철" },
+                { q: "ㅂㅅ", a: "버스" },
+                { q: "ㅂㅎㄱ", a: "비행기" },
+                { q: "ㅍㅇㅈ", a: "편의점" },
+                { q: "ㅋㅍㅅ", a: "커피숍" },
+                { q: "ㄷㅅㄱ", a: "도서관" }
+            ]
+        };
+
+        const categoryNames = {
+            movie: "🎬 영화/드라마",
+            kpop: "🎵 K-Pop/음악",
+            food: "🍕 음식/디저트",
+            proverb: "📚 속담/사자성어",
+            life: "🐶 동물/일상"
+        };
+
+        let players = [];
+        let activeCategories = ["movie", "kpop", "food", "proverb", "life"];
+        let questionPool = [];
+        let currentQuestionIndex = 0;
+        let timer = null;
+        let timeLeft = 15; // 15 seconds per question
+        const totalTime = 15;
+
+        // Player Registration
+        function addPlayer() {
+            const input = document.getElementById('player-name-input');
+            const name = input.value.trim();
+            if (!name) return;
+            if (players.some(p => p.name === name)) {
+                alert('이미 등록된 이름입니다.');
+                return;
+            }
+            players.push({ name, score: 0 });
+            input.value = '';
+            renderPlayerChips();
+        }
+
+        function removePlayer(name) {
+            players = players.filter(p => p.name !== name);
+            renderPlayerChips();
+        }
+
+        function renderPlayerChips() {
+            const container = document.getElementById('player-chips');
+            container.innerHTML = players.map(p => `
+                <div class="player-chip">
+                    <span>${p.name}</span>
+                    <button onclick="removePlayer('${p.name}')">×</button>
+                </div>
+            `).join('');
+        }
+
+        // Category Selection
+        function toggleCategory(card) {
+            const category = card.dataset.category;
+            card.classList.toggle('selected');
+            
+            activeCategories = Array.from(document.querySelectorAll('.category-card.selected'))
+                .map(c => c.dataset.category);
+        }
+
+        // Game Controls
+        function startGame() {
+            if (activeCategories.length === 0) {
+                alert('최소 하나의 카테고리를 선택해야 합니다.');
+                return;
+            }
+            
+            // Generate pool
+            questionPool = [];
+            activeCategories.forEach(cat => {
+                quizDatabase[cat].forEach(item => {
+                    questionPool.push({ ...item, category: categoryNames[cat] });
+                });
+            });
+
+            // Shuffle pool
+            shuffle(questionPool);
+
+            if (questionPool.length === 0) {
+                alert('질문 데이터베이스가 비어있습니다.');
+                return;
+            }
+
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('quiz-arena').style.display = 'flex';
+
+            currentQuestionIndex = 0;
+            renderScoreboard();
+            startQuestion();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startQuestion() {
+            if (currentQuestionIndex >= questionPool.length) {
+                alert('모든 문제를 풀었습니다! 게임이 리셋됩니다.');
+                resetGame();
+                return;
+            }
+
+            const q = questionPool[currentQuestionIndex];
+            document.getElementById('quiz-category').textContent = q.category;
+            document.getElementById('quiz-initial').textContent = q.q;
+            
+            const ansEl = document.getElementById('quiz-answer');
+            ansEl.style.display = 'none';
+            ansEl.textContent = q.a;
+
+            document.getElementById('reveal-btn').style.display = 'inline-block';
+            document.getElementById('next-btn').style.display = 'none';
+
+            // Start Timer
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timeLeft = totalTime;
+            const bar = document.getElementById('timer-bar');
+            bar.style.width = '100%';
+            
+            timer = setInterval(() => {
+                timeLeft -= 0.1;
+                const percent = (timeLeft / totalTime) * 100;
+                bar.style.width = percent + '%';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    revealAnswer();
+                }
+            }, 100);
+        }
+
+        function revealAnswer() {
+            clearInterval(timer);
+            document.getElementById('quiz-answer').style.display = 'block';
+            document.getElementById('reveal-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            startQuestion();
+        }
+
+        function resetGame() {
+            document.getElementById('setup-screen').style.display = 'block';
+            document.getElementById('quiz-arena').style.display = 'none';
+            clearInterval(timer);
+        }
+
+        // Score Tracker
+        function renderScoreboard() {
+            const rows = document.getElementById('score-rows');
+            if (players.length === 0) {
+                rows.innerHTML = '<div style="text-align:center; color:var(--text-secondary);">등록된 플레이어가 없습니다.</div>';
+                return;
+            }
+
+            rows.innerHTML = players.map((p, idx) => `
+                <div class="player-row">
+                    <span class="player-name">${p.name}</span>
+                    <div class="score-controls">
+                        <button class="score-btn" onclick="updateScore(${idx}, -1)">-</button>
+                        <span class="player-score">${p.score}</span>
+                        <button class="score-btn" onclick="updateScore(${idx}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateScore(index, delta) {
+            players[index].score = Math.max(0, players[index].score + delta);
+            renderScoreboard();
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>

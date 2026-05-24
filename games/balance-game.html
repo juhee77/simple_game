@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>밸런스 게임 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .mode-select-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .mode-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 20px rgba(168, 85, 247, 0.2);
+        }
+
+        .mode-card.active {
+            background: rgba(168, 85, 247, 0.1);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        }
+
+        .mode-icon {
+            font-size: 3rem;
+            transition: transform 0.3s;
+        }
+
+        .mode-card:hover .mode-icon {
+            transform: scale(1.15) rotate(5deg);
+        }
+
+        .mode-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .mode-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Balance Split Arena */
+        .balance-arena {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .balance-question-container {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .balance-title-tag {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .balance-question-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .split-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 800px;
+            perspective: 1000px;
+        }
+
+        @media (max-width: 600px) {
+            .split-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        .option-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .option-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: 0;
+        }
+
+        .option-card-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .option-letter {
+            font-size: 2rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.2);
+            transition: color 0.4s;
+        }
+
+        .option-text {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.5;
+            word-break: keep-all;
+        }
+
+        /* Hover States */
+        .option-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(168, 85, 247, 0.15);
+        }
+
+        .option-card.option-a:hover {
+            border-color: #3b82f6;
+        }
+        .option-card.option-b:hover {
+            border-color: #ec4899;
+        }
+
+        /* Selected State */
+        .option-card.selected::before {
+            opacity: 0.15;
+        }
+
+        .option-card.option-a.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .option-card.option-b.selected {
+            border-color: #ec4899;
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.4);
+            background: rgba(236, 72, 153, 0.1);
+        }
+
+        .option-card.selected .option-letter {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Action Buttons */
+        .game-controls {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            max-width: 800px;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .vs-badge {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.1rem;
+            z-index: 10;
+            color: var(--text-secondary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .vs-badge {
+                display: none;
+            }
+        }
+
+        .progress-indicator {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">⚖️ 밸런스 게임</h1>
+            <p class="game-description">세상에서 가장 어려운 선택! 친구나 애인과 토론을 나누어보세요.</p>
+        </div>
+
+        <div class="game-board">
+            <!-- MODE SELECTION -->
+            <div id="mode-selection" class="mode-select-container">
+                <div class="filter-title">🧩 게임 모드 선택</div>
+                <div class="mode-grid">
+                    <div class="mode-card" onclick="selectMode('normal')">
+                        <div class="mode-icon">☕</div>
+                        <div class="mode-title">일반 모드</div>
+                        <div class="mode-desc">가벼운 취향 차이부터 누구나 공감할 수 있는 재미있는 질문 모음</div>
+                    </div>
+                    <div class="mode-card" onclick="selectMode('debate')">
+                        <div class="mode-icon">🌶️</div>
+                        <div class="mode-title">매운맛 토론 모드</div>
+                        <div class="mode-desc">과몰입을 유발하는 난제와 뜨거운 토론을 이끌어내는 고난도 질문 모음</div>
+                    </div>
+                    <div class="mode-card" onclick="selectMode('couple')">
+                        <div class="mode-icon">💖</div>
+                        <div class="mode-title">커플 전용 모드</div>
+                        <div class="mode-desc">서로의 연애관, 가치관을 맞춰보며 깊은 대화를 나눌 수 있는 심쿵 질문 모음</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLAY ARENA -->
+            <div id="balance-arena" class="balance-arena">
+                <div class="balance-question-container">
+                    <div class="balance-title-tag" id="balance-tag">일반 모드</div>
+                    <div class="balance-question-text" id="balance-question">두 가지 중 당신의 선택은?</div>
+                </div>
+
+                <div style="position: relative; width: 100%; max-width: 800px;">
+                    <div class="vs-badge">VS</div>
+                    <div class="split-container">
+                        <div class="option-card option-a" onclick="selectOption('a')">
+                            <div class="option-card-content">
+                                <div class="option-letter">A</div>
+                                <div class="option-text" id="option-a-text">옵션 A</div>
+                            </div>
+                        </div>
+
+                        <div class="option-card option-b" onclick="selectOption('b')">
+                            <div class="option-card-content">
+                                <div class="option-letter">B</div>
+                                <div class="option-text" id="option-b-text">옵션 B</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-indicator" id="progress-text">Q. 1 / 10</div>
+
+                <div class="game-controls">
+                    <button class="button" onclick="goHome()">돌아가기</button>
+                    <button class="button" onclick="nextQuestion()" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));">다음 질문 ➡️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questionDatabase = {
+            normal: [
+                { q: "평생 동안 먹을 계절 음식을 골라야 한다면?", a: "평생 무더운 여름에만 파는 팥빙수", b: "평생 한겨울에만 파는 붕어빵/호떡" },
+                { q: "평생 하나만 먹어야 한다면?", a: "달콤하고 부드러운 물냉면", b: "매콤하고 자극적인 비빔냉면" },
+                { q: "소개팅에서 이성을 만날 때 가장 중요하게 보는 것은?", a: "첫눈에 호감이 가는 외모와 스타일", b: "대화가 잘 통하고 유머러스한 성격" },
+                { q: "만약 부자가 될 수 있는 마법의 버튼이 있다면?", a: "100억 받고 스마트폰 평생 안 쓰기", b: "그냥 지금처럼 평범하게 스마트폰 쓰며 살기" },
+                { q: "초능력을 가질 수 있다면?", a: "언제 어디서든 시간을 마음대로 조작하는 능력 (시간 조절)", b: "순식간에 지구 반대편까지 이동하는 능력 (순간 이동)" },
+                { q: "집에서 쉴 때 나의 이상적인 하루는?", a: "종일 뒹굴거리며 넷플릭스 정주행하기", b: "집 밖으로 나가서 맛집 가고 활동적인 취미 즐기기" },
+                { q: "평생 마실 수 있는 음료는?", a: "하루도 거를 수 없는 아이스 아메리카노(커피)", b: "달콤하고 시원한 탄산음료" },
+                { q: "여행을 떠날 때 나의 스타일은?", a: "분 단위로 동선과 맛집을 완벽하게 기획한 계획파 (J)", b: "그날의 기분에 따라 즉흥적으로 움직이는 자유파 (P)" },
+                { q: "내 방을 청소할 때의 기준은?", a: "물건 하나하나가 정해진 위치에 완벽히 정돈된 상태", b: "어지럽혀져 있어도 내가 어디에 뒀는지 다 아는 상태" },
+                { q: "친구가 큰 마음을 먹고 머리를 자르고 왔는데 너무 안 어울린다. 나의 반응은?", a: "헤어 스타일리스트 욕을 하며 솔직하게 어색하다고 말해준다", b: "상처받지 않게 잘 잘랐다고 영혼 없이 칭찬해준다" }
+            ],
+            debate: [
+                { q: "로또 1등에 당첨된다면 누구에게 알릴 것인가?", a: "평생을 약속할 배우자/연인에게 즉시 알린다", b: "아무에게도 알리지 않고 나 혼자 조용히 자산을 관리한다" },
+                { q: "직장 상사 스타일 중 더 나은 쪽은?", a: "일은 엄청 잘 가르쳐주지만 툭하면 화내는 다혈질 천재 상사", b: "성격은 너무 착하고 천사 같지만 일을 하나도 못 하는 무능한 상사" },
+                { q: "어려운 상황에서 내 인생을 바꿀 수 있는 비밀을 안다면?", a: "내 모든 어두운 과거를 세상 사람들이 전부 아는 상태", b: "내 모든 미래의 죽는 날까지의 비밀을 나 혼자만 아는 상태" },
+                { q: "더 최악인 사람은?", a: "말할 때마다 상대방의 말을 뚝뚝 끊고 자기 얘기만 하는 사람", b: "말을 걸어도 리액션이 전혀 없고 침묵으로만 일관하는 사람" },
+                { q: "절친과 내 애인이 바람을 피웠다. 더 배신감이 드는 쪽은?", a: "나의 모든 비밀을 나누었던 10년 지기 절친", b: "내가 온 마음을 다해 사랑했던 내 애인" },
+                { q: "평생 하나만 해야 한다면?", a: "모든 음식에 설탕이나 소금 없이 오직 맹맛으로 먹기", b: "평생 매일 삼시세끼를 매운 불닭볶음면만 먹기" },
+                { q: "과거로 돌아갈 수 있는 기회가 온다면?", a: "10년 전 과거로 돌아가서 비트코인을 사고 인생 리셋하기", b: "미래 10년 뒤로 가서 내가 어떻게 살고 있는지 미리 확인하고 오기" },
+                { q: "어느 날 갑자기 찾아온 행운은?", a: "평생 잠을 단 1시간만 자도 전혀 피곤하지 않고 쌩쌩한 몸", b: "먹어도 먹어도 절대로 살이 찌지 않고 완벽한 몸매가 유지되는 몸" },
+                { q: "재앙이 닥쳐서 무인도에 단 한 명과 갇혀야 한다면?", a: "성격이 아주 더럽고 예민하지만 생존 기술이 뛰어난 생존 전문가", b: "성격이 너무 착하고 재밌지만 아무 도움도 안 되는 평범한 친구" },
+                { q: "더 싫은 친구는?", a: "약속 시간마다 기본 30분씩 늦고 당연하게 여기는 상습 지각생 친구", b: "약속 시간에 늦지도 않으면서 1시간 전부터 '어디야?'라며 닥달하는 친구" }
+            ],
+            couple: [
+                { q: "연인 사이에 바람직한 연락 주기는?", a: "1시간마다 뭐 하고 있는지 살아있는지 생존신고 하기", b: "출퇴근할 때나 하루 끝날 때 1번 진하게 통화하면 충분함" },
+                { q: "희대의 대논쟁! 내 연인의 행동 중 더 참을 수 없는 것은?", a: "내 절친의 깻잎이 안 떨어질 때 다정하게 떼어주는 애인", b: "내 절친이 조개껍질을 못 깔 때 숟가락으로 살포시 발라주는 애인" },
+                { q: "만약 연인이 아침에 눈을 떴을 때 바퀴벌레로 변해 있다면?", a: "애정으로 정성껏 키우며 책상 위에 아기자기한 집을 지어준다", b: "눈물을 머금고 살충제를 뿌려 세상에서 가장 고통 없이 보내준다" },
+                { q: "기념일을 챙길 때 내 연인이 해줬으면 하는 방식은?", a: "화려한 레스토랑 예약과 값비싼 브랜드 선물 세트", b: "소박한 골목 맛집과 밤새 꾹꾹 눌러 쓴 감동적인 손편지" },
+                { q: "더 용납하기 힘든 내 애인의 남사친/여사친 행동은?", a: "단둘이 낮에 만나서 조용한 브런치 카페 가고 인생 고민 상담하기", b: "단체 모임에서 밤새도록 술을 마시고 술기운에 밤늦게 데려다주기" },
+                { q: "내가 연인에게 듣고 싶은 최고의 칭찬은?", a: "오늘 진짜 예쁘다/멋지다! 외모 칭찬", b: "너랑 있으면 정말 편안하고 든든해! 성격/가치 칭찬" },
+                { q: "싸우고 나서의 연인 관계 대처법 중 더 나은 것은?", a: "감정이 상했을 때 즉시 대화로 조목조목 풀고 화해하기", b: "서로 머리를 식힐 수 있도록 몇 시간 동안 생각 정리할 시간(생각의 방) 가지기" },
+                { q: "내가 꿈꾸는 데이트의 궁극적 로망은?", a: "함께 캠핑을 떠나 모닥불을 피우고 조용히 별을 바라보는 불멍 데이트", b: "도심 속 핫플레이스를 탐방하며 예쁜 카페와 맛집을 투어하는 활기찬 데이트" },
+                { q: "연인의 과거에 대해 나는?", a: "전 애인과의 추억이나 연애사를 사소한 것까지 전부 다 알고 싶다", b: "과거는 과거일 뿐, 서로 상처만 되니 일절 묻지도 듣지도 않는 게 좋다" },
+                { q: "결혼을 결심할 때 상대방의 조건 중 더 결정적인 것은?", a: "경제적으로 매우 풍요롭고 안정된 기반을 갖춘 상태", b: "어떤 힘든 일이 닥쳐도 평생 나를 믿고 끝까지 배려해줄 인성" }
+            ]
+        };
+
+        const modeNames = {
+            normal: "☕ 일반 모드",
+            debate: "🌶️ 매운맛 토론 모드",
+            couple: "💖 커플 전용 모드"
+        };
+
+        let currentMode = 'normal';
+        let currentQuestions = [];
+        let currentIdx = 0;
+        let selectedChoice = null; // 'a' or 'b'
+
+        function selectMode(mode) {
+            currentMode = mode;
+            currentQuestions = [...questionDatabase[mode]];
+            shuffle(currentQuestions);
+
+            document.getElementById('mode-selection').style.display = 'none';
+            document.getElementById('balance-arena').style.display = 'flex';
+
+            currentIdx = 0;
+            showQuestion();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function showQuestion() {
+            if (currentIdx >= currentQuestions.length) {
+                alert('모든 질문을 확인하셨습니다! 다시 모드 선택으로 돌아갑니다.');
+                goHome();
+                return;
+            }
+
+            const q = currentQuestions[currentIdx];
+            document.getElementById('balance-tag').textContent = modeNames[currentMode];
+            document.getElementById('balance-question').textContent = q.q;
+            document.getElementById('option-a-text').textContent = q.a;
+            document.getElementById('option-b-text').textContent = q.b;
+
+            document.getElementById('progress-text').textContent = `Q. ${currentIdx + 1} / ${currentQuestions.length}`;
+
+            // Reset selection styling
+            selectedChoice = null;
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+        }
+
+        function selectOption(option) {
+            selectedChoice = option;
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            if (option === 'a') {
+                document.querySelector('.option-card.option-a').classList.add('selected');
+            } else {
+                document.querySelector('.option-card.option-b').classList.add('selected');
+            }
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            showQuestion();
+        }
+
+        function goHome() {
+            document.getElementById('mode-selection').style.display = 'flex';
+            document.getElementById('balance-arena').style.display = 'none';
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>
