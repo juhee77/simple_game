@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무작위 팀/조 나누기 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .input-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .textarea-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .name-textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .name-textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+        }
+
+        .counter-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            background: var(--accent-primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .split-settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .split-settings {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .setting-label {
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .mode-toggle {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 0.25rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.6rem;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 4px 10px rgba(168, 85, 247, 0.3);
+        }
+
+        .number-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 0.25rem;
+        }
+
+        .num-control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s;
+        }
+
+        .num-control-btn:hover {
+            opacity: 0.8;
+        }
+
+        .num-display {
+            flex: 1;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--accent-primary);
+        }
+
+        .fun-name-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            user-select: none;
+        }
+
+        .fun-name-toggle input {
+            display: none;
+        }
+
+        .checkbox-custom {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .fun-name-toggle input:checked + .checkbox-custom {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+        }
+
+        .fun-name-toggle input:checked + .checkbox-custom::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 900;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Shuffle Animation Overlay */
+        .shuffle-overlay {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 3rem;
+            background: var(--bg-secondary);
+            border: 2px dashed var(--accent-primary);
+            border-radius: 20px;
+            text-align: center;
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: rgba(168, 85, 247, 0.4); }
+            50% { border-color: rgba(168, 85, 247, 1); }
+            100% { border-color: rgba(168, 85, 247, 0.4); }
+        }
+
+        .shuffling-names {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            height: 50px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Results Section */
+        .results-section {
+            display: none;
+            flex-direction: column;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .team-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .team-card.color-0::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .team-card.color-1::before { background: linear-gradient(90deg, #ec4899, #f472b6); }
+        .team-card.color-2::before { background: linear-gradient(90deg, #10b981, #34d399); }
+        .team-card.color-3::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .team-card.color-4::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+        .team-card.color-5::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .team-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .team-size {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .member-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .member-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            animation: slideIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        @keyframes slideIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .share-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .share-actions button {
+            flex: 1;
+            max-width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">👥 무작위 팀/조 나누기</h1>
+            <p class="game-description">엔터나 쉼표로 이름을 나열해 붙여넣으면 무작위로 팀을 구성해 줍니다.</p>
+        </div>
+
+        <div class="game-board">
+            <!-- INPUT CONFIG -->
+            <div id="config-panel" class="input-section">
+                <div class="filter-title">👥 대상 플레이어 목록</div>
+                <div class="textarea-container">
+                    <textarea id="names-input" class="name-textarea" placeholder="김철수, 이영희, 박민수&#10;정지원&#10;최우진" oninput="updateNameCount()"></textarea>
+                    <div id="counter" class="counter-badge">0명</div>
+                </div>
+
+                <div class="split-settings">
+                    <div class="setting-group">
+                        <span class="setting-label">분할 방식</span>
+                        <div class="mode-toggle">
+                            <button id="mode-teams" class="mode-btn active" onclick="setMode('teams')">팀 개수 기준</button>
+                            <button id="mode-members" class="mode-btn" onclick="setMode('members')">팀당 인원 기준</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <span id="target-label" class="setting-label">원하는 팀 개수</span>
+                        <div class="number-input-wrapper">
+                            <button class="num-control-btn" onclick="adjustValue(-1)">-</button>
+                            <div id="target-value" class="num-display">2</div>
+                            <button class="num-control-btn" onclick="adjustValue(1)">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <label class="fun-name-toggle">
+                    <input type="checkbox" id="funny-names-checkbox" checked>
+                    <div class="checkbox-custom"></div>
+                    <span class="setting-label" style="cursor: pointer;">🤪 재미있는 팀 이름 붙여주기</span>
+                </label>
+
+                <button class="button w-100" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));" onclick="startSplit()">조 분할 시작! 🚀</button>
+            </div>
+
+            <!-- SHUFFLE ANIMATION -->
+            <div id="shuffle-panel" class="shuffle-overlay">
+                <div class="filter-title" style="color: var(--accent-primary);">🎲 무작위 셔플 중...</div>
+                <div id="shuffle-display" class="shuffling-names">가나다</div>
+                <p class="game-description">이름들이 이리저리 뒤섞이고 있습니다. 과연 운명의 조 편성은?</p>
+            </div>
+
+            <!-- RESULTS -->
+            <div id="results-panel" class="results-section">
+                <div class="results-grid" id="results-grid"></div>
+
+                <div class="share-actions">
+                    <button class="button" style="background: rgba(255,255,255,0.1);" onclick="resetSplit()">다시 나누기 🔄</button>
+                    <button class="button" style="background: linear-gradient(135deg, #10b981, #059669);" onclick="copyToClipboard()">결과 복사하기 📋</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const funnyTeamNames = [
+            "새벽 감성 독수리파",
+            "상큼발랄 레몬 에이드",
+            "우주 최강 떡볶이 수호대",
+            "무한 궤도 달팽이 유니언",
+            "야근하는 올빼미 부대",
+            "화려한 조명이 나를 감싸네",
+            "배고파서 화난 라이온즈",
+            "벼락치기 천재단",
+            "내일이 없는 불나방조",
+            "디카페인 아메리카노파",
+            "인생은 실전이다 이마리조",
+            "숨겨진 절대 고수 모임",
+            "침묵의 닌자단",
+            "빛보다 빠른 나무늘보",
+            "일단 출발하고 보는 돌격대",
+            "감성 충만 민트초코단",
+            "피자 꼬리 남기는 조",
+            "로또 1등 기원 동아리",
+            "삼겹살 뒤집기 무형문화재",
+            "이불 밖은 위험해파"
+        ];
+
+        let splitMode = 'teams'; // 'teams' or 'members'
+        let splitValue = 2;
+        let finalTeamsData = [];
+
+        function parseNames() {
+            const val = document.getElementById('names-input').value;
+            // Split by comma, space, or newline and clean empty items
+            return val.split(/[,\s\n]+/)
+                .map(n => n.trim())
+                .filter(n => n.length > 0);
+        }
+
+        function updateNameCount() {
+            const names = parseNames();
+            document.getElementById('counter').textContent = `${names.length}명`;
+        }
+
+        function setMode(mode) {
+            splitMode = mode;
+            document.getElementById('mode-teams').classList.toggle('active', mode === 'teams');
+            document.getElementById('mode-members').classList.toggle('active', mode === 'members');
+
+            const label = document.getElementById('target-label');
+            if (mode === 'teams') {
+                label.textContent = "원하는 팀 개수";
+                splitValue = Math.max(2, splitValue);
+            } else {
+                label.textContent = "한 팀당 원하는 인원수";
+                splitValue = Math.max(1, splitValue);
+            }
+            document.getElementById('target-value').textContent = splitValue;
+        }
+
+        function adjustValue(delta) {
+            if (splitMode === 'teams') {
+                splitValue = Math.max(2, splitValue + delta);
+            } else {
+                splitValue = Math.max(1, splitValue + delta);
+            }
+            document.getElementById('target-value').textContent = splitValue;
+        }
+
+        function startSplit() {
+            const names = parseNames();
+            if (names.length === 0) {
+                alert("이름을 한 명 이상 입력해 주세요!");
+                return;
+            }
+
+            if (splitMode === 'teams' && splitValue > names.length) {
+                alert(`입력된 인원(${names.length}명)이 원하는 팀 개수(${splitValue}개)보다 적습니다.`);
+                return;
+            }
+
+            if (splitMode === 'members' && splitValue > names.length) {
+                alert(`입력된 인원(${names.length}명)이 한 팀당 인원(${splitValue}명)보다 적습니다.`);
+                return;
+            }
+
+            // Enter shuffle screen
+            document.getElementById('config-panel').style.display = 'none';
+            const shufflePanel = document.getElementById('shuffle-panel');
+            shufflePanel.style.display = 'flex';
+
+            // Shuffle Animation Loop
+            let shuffleCount = 0;
+            const shuffleInterval = setInterval(() => {
+                const randomIdx = Math.floor(Math.random() * names.length);
+                document.getElementById('shuffle-display').textContent = names[randomIdx];
+                shuffleCount++;
+                
+                if (shuffleCount > 15) {
+                    clearInterval(shuffleInterval);
+                    performSplit(names);
+                }
+            }, 100);
+        }
+
+        function performSplit(names) {
+            // Fisher-Yates Shuffle
+            const shuffled = [...names];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            let numTeams = 0;
+            if (splitMode === 'teams') {
+                numTeams = splitValue;
+            } else {
+                numTeams = Math.ceil(shuffled.length / splitValue);
+            }
+
+            // Initialize teams
+            const teams = Array.from({ length: numTeams }, (_, i) => ({
+                id: i,
+                name: "",
+                members: []
+            }));
+
+            // Assign names round-robin to keep sizes even
+            shuffled.forEach((name, idx) => {
+                const teamIdx = idx % numTeams;
+                teams[teamIdx].members.push(name);
+            });
+
+            // Assign Names
+            const funNamesEnabled = document.getElementById('funny-names-checkbox').checked;
+            const assignedTitles = new Set();
+            
+            teams.forEach((t, i) => {
+                if (funNamesEnabled) {
+                    let title = "";
+                    do {
+                        title = funnyTeamNames[Math.floor(Math.random() * funnyTeamNames.length)];
+                    } while (assignedTitles.has(title) && assignedTitles.size < funnyTeamNames.length);
+                    assignedTitles.add(title);
+                    t.name = title;
+                } else {
+                    t.name = `${i + 1}조`;
+                }
+            });
+
+            finalTeamsData = teams;
+
+            // Render Results
+            const grid = document.getElementById('results-grid');
+            grid.innerHTML = "";
+
+            teams.forEach((t, teamIdx) => {
+                const colorIdx = teamIdx % 6;
+                const card = document.createElement('div');
+                card.className = `team-card color-${colorIdx}`;
+
+                const header = document.createElement('div');
+                header.className = 'team-header';
+                header.innerHTML = `
+                    <span class="team-title">${t.name}</span>
+                    <span class="team-size">${t.members.length}명</span>
+                `;
+                card.appendChild(header);
+
+                const memberList = document.createElement('div');
+                memberList.className = 'member-list';
+
+                t.members.forEach((m, mIdx) => {
+                    const item = document.createElement('div');
+                    item.className = 'member-item';
+                    item.textContent = m;
+                    item.style.animationDelay = `${(teamIdx * 0.1) + (mIdx * 0.05)}s`;
+                    memberList.appendChild(item);
+                });
+
+                card.appendChild(memberList);
+                grid.appendChild(card);
+            });
+
+            // Transition Panels
+            document.getElementById('shuffle-panel').style.display = 'none';
+            document.getElementById('results-panel').style.display = 'flex';
+        }
+
+        function resetSplit() {
+            document.getElementById('config-panel').style.display = 'block';
+            document.getElementById('results-panel').style.display = 'none';
+        }
+
+        function copyToClipboard() {
+            if (finalTeamsData.length === 0) return;
+
+            let resultText = "🎉 [무작위 조 편성 결과]\n\n";
+            finalTeamsData.forEach(t => {
+                resultText += `■ ${t.name} (${t.members.length}명)\n`;
+                resultText += `  └ ${t.members.join(', ')}\n\n`;
+            });
+            resultText += "Generated by 미니게임 천국 👥";
+
+            navigator.clipboard.writeText(resultText).then(() => {
+                alert("편성 결과가 클립보드에 깔끔하게 복사되었습니다! 단톡방에 붙여넣어 보세요! 📋");
+            }).catch(err => {
+                alert("복사에 실패했습니다. 수동으로 복사해 주세요.");
+            });
+        }
+    </script>
+    <script src="../scripts/game-common.js"></script>
+</body>
+
+</html>
