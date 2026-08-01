@@ -15,6 +15,7 @@
                         radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.15), transparent 40%),
                         #0a0e27;
             min-height: 100vh;
+            transition: background 0.3s;
         }
 
         .screen {
@@ -25,7 +26,7 @@
             display: block;
         }
 
-        .setup-container {
+        .screen.active.setup-container {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -61,6 +62,47 @@
             box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
         }
 
+        /* Mode Selection Cards */
+        .mode-select-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+        }
+
+        .mode-card {
+            background: rgba(21, 25, 50, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-card:hover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .mode-card.active {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .mode-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+        }
+
+        .mode-desc {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            line-height: 1.2;
+        }
+
         .player-names-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -71,7 +113,6 @@
             padding-right: 0.5rem;
         }
 
-        /* Scrollbar styling */
         .player-names-list::-webkit-scrollbar {
             width: 6px;
         }
@@ -114,30 +155,6 @@
             border-bottom: 1px solid var(--accent-primary);
         }
 
-        .pass-card {
-            text-align: center;
-            padding: 3rem 1.5rem;
-        }
-
-        .pass-icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .player-highlight {
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: var(--accent-secondary);
-            text-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
-            margin: 1rem 0;
-        }
-
         .game-tag {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -154,12 +171,13 @@
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
             border: 2px solid var(--border-color);
             border-radius: 24px;
-            padding: 3.5rem 2rem;
-            margin: 1.5rem 0;
+            padding: 3rem 2rem;
+            margin: 1rem 0;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             position: relative;
             overflow: hidden;
+            transition: all 0.3s;
         }
 
         .twister-text {
@@ -192,6 +210,7 @@
             flex-direction: column;
             align-items: center;
             margin-top: 1.5rem;
+            width: 100%;
         }
 
         .timer-bar-outer {
@@ -212,35 +231,52 @@
         }
 
         .timer-text {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 800;
             color: var(--text-primary);
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        /* 3-second Warning Glow */
+        @keyframes warning-pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.1); }
+            50% { box-shadow: 0 0 45px rgba(239, 68, 68, 0.6); }
+        }
+
+        .warning-active .twister-card {
+            animation: warning-pulse 1s infinite;
+            border-color: #ef4444;
+        }
+
+        .warning-active .timer-bar-inner {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .warning-active .timer-text {
+            color: #ef4444;
+            transform: scale(1.15);
         }
 
         /* Judgment Buttons */
-        .judgment-container {
-            text-align: center;
-        }
-
         .judge-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.5rem;
-            margin-top: 2rem;
+            margin-top: 1.5rem;
         }
 
         .judge-btn {
-            padding: 2rem 1.5rem;
+            padding: 1.5rem 1.2rem;
             border-radius: 20px;
             border: 2px solid transparent;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 800;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             color: #fff;
         }
 
@@ -250,10 +286,10 @@
         }
 
         .judge-success:hover {
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.25);
             border-color: #10b981;
             box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-            transform: translateY(-5px);
+            transform: translateY(-4px);
         }
 
         .judge-fail {
@@ -262,14 +298,14 @@
         }
 
         .judge-fail:hover {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.25);
             border-color: #ef4444;
             box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
-            transform: translateY(-5px);
+            transform: translateY(-4px);
         }
 
         .judge-icon {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
         }
 
         /* Scoreboard Screen */
@@ -303,6 +339,12 @@
             background: rgba(139, 92, 246, 0.15);
         }
 
+        .scoreboard-table tr.eliminated-row {
+            opacity: 0.45;
+            background: rgba(255, 0, 0, 0.03);
+            text-decoration: line-through;
+        }
+
         .rank-badge {
             display: inline-flex;
             align-items: center;
@@ -319,9 +361,53 @@
         .rank-2 { background: #cbd5e1; color: #000; }
         .rank-3 { background: #b45309; color: #fff; }
 
+        /* Penalty Section */
+        .penalty-card {
+            background: rgba(239, 68, 68, 0.08);
+            border: 2px dashed rgba(239, 68, 68, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .penalty-title {
+            color: #f87171;
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+        }
+
+        .penalty-name {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+            margin: 1rem 0;
+        }
+
+        .roulette-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fbbf24;
+            margin-top: 1.5rem;
+            min-height: 2.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         @media (max-width: 600px) {
             .twister-text {
                 font-size: 1.6rem;
+            }
+            .mode-select-container {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
             }
             .judge-buttons {
                 grid-template-columns: 1fr;
@@ -339,19 +425,19 @@
         <div class="game-header">
             <a href="../index.html" class="back-button">← 메인으로</a>
             <h1 class="game-title">👅 네온 잰말놀이</h1>
-            <p class="game-description">빠르고 정확하게 발음해보세요! 다른 친구들이 성공 여부를 직접 판정합니다.</p>
+            <p class="game-description">빠르고 정확하게 발음해보세요! 모든 사람이 지켜보며 성공 여부를 판정합니다.</p>
         </div>
 
-        <div class="game-board">
+        <div class="game-board" id="main-board">
             <!-- STATUS BAR -->
             <div id="game-status-bar" class="status-bar" style="display: none;">
                 <div class="status-item">
-                    <span class="status-label">라운드</span>
-                    <div class="status-value" id="status-round">1 / 3</div>
+                    <span class="status-label">모드/진행</span>
+                    <div class="status-value" id="status-round">점수 대결</div>
                 </div>
                 <div class="status-item">
-                    <span class="status-label">차례</span>
-                    <div class="status-value" id="status-player">플레이어 1</div>
+                    <span class="status-label">도전자</span>
+                    <div class="status-value" id="status-player" style="color: var(--accent-secondary); font-weight: 900;">플레이어 1</div>
                 </div>
                 <div class="status-item">
                     <span class="status-label">난이도</span>
@@ -361,6 +447,25 @@
 
             <!-- 1. SETUP SCREEN -->
             <div id="screen-setup" class="screen active setup-container">
+                <!-- Game Mode Selection -->
+                <div class="form-group">
+                    <label>게임 모드</label>
+                    <div class="mode-select-container">
+                        <div class="mode-card active" onclick="selectGameMode('score')" id="mode-score">
+                            <div class="mode-title">점수 대결</div>
+                            <div class="mode-desc">N라운드 동안 가장 많은 성공 점수 획득</div>
+                        </div>
+                        <div class="mode-card" onclick="selectGameMode('survival')" id="mode-survival">
+                            <div class="mode-title">서바이벌</div>
+                            <div class="mode-desc">실패 시 즉시 탈락, 최후의 1인 생존전</div>
+                        </div>
+                        <div class="mode-card" onclick="selectGameMode('loser')" id="mode-loser">
+                            <div class="mode-title">벌칙 낙점</div>
+                            <div class="mode-desc">최초의 실패자가 즉시 패배 (벌칙 선정용)</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="player-count">참가자 수 (2 ~ 10명)</label>
                     <input type="number" id="player-count" min="2" max="10" value="3" onchange="updatePlayerInputs()">
@@ -373,7 +478,7 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="round-select-group">
                     <label for="round-count">라운드 수</label>
                     <select id="round-count">
                         <option value="1">1 라운드</option>
@@ -397,21 +502,13 @@
                 <button class="button" onclick="initGame()" style="margin-top: 1rem;">게임 시작! 🚀</button>
             </div>
 
-            <!-- 2. PASS SCREEN -->
-            <div id="screen-pass" class="screen pass-card">
-                <div class="pass-icon">📱</div>
-                <div class="game-tag">다음 차례</div>
-                <div class="helper-copy">휴대폰을 다음 사람에게 넘겨주세요.</div>
-                <div class="player-highlight" id="pass-player-name">플레이어 1</div>
-                <button class="button" onclick="startTurn()" style="margin-top: 1.5rem;">준비 완료! 문장 보기</button>
-            </div>
-
-            <!-- 3. CHALLENGE SCREEN -->
-            <div id="screen-challenge" class="screen">
-                <div class="game-tag" id="challenge-player-tag">플레이어 1의 도전</div>
+            <!-- 2. PLAY SCREEN (Hides Pass screen, merged Challenge & Judgment) -->
+            <div id="screen-play" class="screen">
+                <div class="game-tag" id="play-player-tag">플레이어 1 님의 차례!</div>
+                
                 <div class="twister-card">
-                    <div id="challenge-difficulty" class="difficulty-badge">보통</div>
-                    <div class="twister-text" id="challenge-text">간장공장 공장장은 강 공장장이고 된장공장 공장장은 장 공장장이다.</div>
+                    <div id="play-difficulty" class="difficulty-badge">보통</div>
+                    <div class="twister-text" id="play-text">간장공장 공장장은 강 공장장이고 된장공장 공장장은 장 공장장이다.</div>
                 </div>
 
                 <!-- Timer Section -->
@@ -422,51 +519,46 @@
                     </div>
                 </div>
 
-                <div class="controls">
-                    <button class="button" onclick="stopTurn()">발음 완료! 🛑</button>
-                </div>
-            </div>
-
-            <!-- 4. JUDGMENT SCREEN -->
-            <div id="screen-judgment" class="screen judgment-container">
-                <div class="game-tag" id="judgment-player-tag">플레이어 1 판정</div>
-                <p class="helper-copy" style="margin-bottom: 1.5rem;">도전자가 버벅이지 않고 정확하게 말했나요? 다른 사람들이 평가해주세요!</p>
-
-                <div class="twister-card" style="padding: 2rem; margin: 1rem 0;">
-                    <div class="twister-text" id="judgment-text" style="font-size: 1.6rem; color: var(--text-secondary);"></div>
-                </div>
-
+                <!-- Live Judgment Buttons -->
                 <div class="judge-buttons">
-                    <button class="judge-btn judge-success" onclick="submitResult(true)">
+                    <button class="judge-btn judge-success" onclick="submitTurn(true)">
                         <span class="judge-icon">🎉</span>
                         <span>성공!</span>
-                        <span style="font-size: 0.8rem; opacity: 0.7;">(+1점)</span>
                     </button>
-                    <button class="judge-btn judge-fail" onclick="submitResult(false)">
+                    <button class="judge-btn judge-fail" onclick="submitTurn(false)">
                         <span class="judge-icon">❌</span>
                         <span>실패...</span>
-                        <span style="font-size: 0.8rem; opacity: 0.7;">(0점)</span>
                     </button>
                 </div>
             </div>
 
-            <!-- 5. SCOREBOARD SCREEN -->
+            <!-- 3. SCOREBOARD SCREEN -->
             <div id="screen-scoreboard" class="screen">
-                <h2 style="text-align: center; font-size: 2rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🏆 최종 결과</h2>
+                <h2 id="scoreboard-title" style="text-align: center; font-size: 2rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🏆 최종 결과</h2>
                 
-                <table class="scoreboard-table">
-                    <thead>
-                        <tr>
-                            <th>순위</th>
-                            <th>이름</th>
-                            <th>성공 횟수</th>
-                            <th>성공률</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scoreboard-rows">
-                        <!-- Scoreboard rows go here -->
-                    </tbody>
-                </table>
+                <!-- Penalty section for Loser Out Mode -->
+                <div id="loser-penalty-box" class="penalty-card" style="display: none;">
+                    <div class="penalty-title">💀 벌칙 당첨자 💀</div>
+                    <div class="penalty-name" id="loser-name">플레이어 3</div>
+                    <button class="button" onclick="spinPenaltyRoulette()" style="margin-top: 1rem;">🎰 벌칙 추첨하기</button>
+                    <div id="penalty-roulette-display" class="roulette-box" style="display: none;"></div>
+                </div>
+
+                <div id="scoreboard-table-container">
+                    <table class="scoreboard-table">
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>이름</th>
+                                <th>성공 횟수</th>
+                                <th>상태/성공률</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scoreboard-rows">
+                            <!-- Scoreboard rows go here -->
+                        </tbody>
+                    </table>
+                </div>
 
                 <div class="controls">
                     <button class="button button-secondary" onclick="restartSetup()">설정 변경하기</button>
@@ -520,6 +612,7 @@
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.4);
                 } else if (type === 'warning') {
+                    // Warning Beeps increase pitch to create urgency
                     osc.frequency.setValueAtTime(1100, audioCtx.currentTime); 
                     gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
@@ -531,7 +624,8 @@
             }
         }
 
-        // Game State Variables
+        // Game Settings & State
+        let gameMode = 'score'; // 'score', 'survival', 'loser'
         let players = [];
         let totalRounds = 3;
         let selectedDifficulty = 'all';
@@ -541,9 +635,35 @@
         let activeTwisters = [];
         let currentTwister = null;
 
+        // Timer management
         let timerInterval = null;
         let timerSecondsRemaining = 10;
-        const totalTimerDuration = 10; // 10 seconds for twisters
+        let totalTimerDuration = 10;
+
+        const penaltyItems = [
+            "😊 엉덩이로 이름 쓰기",
+            "💧 시원한 생수 한 잔 원샷하기",
+            "🎤 3초간 소리 질러 발음 연습하기",
+            "👻 다음 판 닉네임은 '바보'로 고정",
+            "🍋 레몬 먹은 표정 5초 짓기",
+            "💃 막춤 5초 동안 추기",
+            "😂 다른 사람 귀청소 코믹하게 해주기",
+            "🤫 다음 게임 시작 전까지 절대 침묵"
+        ];
+
+        // Mode select controller
+        function selectGameMode(mode) {
+            gameMode = mode;
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`mode-${mode}`).classList.add('active');
+
+            const roundGroup = document.getElementById('round-select-group');
+            if (mode === 'score') {
+                roundGroup.style.display = 'block';
+            } else {
+                roundGroup.style.display = 'none';
+            }
+        }
 
         // Initialize setup player list inputs
         function updatePlayerInputs() {
@@ -588,7 +708,8 @@
                     id: idx,
                     name: inp.value.trim() || `플레이어 ${idx + 1}`,
                     score: 0,
-                    history: [] // successful rounds
+                    eliminated: false,
+                    turnsPlayed: 0
                 };
             });
 
@@ -616,12 +737,11 @@
             currentRound = 1;
             currentPlayerIdx = 0;
 
-            // Status labels
+            // Setup Status Label
             const difficultyLabelMap = { 'all': '전체', 'easy': '쉬움', 'medium': '보통', 'hard': '어려움' };
             document.getElementById('status-difficulty').textContent = difficultyLabelMap[selectedDifficulty];
 
-            updateStatusBar();
-            showPassScreen();
+            startNextTurn();
         }
 
         function shuffleArray(array) {
@@ -632,55 +752,75 @@
         }
 
         function updateStatusBar() {
-            document.getElementById('status-round').textContent = `${currentRound} / ${totalRounds}`;
+            const statusRound = document.getElementById('status-round');
+            if (gameMode === 'score') {
+                statusRound.textContent = `라운드 ${currentRound} / ${totalRounds}`;
+            } else if (gameMode === 'survival') {
+                statusRound.textContent = `서바이벌 💀`;
+            } else {
+                statusRound.textContent = `벌칙 낙점 💣`;
+            }
             document.getElementById('status-player').textContent = players[currentPlayerIdx].name;
         }
 
-        function showPassScreen() {
-            const player = players[currentPlayerIdx];
-            document.getElementById('pass-player-name').textContent = player.name;
-            showScreen('screen-pass');
-        }
+        function startNextTurn() {
+            // Find next eligible player (specifically for Survival mode)
+            if (gameMode === 'survival') {
+                // If all but 1 are eliminated, end game
+                const activePlayers = players.filter(p => !p.eliminated);
+                if (activePlayers.length <= 1) {
+                    showScoreboard();
+                    return;
+                }
 
-        function startTurn() {
-            playSound('beep');
+                // Loop to find next active player
+                let loops = 0;
+                while (players[currentPlayerIdx].eliminated && loops < players.length) {
+                    currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+                    loops++;
+                }
+            }
+
             updateStatusBar();
 
             // Select a twister (wrap around if activeTwisters runs out)
-            const twisterIdx = ( (currentRound - 1) * players.length + currentPlayerIdx ) % activeTwisters.length;
+            const twisterIdx = Math.floor(Math.random() * activeTwisters.length);
             currentTwister = activeTwisters[twisterIdx];
 
-            // Render twister
-            const twisterEl = document.getElementById('challenge-text');
-            const diffEl = document.getElementById('challenge-difficulty');
-            const tagEl = document.getElementById('challenge-player-tag');
+            // Render elements
+            const textEl = document.getElementById('play-text');
+            const diffEl = document.getElementById('play-difficulty');
+            const tagEl = document.getElementById('play-player-tag');
 
-            twisterEl.textContent = currentTwister.text;
+            textEl.textContent = currentTwister.text;
             diffEl.textContent = currentTwister.level;
             
-            // Set difficulty class
             diffEl.className = 'difficulty-badge';
             if (currentTwister.level === '쉬움') diffEl.classList.add('diff-easy');
             else if (currentTwister.level === '보통') diffEl.classList.add('diff-medium');
             else diffEl.classList.add('diff-hard');
 
-            tagEl.textContent = `${players[currentPlayerIdx].name} 님의 도전`;
+            tagEl.textContent = `👉 ${players[currentPlayerIdx].name} 님의 차례!`;
 
-            // Start Timer
+            // Calculate Dynamic Timer: (length * 0.18) + 4 seconds
+            const length = currentTwister.text.length;
+            totalTimerDuration = Math.max(6, Math.min(15, Math.round(length * 0.18 + 4)));
+            
+            showScreen('screen-play');
             startTimer();
-
-            showScreen('screen-challenge');
         }
 
         function startTimer() {
             clearInterval(timerInterval);
             timerSecondsRemaining = totalTimerDuration;
-            
+
             const textEl = document.getElementById('timer-text');
             const barInner = document.getElementById('timer-bar');
+            const mainBoard = document.getElementById('main-board');
 
             textEl.textContent = timerSecondsRemaining;
             barInner.style.width = '100%';
+            mainBoard.classList.remove('warning-active');
 
             timerInterval = setInterval(() => {
                 timerSecondsRemaining--;
@@ -689,93 +829,179 @@
                 const percentage = (timerSecondsRemaining / totalTimerDuration) * 100;
                 barInner.style.width = `${percentage}%`;
 
+                // 3-seconds or less warning
                 if (timerSecondsRemaining <= 3 && timerSecondsRemaining > 0) {
-                    playSound('beep');
-                    textEl.style.color = '#ef4444';
-                } else if (timerSecondsRemaining <= 0) {
                     playSound('warning');
-                    stopTurn();
-                } else {
-                    textEl.style.color = 'var(--text-primary)';
+                    mainBoard.classList.add('warning-active');
+                } else if (timerSecondsRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    playSound('fail');
+                    submitTurn(false); // Auto failure on timeout
                 }
             }, 1000);
         }
 
-        function stopTurn() {
+        function submitTurn(isSuccess) {
             clearInterval(timerInterval);
-            
-            // Go to Judgment Screen
-            const jText = document.getElementById('judgment-text');
-            const jTag = document.getElementById('judgment-player-tag');
-
-            jText.textContent = currentTwister.text;
-            jTag.textContent = `${players[currentPlayerIdx].name} 판정`;
-
-            showScreen('screen-judgment');
-        }
-
-        function submitResult(isSuccess) {
             const player = players[currentPlayerIdx];
+            player.turnsPlayed++;
+
             if (isSuccess) {
                 playSound('success');
                 player.score++;
-                player.history.push({ round: currentRound, text: currentTwister.text, success: true });
             } else {
                 playSound('fail');
-                player.history.push({ round: currentRound, text: currentTwister.text, success: false });
+                if (gameMode === 'survival') {
+                    player.eliminated = true;
+                }
             }
 
-            // Next Player or Next Round
-            currentPlayerIdx++;
-            if (currentPlayerIdx >= players.length) {
-                currentPlayerIdx = 0;
-                currentRound++;
-            }
+            // Mode Logic Routing
+            if (gameMode === 'loser') {
+                if (!isSuccess) {
+                    // First failure immediately ends the game in Loser Mode
+                    showScoreboard(player); // pass the loser
+                    return;
+                }
+                // If success, keep rotating
+                currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+                startNextTurn();
+            } else if (gameMode === 'survival') {
+                // Advance player index
+                currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+                
+                // If it wrapped around, increment round counter just for stats
+                if (currentPlayerIdx === 0) {
+                    currentRound++;
+                }
 
-            if (currentRound > totalRounds) {
-                showScoreboard();
-            } else {
-                updateStatusBar();
-                showPassScreen();
+                // Check survival conditions
+                const activePlayers = players.filter(p => !p.eliminated);
+                if (activePlayers.length <= 1) {
+                    showScoreboard();
+                } else {
+                    startNextTurn();
+                }
+            } else { // Score Match
+                currentPlayerIdx++;
+                if (currentPlayerIdx >= players.length) {
+                    currentPlayerIdx = 0;
+                    currentRound++;
+                }
+
+                if (currentRound > totalRounds) {
+                    showScoreboard();
+                } else {
+                    startNextTurn();
+                }
             }
         }
 
-        function showScoreboard() {
+        function showScoreboard(loser = null) {
             const tbody = document.getElementById('scoreboard-rows');
+            const penaltyBox = document.getElementById('loser-penalty-box');
+            const tableContainer = document.getElementById('scoreboard-table-container');
+            const titleEl = document.getElementById('scoreboard-title');
+
             tbody.innerHTML = '';
+            document.getElementById('penalty-roulette-display').style.display = 'none';
 
-            // Sort players by score desc
-            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
-            const maxScore = sortedPlayers[0].score;
+            if (gameMode === 'loser' && loser) {
+                // Show loser highlight box, hide scoreboard table
+                titleEl.textContent = '💣 벌칙 확정!';
+                penaltyBox.style.display = 'block';
+                document.getElementById('loser-name').textContent = loser.name;
+                tableContainer.style.display = 'none';
+            } else {
+                // Show standard scoreboard
+                titleEl.textContent = '🏆 최종 결과';
+                penaltyBox.style.display = 'none';
+                tableContainer.style.display = 'block';
 
-            sortedPlayers.forEach((p, rankIdx) => {
-                let rankDisplay = rankIdx + 1;
-                let rankClass = '';
-                if (rankDisplay === 1) rankClass = 'rank-1';
-                else if (rankDisplay === 2) rankClass = 'rank-2';
-                else if (rankDisplay === 3) rankClass = 'rank-3';
-
-                const tr = document.createElement('tr');
-                if (p.score === maxScore && maxScore > 0) {
-                    tr.className = 'winner-row';
+                let sortedPlayers = [];
+                if (gameMode === 'survival') {
+                    // Survivors are ranked first, then eliminated players based on rounds survived/score
+                    sortedPlayers = [...players].sort((a, b) => {
+                        if (a.eliminated !== b.eliminated) {
+                            return a.eliminated ? 1 : -1; // alive players first
+                        }
+                        return b.score - a.score;
+                    });
+                } else { // Score Match
+                    sortedPlayers = [...players].sort((a, b) => b.score - a.score);
                 }
 
-                const successRate = Math.round((p.score / totalRounds) * 100) || 0;
+                const maxScore = sortedPlayers[0].score;
+                const isTie = sortedPlayers.filter(p => p.score === maxScore).length > 1;
 
-                tr.innerHTML = `
-                    <td>
-                        <span class="rank-badge ${rankClass}">
-                            ${p.score === maxScore && maxScore > 0 ? '👑' : rankDisplay}
-                        </span>
-                    </td>
-                    <td style="font-weight: 700;">${p.name}</td>
-                    <td>${p.score} / ${totalRounds}</td>
-                    <td>${successRate}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
+                sortedPlayers.forEach((p, rankIdx) => {
+                    const tr = document.createElement('tr');
+                    
+                    let rankDisplay = rankIdx + 1;
+                    let rankClass = '';
+                    if (rankDisplay === 1) rankClass = 'rank-1';
+                    else if (rankDisplay === 2) rankClass = 'rank-2';
+                    else if (rankDisplay === 3) rankClass = 'rank-3';
+
+                    if (gameMode === 'survival') {
+                        if (p.eliminated) {
+                            tr.className = 'eliminated-row';
+                        } else {
+                            tr.className = 'winner-row';
+                        }
+
+                        const statusText = p.eliminated ? '💀 탈락' : '👑 생존자';
+                        tr.innerHTML = `
+                            <td><span class="rank-badge ${p.eliminated ? '' : rankClass}">${p.eliminated ? '💀' : '👑'}</span></td>
+                            <td style="font-weight: 700;">${p.name}</td>
+                            <td>${p.score} 번 성공</td>
+                            <td>${statusText}</td>
+                        `;
+                    } else {
+                        // Score Match row rendering
+                        if (p.score === maxScore && maxScore > 0) {
+                            tr.className = 'winner-row';
+                        }
+
+                        const successRate = Math.round((p.score / p.turnsPlayed) * 100) || 0;
+                        tr.innerHTML = `
+                            <td>
+                                <span class="rank-badge ${rankClass}">
+                                    ${p.score === maxScore && maxScore > 0 ? '👑' : rankDisplay}
+                                </span>
+                            </td>
+                            <td style="font-weight: 700;">${p.name}</td>
+                            <td>${p.score} / ${p.turnsPlayed}</td>
+                            <td>${successRate}%</td>
+                        `;
+                    }
+
+                    tbody.appendChild(tr);
+                });
+            }
 
             showScreen('screen-scoreboard');
+        }
+
+        function spinPenaltyRoulette() {
+            playSound('beep');
+            const display = document.getElementById('penalty-roulette-display');
+            display.style.display = 'flex';
+            display.textContent = "추첨 중...";
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                const tempIdx = Math.floor(Math.random() * penaltyItems.length);
+                display.textContent = penaltyItems[tempIdx];
+                playSound('beep');
+                count++;
+                if (count > 8) {
+                    clearInterval(interval);
+                    const finalIdx = Math.floor(Math.random() * penaltyItems.length);
+                    display.textContent = "👉 " + penaltyItems[finalIdx] + " 👈";
+                    playSound('success');
+                }
+            }, 150);
         }
 
         function restartSetup() {
@@ -783,10 +1009,11 @@
         }
 
         function restartGameSamePlayers() {
-            // Reset player scores
+            // Reset player scores & flags
             players.forEach(p => {
                 p.score = 0;
-                p.history = [];
+                p.eliminated = false;
+                p.turnsPlayed = 0;
             });
 
             // Reshuffle active twisters
@@ -796,8 +1023,7 @@
             currentRound = 1;
             currentPlayerIdx = 0;
 
-            updateStatusBar();
-            showPassScreen();
+            startNextTurn();
         }
     </script>
 </body>
