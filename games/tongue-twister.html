@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>네온 잰말놀이 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.15), transparent 35%),
+                        radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.15), transparent 40%),
+                        #0a0e27;
+            min-height: 100vh;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .setup-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(21, 25, 50, 0.8);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .player-names-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        /* Scrollbar styling */
+        .player-names-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .player-names-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .player-names-list::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 10px;
+        }
+
+        .player-input-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 0.4rem 0.8rem;
+        }
+
+        .player-input-item span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-right: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .player-input-item input {
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            padding: 0.2rem 0;
+            width: 100%;
+        }
+
+        .player-input-item input:focus {
+            outline: none;
+            border-bottom: 1px solid var(--accent-primary);
+        }
+
+        .pass-card {
+            text-align: center;
+            padding: 3rem 1.5rem;
+        }
+
+        .pass-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .player-highlight {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--accent-secondary);
+            text-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+            margin: 1rem 0;
+        }
+
+        .game-tag {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.4rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        .twister-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            padding: 3.5rem 2rem;
+            margin: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .twister-text {
+            font-size: 2.2rem;
+            font-weight: 900;
+            line-height: 1.5;
+            color: var(--text-primary);
+            word-break: keep-all;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .difficulty-badge {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            padding: 0.3rem 0.8rem;
+            border-radius: 30px;
+            text-transform: uppercase;
+        }
+
+        .diff-easy { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .diff-medium { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .diff-hard { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Timer UI */
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+
+        .timer-bar-outer {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .timer-bar-inner {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-tertiary));
+            border-radius: 5px;
+            transition: width 0.1s linear;
+        }
+
+        .timer-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        /* Judgment Buttons */
+        .judgment-container {
+            text-align: center;
+        }
+
+        .judge-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .judge-btn {
+            padding: 2rem 1.5rem;
+            border-radius: 20px;
+            border: 2px solid transparent;
+            font-size: 1.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+        }
+
+        .judge-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        .judge-success:hover {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .judge-fail {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .judge-fail:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .judge-icon {
+            font-size: 2.5rem;
+        }
+
+        /* Scoreboard Screen */
+        .scoreboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .scoreboard-table th, .scoreboard-table td {
+            padding: 1.2rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .scoreboard-table th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .scoreboard-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .scoreboard-table tr.winner-row {
+            background: rgba(139, 92, 246, 0.15);
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: 800;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .rank-1 { background: #fbbf24; color: #000; }
+        .rank-2 { background: #cbd5e1; color: #000; }
+        .rank-3 { background: #b45309; color: #fff; }
+
+        @media (max-width: 600px) {
+            .twister-text {
+                font-size: 1.6rem;
+            }
+            .judge-buttons {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .judge-btn {
+                padding: 1.2rem;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 메인으로</a>
+            <h1 class="game-title">👅 네온 잰말놀이</h1>
+            <p class="game-description">빠르고 정확하게 발음해보세요! 다른 친구들이 성공 여부를 직접 판정합니다.</p>
+        </div>
+
+        <div class="game-board">
+            <!-- STATUS BAR -->
+            <div id="game-status-bar" class="status-bar" style="display: none;">
+                <div class="status-item">
+                    <span class="status-label">라운드</span>
+                    <div class="status-value" id="status-round">1 / 3</div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">차례</span>
+                    <div class="status-value" id="status-player">플레이어 1</div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">난이도</span>
+                    <div class="status-value" id="status-difficulty">전체</div>
+                </div>
+            </div>
+
+            <!-- 1. SETUP SCREEN -->
+            <div id="screen-setup" class="screen active setup-container">
+                <div class="form-group">
+                    <label for="player-count">참가자 수 (2 ~ 10명)</label>
+                    <input type="number" id="player-count" min="2" max="10" value="3" onchange="updatePlayerInputs()">
+                </div>
+
+                <div class="form-group">
+                    <label>참가자 이름</label>
+                    <div id="player-names-list" class="player-names-list">
+                        <!-- Auto generated input fields -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="round-count">라운드 수</label>
+                    <select id="round-count">
+                        <option value="1">1 라운드</option>
+                        <option value="2">2 라운드</option>
+                        <option value="3" selected>3 라운드</option>
+                        <option value="4">4 라운드</option>
+                        <option value="5">5 라운드</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="difficulty-select">잰말 난이도</label>
+                    <select id="difficulty-select">
+                        <option value="all">전체 난이도</option>
+                        <option value="easy">쉬움</option>
+                        <option value="medium">보통</option>
+                        <option value="hard">어려움</option>
+                    </select>
+                </div>
+
+                <button class="button" onclick="initGame()" style="margin-top: 1rem;">게임 시작! 🚀</button>
+            </div>
+
+            <!-- 2. PASS SCREEN -->
+            <div id="screen-pass" class="screen pass-card">
+                <div class="pass-icon">📱</div>
+                <div class="game-tag">다음 차례</div>
+                <div class="helper-copy">휴대폰을 다음 사람에게 넘겨주세요.</div>
+                <div class="player-highlight" id="pass-player-name">플레이어 1</div>
+                <button class="button" onclick="startTurn()" style="margin-top: 1.5rem;">준비 완료! 문장 보기</button>
+            </div>
+
+            <!-- 3. CHALLENGE SCREEN -->
+            <div id="screen-challenge" class="screen">
+                <div class="game-tag" id="challenge-player-tag">플레이어 1의 도전</div>
+                <div class="twister-card">
+                    <div id="challenge-difficulty" class="difficulty-badge">보통</div>
+                    <div class="twister-text" id="challenge-text">간장공장 공장장은 강 공장장이고 된장공장 공장장은 장 공장장이다.</div>
+                </div>
+
+                <!-- Timer Section -->
+                <div class="timer-container" id="timer-box">
+                    <div class="timer-text" id="timer-text">10</div>
+                    <div class="timer-bar-outer">
+                        <div class="timer-bar-inner" id="timer-bar"></div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="button" onclick="stopTurn()">발음 완료! 🛑</button>
+                </div>
+            </div>
+
+            <!-- 4. JUDGMENT SCREEN -->
+            <div id="screen-judgment" class="screen judgment-container">
+                <div class="game-tag" id="judgment-player-tag">플레이어 1 판정</div>
+                <p class="helper-copy" style="margin-bottom: 1.5rem;">도전자가 버벅이지 않고 정확하게 말했나요? 다른 사람들이 평가해주세요!</p>
+
+                <div class="twister-card" style="padding: 2rem; margin: 1rem 0;">
+                    <div class="twister-text" id="judgment-text" style="font-size: 1.6rem; color: var(--text-secondary);"></div>
+                </div>
+
+                <div class="judge-buttons">
+                    <button class="judge-btn judge-success" onclick="submitResult(true)">
+                        <span class="judge-icon">🎉</span>
+                        <span>성공!</span>
+                        <span style="font-size: 0.8rem; opacity: 0.7;">(+1점)</span>
+                    </button>
+                    <button class="judge-btn judge-fail" onclick="submitResult(false)">
+                        <span class="judge-icon">❌</span>
+                        <span>실패...</span>
+                        <span style="font-size: 0.8rem; opacity: 0.7;">(0점)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5. SCOREBOARD SCREEN -->
+            <div id="screen-scoreboard" class="screen">
+                <h2 style="text-align: center; font-size: 2rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🏆 최종 결과</h2>
+                
+                <table class="scoreboard-table">
+                    <thead>
+                        <tr>
+                            <th>순위</th>
+                            <th>이름</th>
+                            <th>성공 횟수</th>
+                            <th>성공률</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboard-rows">
+                        <!-- Scoreboard rows go here -->
+                    </tbody>
+                </table>
+
+                <div class="controls">
+                    <button class="button button-secondary" onclick="restartSetup()">설정 변경하기</button>
+                    <button class="button" onclick="restartGameSamePlayers()">같은 인원으로 다시 하기</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Database of 200 items inlined from generator
+        const TWISTER_DB = [{"text":"간장공장 공장장은 강 공장장이고 된장공장 공장장은 장 공장장이다.","level":"보통"},{"text":"경찰청 철창살은 외철창살이냐 쌍철창살이냐.","level":"보통"},{"text":"서울특별시 특허허가과 특허허가사무관.","level":"쉬움"},{"text":"중앙청 철창살은 쌍창살이고 시청 철창살은 외창살이다.","level":"보통"},{"text":"앞 집 팥죽은 붉은 팥 풋팥죽이고, 뒷집 콩죽은 햇콩 단콩 콩죽이다.","level":"어려움"},{"text":"작년에 온 솥장수는 헌 솥장수이고, 금년에 온 솥장수는 새 솥장수이다.","level":"보통"},{"text":"들의 콩깍지는 깐 콩깍지인가 안 깐 콩깍지인가.","level":"쉬움"},{"text":"저기 있는 말말말표 말표 치약은 말표 치약인가 마포 치약인가.","level":"보통"},{"text":"상표 붙은 큰 깡통은 깐 깡통인가 안 깐 깡통인가.","level":"쉬움"},{"text":"고려고 교복은 고급 교복이고 고려고 교복은 고급 원단을 썼다.","level":"보통"},{"text":"신진 샹송 가수의 신춘 샹송 쇼.","level":"어려움"},{"text":"멍멍이네 꿀꿀이는 멍멍해도 꿀꿀이네 멍멍이는 꿀꿀하네.","level":"보통"},{"text":"영양 양장점 옆 영양 약국, 영양 약국 옆 영양 양장점.","level":"어려움"},{"text":"한양 양장점 옆 한양 양장점, 대한 양업사 옆 대한 양업사.","level":"보통"},{"text":"대우 로얄 뉴로얄.","level":"쉬움"},{"text":"저기 있는 저 분은 백 법학박사이고 여기 있는 이 분은 적 법학박사이다.","level":"보통"},{"text":"백합 백화점 옆 백화 백화점, 백화 백화점 옆 백합 백화점.","level":"어려움"},{"text":"홍합 한 합 홍합 합합합.","level":"쉬움"},{"text":"참치 꽁치 삼치 갈치.","level":"쉬움"},{"text":"왕밤빵 왕밤빵 왕밤빵.","level":"쉬움"},{"text":"철수 책상 철책상, 영희 책상 은책상.","level":"쉬움"},{"text":"안 촉촉한 초코칩 나라에 살던 안 촉촉한 초코칩이 촉촉한 초코칩 나라의 촉촉한 초코칩을 보고 촉촉한 초코칩이 되고 싶어서 촉촉한 초코칩 나라에 갔는데, 촉촉한 초코칩 나라의 촉촉한 초코칩이 '넌 안 촉촉한 초코칩이니까 안 촉촉한 초코칩 나라에서 살아라'라고 했다.","level":"어려움"},{"text":"네가 그린 기린 그림은 못 그린 기린 그림이고 내가 그린 기린 그림은 잘 그린 기린 그림이다.","level":"보통"},{"text":"저기 가는 저 상장수가 헌 상장수냐 새 상장수냐.","level":"쉬움"},{"text":"박 범학박사님이 방방곡곡 밤나무를 심으셨다.","level":"보통"},{"text":"도토리가 문을 도로록, 드르륵, 두루룩 열었을까?","level":"보통"},{"text":"대청창살 외대창살, 쌍청창살 쌍대창살.","level":"어려움"},{"text":"우리 집 옆집 앞집 뒷집 창살은 홑겹창살이고, 옆집 뒷집 앞집 우리 집 창살은 쌍겹창살이다.","level":"어려움"},{"text":"시베리아 개썰매스키장 시베리아 개썰매스키장.","level":"보통"},{"text":"라즈베리 샹들리에 아래서 샹송을 불렀다.","level":"어려움"},{"text":"귀돌이네 집 벽돌은 붉은 벽돌이고 귀돌이네 집 벽돌은 푸른 벽돌이다.","level":"쉬움"},{"text":"들의 밭둑은 높은 밭둑인가 낮은 밭둑인가.","level":"쉬움"},{"text":"법학박사 박 법학박사, 의학박사 백 의학박사.","level":"보통"},{"text":"칠월칠석은 아흔아홉 밤 남았고 칠월칠석은 아흔아홉 날 남았다.","level":"보통"},{"text":"청단풍 홍단풍 청단풍 홍단풍 청홍단풍.","level":"쉬움"},{"text":"국민들의 권익을 위한 국민권익위원회.","level":"쉬움"},{"text":"동해물과 백두산이 마르고 닳도록 하느님이 보우하사.","level":"쉬움"},{"text":"적막한 산속에 딱따구리가 딱딱 소리를 낸다.","level":"쉬움"},{"text":"송이버섯 송송 썰어 송이버섯 수프를 만든다.","level":"쉬움"},{"text":"기린 그림 그린 그림은 긴 기린 그림인가 짧은 기린 그림인가.","level":"보통"},{"text":"지향할 지향점과 지양할 지양점.","level":"쉬움"},{"text":"검찰청 창살은 쌍창살이고, 경찰청 창살은 외창살이다.","level":"보통"},{"text":"한국관광공사 홍보팀 홍보담당 홍 과장.","level":"쉬움"},{"text":"상표 상표권 상표등록 상표출원.","level":"쉬움"},{"text":"똠양꿍 한 그릇 똠양꿍 두 그릇 똠양꿍 세 그릇.","level":"보통"},{"text":"스위스에서 온 스미스 씨가 스파게티를 먹었다.","level":"보통"},{"text":"고기 잡는 어부의 그물은 굵은 그물인가 얇은 그물인가.","level":"쉬움"},{"text":"봄날의 따뜻한 햇살 아래 봄나물을 캔다.","level":"쉬움"},{"text":"다람쥐 다람쥐 다람쥐 챗바퀴 돌 듯 돌고 돈다.","level":"쉬움"},{"text":"바다의 푸른 파도가 파도 파도 계속 파랗다.","level":"쉬움"},{"text":"낙뢰 경보가 내린 남해바다 낙뢰 낙뢰 낙뢰.","level":"보통"},{"text":"우유곽 옆에 요구르트 병, 요구르트 병 옆에 우유곽.","level":"보통"},{"text":"동글동글한 동전 동전 구멍에 쏙 들어갔다.","level":"쉬움"},{"text":"백화 백화점 백화점 지하 1층 백화 백화 코너.","level":"보통"},{"text":"청송 녹송 황송 백송 청송 녹송 황송 백송.","level":"보통"},{"text":"철수네 철망은 녹슨 철망이고 영희네 철망은 은색 철망이다.","level":"보통"},{"text":"앞뜰의 콩깍지는 안 깐 콩깍지이고 뒤뜰의 콩깍지는 깐 콩깍지이다.","level":"보통"},{"text":"상상 속에 상상하던 상상화가 현실이 되었다.","level":"쉬움"},{"text":"홍동백서 홍동백서 홍동백서 좌우우좌.","level":"쉬움"},{"text":"참외밭 참외는 잘 익은 참외인가 덜 익은 참외인가.","level":"쉬움"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 박 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 박 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 박 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 박 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 박 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 박 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 박 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 박 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 박 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 박 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 박 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 박 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 박 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 박 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 박 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 박 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 박 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 박 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 박 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 박 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 박 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 박 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 박 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 박 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 박 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 박 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 박 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 박 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 박 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 박 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 박 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 박 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 박 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 박 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 박 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 박 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 박 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 박 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 박 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 박 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 박 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 박 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 박 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 박 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 박 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 박 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 박 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 박 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 박 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 박 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 박 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 박 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 박 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 박 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 이학박사이고 여기 있는 이 분은 박 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 이학박사이고 여기 있는 이 분은 박 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 이학박사이고 여기 있는 이 분은 박 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 이학박사이고 여기 있는 이 분은 박 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 이학박사이고 여기 있는 이 분은 박 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 이학박사이고 여기 있는 이 분은 박 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 이학박사이고 여기 있는 이 분은 박 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 이학박사이고 여기 있는 이 분은 박 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 이학박사이고 여기 있는 이 분은 박 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 철학박사이고 여기 있는 이 분은 박 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 철학박사이고 여기 있는 이 분은 박 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 철학박사이고 여기 있는 이 분은 박 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 철학박사이고 여기 있는 이 분은 박 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 철학박사이고 여기 있는 이 분은 박 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 철학박사이고 여기 있는 이 분은 박 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 철학박사이고 여기 있는 이 분은 박 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 철학박사이고 여기 있는 이 분은 박 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 철학박사이고 여기 있는 이 분은 박 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 신학박사이고 여기 있는 이 분은 박 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 신학박사이고 여기 있는 이 분은 박 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 신학박사이고 여기 있는 이 분은 박 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 신학박사이고 여기 있는 이 분은 박 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 신학박사이고 여기 있는 이 분은 박 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 신학박사이고 여기 있는 이 분은 박 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 신학박사이고 여기 있는 이 분은 박 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 신학박사이고 여기 있는 이 분은 박 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 신학박사이고 여기 있는 이 분은 박 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 행정학박사이고 여기 있는 이 분은 박 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 행정학박사이고 여기 있는 이 분은 박 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 행정학박사이고 여기 있는 이 분은 박 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 행정학박사이고 여기 있는 이 분은 박 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 행정학박사이고 여기 있는 이 분은 박 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 행정학박사이고 여기 있는 이 분은 박 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 행정학박사이고 여기 있는 이 분은 박 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 행정학박사이고 여기 있는 이 분은 박 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 행정학박사이고 여기 있는 이 분은 박 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 이 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 이 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 이 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 이 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 이 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 이 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 이 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 이 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 법학박사이고 여기 있는 이 분은 이 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 이 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 이 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 이 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 이 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 이 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 이 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 이 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 이 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 의학박사이고 여기 있는 이 분은 이 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 이 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 이 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 이 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 이 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 이 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 이 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 이 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 이 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 공학박사이고 여기 있는 이 분은 이 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 이 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 이 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 이 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 이 농학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 이 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 이 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 이 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 이 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 문학박사이고 여기 있는 이 분은 이 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 이 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 이 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 이 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 이 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 이 약학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 이 이학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 이 철학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 이 신학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 농학박사이고 여기 있는 이 분은 이 행정학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 이 법학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 이 의학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 이 공학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 이 문학박사이다.","level":"보통"},{"text":"저기 있는 저 분은 김 약학박사이고 여기 있는 이 분은 이 농학박사이다.","level":"보통"}];
+
+        // Web Audio API Synth for Premium Beeps
+        let audioCtx = null;
+        function playSound(type) {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'beep') {
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // High pitch A5
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.45);
+                } else if (type === 'fail') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+                    osc.frequency.setValueAtTime(164.81, audioCtx.currentTime + 0.15); // E3
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'warning') {
+                    osc.frequency.setValueAtTime(1100, audioCtx.currentTime); 
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.18);
+                }
+            } catch (e) {
+                console.log("Audio play blocked or failed: ", e);
+            }
+        }
+
+        // Game State Variables
+        let players = [];
+        let totalRounds = 3;
+        let selectedDifficulty = 'all';
+        
+        let currentRound = 1;
+        let currentPlayerIdx = 0;
+        let activeTwisters = [];
+        let currentTwister = null;
+
+        let timerInterval = null;
+        let timerSecondsRemaining = 10;
+        const totalTimerDuration = 10; // 10 seconds for twisters
+
+        // Initialize setup player list inputs
+        function updatePlayerInputs() {
+            const count = parseInt(document.getElementById('player-count').value) || 3;
+            const container = document.getElementById('player-names-list');
+            const currentInputs = container.querySelectorAll('input');
+            const savedNames = Array.from(currentInputs).map(inp => inp.value);
+
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const nameVal = savedNames[i] || `플레이어 ${i + 1}`;
+                
+                const div = document.createElement('div');
+                div.className = 'player-input-item';
+                div.innerHTML = `
+                    <span>P${i + 1}</span>
+                    <input type="text" placeholder="이름 입력" value="${nameVal}">
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        // Initialize inputs on page load
+        updatePlayerInputs();
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(scr => scr.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+
+            if (screenId === 'screen-setup' || screenId === 'screen-scoreboard') {
+                document.getElementById('game-status-bar').style.display = 'none';
+            } else {
+                document.getElementById('game-status-bar').style.display = 'flex';
+            }
+        }
+
+        function initGame() {
+            // Get players
+            const inputs = document.getElementById('player-names-list').querySelectorAll('input');
+            players = Array.from(inputs).map((inp, idx) => {
+                return {
+                    id: idx,
+                    name: inp.value.trim() || `플레이어 ${idx + 1}`,
+                    score: 0,
+                    history: [] // successful rounds
+                };
+            });
+
+            if (players.length < 2) {
+                alert("참가자는 최소 2명이어야 합니다!");
+                return;
+            }
+
+            totalRounds = parseInt(document.getElementById('round-count').value) || 3;
+            selectedDifficulty = document.getElementById('difficulty-select').value;
+
+            // Filter Twisters
+            if (selectedDifficulty === 'all') {
+                activeTwisters = [...TWISTER_DB];
+            } else {
+                const levelMap = { 'easy': '쉬움', 'medium': '보통', 'hard': '어려움' };
+                const selectedKOR = levelMap[selectedDifficulty];
+                activeTwisters = TWISTER_DB.filter(t => t.level === selectedKOR);
+            }
+
+            // Shuffle active list
+            shuffleArray(activeTwisters);
+
+            // Reset scores & progress
+            currentRound = 1;
+            currentPlayerIdx = 0;
+
+            // Status labels
+            const difficultyLabelMap = { 'all': '전체', 'easy': '쉬움', 'medium': '보통', 'hard': '어려움' };
+            document.getElementById('status-difficulty').textContent = difficultyLabelMap[selectedDifficulty];
+
+            updateStatusBar();
+            showPassScreen();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function updateStatusBar() {
+            document.getElementById('status-round').textContent = `${currentRound} / ${totalRounds}`;
+            document.getElementById('status-player').textContent = players[currentPlayerIdx].name;
+        }
+
+        function showPassScreen() {
+            const player = players[currentPlayerIdx];
+            document.getElementById('pass-player-name').textContent = player.name;
+            showScreen('screen-pass');
+        }
+
+        function startTurn() {
+            playSound('beep');
+            updateStatusBar();
+
+            // Select a twister (wrap around if activeTwisters runs out)
+            const twisterIdx = ( (currentRound - 1) * players.length + currentPlayerIdx ) % activeTwisters.length;
+            currentTwister = activeTwisters[twisterIdx];
+
+            // Render twister
+            const twisterEl = document.getElementById('challenge-text');
+            const diffEl = document.getElementById('challenge-difficulty');
+            const tagEl = document.getElementById('challenge-player-tag');
+
+            twisterEl.textContent = currentTwister.text;
+            diffEl.textContent = currentTwister.level;
+            
+            // Set difficulty class
+            diffEl.className = 'difficulty-badge';
+            if (currentTwister.level === '쉬움') diffEl.classList.add('diff-easy');
+            else if (currentTwister.level === '보통') diffEl.classList.add('diff-medium');
+            else diffEl.classList.add('diff-hard');
+
+            tagEl.textContent = `${players[currentPlayerIdx].name} 님의 도전`;
+
+            // Start Timer
+            startTimer();
+
+            showScreen('screen-challenge');
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerSecondsRemaining = totalTimerDuration;
+            
+            const textEl = document.getElementById('timer-text');
+            const barInner = document.getElementById('timer-bar');
+
+            textEl.textContent = timerSecondsRemaining;
+            barInner.style.width = '100%';
+
+            timerInterval = setInterval(() => {
+                timerSecondsRemaining--;
+                textEl.textContent = timerSecondsRemaining;
+                
+                const percentage = (timerSecondsRemaining / totalTimerDuration) * 100;
+                barInner.style.width = `${percentage}%`;
+
+                if (timerSecondsRemaining <= 3 && timerSecondsRemaining > 0) {
+                    playSound('beep');
+                    textEl.style.color = '#ef4444';
+                } else if (timerSecondsRemaining <= 0) {
+                    playSound('warning');
+                    stopTurn();
+                } else {
+                    textEl.style.color = 'var(--text-primary)';
+                }
+            }, 1000);
+        }
+
+        function stopTurn() {
+            clearInterval(timerInterval);
+            
+            // Go to Judgment Screen
+            const jText = document.getElementById('judgment-text');
+            const jTag = document.getElementById('judgment-player-tag');
+
+            jText.textContent = currentTwister.text;
+            jTag.textContent = `${players[currentPlayerIdx].name} 판정`;
+
+            showScreen('screen-judgment');
+        }
+
+        function submitResult(isSuccess) {
+            const player = players[currentPlayerIdx];
+            if (isSuccess) {
+                playSound('success');
+                player.score++;
+                player.history.push({ round: currentRound, text: currentTwister.text, success: true });
+            } else {
+                playSound('fail');
+                player.history.push({ round: currentRound, text: currentTwister.text, success: false });
+            }
+
+            // Next Player or Next Round
+            currentPlayerIdx++;
+            if (currentPlayerIdx >= players.length) {
+                currentPlayerIdx = 0;
+                currentRound++;
+            }
+
+            if (currentRound > totalRounds) {
+                showScoreboard();
+            } else {
+                updateStatusBar();
+                showPassScreen();
+            }
+        }
+
+        function showScoreboard() {
+            const tbody = document.getElementById('scoreboard-rows');
+            tbody.innerHTML = '';
+
+            // Sort players by score desc
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            const maxScore = sortedPlayers[0].score;
+
+            sortedPlayers.forEach((p, rankIdx) => {
+                let rankDisplay = rankIdx + 1;
+                let rankClass = '';
+                if (rankDisplay === 1) rankClass = 'rank-1';
+                else if (rankDisplay === 2) rankClass = 'rank-2';
+                else if (rankDisplay === 3) rankClass = 'rank-3';
+
+                const tr = document.createElement('tr');
+                if (p.score === maxScore && maxScore > 0) {
+                    tr.className = 'winner-row';
+                }
+
+                const successRate = Math.round((p.score / totalRounds) * 100) || 0;
+
+                tr.innerHTML = `
+                    <td>
+                        <span class="rank-badge ${rankClass}">
+                            ${p.score === maxScore && maxScore > 0 ? '👑' : rankDisplay}
+                        </span>
+                    </td>
+                    <td style="font-weight: 700;">${p.name}</td>
+                    <td>${p.score} / ${totalRounds}</td>
+                    <td>${successRate}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            showScreen('screen-scoreboard');
+        }
+
+        function restartSetup() {
+            showScreen('screen-setup');
+        }
+
+        function restartGameSamePlayers() {
+            // Reset player scores
+            players.forEach(p => {
+                p.score = 0;
+                p.history = [];
+            });
+
+            // Reshuffle active twisters
+            shuffleArray(activeTwisters);
+
+            // Reset round progress
+            currentRound = 1;
+            currentPlayerIdx = 0;
+
+            updateStatusBar();
+            showPassScreen();
+        }
+    </script>
+</body>
+</html>
