@@ -703,7 +703,7 @@
 
         // Game Configuration & State
         let gameMode = 'solo'; // solo, duo, coop
-        let digitCount = 3;   // 3 or 4
+        let digitCount = 4;   // 3 or 4
         let players = [];     // Array of player objects
         let activePlayerIdx = 0;
         let secretNumbers = {}; // { 'duo-p1': '123', 'duo-p2': '456', 'computer': '789' }
@@ -1342,7 +1342,7 @@
         // On Load setup Default Input states
         window.onload = () => {
             setMode('solo');
-            setDigits(3);
+            setDigits(4);
         };
     </script>
 </body>
