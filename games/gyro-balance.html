@@ -1,101 +1,663 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>네온 밸런스 볼 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;height:100vh;overflow:hidden;touch-action:none}
-.back{position:absolute;top:20px;left:20px;z-index:10}
-.hud{position:absolute;top:20px;right:20px;text-align:right;z-index:10}
-.hud .time{font-size:2rem;font-weight:800}
-canvas{width:100%;height:100vh;display:block}
-.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
-.overlay h2{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,#06b6d4,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.overlay .big{font-size:4rem;font-weight:900;margin:10px 0}
-.btn{background:linear-gradient(135deg,#06b6d4,#8b5cf6);border:none;color:#fff;padding:16px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:20px}
-.hint{color:#64748b;font-size:.85rem;text-align:center;position:absolute;bottom:20px;width:100%}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>네온 밸런스 볼 - 미니게임 천국</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #020617;
+            --panel-bg: rgba(15, 23, 42, 0.7);
+            --border-color: rgba(99, 102, 241, 0.2);
+            --neon-cyan: #06b6d4;
+            --neon-purple: #8b5cf6;
+            --neon-pink: #ec4899;
+            --neon-green: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 27, 75, 0.4) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(2, 6, 23, 0.8) 0, transparent 50%);
+            font-family: 'Pretendard', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+            position: relative;
+        }
+
+        /* Top Navigation Header */
+        header {
+            position: absolute; top: 20px; left: 20px; right: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 50; pointer-events: none;
+        }
+        .back-btn, .refresh-btn {
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            transition: all 0.2s; text-decoration: none; pointer-events: auto;
+            backdrop-filter: blur(10px);
+        }
+        .back-btn:hover, .refresh-btn:hover {
+            background: rgba(99, 102, 241, 0.2); transform: scale(1.05); border-color: var(--neon-cyan);
+        }
+
+        /* HUD display */
+        .hud {
+            display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+            pointer-events: auto;
+        }
+        .hud-row {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            padding: 6px 14px; border-radius: 12px; backdrop-filter: blur(10px);
+            font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .hud-timer { color: var(--neon-pink); text-shadow: 0 0 10px rgba(236,72,153,0.3); }
+        .hud-stage { color: var(--neon-cyan); text-shadow: 0 0 10px rgba(6,182,212,0.3); }
+
+        canvas {
+            width: 100%; height: 100vh; display: block;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+        }
+
+        /* Elegant overlays */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(15px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100;
+        }
+        .modal {
+            background: var(--panel-bg); border: 2px solid var(--border-color);
+            padding: 40px 30px; border-radius: 28px; width: 90%; max-width: 420px;
+            text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.6), 0 0 30px rgba(99, 102, 241, 0.1);
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+            animation: modalPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalPop {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal h2 {
+            font-size: 2.2rem; font-weight: 800; font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+        }
+        .modal p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; }
+        .modal .score-val {
+            font-size: 3.5rem; font-weight: 900; font-family: 'Outfit', sans-serif;
+            color: var(--neon-pink); text-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
+            margin: 10px 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            border: none; color: #fff; padding: 14px 45px; font-size: 1.1rem;
+            font-weight: 800; border-radius: 50px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); }
+        .btn:active { transform: translateY(0); }
+
+        .hint {
+            color: var(--text-muted); font-size: 0.8rem; text-align: center;
+            position: absolute; bottom: 20px; width: 100%; pointer-events: none;
+            z-index: 10; font-weight: 600; letter-spacing: 0.5px;
+        }
+
+    </style>
 </head>
 <body>
-<a href="../index.html" class="back back-button">← 메인</a>
-<div class="hud"><div class="time" id="timer">0.0s</div></div>
-<canvas id="c"></canvas>
-<div class="overlay" id="start-screen">
-<h2>네온 밸런스 볼</h2>
-<p style="color:#94a3b8;margin:15px 0">폰을 기울여 공을 구멍에 넣으세요!</p>
-<button class="btn" onclick="startGame()">시작!</button>
-</div>
-<div class="overlay" id="win-screen" style="display:none">
-<h2>클리어! 🎉</h2>
-<div class="big" id="final-time">0.0s</div>
-<button class="btn" onclick="startGame()">다시 도전</button>
-</div>
-<div class="hint">자이로 센서가 없으면 터치로 공을 드래그하세요</div>
-<script>
-const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
-let W,H,ball,hole,walls,startTime,elapsed=0,running=false,tiltX=0,tiltY=0,touchDrag=false,touchStart={x:0,y:0};
-function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
-window.addEventListener('resize',resize);resize();
-function generateMaze(){
-walls=[];const s=40,cols=Math.floor(W/s),rows=Math.floor(H/s);
-for(let i=0;i<15;i++){
-const horizontal=Math.random()>.5;
-const x=Math.floor(Math.random()*(cols-3))*s+s;
-const y=Math.floor(Math.random()*(rows-3))*s+s*2;
-const len=(2+Math.floor(Math.random()*4))*s;
-if(horizontal)walls.push({x,y,w:len,h:8});
-else walls.push({x,y,w:8,h:len});
-}
-}
-function startGame(){
-document.getElementById('start-screen').style.display='none';
-document.getElementById('win-screen').style.display='none';
-generateMaze();
-ball={x:60,y:120,vx:0,vy:0,r:12};
-hole={x:W-80,y:H-120,r:18};
-startTime=Date.now();running=true;
-if(window.DeviceOrientationEvent){
-window.addEventListener('deviceorientation',onOrient);
-if(typeof DeviceOrientationEvent.requestPermission==='function')DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')window.addEventListener('deviceorientation',onOrient)});
-}
-loop();
-}
-function onOrient(e){tiltX=(e.gamma||0)/30;tiltY=(e.beta||0)/30}
-canvas.addEventListener('pointerdown',e=>{touchDrag=true;touchStart={x:e.clientX,y:e.clientY}});
-canvas.addEventListener('pointermove',e=>{if(!touchDrag)return;tiltX=(e.clientX-touchStart.x)/80;tiltY=(e.clientY-touchStart.y)/80});
-canvas.addEventListener('pointerup',()=>{touchDrag=false;tiltX=0;tiltY=0});
-function loop(){
-if(!running)return;
-elapsed=(Date.now()-startTime)/1000;
-document.getElementById('timer').textContent=elapsed.toFixed(1)+'s';
-ball.vx+=tiltX*0.5;ball.vy+=tiltY*0.5;
-ball.vx*=0.95;ball.vy*=0.95;
-ball.x+=ball.vx;ball.y+=ball.vy;
-if(ball.x<ball.r){ball.x=ball.r;ball.vx*=-0.5}
-if(ball.x>W-ball.r){ball.x=W-ball.r;ball.vx*=-0.5}
-if(ball.y<ball.r){ball.y=ball.r;ball.vy*=-0.5}
-if(ball.y>H-ball.r){ball.y=H-ball.r;ball.vy*=-0.5}
-walls.forEach(w=>{
-if(ball.x+ball.r>w.x&&ball.x-ball.r<w.x+w.w&&ball.y+ball.r>w.y&&ball.y-ball.r<w.y+w.h){
-const overlapX=Math.min(ball.x+ball.r-w.x,w.x+w.w-(ball.x-ball.r));
-const overlapY=Math.min(ball.y+ball.r-w.y,w.y+w.h-(ball.y-ball.r));
-if(overlapX<overlapY){if(ball.x<w.x+w.w/2){ball.x=w.x-ball.r;ball.vx*=-0.5}else{ball.x=w.x+w.w+ball.r;ball.vx*=-0.5}}
-else{if(ball.y<w.y+w.h/2){ball.y=w.y-ball.r;ball.vy*=-0.5}else{ball.y=w.y+w.h+ball.r;ball.vy*=-0.5}}
-}});
-const dist=Math.hypot(ball.x-hole.x,ball.y-hole.y);
-if(dist<hole.r){running=false;document.getElementById('win-screen').style.display='flex';document.getElementById('final-time').textContent=elapsed.toFixed(1)+'s';return}
-draw();requestAnimationFrame(loop);
-}
-function draw(){
-ctx.fillStyle='#0f172a';ctx.fillRect(0,0,W,H);
-ctx.fillStyle='rgba(6,182,212,0.15)';for(let i=0;i<W;i+=40){ctx.fillRect(i,0,1,H)}for(let i=0;i<H;i+=40){ctx.fillRect(0,i,W,1)}
-walls.forEach(w=>{ctx.fillStyle='rgba(139,92,246,0.6)';ctx.fillRect(w.x,w.y,w.w,w.h);ctx.shadowColor='#8b5cf6';ctx.shadowBlur=10;ctx.fillRect(w.x,w.y,w.w,w.h);ctx.shadowBlur=0});
-ctx.beginPath();ctx.arc(hole.x,hole.y,hole.r,0,Math.PI*2);ctx.fillStyle='#2ed573';ctx.shadowColor='#2ed573';ctx.shadowBlur=20;ctx.fill();ctx.shadowBlur=0;
-ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);const g=ctx.createRadialGradient(ball.x-3,ball.y-3,2,ball.x,ball.y,ball.r);g.addColorStop(0,'#fff');g.addColorStop(1,'#06b6d4');ctx.fillStyle=g;ctx.shadowColor='#06b6d4';ctx.shadowBlur=15;ctx.fill();ctx.shadowBlur=0;
-}
-</script>
+
+    <header>
+        <a href="../index.html" class="back-btn back-button"><i class="ri-home-4-line"></i></a>
+        <div class="hud">
+            <div class="hud-row" style="margin-bottom: 6px;">
+                <i class="ri-flag-line" style="color: var(--neon-cyan);"></i>
+                <span class="hud-stage" id="stage-display">STAGE 1</span>
+            </div>
+            <div class="hud-row">
+                <i class="ri-time-line" style="color: var(--neon-pink);"></i>
+                <span class="hud-timer" id="timer">0.0s</span>
+            </div>
+        </div>
+    </header>
+
+    <canvas id="c"></canvas>
+
+    <!-- Start Modal -->
+    <div class="overlay" id="start-screen">
+        <div class="modal">
+            <h2>NEON BALANCE</h2>
+            <p>폰을 기울이거나 화면을 드래그하여 공을 조종하세요.<br>빨간색 장애물과 블랙홀을 피해 무사히 녹색 터미널로 골인해야 합니다!</p>
+            <button class="btn" onclick="startGame(1)">게임 시작</button>
+        </div>
+    </div>
+
+    <!-- Win/Stage Clear Modal -->
+    <div class="overlay" id="win-screen" style="display:none">
+        <div class="modal">
+            <h2 id="win-title">STAGE CLEAR!</h2>
+            <div class="score-val" id="final-time">0.0s</div>
+            <p id="win-desc">훌륭한 균형 감각입니다.</p>
+            <button class="btn" id="next-btn" onclick="nextStage()">다음 단계</button>
+        </div>
+    </div>
+
+    <div class="hint">자이로 센서 미지원 기기는 화면을 드래그하여 기울기를 조절하세요</div>
+
+    <!-- Audio Synthesizer Class -->
+    <script>
+        class SoundSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playBounce() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+            playExplode() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                // Noise buffer generation
+                const bufferSize = this.ctx.sampleRate * 0.3; // 0.3 seconds
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noiseNode = this.ctx.createBufferSource();
+                noiseNode.buffer = buffer;
+                
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(300, now);
+                filter.frequency.exponentialRampToValueAtTime(10, now + 0.3);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                noiseNode.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noiseNode.start();
+                noiseNode.stop(now + 0.3);
+            }
+            playSuccess() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]; // C4, E4, G4, C5, E5, G5
+                notes.forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0, now + idx * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.08 + 0.04);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.8);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.8);
+                });
+            }
+        }
+        const sfx = new SoundSynth();
+    </script>
+
+    <!-- Physics & Rendering Engine -->
+    <script>
+        const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+        let W, H;
+        let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 12, history: [] };
+        let hole = { x: 0, y: 0, r: 18 };
+        let walls = [];
+        let traps = [];      // Red spikes
+        let blackholes = []; // Pull traps
+        let particles = [];  // Spark particles when dying
+        
+        let startTime = null;
+        let elapsed = 0;
+        let currentStage = 1;
+        let running = false;
+        let tiltX = 0, tiltY = 0;
+        let touchDrag = false, touchStart = { x: 0, y: 0 };
+        
+        // Cumulative timing score
+        let cumulativeTime = 0;
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+            if (running) {
+                // Keep hole and ball in bounds
+                hole.x = W - 80;
+                hole.y = H - 120;
+            }
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function generateMaze(stage) {
+            walls = [];
+            traps = [];
+            blackholes = [];
+            particles = [];
+
+            const unit = 40;
+            const cols = Math.floor(W / unit);
+            const rows = Math.floor(H / unit);
+
+            // 1. Generate Walls based on stage
+            const wallCount = 10 + stage * 3;
+            for (let i = 0; i < wallCount; i++) {
+                const horizontal = Math.random() > 0.5;
+                const x = Math.floor(Math.random() * (cols - 3)) * unit + unit;
+                const y = Math.floor(Math.random() * (rows - 4)) * unit + unit * 2;
+                const len = (2 + Math.floor(Math.random() * 3)) * unit;
+                
+                // Prevent walls covering start or end points directly
+                if (x < 150 && y < 200) continue;
+                if (x > W - 150 && y > H - 200) continue;
+
+                if (horizontal) walls.push({ x, y, w: len, h: 8 });
+                else walls.push({ x, y, w: 8, h: len });
+            }
+
+            // 2. Generate Traps & Blackholes based on stage difficulty
+            if (stage >= 2) {
+                // Add Red Spikes traps
+                const trapCount = stage === 2 ? 3 : 5;
+                for (let i = 0; i < trapCount; i++) {
+                    const tx = 150 + Math.random() * (W - 300);
+                    const ty = 200 + Math.random() * (H - 400);
+                    traps.push({ x: tx, y: ty, r: 14 });
+                }
+            }
+
+            if (stage >= 3) {
+                // Add gravitational Blackhole in the center zone
+                blackholes.push({ x: W / 2, y: H / 2, r: 24, pullRadius: 180, pullForce: 0.8 });
+            }
+        }
+
+        function startGame(stage = 1) {
+            sfx.init();
+            currentStage = stage;
+            if (stage === 1) cumulativeTime = 0;
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('win-screen').style.display = 'none';
+            document.getElementById('stage-display').innerText = `STAGE ${stage}`;
+
+            generateMaze(stage);
+            
+            // Spawn ball and destination hole safely
+            ball = { x: 70, y: 130, vx: 0, vy: 0, r: 12, history: [] };
+            hole = { x: W - 80, y: H - 120, r: 18 };
+            
+            startTime = Date.now();
+            running = true;
+
+            // Setup accelerometer listener for mobile
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', onOrient);
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission().then(res => {
+                        if (res === 'granted') window.addEventListener('deviceorientation', onOrient);
+                    }).catch(err => console.log('Permission rejected or not supported'));
+                }
+            }
+            
+            requestAnimationFrame(loop);
+        }
+
+        function onOrient(e) {
+            // Adjust coordinates according to landscape/portrait orientation
+            const landscape = window.innerWidth > window.innerHeight;
+            if (landscape) {
+                tiltX = (e.beta || 0) / 25;
+                tiltY = -(e.gamma || 0) / 25;
+            } else {
+                tiltX = (e.gamma || 0) / 25;
+                tiltY = (e.beta || 0) / 25;
+            }
+        }
+
+        // Joystick-drag interface backup for PCs/Emulators without gyroscope
+        canvas.addEventListener('pointerdown', e => {
+            touchDrag = true;
+            touchStart = { x: e.clientX, y: e.clientY };
+        });
+        canvas.addEventListener('pointermove', e => {
+            if (!touchDrag) return;
+            tiltX = (e.clientX - touchStart.x) / 70;
+            tiltY = (e.clientY - touchStart.y) / 70;
+            // Cap max tilt values
+            tiltX = Math.max(-1.5, Math.min(1.5, tiltX));
+            tiltY = Math.max(-1.5, Math.min(1.5, tiltY));
+        });
+        canvas.addEventListener('pointerup', () => {
+            touchDrag = false;
+            tiltX = 0;
+            tiltY = 0;
+        });
+
+        function resetBall(killed = false) {
+            if (killed) {
+                sfx.playExplode();
+                // Create sparks particles
+                for (let i = 0; i < 25; i++) {
+                    particles.push({
+                        x: ball.x, y: ball.y,
+                        vx: (Math.random() - 0.5) * 12,
+                        vy: (Math.random() - 0.5) * 12,
+                        alpha: 1,
+                        color: 'rgba(236,72,153,0.8)' // Pinkish sparks
+                    });
+                }
+            }
+            // Reposition ball safely to the top-left startup
+            ball.x = 70;
+            ball.y = 130;
+            ball.vx = 0;
+            ball.vy = 0;
+            ball.history = [];
+        }
+
+        function loop() {
+            if (!running) return;
+
+            elapsed = (Date.now() - startTime) / 1000;
+            document.getElementById('timer').textContent = elapsed.toFixed(1) + 's';
+
+            // 1. Process physics gravity and pulls
+            let ax = tiltX * 0.45;
+            let ay = tiltY * 0.45;
+
+            // Apply Blackhole pull forces
+            blackholes.forEach(bh => {
+                const dx = bh.x - ball.x;
+                const dy = bh.y - ball.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < bh.pullRadius) {
+                    // Gravitational force: pull stronger as ball gets closer
+                    const forceFactor = (1 - (dist / bh.pullRadius)) * bh.pullForce;
+                    ax += (dx / dist) * forceFactor;
+                    ay += (dy / dist) * forceFactor;
+                    
+                    // Collision check with blackhole event horizon
+                    if (dist < bh.r) {
+                        resetBall(true);
+                    }
+                }
+            });
+
+            ball.vx += ax;
+            ball.vy += ay;
+            ball.vx *= 0.94; // friction damping
+            ball.vy *= 0.94;
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // Push trail history
+            ball.history.push({ x: ball.x, y: ball.y });
+            if (ball.history.length > 8) ball.history.shift();
+
+            // 2. Wall Collisions checks
+            if (ball.x < ball.r) { ball.x = ball.r; ball.vx *= -0.4; sfx.playBounce(); }
+            if (ball.x > W - ball.r) { ball.x = W - ball.r; ball.vx *= -0.4; sfx.playBounce(); }
+            if (ball.y < ball.r) { ball.y = ball.r; ball.vy *= -0.4; sfx.playBounce(); }
+            if (ball.y > H - ball.r) { ball.y = H - ball.r; ball.vy *= -0.4; sfx.playBounce(); }
+
+            walls.forEach(w => {
+                if (ball.x + ball.r > w.x && ball.x - ball.r < w.x + w.w &&
+                    ball.y + ball.r > w.y && ball.y - ball.r < w.y + w.h) {
+                    
+                    const overlapX = Math.min(ball.x + ball.r - w.x, w.x + w.w - (ball.x - ball.r));
+                    const overlapY = Math.min(ball.y + ball.r - w.y, w.y + w.h - (ball.y - ball.r));
+                    
+                    sfx.playBounce();
+                    if (overlapX < overlapY) {
+                        if (ball.x < w.x + w.w / 2) {
+                            ball.x = w.x - ball.r;
+                            ball.vx *= -0.4;
+                        } else {
+                            ball.x = w.x + w.w + ball.r;
+                            ball.vx *= -0.4;
+                        }
+                    } else {
+                        if (ball.y < w.y + w.h / 2) {
+                            ball.y = w.y - ball.r;
+                            ball.vy *= -0.4;
+                        } else {
+                            ball.y = w.y + w.h + ball.r;
+                            ball.vy *= -0.4;
+                        }
+                    }
+                }
+            });
+
+            // 3. Spikes Trap Collisions
+            traps.forEach(t => {
+                const dist = Math.hypot(ball.x - t.x, ball.y - t.y);
+                if (dist < ball.r + t.r) {
+                    resetBall(true);
+                }
+            });
+
+            // 4. Target Hole Collision (Goal check)
+            const holeDist = Math.hypot(ball.x - hole.x, ball.y - hole.y);
+            if (holeDist < hole.r * 0.9) {
+                triggerStageClear();
+                return;
+            }
+
+            // 5. Update decorative particles
+            particles.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.03;
+                if (p.alpha <= 0) particles.splice(idx, 1);
+            });
+
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        function triggerStageClear() {
+            running = false;
+            sfx.playSuccess();
+            cumulativeTime += elapsed;
+
+            const winOverlay = document.getElementById('win-screen');
+            const winTitle = document.getElementById('win-title');
+            const winDesc = document.getElementById('win-desc');
+            const finalTimeEl = document.getElementById('final-time');
+            const nextBtn = document.getElementById('next-btn');
+
+            winOverlay.style.display = 'flex';
+            finalTimeEl.textContent = elapsed.toFixed(1) + 's';
+
+            if (currentStage < 3) {
+                winTitle.innerText = `STAGE ${currentStage} CLEAR!`;
+                winDesc.innerHTML = `훌륭한 균형 감각입니다.<br>다음 단계에 도전하세요!`;
+                nextBtn.innerText = "다음 단계";
+            } else {
+                winTitle.innerText = "🎉 전체 클리어! 🎉";
+                winDesc.innerHTML = `모든 장애물을 돌파했습니다!<br><b>총 합계 기록</b>: ${cumulativeTime.toFixed(1)}초`;
+                nextBtn.innerText = "처음부터 다시 하기";
+            }
+        }
+
+        function nextStage() {
+            if (currentStage < 3) {
+                startGame(currentStage + 1);
+            } else {
+                startGame(1);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            // 1. Grid Background
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.04)';
+            for (let i = 0; i < W; i += 40) ctx.fillRect(i, 0, 1, H);
+            for (let i = 0; i < H; i += 40) ctx.fillRect(0, i, W, 1);
+
+            // 2. Draw Blackholes
+            blackholes.forEach(bh => {
+                // Pull range pulse radius ring
+                const pulseRadius = bh.pullRadius - (Date.now() % 500) * 0.15;
+                ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(bh.x, bh.y, Math.max(0, pulseRadius), 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Blackhole main center
+                ctx.shadowColor = '#8b5cf6';
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = '#1e1b4b';
+                ctx.beginPath();
+                ctx.arc(bh.x, bh.y, bh.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Event horizon ring swirl
+                ctx.strokeStyle = '#8b5cf6';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(bh.x, bh.y, bh.r + 3, (Date.now() / 200) % (Math.PI * 2), (Date.now() / 200) % (Math.PI * 2) + Math.PI);
+                ctx.stroke();
+            });
+
+            // 3. Draw Destination Hole (Green Terminal)
+            ctx.beginPath();
+            ctx.arc(hole.x, hole.y, hole.r, 0, Math.PI * 2);
+            ctx.fillStyle = '#064e3b';
+            ctx.strokeStyle = varColor('--neon-green');
+            ctx.lineWidth = 3;
+            ctx.shadowColor = varColor('--neon-green');
+            ctx.shadowBlur = 15;
+            ctx.fill();
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Goal inner glow indicator
+            ctx.beginPath();
+            ctx.arc(hole.x, hole.y, hole.r - 6, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.5)';
+            ctx.fill();
+
+            // 4. Draw Walls (Purple barriers)
+            walls.forEach(w => {
+                ctx.fillStyle = '#311059';
+                ctx.strokeStyle = '#8b5cf6';
+                ctx.lineWidth = 1;
+                ctx.fillRect(w.x, w.y, w.w, w.h);
+                ctx.strokeRect(w.x, w.y, w.w, w.h);
+
+                ctx.shadowColor = '#8b5cf6';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(w.x, w.y, w.w, w.h);
+                ctx.shadowBlur = 0;
+            });
+
+            // 5. Draw Spikes Traps (Red traps)
+            traps.forEach(t => {
+                ctx.save();
+                ctx.translate(t.x, t.y);
+                ctx.rotate(Date.now() / 400); // Auto rotating spikes
+
+                ctx.shadowColor = '#f43f5e';
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = '#f43f5e';
+                ctx.beginPath();
+                // Draw star-like spike teeth
+                for (let i = 0; i < 8; i++) {
+                    ctx.lineTo(0, -t.r);
+                    ctx.rotate(Math.PI / 8);
+                    ctx.lineTo(0, -t.r / 2);
+                    ctx.rotate(Math.PI / 8);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // 6. Draw Ball Trail (History fading)
+            ball.history.forEach((h, idx) => {
+                const alpha = (idx + 1) / ball.history.length * 0.35;
+                ctx.beginPath();
+                ctx.arc(h.x, h.y, ball.r - 2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(6, 182, 212, ${alpha})`;
+                ctx.fill();
+            });
+
+            // 7. Draw Ball (Main Cyan Orb)
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+            const g = ctx.createRadialGradient(ball.x - 3, ball.y - 3, 2, ball.x, ball.y, ball.r);
+            g.addColorStop(0, '#fff');
+            g.addColorStop(0.7, '#06b6d4');
+            g.addColorStop(1, '#0891b2');
+            ctx.fillStyle = g;
+            ctx.shadowColor = '#06b6d4';
+            ctx.shadowBlur = 15;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // 8. Draw Spark particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+        }
+
+        // Helper to grab CSS variables values dynamically
+        function varColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+    </script>
+
     <script src="../scripts/game-common.js"></script>
 </body>
 </html>
