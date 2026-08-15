@@ -1,87 +1,487 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>포토 헌터 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
-.back{position:absolute;top:20px;left:20px;z-index:10}
-h1{font-size:1.8rem;margin:40px 0 10px;background:linear-gradient(135deg,#10b981,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.setup{width:90%;max-width:500px;text-align:center;margin-top:30px}
-.setup input{width:80%;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1rem;font-family:inherit;margin:5px 0}
-.players{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:15px 0}
-.player-tag{background:rgba(255,255,255,.1);padding:8px 16px;border-radius:20px;display:flex;align-items:center;gap:8px}
-.player-tag button{background:none;border:none;color:#ff4757;cursor:pointer;font-size:1rem}
-.btn{background:linear-gradient(135deg,#10b981,#3b82f6);border:none;color:#fff;padding:14px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:15px 0;transition:transform .3s}
-.btn:hover{transform:scale(1.05)}
-.mission-screen{display:none;text-align:center;width:90%;max-width:500px}
-.mission-card{background:rgba(255,255,255,.05);padding:40px 30px;border-radius:30px;border:2px solid rgba(59,130,246,.3);margin:20px 0}
-.mission-text{font-size:2rem;font-weight:800;margin-bottom:10px}
-.mission-hint{color:#94a3b8;font-size:1.1rem}
-.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
-.claim-btn{padding:16px;border:none;border-radius:16px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .3s;color:#fff}
-.claim-btn:active{transform:scale(0.95)}
-.scoreboard{width:90%;max-width:500px;text-align:center}
-.scoreboard h2{font-size:2rem;margin:20px 0}
-.score-row{display:flex;justify-content:space-between;padding:12px 20px;background:rgba(255,255,255,.05);border-radius:12px;margin:8px 0;font-size:1.1rem}
-.score-row .pts{font-weight:800;color:#2ed573}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>포토 헌터 - 미니게임 천국</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(22, 28, 45, 0.6);
+            --border-color: rgba(99, 102, 241, 0.2);
+            --neon-green: #10b981;
+            --neon-blue: #3b82f6;
+            --neon-purple: #8b5cf6;
+            --neon-pink: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(17, 24, 39, 0.8) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.15) 0, transparent 50%);
+            font-family: 'Pretendard', sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        header {
+            width: 100%; max-width: 500px; padding: 15px 0;
+            display: flex; justify-content: space-between; align-items: center;
+            position: relative;
+        }
+        .back-btn {
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            transition: all 0.2s; text-decoration: none;
+        }
+        .back-btn:hover { background: rgba(99, 102, 241, 0.15); transform: scale(1.05); border-color: var(--neon-blue); }
+
+        h1 {
+            font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .container {
+            width: 100%; max-width: 500px;
+            background: var(--panel-bg); backdrop-filter: blur(15px);
+            border: 2px solid var(--border-color); border-radius: 30px;
+            padding: 25px; display: flex; flex-direction: column; gap: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 30px rgba(99, 102, 241, 0.05);
+            margin-top: 10px;
+        }
+
+        /* Setup view */
+        .setup {
+            text-align: center; display: flex; flex-direction: column; gap: 15px;
+        }
+        .input-group {
+            display: flex; flex-direction: column; gap: 8px; text-align: left;
+        }
+        .input-group label {
+            font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;
+        }
+        .setup input {
+            width: 100%; padding: 14px; background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color); border-radius: 16px;
+            color: #fff; font-size: 1rem; transition: all 0.2s;
+        }
+        .setup input:focus {
+            outline: none; border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+        }
+
+        .players {
+            display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+            min-height: 50px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 16px;
+        }
+        .player-tag {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.05);
+            padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; gap: 8px;
+            animation: tagPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 0.95rem; font-weight: 600;
+        }
+        @keyframes tagPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .player-tag button {
+            background: none; border: none; color: var(--neon-pink); cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+            border: none; color: #fff; padding: 14px 40px; font-size: 1.1rem;
+            font-weight: 800; border-radius: 50px; cursor: pointer;
+            transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35); }
+        .btn:active { transform: translateY(0); }
+
+        /* Game Screen */
+        .mission-screen {
+            display: none; text-align: center; flex-direction: column; gap: 20px;
+        }
+        .mission-card {
+            background: rgba(15, 23, 42, 0.6); padding: 35px 25px; border-radius: 24px;
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation: cardSwitch 0.4s ease;
+        }
+        @keyframes cardSwitch {
+            0% { transform: translateY(10px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .mission-text {
+            font-size: 1.8rem; font-weight: 800; margin: 15px 0 8px;
+            background: linear-gradient(135deg, #fff, var(--neon-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .mission-hint { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
+
+        .btn-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0;
+        }
+        .claim-btn {
+            padding: 16px; border: none; border-radius: 16px; font-size: 1rem;
+            font-weight: 800; cursor: pointer; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .claim-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(255,255,255,0.1); }
+        .claim-btn:active { transform: scale(0.95); }
+
+        .action-row {
+            display: flex; gap: 10px; width: 100%;
+        }
+        .btn-action {
+            flex: 1; padding: 12px; font-size: 0.95rem;
+        }
+
+        /* Scoreboard */
+        .scoreboard {
+            display: none; text-align: center; flex-direction: column; gap: 20px;
+        }
+        .scoreboard h2 {
+            font-size: 1.8rem; font-family: 'Outfit', sans-serif; font-weight: 800;
+            color: var(--neon-yellow); text-shadow: 0 0 15px rgba(250,204,21,0.2);
+        }
+        .score-list {
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .score-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 20px; background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color); border-radius: 16px;
+            font-size: 1.05rem; font-weight: 600;
+            animation: rowFade 0.3s ease forwards; opacity: 0;
+        }
+        @keyframes rowFade {
+            to { opacity: 1; }
+        }
+        .score-row .pts { font-weight: 800; color: var(--neon-green); font-family: 'Outfit', sans-serif; }
+        .score-row.winner {
+            border-color: var(--neon-pink);
+            background: linear-gradient(90deg, rgba(236,72,153,0.1), rgba(15,23,42,0.6));
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.15);
+        }
+
+    </style>
 </head>
 <body>
-<a href="../index.html" class="back back-button">← 메인</a>
-<h1>📸 포토 헌터</h1>
-<div class="setup" id="setup">
-<p style="color:#94a3b8;margin-bottom:15px">참가자 이름을 추가하세요</p>
-<input id="name-input" placeholder="이름 입력 후 Enter" onkeydown="if(event.key==='Enter' && !event.isComposing)addPlayer()">
-<div class="players" id="player-list"></div>
-<button class="btn" onclick="startGame()">게임 시작!</button>
-</div>
-<div class="mission-screen" id="mission-screen">
-<div class="mission-card">
-<div style="font-size:3rem;margin-bottom:10px">🔍</div>
-<div class="mission-text" id="mission-text"></div>
-<div class="mission-hint" id="mission-hint"></div>
-</div>
-<p style="color:#94a3b8;margin-bottom:10px">가장 먼저 찾은 사람의 버튼을 누르세요!</p>
-<div class="btn-grid" id="btn-grid"></div>
-<button class="btn" onclick="nextMission()" style="background:linear-gradient(135deg,#f97316,#ec4899)">다음 미션 →</button>
-<button class="btn" onclick="endGame()" style="background:rgba(255,255,255,.1);margin-left:10px">결과 보기</button>
-</div>
-<div class="scoreboard" id="scoreboard" style="display:none">
-<h2>🏆 최종 결과</h2>
-<div id="final-scores"></div>
-<button class="btn" onclick="location.reload()">다시 하기</button>
-</div>
-<script>
-let players=[],scores={},missionIdx=0;
-const missions=[
-{text:'빨간색 물건',hint:'주변에서 빨간색인 물건을 찾으세요!'},
-{text:'둥근 물건',hint:'동그란 모양의 물건을 찾아보세요!'},
-{text:'금속 재질',hint:'반짝이는 금속으로 된 물건!'},
-{text:'글자가 적힌 것',hint:'텍스트가 보이는 물건을 찾으세요!'},
-{text:'자연에서 온 것',hint:'나뭇잎, 꽃, 돌 등 자연물!'},
-{text:'줄무늬 패턴',hint:'줄무늬가 있는 것을 찾아보세요!'},
-{text:'네모난 물건',hint:'사각형 모양인 물건!'},
-{text:'투명한 물건',hint:'투명하거나 반투명한 것!'},
-{text:'부드러운 촉감',hint:'만지면 부드러운 것을 찾으세요!'},
-{text:'주머니 속 물건',hint:'지금 주머니에 있는 것!'},
-{text:'초록색 무언가',hint:'초록색인 것을 찾아보세요!'},
-{text:'소리나는 물건',hint:'흔들거나 두드리면 소리나는 것!'},
-{text:'2개 이상 쌍',hint:'같은 종류가 2개 이상인 것!'},
-{text:'가장 작은 물건',hint:'주변에서 가장 작은 것을 찾으세요!'},
-{text:'본인의 소지품',hint:'지금 갖고 있는 소지품 중 하나!'}
-];
-const colors=['#ff4757','#1e90ff','#2ed573','#ffa502','#8b5cf6','#ec4899','#00cec9','#fd79a8'];
-function addPlayer(){const inp=document.getElementById('name-input'),n=inp.value.trim();if(!n)return;players.push(n);scores[n]=0;inp.value='';renderPlayers()}
-function renderPlayers(){document.getElementById('player-list').innerHTML=players.map((p,i)=>`<div class="player-tag"><span>${p}</span><button onclick="players.splice(${i},1);delete scores['${p}'];renderPlayers()">✕</button></div>`).join('')}
-function startGame(){if(players.length<2){alert('최소 2명 이상!');return}document.getElementById('setup').style.display='none';document.getElementById('mission-screen').style.display='block';renderBtns();nextMission()}
-function renderBtns(){document.getElementById('btn-grid').innerHTML=players.map((p,i)=>`<button class="claim-btn" style="background:${colors[i%colors.length]}" onclick="claim('${p}')">${p}</button>`).join('')}
-function nextMission(){if(missionIdx>=missions.length)missionIdx=0;const m=missions[missionIdx++];document.getElementById('mission-text').textContent=m.text;document.getElementById('mission-hint').textContent=m.hint}
-function claim(name){scores[name]++;const btn=event.target;btn.style.transform='scale(1.2)';setTimeout(()=>btn.style.transform='',300);nextMission()}
-function endGame(){document.getElementById('mission-screen').style.display='none';document.getElementById('scoreboard').style.display='block';const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);document.getElementById('final-scores').innerHTML=sorted.map(([n,s],i)=>`<div class="score-row"><span>${i===0?'👑 ':''}${n}</span><span class="pts">${s}점</span></div>`).join('')}
-</script>
+
+    <header>
+        <a href="../index.html" class="back-btn"><i class="ri-home-4-line"></i></a>
+        <h1>PHOTO HUNTER</h1>
+        <div style="width: 40px;"></div> <!-- Spacer -->
+    </header>
+
+    <div class="container">
+        <!-- Setup Screen -->
+        <div class="setup" id="setup">
+            <div class="input-group">
+                <label>참가자 이름 추가</label>
+                <input id="name-input" placeholder="이름을 입력하고 Enter를 누르거나 쉼표로 구분" onkeydown="handleInput(event)">
+            </div>
+            <div class="players" id="player-list"></div>
+            <button class="btn" onclick="startGame()"><i class="ri-play-fill"></i> 게임 시작!</button>
+        </div>
+
+        <!-- Mission Screen -->
+        <div class="mission-screen" id="mission-screen">
+            <div class="mission-card" id="mission-card">
+                <div style="font-size: 3rem; margin-bottom: 5px; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));">📸</div>
+                <div class="mission-text" id="mission-text"></div>
+                <div class="mission-hint" id="mission-hint"></div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">가장 먼저 사진을 촬영하거나 물건을 가져온 사람의 버튼을 누르세요!</p>
+            <div class="btn-grid" id="btn-grid"></div>
+            
+            <div class="action-row">
+                <button class="btn btn-action" onclick="nextMission()" style="background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));"><i class="ri-skip-forward-line"></i> 다음 미션</button>
+                <button class="btn btn-action" onclick="endGame()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.1);"><i class="ri-trophy-line"></i> 결과 보기</button>
+            </div>
+        </div>
+
+        <!-- Scoreboard Screen -->
+        <div class="scoreboard" id="scoreboard">
+            <h2>🏆 최종 랭킹</h2>
+            <div class="score-list" id="final-scores"></div>
+            <button class="btn" onclick="location.reload()"><i class="ri-refresh-line"></i> 다시 하기</button>
+        </div>
+    </div>
+
+    <!-- Audio Synthesizer Class -->
+    <script>
+        class SoundSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playClick() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+            playPoint() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(587.33, this.ctx.currentTime); // D5
+                osc.frequency.setValueAtTime(880, this.ctx.currentTime + 0.08); // A5
+                gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+            playWinner() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 987.77, 1046.50]; // C5, E5, G5, B5, C6
+                notes.forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now + idx * 0.1);
+                    gain.gain.setValueAtTime(0, now + idx * 0.1);
+                    gain.gain.linearRampToValueAtTime(0.1, now + idx * 0.1 + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.6);
+                    osc.start(now + idx * 0.1);
+                    osc.stop(now + idx * 0.1 + 0.6);
+                });
+            }
+        }
+        const sfx = new SoundSynth();
+    </script>
+
+    <!-- Main Game Scripts -->
+    <script>
+        let players = [];
+        let scores = {};
+        let missionIdx = 0;
+
+        // Expanded mission pool (40 items)
+        const missions = [
+            { text: '빨간색 물건', hint: '주변에서 빨간색인 물건을 가져오거나 촬영하세요!' },
+            { text: '동그란 물건', hint: '동그란 모양이나 단면이 둥근 형태의 물건!' },
+            { text: '차가운 것', hint: '만졌을 때 시원하거나 차갑다고 느껴지는 물건!' },
+            { text: '자연에서 온 것', hint: '나뭇잎, 꽃, 돌, 나뭇가지 등 가공되지 않은 자연물!' },
+            { text: '글자가 적힌 것', hint: '명확한 글자가 새겨지거나 적힌 텍스트 아이템!' },
+            { text: '가장 얇은 물건', hint: '두께가 가장 얇은 물건을 가져오세요!' },
+            { text: '금속 재질의 무언가', hint: '철, 스테인리스, 구리 등 반짝이는 금속으로 된 물건!' },
+            { text: '줄무늬나 패턴이 있는 것', hint: '스프라이트, 체크 등 특정 무늬를 가진 물건!' },
+            { text: '파란색 물건', hint: '푸른빛을 띠고 있는 선명한 물건!' },
+            { text: '주머니에 있던 소지품', hint: '현재 바지나 외투 주머니 안에 들어 있던 유용한 도구!' },
+            { text: '투명한 물건', hint: '투명하게 뒷배경이 비치는 유리, 플라스틱 등!' },
+            { text: '초록색 무언가', hint: '초록 혹은 연두색 컬러가 들어간 인물/사물!' },
+            { text: '2개 이상의 쌍', hint: '같은 종류가 2개 이상 모여 있는 아이템!' },
+            { text: '주변에서 가장 작은 것', hint: '실내에서 부피나 크기가 가장 작은 물건!' },
+            { text: '부드러운 촉감', hint: '만졌을 때 폭신하거나 부드러운 촉감의 물건!' },
+            { text: '노란색 물건', hint: '노란색이나 오렌지색 계열의 물건!' },
+            { text: '소리가 나는 물건', hint: '두드리거나 흔들면 특유의 소리가 나는 사물!' },
+            { text: '충전기나 케이블', hint: '전자기기를 충전하거나 연결할 수 있는 선!' },
+            { text: '무언가의 뚜껑', hint: '병뚜껑, 통뚜껑, 볼펜 캡 등 닫을 수 있는 마개!' },
+            { text: '종이로 된 것', hint: '책, 영수증, 상자 등 종이 재질의 사물!' },
+            { text: '신발 또는 양말', hint: '발에 착용하는 소지품의 일부!' },
+            { text: '끈이나 밴드', hint: '머리끈, 고무줄, 신발끈 등 묶을 수 있는 도구!' },
+            { text: '얼굴이 그려진 것', hint: '사람이나 캐릭터의 얼굴이 인쇄되거나 장식된 것!' },
+            { text: '검은색 물건', hint: '새까만 올 블랙 톤을 띤 사물!' },
+            { text: '반사되는 표면', hint: '거울, 폰 액션, 금속 판 등 내 얼굴이 비치는 표면!' },
+            { text: '동전이나 열쇠', hint: '지갑이나 가방 속 금속 동전 및 차/방 열쇠!' },
+            { text: '가장 긴 물건', hint: '주변 사물 중 길이가 가장 길게 뻗은 것!' },
+            { text: '세모난 형태', hint: '삼각형 구조를 가졌거나 모서리가 세 개인 사물!' },
+            { text: '달콤한 것', hint: '사탕, 과자, 초콜릿 등 단맛이 나는 간식류!' },
+            { text: '플라스틱 재질', hint: '일상에서 흔히 만나는 단단하고 가벼운 플라스틱!' },
+            { text: '가죽 느낌의 사물', hint: '가방, 지갑, 벨트 등 가죽 질감이 묻어나는 물건!' },
+            { text: '빛을 내는 것', hint: '자체 발광하는 손전등, 라이터, 디스플레이 화면 등!' },
+            { text: '나무로 만든 것', hint: '연필, 책상 조각, 나무젓가락 등 목재 재질!' },
+            { text: '글을 쓸 수 있는 도구', hint: '볼펜, 샤프, 연필, 네임펜 등 필기구!' },
+            { text: '숫자가 보이는 것', hint: '시계, 영수증, 달력 등 숫자가 인쇄된 물건!' },
+            { text: '냄새가 나는 사물', hint: '향수, 핸드크림, 커피 등 뚜렷한 향을 품은 사물!' },
+            { text: '최근 일주일 내 얻은 것', hint: '근래 일주일 사이에 새로 생기거나 구매한 영수증/물건!' },
+            { text: '동물 관련 캐릭터', hint: '동물의 모습이 새겨진 굿즈, 인형, 로고 등!' },
+            { text: '안경이나 시계', hint: '신체에 직접 착용하는 시각/시간 관련 유틸!' },
+            { text: '흰색 물건', hint: '깔끔한 흰색을 가진 사물!' }
+        ];
+
+        // Unique HSL background color system for participant buttons
+        const colorPalette = [
+            'linear-gradient(135deg, #ef4444, #b91c1c)', // Red
+            'linear-gradient(135deg, #3b82f6, #1d4ed8)', // Blue
+            'linear-gradient(135deg, #10b981, #047857)', // Green
+            'linear-gradient(135deg, #f59e0b, #b45309)', // Amber
+            'linear-gradient(135deg, #8b5cf6, #6d28d9)', // Purple
+            'linear-gradient(135deg, #ec4899, #be185d)', // Pink
+            'linear-gradient(135deg, #06b6d4, #0891b2)', // Cyan
+            'linear-gradient(135deg, #f97316, #c2410c)'  // Orange
+        ];
+
+        function handleInput(event) {
+            if (event.key === 'Enter') {
+                if (event.isComposing) return; // Prevent duplicates in macOS IME
+                addPlayer();
+            }
+        }
+
+        function addPlayer() {
+            const input = document.getElementById('name-input');
+            const val = input.value.trim();
+            if (!val) return;
+
+            sfx.playClick();
+            // Allow multiple names split by comma or spaces
+            const names = val.split(/[,，\s]+/).filter(x => x.trim().length > 0);
+            names.forEach(n => {
+                const uniqueName = n.trim();
+                if (uniqueName && !players.includes(uniqueName)) {
+                    players.push(uniqueName);
+                    scores[uniqueName] = 0;
+                }
+            });
+
+            input.value = '';
+            renderPlayers();
+        }
+
+        function renderPlayers() {
+            const list = document.getElementById('player-list');
+            list.innerHTML = players.map((p, i) => `
+                <div class="player-tag">
+                    <span>${p}</span>
+                    <button onclick="removePlayer(${i}, '${p}')"><i class="ri-close-line"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function removePlayer(idx, name) {
+            sfx.playClick();
+            players.splice(idx, 1);
+            delete scores[name];
+            renderPlayers();
+        }
+
+        function startGame() {
+            if (players.length < 2) {
+                alert('최소 2명 이상의 플레이어가 필요합니다!');
+                return;
+            }
+            sfx.playClick();
+            // Shuffle mission indices
+            for (let i = missions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [missions[i], missions[j]] = [missions[j], missions[i]];
+            }
+            missionIdx = 0;
+
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('win-overlay'); // Warm up
+            document.getElementById('mission-screen').style.display = 'flex';
+            
+            renderClaimButtons();
+            nextMission();
+        }
+
+        function renderClaimButtons() {
+            const grid = document.getElementById('btn-grid');
+            grid.innerHTML = players.map((p, i) => `
+                <button class="claim-btn" style="background: ${colorPalette[i % colorPalette.length]}" onclick="claim(event, '${p}')">
+                    ${p}
+                </button>
+            `).join('');
+        }
+
+        function nextMission() {
+            sfx.playClick();
+            if (missionIdx >= missions.length) {
+                // Wrap around and reshuffle
+                missionIdx = 0;
+                for (let i = missions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [missions[i], missions[j]] = [missions[j], missions[i]];
+                }
+            }
+
+            const m = missions[missionIdx++];
+            
+            // Animation trigger
+            const card = document.getElementById('mission-card');
+            card.style.animation = 'none';
+            card.offsetHeight; /* trigger reflow */
+            card.style.animation = null;
+
+            document.getElementById('mission-text').textContent = m.text;
+            document.getElementById('mission-hint').textContent = m.hint;
+        }
+
+        function claim(event, name) {
+            sfx.playPoint();
+            scores[name]++;
+            
+            const btn = event.currentTarget;
+            btn.style.transform = 'scale(1.15)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 250);
+
+            nextMission();
+        }
+
+        function endGame() {
+            sfx.playWinner();
+            document.getElementById('mission-screen').style.display = 'none';
+            document.getElementById('scoreboard').style.display = 'flex';
+
+            const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+            const finalScores = document.getElementById('final-scores');
+            
+            finalScores.innerHTML = sorted.map(([n, s], i) => {
+                const isWinner = i === 0 && s > 0;
+                return `
+                    <div class="score-row ${isWinner ? 'winner' : ''}" style="animation-delay: ${i * 0.1}s">
+                        <span>${isWinner ? '👑 ' : ''}${n}</span>
+                        <span class="pts">${s}점</span>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+
     <script src="../scripts/game-common.js"></script>
 </body>
 </html>
