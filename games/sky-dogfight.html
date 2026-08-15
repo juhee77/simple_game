@@ -182,7 +182,7 @@
         <div class="header-actions">
             <button class="icon-btn" onclick="openGDD()" title="기획서 보기"><i class="ri-book-read-line"></i></button>
             <button class="icon-btn" onclick="initGame()" title="게임 재시작"><i class="ri-refresh-line"></i></button>
-            <button class="icon-btn" onclick="location.href='../index.html'" title="로비로 돌아가기"><i class="ri-home-4-line"></i></button>
+            <a class="icon-btn back-btn" href="../index.html" title="로비로 돌아가기"><i class="ri-home-4-line"></i></a>
         </div>
     </header>
 
@@ -517,5 +517,6 @@
         window.onload = initGame;
         window.addEventListener('resize', resize);
     </script>
+    <script src="../scripts/game-common.js"></script>
 </body>
 </html>
