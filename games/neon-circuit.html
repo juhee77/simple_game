@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>네온 서킷 커넥트 - Neon Circuit Connect</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #020617;
+            --panel-bg: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(99, 102, 241, 0.2);
+            --neon-blue: #38bdf8;
+            --neon-indigo: #6366f1;
+            --neon-pink: #f43f5e;
+            --neon-yellow: #facc15;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 27, 75, 0.4) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(15, 23, 42, 0.8) 0, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 10px;
+        }
+
+        header {
+            width: 100%; max-width: 600px; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+        h1 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--neon-blue); text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+
+        .btn-icon {
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { background: rgba(99, 102, 241, 0.15); transform: scale(1.05); border-color: var(--neon-indigo); }
+
+        /* Game Board Container */
+        .game-container {
+            width: 100%; max-width: 600px;
+            background: var(--panel-bg); backdrop-filter: blur(15px);
+            border: 2px solid var(--border-color); border-radius: 24px;
+            padding: 20px; display: flex; flex-direction: column; gap: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 0 40px rgba(99, 102, 241, 0.05);
+            position: relative;
+        }
+
+        /* Dash board stats */
+        .dashboard {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .stat-value { font-size: 1.2rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: var(--text-main); }
+        .timer-glow { color: var(--neon-pink); text-shadow: 0 0 8px rgba(244, 63, 94, 0.4); }
+
+        /* Grid */
+        .grid-wrapper {
+            position: relative; width: 100%; display: flex; justify-content: center;
+        }
+        .grid {
+            display: grid; gap: 8px; width: 100%; aspect-ratio: 1/1;
+            background: rgba(15, 23, 42, 0.8); border-radius: 16px;
+            padding: 10px; border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Tile Stylings */
+        .tile {
+            position: relative; background: #0f172a; border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.3s, transform 0.2s, border-color 0.3s;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .tile:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            background: #1e293b;
+        }
+        .tile:active {
+            transform: scale(0.95);
+        }
+
+        /* Custom SVG connector lines */
+        .connector-svg {
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Power source and Output terminals */
+        .terminal-glow {
+            position: absolute; border-radius: 50%;
+            width: 14px; height: 14px; background: var(--neon-indigo);
+            box-shadow: 0 0 10px var(--neon-indigo);
+        }
+        .terminal-source {
+            top: 10px; left: 10px; background: var(--neon-blue); box-shadow: 0 0 12px var(--neon-blue);
+        }
+        .terminal-dest {
+            bottom: 10px; right: 10px; background: var(--neon-yellow); box-shadow: 0 0 12px var(--neon-yellow);
+        }
+
+        /* Difficulty Controller */
+        .difficulty-selector {
+            display: flex; gap: 8px; justify-content: center;
+        }
+        .diff-btn {
+            flex: 1; padding: 10px; border: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.5); color: var(--text-muted);
+            border-radius: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+        .diff-btn.active {
+            border-color: var(--neon-blue); background: rgba(56, 189, 248, 0.1);
+            color: var(--neon-blue); box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+        }
+
+        /* Clear Overlay modal */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(2, 6, 23, 0.9); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .overlay.active { display: flex; }
+        .modal {
+            background: var(--panel-bg); border: 2px solid var(--neon-indigo);
+            padding: 35px; border-radius: 24px; width: 85%; max-width: 400px;
+            text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.6), 0 0 25px rgba(99, 102, 241, 0.2);
+            display: flex; flex-direction: column; gap: 15px;
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalPop {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal h2 { font-size: 2rem; color: var(--neon-yellow); text-shadow: 0 0 15px rgba(250, 204, 21, 0.4); font-family: 'Outfit', sans-serif; }
+        .modal p { font-size: 1rem; color: var(--text-main); line-height: 1.5; }
+        .btn-main {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-indigo));
+            color: #fff; border: none; padding: 14px 35px; border-radius: 50px;
+            font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(99, 102, 241, 0.6); }
+
+        /* Game Instructions */
+        .info-panel {
+            font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;
+            background: rgba(0,0,0,0.2); border-radius: 16px; padding: 15px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <a class="btn-icon back-btn" href="../index.html" title="로비로 돌아가기"><i class="ri-home-4-line"></i></a>
+        <h1>NEON CIRCUIT</h1>
+        <button class="btn-icon" onclick="resetStage()" title="스테이지 재시작"><i class="ri-refresh-line"></i></button>
+    </header>
+
+    <div class="game-container">
+        <!-- Dash board stats -->
+        <div class="dashboard">
+            <div class="stat-box">
+                <span class="stat-label">스테이지</span>
+                <span class="stat-value" id="stage-display">1</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">소요 시간</span>
+                <span class="stat-value timer-glow" id="timer-display">00:00</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">움직임</span>
+                <span class="stat-value" id="moves-display" style="color: var(--neon-blue);">0</span>
+            </div>
+        </div>
+
+        <!-- Difficulty Selector -->
+        <div class="difficulty-selector">
+            <button class="diff-btn active" onclick="changeDifficulty(4, this)">EASY (4x4)</button>
+            <button class="diff-btn" onclick="changeDifficulty(5, this)">NORMAL (5x5)</button>
+            <button class="diff-btn" onclick="changeDifficulty(6, this)">HARD (6x6)</button>
+        </div>
+
+        <!-- Grid Board -->
+        <div class="grid-wrapper">
+            <div class="grid" id="board">
+                <!-- Tiles will be dynamically generated -->
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="info-panel">
+            <p>💡 <b>게임 방법</b>: 타일을 탭하여 시계 방향으로 90도 회전시킬 수 있습니다. 좌측 상단의 파란색 전원 단자에서 시작하여 우측 하단의 노란색 터미널까지 네온 전류가 흐르도록 모든 회로 조각을 연결하세요! 모든 목적지까지 완전한 폐회로가 개척되면 스테이지가 완료됩니다.</p>
+        </div>
+    </div>
+
+    <!-- Win Modal Overlay -->
+    <div class="overlay" id="win-overlay">
+        <div class="modal">
+            <h2>CIRCUIT COMPLETE!</h2>
+            <p id="win-desc">전류가 완벽하게 흐릅니다!<br>소요 시간: 00:00 | 움직임: 0회</p>
+            <button class="btn-main" onclick="startNewGame(true)">다음 스테이지</button>
+        </div>
+    </div>
+
+    <!-- Audio Synth Utilities -->
+    <script>
+        class SoundSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playClick() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.08);
+                
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+            playPowerFlow() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(80, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.25);
+                
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+            playComplete() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                // High bell chord
+                const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                freqs.forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now + idx * 0.08);
+                    
+                    gain.gain.setValueAtTime(0, now + idx * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.15, now + idx * 0.08 + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 1.2);
+                    
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 1.2);
+                });
+            }
+        }
+        const sfx = new SoundSynth();
+    </script>
+
+    <!-- Game Engine Logic -->
+    <script>
+        let gridSize = 4;
+        let board = [];
+        let moves = 0;
+        let stage = 1;
+        let startTime = null;
+        let timerInterval = null;
+        let isCleared = false;
+
+        // Tile Type base connector mapping (Directions: 0: Up, 1: Right, 2: Down, 3: Left)
+        const TILE_DEFINITIONS = {
+            'I': [0, 2],       // Straight (vertical default)
+            'L': [0, 1],       // Elbow curve (up-right default)
+            'T': [3, 0, 1],    // 3-way (T-shaped, pointing down default)
+            '+': [0, 1, 2, 3], // Cross
+            'E': [0]           // Terminal end (up default)
+        };
+
+        const NEON_COLORS = {
+            dim: 'rgba(71, 85, 105, 0.4)',
+            powered: '#38bdf8',
+            glow: 'rgba(56, 189, 248, 0.75)'
+        };
+
+        class Tile {
+            constructor(r, c, type) {
+                this.r = r;
+                this.c = c;
+                this.type = type;
+                this.rotation = 0; // 0, 1, 2, 3 (rotation * 90 degrees)
+                this.powered = false;
+            }
+
+            // Get absolute current directions based on current rotation
+            getDirections() {
+                const base = TILE_DEFINITIONS[this.type];
+                return base.map(d => (d + this.rotation) % 4);
+            }
+
+            rotate() {
+                this.rotation = (this.rotation + 1) % 4;
+            }
+        }
+
+        function changeDifficulty(size, btn) {
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            gridSize = size;
+            stage = 1;
+            startNewGame(false);
+        }
+
+        function startNewGame(incrementStage = false) {
+            if (incrementStage) stage++;
+            moves = 0;
+            isCleared = false;
+            document.getElementById('stage-display').innerText = stage;
+            document.getElementById('moves-display').innerText = moves;
+            document.getElementById('win-overlay').classList.remove('active');
+
+            generateSolvableBoard();
+            updatePowerFlow();
+            renderBoard();
+
+            // Set Timer
+            clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+
+        function resetStage() {
+            moves = 0;
+            isCleared = false;
+            document.getElementById('moves-display').innerText = moves;
+            document.getElementById('win-overlay').classList.remove('active');
+            
+            // Just shuffle existing board rotations again
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    board[r][c].rotation = Math.floor(Math.random() * 4);
+                }
+            }
+            updatePowerFlow();
+            renderBoard();
+
+            // Reset Timer
+            clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+
+        function updateTimer() {
+            if (isCleared) return;
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const secs = String(elapsed % 60).padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+        }
+
+        // Solvable path board generator
+        function generateSolvableBoard() {
+            board = [];
+            for (let r = 0; r < gridSize; r++) {
+                board.push([]);
+                for (let c = 0; c < gridSize; c++) {
+                    board[r].push(null);
+                }
+            }
+
+            // Step 1: Create a random path from source (0,0) to destination (gridSize-1, gridSize-1)
+            const path = [];
+            let current = { r: 0, c: 0 };
+            path.push(current);
+
+            const visited = new Set();
+            visited.add('0,0');
+
+            while (current.r !== gridSize - 1 || current.c !== gridSize - 1) {
+                const neighbors = [];
+                // Possible moves: Down, Right, Up, Left
+                const directions = [
+                    { dr: 1, dc: 0, dir: 2 }, // Down
+                    { dr: 0, dc: 1, dir: 1 }, // Right
+                    { dr: -1, dc: 0, dir: 0 }, // Up
+                    { dr: 0, dc: -1, dir: 3 } // Left
+                ];
+
+                for (let opt of directions) {
+                    const nr = current.r + opt.dr;
+                    const nc = current.c + opt.dc;
+                    if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize && !visited.has(`${nr},${nc}`)) {
+                        neighbors.push({ r: nr, c: nc, dir: opt.dir });
+                    }
+                }
+
+                if (neighbors.length > 0) {
+                    // Bias towards moving Down/Right
+                    const biasNeighbors = neighbors.filter(n => n.dir === 1 || n.dir === 2);
+                    let next;
+                    if (biasNeighbors.length > 0 && Math.random() < 0.7) {
+                        next = biasNeighbors[Math.floor(Math.random() * biasNeighbors.length)];
+                    } else {
+                        next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    }
+                    visited.add(`${next.r},${next.c}`);
+                    current = { r: next.r, c: next.c };
+                    path.push(current);
+                } else {
+                    // Dead end, reset generation
+                    return generateSolvableBoard();
+                }
+            }
+
+            // Step 2: Assemble tiles along the path and define connection direction attributes
+            const pathConnectors = {}; // 'r,c' -> Set representing required connection directions
+            for (let i = 0; i < path.length; i++) {
+                const cur = path[i];
+                const key = `${cur.r},${cur.c}`;
+                if (!pathConnectors[key]) pathConnectors[key] = new Set();
+
+                // Add source terminal connection direction
+                if (i === 0) {
+                    pathConnectors[key].add(3); // Source flows from Left
+                }
+                // Add destination terminal connection direction
+                if (i === path.length - 1) {
+                    pathConnectors[key].add(1); // Dest flows out Right
+                }
+
+                if (i > 0) {
+                    const prev = path[i - 1];
+                    // From prev to cur
+                    if (cur.r > prev.r) { pathConnectors[`${prev.r},${prev.c}`].add(2); pathConnectors[key].add(0); } // Down
+                    if (cur.r < prev.r) { pathConnectors[`${prev.r},${prev.c}`].add(0); pathConnectors[key].add(2); } // Up
+                    if (cur.c > prev.c) { pathConnectors[`${prev.r},${prev.c}`].add(1); pathConnectors[key].add(3); } // Right
+                    if (cur.c < prev.c) { pathConnectors[`${prev.r},${prev.c}`].add(3); pathConnectors[key].add(1); } // Left
+                }
+            }
+
+            // Step 3: Instantiate Tile components (both path tiles and filler tiles)
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    const key = `${r},${c}`;
+                    if (pathConnectors[key]) {
+                        const requiredDirs = Array.from(pathConnectors[key]);
+                        // Deduce appropriate tile type for required directions
+                        board[r][c] = fitTileType(r, c, requiredDirs);
+                    } else {
+                        // Place random filler tile
+                        const types = ['I', 'L', 'T', '+'];
+                        const randomType = types[Math.floor(Math.random() * types.length)];
+                        board[r][c] = new Tile(r, c, randomType);
+                    }
+                    // Shuffle rotation
+                    board[r][c].rotation = Math.floor(Math.random() * 4);
+                }
+            }
+        }
+
+        // Helper to match a tile type based on the DFS path connectivity requirements
+        function fitTileType(r, c, requiredDirs) {
+            const count = requiredDirs.length;
+            let type = '+';
+            if (count === 1) type = 'E';
+            else if (count === 2) {
+                const diff = Math.abs(requiredDirs[0] - requiredDirs[1]);
+                type = (diff === 2) ? 'I' : 'L';
+            } else if (count === 3) type = 'T';
+            
+            const tile = new Tile(r, c, type);
+            // Rotate the tile to align baseDirections with required directions
+            for (let rot = 0; rot < 4; rot++) {
+                tile.rotation = rot;
+                const activeDirs = tile.getDirections();
+                const matches = requiredDirs.every(d => activeDirs.includes(d));
+                if (matches) break;
+            }
+            return tile;
+        }
+
+        // Compute neon power grid flowing algorithm
+        function updatePowerFlow() {
+            // Reset power states
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    board[r][c].powered = false;
+                }
+            }
+
+            // Start power flows from (0,0) IF source connects to Left (direction 3)
+            const queue = [];
+            const startTile = board[0][0];
+            if (startTile.getDirections().includes(3)) {
+                startTile.powered = true;
+                queue.push(startTile);
+            }
+
+            const directions = [
+                { dr: -1, dc: 0, from: 2, to: 0 }, // Up (0)
+                { dr: 0, dc: 1, from: 3, to: 1 },  // Right (1)
+                { dr: 1, dc: 0, from: 0, to: 2 },  // Down (2)
+                { dr: 0, dc: -1, from: 1, to: 3 }  // Left (3)
+            ];
+
+            while (queue.length > 0) {
+                const cur = queue.shift();
+                const curDirs = cur.getDirections();
+
+                for (let d of curDirs) {
+                    const move = directions[d];
+                    const nr = cur.r + move.dr;
+                    const nc = cur.c + move.dc;
+
+                    if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+                        const target = board[nr][nc];
+                        if (!target.powered) {
+                            const targetDirs = target.getDirections();
+                            // Check if connection alignment matches
+                            if (targetDirs.includes(move.from)) {
+                                target.powered = true;
+                                queue.push(target);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Check Win Condition: Destination (gridSize-1, gridSize-1) is powered AND exits Right (direction 1)
+            const destTile = board[gridSize - 1][gridSize - 1];
+            if (destTile.powered && destTile.getDirections().includes(1)) {
+                triggerWin();
+            }
+        }
+
+        function triggerWin() {
+            if (isCleared) return;
+            isCleared = true;
+            clearInterval(timerInterval);
+            sfx.playComplete();
+            
+            setTimeout(() => {
+                const totalTime = document.getElementById('timer-display').innerText;
+                document.getElementById('win-desc').innerHTML = `전류가 완벽하게 흐릅니다!<br><b>소요 시간</b>: ${totalTime} | <b>움직임</b>: ${moves}회`;
+                document.getElementById('win-overlay').classList.add('active');
+            }, 500);
+        }
+
+        // Render HTML Elements based on logic state
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            boardEl.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    const tile = board[r][c];
+                    const tileEl = document.createElement('div');
+                    tileEl.className = 'tile';
+                    tileEl.dataset.r = r;
+                    tileEl.dataset.c = c;
+                    tileEl.onclick = () => onTileClick(r, c);
+
+                    // Add connector line visual svg
+                    const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svgEl.setAttribute('class', 'connector-svg');
+                    svgEl.setAttribute('viewBox', '0 0 100 100');
+                    svgEl.style.transform = `rotate(${tile.rotation * 90}deg)`;
+
+                    const color = tile.powered ? NEON_COLORS.powered : NEON_COLORS.dim;
+                    const filter = tile.powered ? 'filter: drop-shadow(0 0 8px ' + NEON_COLORS.glow + ');' : '';
+
+                    let svgContent = '';
+                    if (tile.type === 'I') {
+                        // Straight Up to Down line
+                        svgContent = `<line x1="50" y1="0" x2="50" y2="100" stroke="${color}" stroke-width="12" stroke-linecap="round" style="${filter}" />`;
+                    } else if (tile.type === 'L') {
+                        // Curved Up to Right elbow line
+                        svgContent = `<path d="M 50 0 A 50 50 0 0 1 100 50" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" style="${filter}" />`;
+                    } else if (tile.type === 'T') {
+                        // T-shaped (Up, Right, Left)
+                        svgContent = `
+                            <line x1="0" y1="50" x2="100" y2="50" stroke="${color}" stroke-width="12" stroke-linecap="round" style="${filter}" />
+                            <line x1="50" y1="50" x2="50" y2="0" stroke="${color}" stroke-width="12" stroke-linecap="round" style="${filter}" />
+                        `;
+                    } else if (tile.type === '+') {
+                        // Cross
+                        svgContent = `
+                            <line x1="0" y1="50" x2="100" y2="50" stroke="${color}" stroke-width="12" stroke-linecap="round" style="${filter}" />
+                            <line x1="50" y1="0" x2="50" y2="100" stroke="${color}" stroke-width="12" stroke-linecap="round" style="${filter}" />
+                        `;
+                    } else if (tile.type === 'E') {
+                        // End point
+                        svgContent = `
+                            <line x1="50" y1="0" x2="50" y2="50" stroke="${color}" stroke-width="12" stroke-linecap="round" style="${filter}" />
+                            <circle cx="50" cy="50" r="10" fill="${color}" style="${filter}" />
+                        `;
+                    }
+
+                    svgEl.innerHTML = svgContent;
+                    tileEl.appendChild(svgEl);
+
+                    // Add physical decorators for Source Terminal and Output Terminal
+                    if (r === 0 && c === 0) {
+                        const marker = document.createElement('div');
+                        marker.className = 'terminal-glow terminal-source';
+                        tileEl.appendChild(marker);
+                    }
+                    if (r === gridSize - 1 && c === gridSize - 1) {
+                        const marker = document.createElement('div');
+                        marker.className = 'terminal-glow terminal-dest';
+                        tileEl.appendChild(marker);
+                    }
+
+                    boardEl.appendChild(tileEl);
+                }
+            }
+        }
+
+        function onTileClick(r, c) {
+            if (isCleared) return;
+            sfx.playClick();
+            board[r][c].rotate();
+            moves++;
+            document.getElementById('moves-display').innerText = moves;
+            updatePowerFlow();
+            renderBoard();
+        }
+
+        // Initialize Game Onload
+        window.onload = () => {
+            startNewGame(false);
+        };
+    </script>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "네온 서킷 커넥트",
+ "players": "1인",
+ "time": "약 10분",
+ "goal": "타일을 돌려 전류가 끝까지 흐르는 회로를 완성하세요.",
+ "steps": [
+  "난이도(4x4 / 5x5 / 6x6)를 고릅니다.",
+  "타일을 누르면 90도씩 회전합니다.",
+  "발전기에서 시작한 전선이 끊기지 않고 모든 단자에 닿도록 방향을 맞춥니다.",
+  "회로가 모두 이어지면 전류가 흐르며 클리어됩니다."
+ ],
+ "tips": [
+  "가장자리와 모서리 타일부터 맞추면 경우의 수가 빠르게 줄어듭니다."
+ ]
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
+</body>
+</html>

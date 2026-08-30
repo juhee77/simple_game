@@ -148,11 +148,14 @@
 
   <!-- Action Modal -->
   <div id="action-modal">
-    <h3 id="am-title">카드 액션</h3>
-    <div id="am-cost" style="margin-bottom: 15px; color: var(--border);"></div>
+    <h3 id="am-title" style="color: var(--yellow); margin-bottom: 10px;">선택한 카드 액션</h3>
+    <div id="am-cost" style="margin-bottom: 10px; color: var(--border); font-size: 1.1rem; font-weight: bold;"></div>
+    <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 15px;">
+      💡 카드를 고용(구매)하여 세력을 확장하거나,<br>자원이 모자라면 <b>[처분]</b>을 눌러 💵검은돈 +2를 버세요!
+    </p>
     <div class="action-btns">
-      <button id="btn-buy" onclick="buyCard()" style="background: var(--green); border-color: #0f0;">고용 (자원 지불)</button>
-      <button onclick="discardCard()" style="background: var(--yellow); color: #000;">처분 (검은돈 +2)</button>
+      <button id="btn-buy" onclick="buyCard()" style="background: var(--green); border-color: #0f0; font-weight: bold;">고용 (카드가 내 세력으로)</button>
+      <button onclick="discardCard()" style="background: var(--yellow); color: #000; font-weight: bold;">처분 (검은돈 +2💵 버기)</button>
       <button onclick="closeActionModal()">취소</button>
     </div>
   </div>
@@ -178,6 +181,15 @@
 
     <!-- Center Board -->
     <div class="center-board">
+      <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 0.85rem; color: var(--yellow); background: rgba(184,159,59,0.1); border: 1px solid rgba(184,159,59,0.3); border-radius: 8px; padding: 6px 14px;">
+          💡 <b>노란 테두리로 빛나는 카드</b>(다른 카드에 안 덮인 카드)만 선택 가능합니다! 선택 후 <b>[고용]</b> 또는 <b>[처분]</b> 하세요!
+        </span>
+        <button class="guide-btn" onclick="openGDD()" style="border-radius: 20px; background: linear-gradient(135deg, #b89f3b, #8a7351); color: #000; font-weight: bold; padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+          📖 게임 방법
+        </button>
+      </div>
+
       <div class="threat-track" id="threat-track">
         <!-- 21 slots (-10 to 10) -->
         <div class="threat-marker" id="threat-marker"></div>

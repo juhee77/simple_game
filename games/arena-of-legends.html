@@ -188,7 +188,7 @@
     <header>
         <h1><i class="ri-sword-fill"></i> 아레나 오브 레전드</h1>
         <div class="header-actions">
-            <button class="icon-btn" onclick="openGDD()" title="기획서 보기"><i class="ri-book-read-line"></i></button>
+            <button class="guide-btn" onclick="openGDD()" title="쉽게 보는 게임 설명서"><i class="ri-book-read-line"></i> 게임 방법</button>
             <button class="icon-btn" onclick="initGame()" title="게임 재시작"><i class="ri-refresh-line"></i></button>
             <button class="icon-btn" onclick="location.href='../index.html'" title="로비로 돌아가기"><i class="ri-home-4-line"></i></button>
         </div>
@@ -199,10 +199,10 @@
         <div class="opponent-area">
             <div>
                 <div style="font-weight: 800; font-size: 1.2rem;" id="opp-name">P2</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">적대자</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">적대자 (상대방)</div>
             </div>
             <div class="hp-box">
-                <div class="hp-label">HP</div>
+                <div class="hp-label">상대 HP</div>
                 <div class="hp-value" id="opp-hp">30</div>
             </div>
         </div>
@@ -210,7 +210,7 @@
         <!-- Market -->
         <div class="market-area">
             <div class="section-title">
-                <span>상점 (Market)</span>
+                <span>🛒 카드 상점 (Market)</span>
                 <span style="color: var(--gold-color);"><i class="ri-coin-fill"></i> 내 골드로 터치하여 구매</span>
             </div>
             <div class="market-grid" id="market-container">
@@ -221,7 +221,7 @@
         <!-- Center Action -->
         <div class="center-action">
             <div class="gold-display">
-                <i class="ri-coin-fill"></i> <span id="current-gold">0</span> 골드
+                <i class="ri-coin-fill"></i> <span id="current-gold">0</span> 골드 (사용 가능)
             </div>
             <div class="play-area" id="play-area">
                 <!-- Played cards this turn -->
@@ -234,8 +234,8 @@
                 <div>
                     <div style="font-weight: 800; font-size: 1.2rem; color: var(--magic-color);" id="my-name">P1</div>
                     <div class="deck-info">
-                        <span title="덱 남은 수"><i class="ri-stack-line"></i> <span id="my-deck-count">5</span></span>
-                        <span title="무덤(버린 카드) 수"><i class="ri-delete-bin-line"></i> <span id="my-discard-count">0</span></span>
+                        <span title="덱 남은 수"><i class="ri-stack-line"></i> 덱: <span id="my-deck-count">5</span></span>
+                        <span title="무덤(버린 카드) 수"><i class="ri-delete-bin-line"></i> 버린카드: <span id="my-discard-count">0</span></span>
                     </div>
                 </div>
                 <div class="hp-box">
@@ -244,11 +244,23 @@
                 </div>
             </div>
 
+            <!-- Turn Step Guidance Banner -->
+            <div style="font-size: 0.82rem; color: var(--gold-color); background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); border-radius: 8px; padding: 8px 12px; text-align: center;" id="step-guide">
+                1️⃣ [⚡ 카드 모두 내기]를 누르거나 손패를 클릭해 공격&골드를 사용하세요!
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.85rem; font-weight: bold; color: var(--text-muted);">🖐️ 내 손패 (Hand)</span>
+                <button onclick="playAllHandCards()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 6px 14px; border-radius: 16px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(16,185,129,0.3);">
+                    <i class="ri-flashlight-fill"></i> ⚡ 카드 모두 내기
+                </button>
+            </div>
+
             <div class="hand-area" id="hand-container">
                 <!-- Hand Cards -->
             </div>
 
-            <button class="btn-end-turn" onclick="endTurn()">턴 종료 및 정리</button>
+            <button class="btn-end-turn" onclick="endTurn()">턴 종료 및 덱 정리 (다음 플레이어로)</button>
         </div>
     </div>
 
@@ -353,6 +365,14 @@
             updateUI();
         }
 
+        function playAllHandCards() {
+            const p = players[turn];
+            while (p.hand.length > 0) {
+                playCard(0);
+                if (players[0].hp <= 0 || players[1].hp <= 0) break;
+            }
+        }
+
         function playCard(handIndex) {
             const p = players[turn];
             const opp = players[turn === 0 ? 1 : 0];
@@ -454,6 +474,18 @@
             document.getElementById('my-deck-count').innerText = p.deck.length;
             document.getElementById('my-discard-count').innerText = p.discard.length;
             document.getElementById('current-gold').innerText = currentGold;
+
+            // Step Guide text
+            const stepGuideEl = document.getElementById('step-guide');
+            if (stepGuideEl) {
+                if (p.hand.length > 0) {
+                    stepGuideEl.innerHTML = `1️⃣ <b>[⚡ 카드 모두 내기]</b>를 누르거나 손패를 클릭해 공격 & 골드를 사용하세요!`;
+                } else if (currentGold > 0) {
+                    stepGuideEl.innerHTML = `2️⃣ 모은 <b>${currentGold} 골드</b>로 🛒<b>상점</b>에서 강력한 카드를 사세요!`;
+                } else {
+                    stepGuideEl.innerHTML = `3️⃣ 카드 사용과 구매가 끝났다면 <b>[턴 종료 및 덱 정리]</b>를 누르세요!`;
+                }
+            }
 
             // Render Hand
             const handContainer = document.getElementById('hand-container');

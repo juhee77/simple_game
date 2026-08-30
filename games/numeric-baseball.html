@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>네온 숫자 야구 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(99, 102, 241, 0.15), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.15), transparent 35%),
+                #0a0e27;
+            min-height: 100vh;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .screen.active.setup-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Lobby & Setup Styles */
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .option-label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .select-card {
+            background: rgba(25, 29, 58, 0.75);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .select-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15);
+        }
+
+        .select-card.active {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .select-card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .select-card-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .select-card-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            background: rgba(21, 25, 50, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .player-input-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .player-input-row label {
+            width: 70px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .player-input-row input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: rgba(10, 14, 39, 0.8);
+            color: var(--text-primary);
+            font: inherit;
+        }
+
+        /* Pass Overlay Screen */
+        .pass-screen-box {
+            text-align: center;
+            padding: 3rem 1.5rem;
+        }
+
+        .pass-label {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent-secondary);
+            margin: 1.5rem 0;
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Secret Input Screen */
+        .secret-digits-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .digit-placeholder {
+            width: 60px;
+            height: 70px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: rgba(10, 14, 39, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Main Game Layout */
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .game-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Left Side: Game Controller & Display */
+        .display-board {
+            background: rgba(21, 25, 50, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .guess-box-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .guess-digits {
+            display: flex;
+            gap: 1rem;
+            margin: 0.5rem 0;
+        }
+
+        .guess-digit {
+            width: 55px;
+            height: 65px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: rgba(10, 14, 39, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .guess-digit.filled {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Interactive Keypad */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.6rem;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .key {
+            padding: 1rem 0;
+            background: rgba(30, 35, 60, 0.8);
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .key:hover:not(:disabled) {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .key:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .key:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+            background: rgba(10, 14, 39, 0.4);
+            border-color: rgba(99, 102, 241, 0.05);
+        }
+
+        .key-action {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent-primary);
+        }
+
+        .key-action:hover:not(:disabled) {
+            background: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+        }
+
+        .key-confirm {
+            background: rgba(236, 72, 153, 0.25);
+            border-color: var(--accent-tertiary);
+            color: #fbcfe8;
+        }
+
+        .key-confirm:hover:not(:disabled) {
+            background: var(--accent-tertiary);
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
+            color: white;
+        }
+
+        /* Right Side: Scrollable Match History Table */
+        .history-card {
+            background: rgba(21, 25, 50, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            max-height: 480px;
+        }
+
+        .history-header-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-list-wrapper {
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 0.25rem;
+        }
+
+        .history-list-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+        .history-list-wrapper::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        .history-list-wrapper::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            background: rgba(10, 14, 39, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .history-item.highlight-turn {
+            border-color: rgba(236, 72, 153, 0.3);
+            background: rgba(236, 72, 153, 0.05);
+        }
+
+        .history-badge-container {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        /* Badges styling */
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-strike {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--success);
+            color: #a7f3d0;
+        }
+
+        .badge-ball {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid var(--warning);
+            color: #fde68a;
+        }
+
+        .badge-out {
+            background: rgba(239, 68, 68, 0.25);
+            border: 1px solid var(--danger);
+            color: #fecaca;
+        }
+
+        .badge-hr {
+            background: rgba(139, 92, 246, 0.3);
+            border: 1px solid #8b5cf6;
+            color: #ddd6fe;
+            animation: pulse 1s infinite alternate;
+        }
+
+        /* Scoreboard Screen */
+        .result-box {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .result-crown {
+            font-size: 4rem;
+            animation: bounce 1.5s infinite;
+        }
+
+        .result-headline {
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-sub {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .secret-reveal {
+            background: rgba(99, 102, 241, 0.1);
+            border: 2px dashed var(--accent-primary);
+            border-radius: 12px;
+            padding: 0.75rem 2rem;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: 3px;
+            margin: 0.5rem 0;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 0.9rem 1.2rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .leaderboard-table th {
+            background: rgba(30, 35, 60, 0.8);
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .leaderboard-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .leaderboard-table tr.winner-row {
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        /* Animations */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="../index.html" class="back-button">← 로비로</a>
+            <h1 class="game-title">⚾ 네온 숫자 야구</h1>
+            <p class="game-description">중복 없는 숫자를 조율해 숨겨진 스트라이크를 날리세요!</p>
+        </div>
+
+        <div class="game-board">
+            <!-- 1. SETUP SCREEN -->
+            <div id="screen-setup" class="screen active setup-container">
+                <div class="option-group">
+                    <div class="option-label">🎮 게임 모드</div>
+                    <div class="cards-grid">
+                        <div class="select-card active" id="card-mode-solo" onclick="setMode('solo')">
+                            <div class="select-card-icon">☕</div>
+                            <div class="select-card-title">솔로 플레이</div>
+                            <div class="select-card-desc">컴퓨터가 숨긴 숫자를 가장 적은 시도 횟수 내에 맞춥니다.</div>
+                        </div>
+                        <div class="select-card" id="card-mode-duo" onclick="setMode('duo')">
+                            <div class="select-card-icon">⚔️</div>
+                            <div class="select-card-title">1대1 배틀</div>
+                            <div class="select-card-desc">서로의 비밀번호를 설정한 후, 번갈아 가며 먼저 맞추는 대결입니다.</div>
+                        </div>
+                        <div class="select-card" id="card-mode-coop" onclick="setMode('coop')">
+                            <div class="select-card-icon">🤝</div>
+                            <div class="select-card-title">협동 파티</div>
+                            <div class="select-card-desc">팀원 전체가 하나의 비밀번호를 교대로 유추하며 맞춥니다.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <div class="option-label">🔢 비밀번호 자리수</div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="button" id="btn-digits-3" onclick="setDigits(3)" style="flex: 1;">3자리</button>
+                        <button class="button button-secondary" id="btn-digits-4" onclick="setDigits(4)" style="flex: 1;">4자리</button>
+                    </div>
+                </div>
+
+                <!-- Dynamic inputs based on Mode -->
+                <div id="setup-inputs-container">
+                    <!-- Solo Mode: No inputs needed -->
+                </div>
+
+                <button class="button" onclick="initGame()" style="margin-top: 1rem; width: 100%; font-size: 1.2rem; padding: 1rem 0;">게임 시작! 🚀</button>
+            </div>
+
+            <!-- 2. PASS PHONE SCREEN ( 가림막 ) -->
+            <div id="screen-pass" class="screen">
+                <div class="pass-screen-box">
+                    <div class="select-card-icon" style="font-size: 4rem;">📱</div>
+                    <h2 style="font-size: 2rem; margin-top: 1rem;">휴대폰을 넘겨주세요</h2>
+                    <div class="pass-label" id="pass-player-name">플레이어 1</div>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;">차례에 맞는 플레이어만 화면을 터치해 주시기 바랍니다.</p>
+                    <button class="button" id="btn-pass-confirm" onclick="confirmPass()">확인 완료 (화면 보기)</button>
+                </div>
+            </div>
+
+            <!-- 3. SECRET INPUT SCREEN (For Duo Battle setting secrets) -->
+            <div id="screen-secret" class="screen">
+                <div style="text-align: center; padding: 1.5rem 0;">
+                    <h2 id="secret-setup-title">P1 님, 비밀번호를 설정하세요</h2>
+                    <p style="color: var(--text-muted); margin-top: 0.5rem;">상대방이 맞출 중복 없는 비밀 숫자를 지정해 주세요.</p>
+                    
+                    <div class="secret-digits-container" id="secret-placeholders">
+                        <!-- placeholders dynamically generated -->
+                    </div>
+
+                    <div class="keypad" id="secret-keypad" style="margin: 0 auto;">
+                        <!-- Custom Keypad -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. PLAY SCREEN -->
+            <div id="screen-play" class="screen">
+                <!-- Status Strip -->
+                <div class="status-bar" style="margin-bottom: 1.5rem;">
+                    <div class="status-item">
+                        <span class="status-label" id="status-label-left">시도 횟수</span>
+                        <div class="status-value" id="status-value-left">0</div>
+                    </div>
+                    <div class="status-item" style="text-align: center;">
+                        <span class="status-label">현재 차례</span>
+                        <div class="status-value" id="status-current-player" style="color: var(--accent-secondary);">플레이어</div>
+                    </div>
+                    <div class="status-item" style="text-align: right;">
+                        <span class="status-label" id="status-label-right">진행 시간</span>
+                        <div class="status-value" id="status-value-right">00:00</div>
+                    </div>
+                </div>
+
+                <!-- Main Game Play Split -->
+                <div class="game-grid">
+                    <!-- Left: Input Console -->
+                    <div class="display-board">
+                        <div class="guess-box-title">현재 입력값</div>
+                        
+                        <div class="guess-digits" id="play-guess-container">
+                            <!-- Slots -->
+                        </div>
+
+                        <!-- Numeric Keypad -->
+                        <div class="keypad" id="play-keypad">
+                            <!-- Keys generated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Guess History -->
+                    <div class="history-card">
+                        <div class="history-header-title">
+                            <span>📋 공격 이력</span>
+                            <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);" id="history-summary">0회 시도</span>
+                        </div>
+                        <div class="history-list-wrapper" id="play-history-list">
+                            <!-- History items -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. SCOREBOARD / RESULT SCREEN -->
+            <div id="screen-scoreboard" class="screen">
+                <div class="result-box">
+                    <div class="result-crown" id="result-crown">👑</div>
+                    <h2 class="result-headline" id="result-headline">축하합니다!</h2>
+                    <p class="result-sub" id="result-sub">설명 설명...</p>
+                    
+                    <div id="result-secret-reveal-box" style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">정답 공개</span>
+                        <div class="secret-reveal" id="result-secret-text">123</div>
+                    </div>
+
+                    <table class="leaderboard-table" id="result-table">
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>플레이어</th>
+                                <th>시도 횟수</th>
+                                <th>결과</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-table-rows">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+
+                    <div class="controls" style="width: 100%;">
+                        <button class="button button-secondary" onclick="restartSetup()" style="flex: 1;">설정 변경하기</button>
+                        <button class="button" onclick="restartGameSameSettings()" style="flex: 1;">다시 플레이 ⚾</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API Sound Synthesizer
+        let audioCtx = null;
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'strike') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.setValueAtTime(1100, now + 0.06);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'ball') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(450, now);
+                    osc.frequency.setValueAtTime(550, now + 0.06);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'out') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(150, now + 0.25);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'win') {
+                    // Quick arpeggio
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    notes.forEach((freq, idx) => {
+                        const subOsc = audioCtx.createOscillator();
+                        const subGain = audioCtx.createGain();
+                        subOsc.connect(subGain);
+                        subGain.connect(audioCtx.destination);
+                        
+                        subOsc.type = 'sine';
+                        subOsc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        subGain.gain.setValueAtTime(0.08, now + idx * 0.08);
+                        subGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+                        
+                        subOsc.start(now + idx * 0.08);
+                        subOsc.stop(now + idx * 0.08 + 0.25);
+                    });
+                }
+            } catch (e) {
+                console.warn('AudioContext not supported or blocked:', e);
+            }
+        }
+
+        // Game Configuration & State
+        let gameMode = 'solo'; // solo, duo, coop
+        let digitCount = 4;   // 3 or 4
+        let players = [];     // Array of player objects
+        let activePlayerIdx = 0;
+        let secretNumbers = {}; // { 'duo-p1': '123', 'duo-p2': '456', 'computer': '789' }
+        let currentGuess = [];
+        let history = []; // Array of { playerIndex, guessStr, strike, ball, out, turnIndex }
+        
+        // Timer
+        let elapsedSeconds = 0;
+        let timerInterval = null;
+
+        // Mode and digit setting actions in Lobby
+        function setMode(mode) {
+            playSound('click');
+            gameMode = mode;
+            document.querySelectorAll('.select-card').forEach(card => card.classList.remove('active'));
+            document.getElementById(`card-mode-${mode}`).classList.add('active');
+
+            const container = document.getElementById('setup-inputs-container');
+            container.innerHTML = '';
+
+            if (mode === 'duo') {
+                container.innerHTML = `
+                    <div class="input-group">
+                        <div class="player-input-row">
+                            <label>Player 1</label>
+                            <input type="text" id="input-duo-p1" value="플레이어 1" maxlength="8">
+                        </div>
+                        <div class="player-input-row">
+                            <label>Player 2</label>
+                            <input type="text" id="input-duo-p2" value="플레이어 2" maxlength="8">
+                        </div>
+                    </div>
+                `;
+            } else if (mode === 'coop') {
+                container.innerHTML = `
+                    <div class="input-group">
+                        <div class="player-input-row">
+                            <label>인원 수</label>
+                            <select id="select-coop-count" onchange="adjustCoopNameInputs()" style="flex: 1; padding: 0.75rem; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(10, 14, 39, 0.8); color: white; font: inherit;">
+                                <option value="2">2명</option>
+                                <option value="3" selected>3명</option>
+                                <option value="4">4명</option>
+                                <option value="5">5명</option>
+                            </select>
+                        </div>
+                        <div id="coop-player-names-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <!-- Name Inputs -->
+                        </div>
+                    </div>
+                `;
+                adjustCoopNameInputs();
+            }
+        }
+
+        function adjustCoopNameInputs() {
+            const count = parseInt(document.getElementById('select-coop-count').value);
+            const container = document.getElementById('coop-player-names-container');
+            container.innerHTML = '';
+            for (let i = 1; i <= count; i++) {
+                container.innerHTML += `
+                    <div class="player-input-row">
+                        <label>P${i} 이름</label>
+                        <input type="text" class="input-coop-p" value="플레이어 ${i}" maxlength="8">
+                    </div>
+                `;
+            }
+        }
+
+        function setDigits(count) {
+            playSound('click');
+            digitCount = count;
+            document.getElementById('btn-digits-3').className = count === 3 ? 'button' : 'button button-secondary';
+            document.getElementById('btn-digits-4').className = count === 4 ? 'button' : 'button button-secondary';
+        }
+
+        // Navigation Helper
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(scr => scr.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Initialize Game Session
+        function initGame() {
+            playSound('click');
+            players = [];
+            history = [];
+            currentGuess = [];
+            elapsedSeconds = 0;
+            clearInterval(timerInterval);
+
+            // 1. Gather player information
+            if (gameMode === 'solo') {
+                players.push({ name: '솔로 플레이어', attempts: 0 });
+                // Computer generates target
+                secretNumbers['computer'] = generateRandomSecret();
+                activePlayerIdx = 0;
+                startPlayScreen();
+            } else if (gameMode === 'duo') {
+                const name1 = document.getElementById('input-duo-p1').value.trim() || '플레이어 1';
+                const name2 = document.getElementById('input-duo-p2').value.trim() || '플레이어 2';
+                players.push({ name: name1, attempts: 0, targetSecretKey: 'duo-p2' }); // guesses P2's secret
+                players.push({ name: name2, attempts: 0, targetSecretKey: 'duo-p1' }); // guesses P1's secret
+                
+                // Prompt secret setup phase
+                activePlayerIdx = 0;
+                startSecretSetupPhase();
+            } else if (gameMode === 'coop') {
+                const inputs = document.querySelectorAll('.input-coop-p');
+                inputs.forEach((input, index) => {
+                    players.push({ name: input.value.trim() || `플레이어 ${index + 1}` });
+                });
+                
+                // Computer target to be guessed by the group
+                secretNumbers['computer'] = generateRandomSecret();
+                activePlayerIdx = 0;
+                startPlayScreen();
+            }
+        }
+
+        // Generator helper for secret numbers (distinct digits)
+        function generateRandomSecret() {
+            const digits = ['0','1','2','3','4','5','6','7','8','9'];
+            let result = '';
+            for (let i = 0; i < digitCount; i++) {
+                const idx = Math.floor(Math.random() * digits.length);
+                result += digits.splice(idx, 1)[0];
+            }
+            return result;
+        }
+
+        // Pass Phone Flow
+        let passConfirmCallback = null;
+        function showPassScreen(playerName, callback) {
+            document.getElementById('pass-player-name').textContent = playerName;
+            passConfirmCallback = callback;
+            showScreen('screen-pass');
+        }
+
+        function confirmPass() {
+            playSound('click');
+            if (passConfirmCallback) {
+                passConfirmCallback();
+            }
+        }
+
+        // Secret Setup Screen flow (Duo mode setting opponent's target)
+        let secretSetupPlayerIdx = 0;
+        let tempSecretArray = [];
+        
+        function startSecretSetupPhase() {
+            secretSetupPlayerIdx = 0;
+            tempSecretArray = [];
+            promptNextSecretSetup();
+        }
+
+        function promptNextSecretSetup() {
+            const setterName = players[secretSetupPlayerIdx].name;
+            const targetName = players[secretSetupPlayerIdx === 0 ? 1 : 0].name;
+            
+            showPassScreen(setterName, () => {
+                showScreen('screen-secret');
+                document.getElementById('secret-setup-title').textContent = `${setterName} 님, 비밀번호를 설정하세요`;
+                document.getElementById('secret-setup-title').style.color = secretSetupPlayerIdx === 0 ? 'var(--accent-primary)' : 'var(--accent-tertiary)';
+                
+                tempSecretArray = [];
+                renderSecretPlaceholders();
+                renderKeypad('secret-keypad', handleSecretKeyInput);
+            });
+        }
+
+        function renderSecretPlaceholders() {
+            const container = document.getElementById('secret-placeholders');
+            container.innerHTML = '';
+            for (let i = 0; i < digitCount; i++) {
+                const val = tempSecretArray[i] !== undefined ? tempSecretArray[i] : '_';
+                container.innerHTML += `<div class="digit-placeholder">${val}</div>`;
+            }
+        }
+
+        function handleSecretKeyInput(val) {
+            playSound('click');
+            if (val === 'DEL') {
+                if (tempSecretArray.length > 0) {
+                    const removed = tempSecretArray.pop();
+                    enableKey('secret-keypad', removed);
+                }
+            } else if (val === 'OK') {
+                if (tempSecretArray.length === digitCount) {
+                    // Record secret
+                    const key = secretSetupPlayerIdx === 0 ? 'duo-p1' : 'duo-p2';
+                    secretNumbers[key] = tempSecretArray.join('');
+                    
+                    // Proceed
+                    secretSetupPlayerIdx++;
+                    if (secretSetupPlayerIdx >= 2) {
+                        // Both secrets set. Start play screen!
+                        activePlayerIdx = 0;
+                        showPassScreen(players[activePlayerIdx].name, startPlayScreen);
+                    } else {
+                        promptNextSecretSetup();
+                    }
+                }
+            } else {
+                if (tempSecretArray.length < digitCount) {
+                    tempSecretArray.push(val);
+                    disableKey('secret-keypad', val);
+                }
+            }
+            renderSecretPlaceholders();
+            
+            // Toggle OK button status
+            const okBtn = document.querySelector('#secret-keypad .key-confirm');
+            if (okBtn) {
+                okBtn.disabled = tempSecretArray.length !== digitCount;
+            }
+        }
+
+        // Main Play Screen setup
+        function startPlayScreen() {
+            showScreen('screen-play');
+            currentGuess = [];
+            
+            // Adjust layouts and labels based on mode
+            const labelLeft = document.getElementById('status-label-left');
+            const valLeft = document.getElementById('status-value-left');
+            const labelRight = document.getElementById('status-label-right');
+            const valRight = document.getElementById('status-value-right');
+
+            if (gameMode === 'solo') {
+                labelLeft.textContent = '시도 횟수';
+                valLeft.textContent = '0';
+                labelRight.textContent = '진행 시간';
+                valRight.textContent = '00:00';
+                
+                // Start timer
+                startTimer();
+            } else if (gameMode === 'duo') {
+                labelLeft.textContent = '공격 횟수 (P1)';
+                valLeft.textContent = '0';
+                labelRight.textContent = '공격 횟수 (P2)';
+                valRight.textContent = '0';
+            } else if (gameMode === 'coop') {
+                labelLeft.textContent = '남은 총 기회';
+                const totalAllowed = digitCount === 3 ? 10 : 12;
+                valLeft.textContent = totalAllowed;
+                labelRight.textContent = '공동 시도';
+                valRight.textContent = '0';
+            }
+
+            renderPlayGuessSlots();
+            renderKeypad('play-keypad', handlePlayKeyInput);
+            updatePlayStatusBar();
+            renderHistoryList();
+        }
+
+        function startTimer() {
+            elapsedSeconds = 0;
+            document.getElementById('status-value-right').textContent = '00:00';
+            timerInterval = setInterval(() => {
+                elapsedSeconds++;
+                const mins = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+                const secs = String(elapsedSeconds % 60).padStart(2, '0');
+                document.getElementById('status-value-right').textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function renderPlayGuessSlots() {
+            const container = document.getElementById('play-guess-container');
+            container.innerHTML = '';
+            for (let i = 0; i < digitCount; i++) {
+                const val = currentGuess[i] !== undefined ? currentGuess[i] : '_';
+                const isFilled = currentGuess[i] !== undefined ? 'filled' : '';
+                container.innerHTML += `<div class="guess-digit ${isFilled}">${val}</div>`;
+            }
+        }
+
+        function updatePlayStatusBar() {
+            const cpName = players[activePlayerIdx].name;
+            document.getElementById('status-current-player').textContent = cpName;
+
+            const valLeft = document.getElementById('status-value-left');
+            const valRight = document.getElementById('status-value-right');
+
+            if (gameMode === 'solo') {
+                valLeft.textContent = history.length;
+            } else if (gameMode === 'duo') {
+                const p1Attempts = history.filter(h => h.playerIndex === 0).length;
+                const p2Attempts = history.filter(h => h.playerIndex === 1).length;
+                valLeft.textContent = p1Attempts;
+                valRight.textContent = p2Attempts;
+            } else if (gameMode === 'coop') {
+                const maxAttempts = digitCount === 3 ? 10 : 12;
+                valLeft.textContent = Math.max(0, maxAttempts - history.length);
+                valRight.textContent = history.length;
+            }
+        }
+
+        // Generic Keypad Renderer
+        function renderKeypad(containerId, clickHandler) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            // Add digits 0-9
+            const keys = ['1','2','3','4','5','6','7','8','9','0'];
+            keys.forEach(k => {
+                const btn = document.createElement('button');
+                btn.className = 'key';
+                btn.textContent = k;
+                btn.onclick = () => clickHandler(k);
+                container.appendChild(btn);
+            });
+
+            // Add Delete key
+            const delBtn = document.createElement('button');
+            delBtn.className = 'key key-action';
+            delBtn.style.gridColumn = 'span 2';
+            delBtn.textContent = '←';
+            delBtn.onclick = () => clickHandler('DEL');
+            container.appendChild(delBtn);
+
+            // Add OK key
+            const okBtn = document.createElement('button');
+            okBtn.className = 'key key-confirm';
+            okBtn.style.gridColumn = 'span 3';
+            okBtn.textContent = '확인';
+            okBtn.disabled = true; // disabled by default
+            okBtn.onclick = () => clickHandler('OK');
+            container.appendChild(okBtn);
+        }
+
+        // Disabling keys once pressed to prevent duplicates
+        function disableKey(containerId, value) {
+            const buttons = document.querySelectorAll(`#${containerId} .key`);
+            buttons.forEach(btn => {
+                if (btn.textContent === value) {
+                    btn.disabled = true;
+                }
+            });
+        }
+
+        function enableKey(containerId, value) {
+            const buttons = document.querySelectorAll(`#${containerId} .key`);
+            buttons.forEach(btn => {
+                if (btn.textContent === value) {
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        function handlePlayKeyInput(val) {
+            playSound('click');
+            if (val === 'DEL') {
+                if (currentGuess.length > 0) {
+                    const removed = currentGuess.pop();
+                    enableKey('play-keypad', removed);
+                }
+            } else if (val === 'OK') {
+                if (currentGuess.length === digitCount) {
+                    submitGuess();
+                }
+            } else {
+                if (currentGuess.length < digitCount) {
+                    currentGuess.push(val);
+                    disableKey('play-keypad', val);
+                }
+            }
+            renderPlayGuessSlots();
+
+            // Toggle OK button status
+            const okBtn = document.querySelector('#play-keypad .key-confirm');
+            if (okBtn) {
+                okBtn.disabled = currentGuess.length !== digitCount;
+            }
+        }
+
+        // Guess Processing Logic
+        function submitGuess() {
+            const guessStr = currentGuess.join('');
+            
+            // Determine target secret key
+            let targetSecret = '';
+            if (gameMode === 'solo' || gameMode === 'coop') {
+                targetSecret = secretNumbers['computer'];
+            } else if (gameMode === 'duo') {
+                const targetKey = players[activePlayerIdx].targetSecretKey;
+                targetSecret = secretNumbers[targetKey];
+            }
+
+            // Calculate Strike & Ball
+            let strike = 0;
+            let ball = 0;
+            for (let i = 0; i < digitCount; i++) {
+                if (guessStr[i] === targetSecret[i]) {
+                    strike++;
+                } else if (targetSecret.includes(guessStr[i])) {
+                    ball++;
+                }
+            }
+
+            const out = (strike === 0 && ball === 0);
+            
+            // Add entry to history
+            history.push({
+                playerIndex: activePlayerIdx,
+                playerName: players[activePlayerIdx].name,
+                guessStr: guessStr,
+                strike: strike,
+                ball: ball,
+                out: out
+            });
+
+            // Audio Feedbacks
+            if (strike === digitCount) {
+                playSound('win');
+            } else if (out) {
+                playSound('out');
+            } else if (strike > 0 && ball === 0) {
+                playSound('strike');
+            } else {
+                playSound('ball');
+            }
+
+            renderHistoryList();
+            updatePlayStatusBar();
+
+            // Game End Check
+            if (strike === digitCount) {
+                // Success / Home Run!
+                clearInterval(timerInterval);
+                setTimeout(() => showGameResult(true, activePlayerIdx), 600);
+                return;
+            }
+
+            // Limit check (for Coop Mode)
+            if (gameMode === 'coop') {
+                const maxAllowed = digitCount === 3 ? 10 : 12;
+                if (history.length >= maxAllowed) {
+                    clearInterval(timerInterval);
+                    setTimeout(() => showGameResult(false, null), 600);
+                    return;
+                }
+            }
+
+            // Advance Turns
+            if (gameMode === 'duo') {
+                activePlayerIdx = activePlayerIdx === 0 ? 1 : 0;
+                // Duo is high stakes, pass phone overlay to keep gameplay secretive
+                setTimeout(() => {
+                    showPassScreen(players[activePlayerIdx].name, () => {
+                        startPlayScreen();
+                    });
+                }, 500);
+            } else if (gameMode === 'coop') {
+                activePlayerIdx = (activePlayerIdx + 1) % players.length;
+                setTimeout(() => {
+                    showPassScreen(players[activePlayerIdx].name, () => {
+                        startPlayScreen();
+                    });
+                }, 500);
+            } else {
+                // Solo Mode - Keep going on the same screen! Reset input console
+                currentGuess = [];
+                renderPlayGuessSlots();
+                renderKeypad('play-keypad', handlePlayKeyInput);
+            }
+        }
+
+        // Render Guess List in Table
+        function renderHistoryList() {
+            const listEl = document.getElementById('play-history-list');
+            listEl.innerHTML = '';
+
+            document.getElementById('history-summary').textContent = `${history.length}회 시도`;
+
+            // Draw reverse order
+            for (let i = history.length - 1; i >= 0; i--) {
+                const item = history[i];
+                const tr = document.createElement('div');
+                tr.className = 'history-item';
+                
+                let badgeHTML = '';
+                if (item.strike === digitCount) {
+                    badgeHTML = `<span class="badge badge-hr">HOME RUN</span>`;
+                } else if (item.out) {
+                    badgeHTML = `<span class="badge badge-out">OUT</span>`;
+                } else {
+                    if (item.strike > 0) badgeHTML += `<span class="badge badge-strike">${item.strike}S</span> `;
+                    if (item.ball > 0) badgeHTML += `<span class="badge badge-ball">${item.ball}B</span>`;
+                }
+
+                // Prefix with name if multiplayer
+                const namePrefix = (gameMode !== 'solo') ? `<strong style="color:var(--text-secondary);">${item.playerName}:</strong> ` : ``;
+                
+                tr.innerHTML = `
+                    <div>
+                        <span style="color: var(--accent-primary); font-weight:700; margin-right: 0.5rem;">#${i + 1}</span>
+                        ${namePrefix}
+                        <span style="letter-spacing: 2px; font-weight: 700;">${item.guessStr}</span>
+                    </div>
+                    <div class="history-badge-container">${badgeHTML}</div>
+                `;
+
+                listEl.appendChild(tr);
+            }
+        }
+
+        // Scoreboard / Result Screen
+        function showGameResult(isWin, winnerIdx) {
+            showScreen('screen-scoreboard');
+            
+            const crown = document.getElementById('result-crown');
+            const headline = document.getElementById('result-headline');
+            const sub = document.getElementById('result-sub');
+            const secretBox = document.getElementById('result-secret-reveal-box');
+            const secretText = document.getElementById('result-secret-text');
+            const tbody = document.getElementById('result-table-rows');
+
+            tbody.innerHTML = '';
+            secretBox.style.display = 'flex';
+
+            if (gameMode === 'solo') {
+                secretText.textContent = secretNumbers['computer'];
+                if (isWin) {
+                    crown.textContent = '👑';
+                    headline.textContent = '미션 클리어!';
+                    
+                    const mins = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+                    const secs = String(elapsedSeconds % 60).padStart(2, '0');
+                    sub.textContent = `${history.length}회 시도만에 비밀번호를 격파했습니다! (총 소요 시간: ${mins}분 ${secs}초)`;
+
+                    tbody.innerHTML = `
+                        <tr class="winner-row">
+                            <td>1</td>
+                            <td style="font-weight:700;">플레이어</td>
+                            <td>${history.length}회</td>
+                            <td><span class="badge badge-strike">성공</span></td>
+                        </tr>
+                    `;
+                }
+            } else if (gameMode === 'duo') {
+                const winner = players[winnerIdx];
+                const loserIdx = winnerIdx === 0 ? 1 : 0;
+                const loser = players[loserIdx];
+
+                crown.textContent = '⚔️';
+                headline.textContent = `${winner.name} 최종 승리!`;
+                sub.textContent = `상대방의 비밀번호를 먼저 저격하여 경기에서 승리하였습니다.`;
+                
+                // Show secrets of both
+                secretText.innerHTML = `
+                    <div style="font-size: 1rem; color:var(--text-muted); margin-bottom: 0.25rem;">
+                        ${winner.name} 비밀번호: ${secretNumbers[winnerIdx === 0 ? 'duo-p1' : 'duo-p2']}
+                    </div>
+                    <div style="font-size: 1.4rem; font-weight:800; color:var(--accent-primary);">
+                        ${loser.name} 비밀번호: ${secretNumbers[loserIdx === 0 ? 'duo-p1' : 'duo-p2']}
+                    </div>
+                `;
+
+                const wAttempts = history.filter(h => h.playerIndex === winnerIdx).length;
+                const lAttempts = history.filter(h => h.playerIndex === loserIdx).length;
+
+                tbody.innerHTML = `
+                    <tr class="winner-row">
+                        <td>1</td>
+                        <td style="font-weight:700;">${winner.name}</td>
+                        <td>${wAttempts}회</td>
+                        <td><span class="badge badge-strike">승리</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td style="font-weight:700;">${loser.name}</td>
+                        <td>${lAttempts}회</td>
+                        <td><span class="badge badge-out">패배</span></td>
+                    </tr>
+                `;
+            } else if (gameMode === 'coop') {
+                secretText.textContent = secretNumbers['computer'];
+                if (isWin) {
+                    const mvpName = players[winnerIdx].name;
+                    crown.textContent = '👑';
+                    headline.textContent = '협동 승리!';
+                    sub.textContent = `모두의 노력 끝에 정답을 밝혀냈습니다! MVP는 홈런 타자 [${mvpName}] 님입니다.`;
+                } else {
+                    crown.textContent = '👾';
+                    headline.textContent = '아웃! 공략 실패';
+                    sub.textContent = `제한된 공격 기회를 모두 소진했습니다. 컴퓨터가 승리했습니다.`;
+                }
+
+                // Sort players by contributions or draw list
+                players.forEach((p, idx) => {
+                    const pGuesses = history.filter(h => h.playerIndex === idx);
+                    const gotHr = pGuesses.some(g => g.strike === digitCount);
+                    
+                    const tr = document.createElement('tr');
+                    if (gotHr) {
+                        tr.className = 'winner-row';
+                    }
+                    tr.innerHTML = `
+                        <td>${gotHr ? '👑' : '-'}</td>
+                        <td style="font-weight: 700;">${p.name}</td>
+                        <td>${pGuesses.length}회 시도</td>
+                        <td>${gotHr ? '<span class="badge badge-hr">MVP</span>' : '<span class="badge badge-strike">기여</span>'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // Restart configuration
+        function restartSetup() {
+            showScreen('screen-setup');
+        }
+
+        // Replay with exact same configurations & players
+        function restartGameSameSettings() {
+            history = [];
+            currentGuess = [];
+            elapsedSeconds = 0;
+            clearInterval(timerInterval);
+
+            if (gameMode === 'solo') {
+                secretNumbers['computer'] = generateRandomSecret();
+                activePlayerIdx = 0;
+                startPlayScreen();
+            } else if (gameMode === 'duo') {
+                // Re-prompt P1/P2 to set new secrets
+                activePlayerIdx = 0;
+                startSecretSetupPhase();
+            } else if (gameMode === 'coop') {
+                secretNumbers['computer'] = generateRandomSecret();
+                activePlayerIdx = 0;
+                startPlayScreen();
+            }
+        }
+
+        // On Load setup Default Input states
+        window.onload = () => {
+            setMode('solo');
+            setDigits(4);
+        };
+    </script>
+<script type="application/json" id="game-rules">
+{
+ "title": "네온 숫자 야구",
+ "players": "1~2인",
+ "time": "약 10분",
+ "goal": "숨겨진 숫자를 스트라이크와 볼 힌트만으로 알아내세요.",
+ "steps": [
+  "상대(또는 컴퓨터)가 서로 다른 숫자로 된 비밀 번호를 정합니다.",
+  "숫자를 추측해 입력합니다.",
+  "자리와 숫자가 모두 맞으면 스트라이크, 숫자만 맞으면 볼입니다.",
+  "하나도 없으면 아웃입니다.",
+  "모든 자리를 스트라이크로 맞히면 승리합니다."
+ ],
+ "tips": [
+  "2인전은 폰을 넘기며 진행합니다. 자기 차례가 아니면 화면을 보지 마세요.",
+  "아웃이 나온 숫자는 후보에서 통째로 지울 수 있어 오히려 큰 힌트입니다."
+ ]
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
+</body>
+</html>
