@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리버시 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: rgba(255, 255, 255, .05);
+            --border: rgba(255, 255, 255, .14);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --felt: #14532d;
+            --felt-line: rgba(255, 255, 255, .1);
+            --accent: #4ade80;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+            touch-action: manipulation;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.7rem;
+            margin: 44px 0 4px;
+            background: linear-gradient(135deg, #4ade80, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub { color: var(--muted); font-size: .88rem; margin-bottom: 14px; text-align: center; }
+
+        .modes { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
+
+        .mode-btn {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--muted);
+            font-family: inherit;
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .mode-btn.active { background: linear-gradient(135deg, #4ade80, #38bdf8); color: #06210f; border-color: transparent; }
+
+        .score {
+            display: flex;
+            gap: 22px;
+            align-items: center;
+            padding: 10px 20px;
+            margin-bottom: 12px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .side { display: flex; align-items: center; gap: 10px; }
+        .side.turn { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 10px; }
+
+        .stone-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .stone-icon.black { background: #0b1220; border: 2px solid #475569; }
+        .stone-icon.white { background: #f1f5f9; }
+
+        .side .count { font-size: 1.35rem; font-weight: 800; }
+        .side .who { display: block; font-size: .66rem; color: var(--muted); }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, var(--cell));
+            gap: 2px;
+            padding: 8px;
+            background: var(--felt);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 14px;
+        }
+
+        .sq {
+            width: var(--cell);
+            height: var(--cell);
+            background: #166534;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+            position: relative;
+        }
+
+        .sq.playable { cursor: pointer; }
+
+        .sq.playable::after {
+            content: '';
+            width: 26%;
+            height: 26%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .34);
+        }
+
+        .sq.playable:hover::after { background: rgba(255, 255, 255, .6); }
+
+        .stone {
+            width: 84%;
+            height: 84%;
+            border-radius: 50%;
+            transition: background .25s ease;
+        }
+
+        .stone.black { background: radial-gradient(circle at 32% 30%, #475569, #0b1220 70%); }
+        .stone.white { background: radial-gradient(circle at 32% 30%, #ffffff, #cbd5e1 70%); }
+
+        .sq.last { box-shadow: inset 0 0 0 2px var(--accent); }
+
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #4ade80, #38bdf8);
+            color: #06210f;
+            font-family: inherit;
+            font-size: .95rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+        .btn:disabled { opacity: .4; cursor: default; }
+
+        .msg { margin-top: 14px; min-height: 26px; font-weight: 700; text-align: center; }
+        .msg.good { color: var(--accent); }
+        .msg.warn { color: #fbbf24; }
+
+        @media (max-width: 420px) { :root { --cell: 36px; } }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>⚫ 리버시</h1>
+    <p class="sub">상대 돌을 사이에 끼워 뒤집으세요. 마지막에 돌이 많은 쪽이 승리합니다</p>
+
+    <div class="modes" id="modes">
+        <button class="mode-btn" data-mode="easy" onclick="setMode('easy')">AI 쉬움</button>
+        <button class="mode-btn active" data-mode="normal" onclick="setMode('normal')">AI 보통</button>
+        <button class="mode-btn" data-mode="hard" onclick="setMode('hard')">AI 어려움</button>
+        <button class="mode-btn" data-mode="duo" onclick="setMode('duo')">2인 대결</button>
+    </div>
+
+    <div class="score">
+        <div class="side" id="side-black">
+            <i class="stone-icon black"></i>
+            <span><span class="count" id="count-black">2</span><span class="who" id="who-black">나</span></span>
+        </div>
+        <div class="side" id="side-white">
+            <i class="stone-icon white"></i>
+            <span><span class="count" id="count-white">2</span><span class="who" id="who-white">AI</span></span>
+        </div>
+    </div>
+
+    <div class="board" id="board" style="--cell:42px"></div>
+
+    <div class="actions">
+        <button class="btn" onclick="newGame()">새 게임</button>
+        <button class="btn ghost" id="pass-btn" onclick="passTurn()" disabled>둘 곳 없음 · 넘기기</button>
+    </div>
+
+    <p class="msg" id="msg"></p>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "리버시",
+ "players": "1~2인",
+ "time": "약 15분",
+ "goal": "게임이 끝났을 때 자기 돌이 더 많으면 승리합니다.",
+ "steps": [
+  "흑이 먼저 둡니다. 놓을 수 있는 자리에는 점이 표시됩니다.",
+  "자기 돌과 상대 돌 사이에 상대 돌을 끼우는 자리에만 놓을 수 있습니다.",
+  "놓는 순간 사이에 끼인 상대 돌이 모두 자기 색으로 뒤집힙니다.",
+  "뒤집을 수 있는 자리가 없으면 차례를 넘깁니다.",
+  "양쪽 다 둘 곳이 없으면 게임이 끝나고, 돌이 많은 쪽이 이깁니다."
+ ],
+ "tips": [
+  "네 귀퉁이는 절대 뒤집히지 않습니다. 가장 중요한 자리입니다.",
+  "귀퉁이 바로 옆은 상대에게 귀퉁이를 내주기 쉬우니 조심하세요.",
+  "초반에 많이 뒤집는 것은 오히려 손해일 때가 많습니다."
+ ]
+}
+</script>
+
+    <script>
+        const SIZE = 8;
+        const EMPTY = 0, BLACK = 1, WHITE = 2;
+        const DIRS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+
+        // 자리마다 가치가 다르다. 귀퉁이는 뒤집히지 않아 가장 높고,
+        // 그 옆칸은 귀퉁이를 내주기 쉬워 크게 깎는다.
+        const WEIGHTS = [
+            [120, -20, 20, 5, 5, 20, -20, 120],
+            [-20, -40, -5, -5, -5, -5, -40, -20],
+            [20, -5, 15, 3, 3, 15, -5, 20],
+            [5, -5, 3, 3, 3, 3, -5, 5],
+            [5, -5, 3, 3, 3, 3, -5, 5],
+            [20, -5, 15, 3, 3, 15, -5, 20],
+            [-20, -40, -5, -5, -5, -5, -40, -20],
+            [120, -20, 20, 5, 5, 20, -20, 120]
+        ];
+
+        let board = [];
+        let turn = BLACK;
+        let mode = 'normal';
+        let lastMove = null;
+        let gameOver = false;
+        let thinking = false;
+
+        const opponent = (p) => (p === BLACK ? WHITE : BLACK);
+        const isAiTurn = () => mode !== 'duo' && turn === WHITE;
+
+        function emptyBoard() {
+            const b = Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
+            b[3][3] = WHITE; b[4][4] = WHITE;
+            b[3][4] = BLACK; b[4][3] = BLACK;
+            return b;
+        }
+
+        // 어떤 자리에 놓았을 때 뒤집히는 돌 목록. 비어 있으면 둘 수 없는 자리다.
+        function flipsFor(b, row, col, player) {
+            if (b[row][col] !== EMPTY) return [];
+            const flips = [];
+            for (const [dr, dc] of DIRS) {
+                const line = [];
+                let r = row + dr, c = col + dc;
+                while (r >= 0 && r < SIZE && c >= 0 && c < SIZE && b[r][c] === opponent(player)) {
+                    line.push([r, c]); r += dr; c += dc;
+                }
+                if (line.length && r >= 0 && r < SIZE && c >= 0 && c < SIZE && b[r][c] === player) {
+                    flips.push(...line);
+                }
+            }
+            return flips;
+        }
+
+        function legalMoves(b, player) {
+            const moves = [];
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    const flips = flipsFor(b, r, c, player);
+                    if (flips.length) moves.push({ r, c, flips });
+                }
+            }
+            return moves;
+        }
+
+        function applyMove(b, move, player) {
+            const next = b.map(row => [...row]);
+            next[move.r][move.c] = player;
+            for (const [r, c] of move.flips) next[r][c] = player;
+            return next;
+        }
+
+        function counts(b) {
+            let black = 0, white = 0;
+            for (const row of b) for (const v of row) {
+                if (v === BLACK) black++;
+                else if (v === WHITE) white++;
+            }
+            return { black, white };
+        }
+
+        // ── AI ────────────────────────────────────────────
+        function evaluate(b, player) {
+            let score = 0;
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    if (b[r][c] === player) score += WEIGHTS[r][c];
+                    else if (b[r][c] === opponent(player)) score -= WEIGHTS[r][c];
+                }
+            }
+            // 둘 수 있는 자리가 많을수록 유리하다.
+            score += (legalMoves(b, player).length - legalMoves(b, opponent(player)).length) * 8;
+            return score;
+        }
+
+        function minimax(b, player, depth, alpha, beta, maximizing, root) {
+            const moves = legalMoves(b, player);
+            if (depth === 0) return { score: evaluate(b, root) };
+            if (!moves.length) {
+                // 둘 곳이 없으면 차례를 넘긴다. 양쪽 다 없으면 종료.
+                if (!legalMoves(b, opponent(player)).length) {
+                    const { black, white } = counts(b);
+                    const mine = root === BLACK ? black : white;
+                    const theirs = root === BLACK ? white : black;
+                    return { score: (mine - theirs) * 1000 };
+                }
+                return minimax(b, opponent(player), depth - 1, alpha, beta, !maximizing, root);
+            }
+
+            let best = null;
+            for (const move of moves) {
+                const child = applyMove(b, move, player);
+                const { score } = minimax(child, opponent(player), depth - 1, alpha, beta, !maximizing, root);
+                if (maximizing) {
+                    if (best === null || score > best.score) best = { score, move };
+                    alpha = Math.max(alpha, score);
+                } else {
+                    if (best === null || score < best.score) best = { score, move };
+                    beta = Math.min(beta, score);
+                }
+                if (beta <= alpha) break;
+            }
+            return best;
+        }
+
+        function chooseAiMove() {
+            const moves = legalMoves(board, WHITE);
+            if (!moves.length) return null;
+
+            if (mode === 'easy') {
+                // 쉬움은 무작위. 초보자가 이길 수 있어야 한다.
+                return moves[Math.floor(Math.random() * moves.length)];
+            }
+            if (mode === 'normal') {
+                // 보통은 한 수 앞만 본다.
+                let best = null;
+                for (const move of moves) {
+                    const score = evaluate(applyMove(board, move, WHITE), WHITE);
+                    if (!best || score > best.score) best = { score, move };
+                }
+                return best.move;
+            }
+            const result = minimax(board, WHITE, 4, -Infinity, Infinity, true, WHITE);
+            return result.move ?? moves[0];
+        }
+
+        // ── 진행 ──────────────────────────────────────────
+        function newGame() {
+            board = emptyBoard();
+            turn = BLACK;
+            lastMove = null;
+            gameOver = false;
+            thinking = false;
+            setMessage(mode === 'duo' ? '흑돌부터 시작합니다.' : '흑돌(나)부터 시작합니다.');
+            render();
+        }
+
+        function setMode(next) {
+            mode = next;
+            document.querySelectorAll('.mode-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.mode === next));
+            document.getElementById('who-white').textContent = next === 'duo' ? '백돌' : 'AI';
+            document.getElementById('who-black').textContent = next === 'duo' ? '흑돌' : '나';
+            newGame();
+        }
+
+        function play(r, c) {
+            if (gameOver || thinking || isAiTurn()) return;
+            const move = legalMoves(board, turn).find(m => m.r === r && m.c === c);
+            if (!move) return;
+            commit(move);
+        }
+
+        function commit(move) {
+            board = applyMove(board, move, turn);
+            lastMove = [move.r, move.c];
+            turn = opponent(turn);
+            render();
+            advance();
+        }
+
+        // 차례를 넘기거나 종료를 판정한다. 둘 곳이 있으면 그대로 진행한다.
+        function advance() {
+            if (legalMoves(board, turn).length) {
+                if (isAiTurn()) scheduleAi();
+                return;
+            }
+            if (legalMoves(board, opponent(turn)).length) {
+                const stuck = turn;
+                setMessage(`${stuck === BLACK ? '흑돌' : '백돌'}은 둘 곳이 없어 차례를 넘깁니다.`, 'warn');
+                turn = opponent(turn);
+                render();
+                if (isAiTurn()) scheduleAi();
+                return;
+            }
+            finish();
+        }
+
+        function scheduleAi() {
+            thinking = true;
+            render();
+            // 즉시 두면 무슨 일이 일어났는지 알기 어려워 잠깐 뜸을 들인다.
+            setTimeout(() => {
+                thinking = false;
+                const move = chooseAiMove();
+                if (!move) { advance(); return; }
+                commit(move);
+            }, 420);
+        }
+
+        function passTurn() {
+            if (gameOver || legalMoves(board, turn).length) return;
+            turn = opponent(turn);
+            render();
+            advance();
+        }
+
+        function finish() {
+            gameOver = true;
+            const { black, white } = counts(board);
+            const label = black > white ? '흑돌 승리' : white > black ? '백돌 승리' : '무승부';
+            const mine = mode === 'duo' ? '' : black > white ? ' — 당신이 이겼습니다!' : white > black ? ' — AI가 이겼습니다.' : '';
+            setMessage(`${label} (${black} : ${white})${mine}`, black >= white ? 'good' : '');
+            render();
+        }
+
+        function setMessage(text, kind) {
+            const el = document.getElementById('msg');
+            el.textContent = text;
+            el.className = 'msg' + (kind ? ' ' + kind : '');
+        }
+
+        function render() {
+            const el = document.getElementById('board');
+            el.innerHTML = '';
+            const playable = gameOver || thinking || isAiTurn() ? [] : legalMoves(board, turn);
+
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    const sq = document.createElement('div');
+                    sq.className = 'sq';
+                    if (lastMove && lastMove[0] === r && lastMove[1] === c) sq.classList.add('last');
+                    if (playable.some(m => m.r === r && m.c === c)) {
+                        sq.classList.add('playable');
+                        sq.onclick = () => play(r, c);
+                    }
+                    if (board[r][c] !== EMPTY) {
+                        const stone = document.createElement('i');
+                        stone.className = 'stone ' + (board[r][c] === BLACK ? 'black' : 'white');
+                        sq.appendChild(stone);
+                    }
+                    el.appendChild(sq);
+                }
+            }
+
+            const { black, white } = counts(board);
+            document.getElementById('count-black').textContent = black;
+            document.getElementById('count-white').textContent = white;
+            document.getElementById('side-black').classList.toggle('turn', !gameOver && turn === BLACK);
+            document.getElementById('side-white').classList.toggle('turn', !gameOver && turn === WHITE);
+            document.getElementById('pass-btn').disabled =
+                gameOver || thinking || isAiTurn() || legalMoves(board, turn).length > 0;
+        }
+
+        setMode('normal');
+    </script>
+</body>
+
+</html>

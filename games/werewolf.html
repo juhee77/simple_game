@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한밤의 늑대인간 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c0a1a;
+            --panel: rgba(255, 255, 255, .05);
+            --border: rgba(255, 255, 255, .14);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --wolf: #f87171;
+            --village: #4ade80;
+            --accent: #a78bfa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #1a1333 0%, var(--bg) 60%);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.7rem;
+            margin: 44px 0 4px;
+            background: linear-gradient(135deg, #a78bfa, #f87171);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub { color: var(--muted); font-size: .88rem; margin-bottom: 18px; text-align: center; }
+
+        .screen { display: none; width: 100%; max-width: 460px; }
+        .screen.active { display: block; }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 14px;
+        }
+
+        .card h2 { font-size: 1.15rem; margin-bottom: 10px; }
+        .card p { color: var(--muted); font-size: .9rem; line-height: 1.65; }
+
+        label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+
+        input[type=number] {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.1rem;
+            text-align: center;
+            outline: none;
+        }
+
+        .role-toggles { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .03);
+            cursor: pointer;
+        }
+
+        .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+        .toggle .name { font-weight: 700; }
+        .toggle .desc { display: block; font-size: .76rem; color: var(--muted); font-weight: 400; }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 15px;
+            background: linear-gradient(135deg, #a78bfa, #f87171);
+            color: #16091b;
+            font-family: inherit;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+        .btn:disabled { opacity: .4; cursor: default; }
+
+        .pass { text-align: center; padding: 30px 20px; }
+        .pass .who { font-size: 1.9rem; font-weight: 800; margin: 12px 0 6px; }
+
+        .reveal { text-align: center; padding: 26px 20px; }
+        .reveal .role-name { font-size: 2rem; font-weight: 800; margin: 10px 0 4px; }
+        .reveal .role-name.wolf { color: var(--wolf); }
+        .reveal .role-name.village { color: var(--village); }
+        .reveal .role-desc { color: var(--muted); font-size: .92rem; line-height: 1.7; margin-bottom: 8px; }
+
+        .peek {
+            margin: 14px 0;
+            padding: 14px;
+            border-radius: 14px;
+            background: rgba(167, 139, 250, .12);
+            border: 1px solid rgba(167, 139, 250, .35);
+            font-size: .95rem;
+            line-height: 1.6;
+        }
+
+        .timer { font-size: 3rem; font-weight: 800; text-align: center; margin: 10px 0; }
+        .timer.urgent { color: var(--wolf); }
+
+        .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+
+        .vote-btn {
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .vote-btn:disabled { opacity: .35; cursor: default; }
+
+        .tally { margin-top: 12px; font-size: .88rem; color: var(--muted); text-align: center; line-height: 1.7; }
+
+        .result-line { font-size: 1.4rem; font-weight: 800; text-align: center; margin-bottom: 10px; }
+        .result-line.village { color: var(--village); }
+        .result-line.wolf { color: var(--wolf); }
+
+        .roster { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+
+        .roster-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .04);
+            font-size: .92rem;
+        }
+
+        .roster-row .tag { font-weight: 700; }
+        .roster-row .tag.wolf { color: var(--wolf); }
+        .roster-row .tag.village { color: var(--village); }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>🌙 한밤의 늑대인간</h1>
+    <p class="sub">사회자 없이 단 한 밤으로 끝나는 마피아</p>
+
+    <!-- 설정 -->
+    <div class="screen active" id="screen-setup">
+        <div class="card">
+            <label for="player-count">참가자 수 (5~10명)</label>
+            <input id="player-count" type="number" min="5" max="10" value="6">
+            <div class="role-toggles">
+                <label class="toggle">
+                    <input type="checkbox" id="use-seer" checked>
+                    <span><span class="name">예언자</span><span class="desc">밤에 한 사람의 정체를 확인합니다</span></span>
+                </label>
+                <label class="toggle">
+                    <input type="checkbox" id="use-robber" checked>
+                    <span><span class="name">도둑</span><span class="desc">한 사람과 역할을 바꿔 갑니다</span></span>
+                </label>
+                <label class="toggle">
+                    <input type="checkbox" id="use-troublemaker">
+                    <span><span class="name">말썽꾼</span><span class="desc">다른 두 사람의 역할을 서로 바꿉니다</span></span>
+                </label>
+            </div>
+            <button class="btn" onclick="startGame()">역할 나눠주기</button>
+        </div>
+        <div class="card">
+            <h2>이렇게 진행합니다</h2>
+            <p>폰을 한 명씩 돌려 자기 역할만 확인합니다. 밤 능력은 확인 화면에서 바로 처리됩니다.
+                모두 확인했으면 다 같이 토론하고, 마지막에 한 명씩 투표해 늑대를 찾아냅니다.</p>
+        </div>
+    </div>
+
+    <!-- 폰 넘기기 -->
+    <div class="screen" id="screen-pass">
+        <div class="card pass">
+            <div style="font-size:2.4rem">📱</div>
+            <div class="who" id="pass-who">플레이어 1</div>
+            <p id="pass-desc">본인만 보고 다음 사람에게 넘겨주세요.</p>
+            <button class="btn" onclick="revealRole()">내 역할 확인</button>
+        </div>
+    </div>
+
+    <!-- 역할 공개 -->
+    <div class="screen" id="screen-reveal">
+        <div class="card reveal">
+            <div style="font-size:2.6rem" id="reveal-emoji">🐺</div>
+            <div class="role-name" id="reveal-name">늑대인간</div>
+            <p class="role-desc" id="reveal-desc"></p>
+            <div id="reveal-action"></div>
+            <button class="btn" id="reveal-next" onclick="nextPlayer()">확인했습니다</button>
+        </div>
+    </div>
+
+    <!-- 토론 -->
+    <div class="screen" id="screen-talk">
+        <div class="card" style="text-align:center">
+            <h2>토론 시간</h2>
+            <div class="timer" id="talk-timer">05:00</div>
+            <p>누가 늑대인지 이야기해 보세요. 밤에 무엇을 했는지 말해도 되고, 숨겨도 됩니다.</p>
+            <button class="btn" onclick="startVoting()">투표 시작</button>
+            <button class="btn ghost" id="talk-toggle" onclick="toggleTimer()">타이머 멈추기</button>
+        </div>
+    </div>
+
+    <!-- 투표 -->
+    <div class="screen" id="screen-vote">
+        <div class="card">
+            <h2 id="vote-title">플레이어 1의 투표</h2>
+            <p>늑대인간이라고 생각하는 사람을 고르세요. 본인은 뽑을 수 없습니다.</p>
+            <div class="vote-grid" id="vote-grid"></div>
+        </div>
+    </div>
+
+    <!-- 결과 -->
+    <div class="screen" id="screen-result">
+        <div class="card">
+            <div class="result-line" id="result-line"></div>
+            <p id="result-detail" style="text-align:center"></p>
+            <div class="tally" id="result-tally"></div>
+            <div class="roster" id="result-roster"></div>
+            <button class="btn" onclick="location.reload()">다시 하기</button>
+        </div>
+    </div>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "한밤의 늑대인간",
+ "players": "5~10인",
+ "time": "약 15분",
+ "goal": "마을 편은 늑대를 찾아내고, 늑대는 살아남으세요.",
+ "steps": [
+  "참가자 수와 쓸 역할을 정하고 역할을 나눕니다. 사회자는 필요 없습니다.",
+  "폰을 한 명씩 돌리며 자기 역할만 확인합니다. 밤 능력이 있으면 그 화면에서 바로 씁니다.",
+  "모두 확인했으면 다 같이 토론합니다. 밤에 본 것을 말해도, 거짓말을 해도 됩니다.",
+  "토론이 끝나면 다시 폰을 돌리며 한 명씩 투표합니다.",
+  "최다 득표자가 늑대면 마을 편 승리, 아니면 늑대 편 승리입니다. 동표면 늑대가 살아남습니다."
+ ],
+ "tips": [
+  "도둑과 말썽꾼 때문에 처음 받은 역할이 끝까지 내 역할이 아닐 수 있습니다.",
+  "예언자가 너무 일찍 정체를 밝히면 늑대가 예언자인 척 따라 합니다.",
+  "늑대는 마을 사람인 척 밤에 아무것도 못 봤다고 말하는 편이 안전합니다."
+ ]
+}
+</script>
+
+    <script>
+        const ROLE_INFO = {
+            wolf: { name: '늑대인간', emoji: '🐺', team: 'wolf', desc: '들키지 않고 살아남으세요. 밤에는 다른 늑대가 누구인지 알 수 있습니다.' },
+            villager: { name: '마을 사람', emoji: '🧑‍🌾', team: 'village', desc: '특별한 능력은 없습니다. 토론으로 늑대를 찾아내세요.' },
+            seer: { name: '예언자', emoji: '🔮', team: 'village', desc: '밤에 한 사람의 정체를 확인할 수 있습니다.' },
+            robber: { name: '도둑', emoji: '🥷', team: 'village', desc: '밤에 한 사람과 역할을 바꿉니다. 바꾼 뒤에는 그 역할이 당신의 역할입니다.' },
+            troublemaker: { name: '말썽꾼', emoji: '🤹', team: 'village', desc: '밤에 자신을 뺀 두 사람의 역할을 서로 바꿉니다. 무엇으로 바뀌는지는 보지 못합니다.' }
+        };
+
+        let playerCount = 6;
+        let roles = [];          // 최종 역할. 밤 능력으로 바뀔 수 있다.
+        let initialRoles = [];   // 각자 처음 받은 역할 (능력 판단 기준)
+        let current = 0;
+        let votes = [];
+        let voteCounts = [];
+        let talkSeconds = 300;
+        let talkTimer = null;
+        let talkRunning = false;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function shuffled(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function startGame() {
+            playerCount = Math.min(10, Math.max(5, Number(document.getElementById('player-count').value) || 6));
+
+            // 5~7인은 늑대 1명, 8인 이상은 2명. 늑대가 너무 많으면 마을이 이기기 어렵다.
+            const wolves = playerCount >= 8 ? 2 : 1;
+            const deck = Array.from({ length: wolves }, () => 'wolf');
+            if (document.getElementById('use-seer').checked) deck.push('seer');
+            if (document.getElementById('use-robber').checked) deck.push('robber');
+            if (document.getElementById('use-troublemaker').checked) deck.push('troublemaker');
+            while (deck.length < playerCount) deck.push('villager');
+            // 특수 역할을 너무 많이 켠 경우 마을 사람 자리부터 밀려나므로 잘라 준다.
+            deck.length = playerCount;
+
+            roles = shuffled(deck);
+            initialRoles = [...roles];
+            current = 0;
+            votes = [];
+            voteCounts = Array(playerCount).fill(0);
+            goToPass();
+        }
+
+        function goToPass() {
+            document.getElementById('pass-who').textContent = `플레이어 ${current + 1}`;
+            document.getElementById('pass-desc').textContent = '본인만 보고 다음 사람에게 넘겨주세요.';
+            showScreen('screen-pass');
+        }
+
+        function revealRole() {
+            // 능력 판정은 '처음 받은 역할' 기준이다. 도둑이 훔친 뒤에도
+            // 훔친 사람이 다시 능력을 쓰면 안 되기 때문이다.
+            const role = initialRoles[current];
+            const info = ROLE_INFO[role];
+            document.getElementById('reveal-emoji').textContent = info.emoji;
+            const nameEl = document.getElementById('reveal-name');
+            nameEl.textContent = info.name;
+            nameEl.className = 'role-name ' + info.team;
+            document.getElementById('reveal-desc').textContent = info.desc;
+
+            const action = document.getElementById('reveal-action');
+            action.innerHTML = '';
+            document.getElementById('reveal-next').style.display = '';
+
+            if (role === 'wolf') showWolfPartners(action);
+            else if (role === 'seer') showSeerChoice(action);
+            else if (role === 'robber') showRobberChoice(action);
+            else if (role === 'troublemaker') showTroublemakerChoice(action);
+
+            showScreen('screen-reveal');
+        }
+
+        function makeChoiceGrid(exclude, onPick, count = 1) {
+            const grid = document.createElement('div');
+            grid.className = 'vote-grid';
+            const picked = [];
+            for (let i = 0; i < playerCount; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'vote-btn';
+                btn.textContent = `플레이어 ${i + 1}`;
+                if (exclude.includes(i)) btn.disabled = true;
+                else btn.onclick = () => {
+                    picked.push(i);
+                    btn.disabled = true;
+                    btn.textContent += ' ✓';
+                    if (picked.length >= count) {
+                        grid.querySelectorAll('button').forEach(b => b.disabled = true);
+                        onPick(picked);
+                    }
+                };
+                grid.appendChild(btn);
+            }
+            return grid;
+        }
+
+        function note(text) {
+            const div = document.createElement('div');
+            div.className = 'peek';
+            div.textContent = text;
+            return div;
+        }
+
+        function showWolfPartners(action) {
+            const others = initialRoles
+                .map((r, i) => (r === 'wolf' && i !== current ? i + 1 : null))
+                .filter(Boolean);
+            action.appendChild(note(
+                others.length
+                    ? `같은 편 늑대: 플레이어 ${others.join(', ')}`
+                    : '이번 밤에 늑대는 당신 혼자입니다.'
+            ));
+        }
+
+        function showSeerChoice(action) {
+            const label = document.createElement('p');
+            label.className = 'role-desc';
+            label.textContent = '정체를 확인할 사람을 한 명 고르세요.';
+            action.appendChild(label);
+            document.getElementById('reveal-next').style.display = 'none';
+            action.appendChild(makeChoiceGrid([current], ([target]) => {
+                // 예언자는 '지금 시점의' 역할을 본다. 앞 순서의 도둑이 이미 바꿨다면 바뀐 값이 보인다.
+                action.appendChild(note(`플레이어 ${target + 1}의 정체는 「${ROLE_INFO[roles[target]].name}」입니다.`));
+                document.getElementById('reveal-next').style.display = '';
+            }));
+        }
+
+        function showRobberChoice(action) {
+            const label = document.createElement('p');
+            label.className = 'role-desc';
+            label.textContent = '역할을 바꿔 올 사람을 한 명 고르세요.';
+            action.appendChild(label);
+            document.getElementById('reveal-next').style.display = 'none';
+            action.appendChild(makeChoiceGrid([current], ([target]) => {
+                const taken = roles[target];
+                roles[target] = roles[current];
+                roles[current] = taken;
+                action.appendChild(note(
+                    `플레이어 ${target + 1}의 역할을 가져왔습니다. 이제 당신은 「${ROLE_INFO[taken].name}」입니다.`
+                ));
+                document.getElementById('reveal-next').style.display = '';
+            }));
+        }
+
+        function showTroublemakerChoice(action) {
+            const label = document.createElement('p');
+            label.className = 'role-desc';
+            label.textContent = '역할을 서로 바꿀 두 사람을 고르세요.';
+            action.appendChild(label);
+            document.getElementById('reveal-next').style.display = 'none';
+            action.appendChild(makeChoiceGrid([current], (picked) => {
+                const [a, b] = picked;
+                [roles[a], roles[b]] = [roles[b], roles[a]];
+                action.appendChild(note(
+                    `플레이어 ${a + 1}과 플레이어 ${b + 1}의 역할을 바꿨습니다. 무엇으로 바뀌었는지는 당신도 모릅니다.`
+                ));
+                document.getElementById('reveal-next').style.display = '';
+            }, 2));
+        }
+
+        function nextPlayer() {
+            current++;
+            if (current >= playerCount) return goToTalk();
+            goToPass();
+        }
+
+        // ── 토론 ─────────────────────────────────────────
+        function goToTalk() {
+            showScreen('screen-talk');
+            talkSeconds = 300;
+            renderTimer();
+            startTimer();
+        }
+
+        function renderTimer() {
+            const el = document.getElementById('talk-timer');
+            const m = String(Math.floor(talkSeconds / 60)).padStart(2, '0');
+            const s = String(talkSeconds % 60).padStart(2, '0');
+            el.textContent = `${m}:${s}`;
+            el.classList.toggle('urgent', talkSeconds <= 30);
+        }
+
+        function startTimer() {
+            clearInterval(talkTimer);
+            talkRunning = true;
+            document.getElementById('talk-toggle').textContent = '타이머 멈추기';
+            talkTimer = setInterval(() => {
+                talkSeconds--;
+                renderTimer();
+                if (talkSeconds <= 0) {
+                    clearInterval(talkTimer);
+                    talkRunning = false;
+                    startVoting();
+                }
+            }, 1000);
+        }
+
+        function toggleTimer() {
+            if (talkRunning) {
+                clearInterval(talkTimer);
+                talkRunning = false;
+                document.getElementById('talk-toggle').textContent = '타이머 다시 시작';
+            } else {
+                startTimer();
+            }
+        }
+
+        // ── 투표 ─────────────────────────────────────────
+        function startVoting() {
+            clearInterval(talkTimer);
+            current = 0;
+            renderVote();
+            showScreen('screen-vote');
+        }
+
+        function renderVote() {
+            document.getElementById('vote-title').textContent = `플레이어 ${current + 1}의 투표`;
+            const grid = document.getElementById('vote-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < playerCount; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'vote-btn';
+                btn.textContent = `플레이어 ${i + 1}`;
+                if (i === current) { btn.disabled = true; btn.textContent += ' (본인)'; }
+                else btn.onclick = () => castVote(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        function castVote(target) {
+            votes.push(target);
+            voteCounts[target]++;
+            current++;
+            if (current >= playerCount) return showResult();
+            renderVote();
+        }
+
+        function showResult() {
+            const max = Math.max(...voteCounts);
+            const top = voteCounts.map((c, i) => [c, i]).filter(([c]) => c === max).map(([, i]) => i);
+            const tie = top.length > 1;
+            // 최종 역할 기준으로 판정한다. 밤에 바뀐 결과가 진짜 정체다.
+            const villageWin = !tie && ROLE_INFO[roles[top[0]]].team === 'wolf';
+
+            const line = document.getElementById('result-line');
+            line.textContent = villageWin ? '🎉 마을 편 승리!' : '🐺 늑대 편 승리!';
+            line.className = 'result-line ' + (villageWin ? 'village' : 'wolf');
+
+            document.getElementById('result-detail').textContent = tie
+                ? '동표가 나와 아무도 처형하지 못했습니다. 늑대가 살아남습니다.'
+                : `플레이어 ${top[0] + 1}이(가) 지목되었고, 정체는 「${ROLE_INFO[roles[top[0]]].name}」였습니다.`;
+
+            document.getElementById('result-tally').textContent =
+                '개표 — ' + voteCounts.map((c, i) => `P${i + 1}:${c}표`).join(' · ');
+
+            const roster = document.getElementById('result-roster');
+            roster.innerHTML = '';
+            for (let i = 0; i < playerCount; i++) {
+                const row = document.createElement('div');
+                row.className = 'roster-row';
+                const who = document.createElement('span');
+                who.textContent = `플레이어 ${i + 1}`;
+                const tag = document.createElement('span');
+                const info = ROLE_INFO[roles[i]];
+                tag.className = 'tag ' + info.team;
+                // 밤에 역할이 바뀐 사람은 처음 역할도 함께 보여 준다.
+                tag.textContent = roles[i] === initialRoles[i]
+                    ? `${info.emoji} ${info.name}`
+                    : `${info.emoji} ${info.name} (처음: ${ROLE_INFO[initialRoles[i]].name})`;
+                row.append(who, tag);
+                roster.appendChild(row);
+            }
+
+            showScreen('screen-result');
+        }
+    </script>
+</body>
+
+</html>

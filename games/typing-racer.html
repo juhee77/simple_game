@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>타이핑 레이서 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: rgba(255, 255, 255, .05);
+            --border: rgba(255, 255, 255, .14);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --ok: #4ade80;
+            --bad: #f87171;
+            --ghost: #a78bfa;
+            --accent: #38bdf8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.7rem;
+            margin: 44px 0 4px;
+            background: linear-gradient(135deg, #38bdf8, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub { color: var(--muted); font-size: .88rem; margin-bottom: 16px; text-align: center; }
+
+        .screen { display: none; width: 100%; max-width: 520px; }
+        .screen.active { display: block; }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 14px;
+        }
+
+        .card h2 { font-size: 1.1rem; margin-bottom: 10px; }
+        .card p { color: var(--muted); font-size: .9rem; line-height: 1.65; }
+
+        label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+
+        input[type=number] {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.1rem;
+            text-align: center;
+            outline: none;
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 15px;
+            background: linear-gradient(135deg, #38bdf8, #a78bfa);
+            color: #05121e;
+            font-family: inherit;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+
+        .hud {
+            display: flex;
+            gap: 14px;
+            padding: 10px 18px;
+            margin-bottom: 12px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .hud div { text-align: center; flex: 1; }
+        .hud .label { display: block; font-size: .66rem; color: var(--muted); }
+        .hud .value { font-size: 1.15rem; font-weight: 800; }
+
+        .track {
+            position: relative;
+            height: 54px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .runner {
+            position: absolute;
+            top: 8px;
+            font-size: 1.4rem;
+            transition: left .12s linear;
+            transform: translateX(-50%);
+        }
+
+        .runner.me { top: 4px; }
+        .runner.ghost { top: 27px; font-size: 1.05rem; opacity: .65; }
+
+        .track .finish {
+            position: absolute;
+            right: 6px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: repeating-linear-gradient(180deg, #fff 0 6px, #334155 6px 12px);
+        }
+
+        .passage {
+            font-size: 1.3rem;
+            line-height: 2;
+            padding: 18px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, .28);
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            word-break: keep-all;
+        }
+
+        .passage .done { color: var(--ok); }
+        .passage .wrong { color: var(--bad); background: rgba(248, 113, 113, .18); border-radius: 4px; }
+        .passage .cur { border-bottom: 3px solid var(--accent); }
+        .passage .todo { color: var(--muted); }
+
+        #typing {
+            width: 100%;
+            padding: 15px 18px;
+            border-radius: 14px;
+            border: 2px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.1rem;
+            outline: none;
+        }
+
+        #typing:focus { border-color: var(--accent); }
+        #typing:disabled { opacity: .5; }
+
+        .board-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+
+        .board-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .04);
+            font-size: .95rem;
+        }
+
+        .board-row.best { background: rgba(74, 222, 128, .14); border: 1px solid rgba(74, 222, 128, .4); }
+        .board-row .rank { font-weight: 800; margin-right: 10px; }
+        .board-row .stat { color: var(--muted); font-size: .84rem; }
+
+        .msg { margin-top: 12px; min-height: 24px; font-weight: 700; text-align: center; }
+        .msg.good { color: var(--ok); }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>⌨️ 타이핑 레이서</h1>
+    <p class="sub">문장을 정확하고 빠르게 쳐서 결승선을 먼저 넘으세요</p>
+
+    <!-- 설정 -->
+    <div class="screen active" id="screen-setup">
+        <div class="card">
+            <label for="player-count">참가자 수 (1~4명)</label>
+            <input id="player-count" type="number" min="1" max="4" value="1">
+            <button class="btn" onclick="startMatch()">경주 시작</button>
+        </div>
+        <div class="card">
+            <h2>유령과의 경주</h2>
+            <p>혼자 해도 <strong>내 최고 기록이 유령</strong>이 되어 함께 달립니다.
+                여러 명이면 한 사람씩 돌아가며 달린 뒤 기록을 비교합니다.</p>
+        </div>
+    </div>
+
+    <!-- 준비 -->
+    <div class="screen" id="screen-ready">
+        <div class="card" style="text-align:center">
+            <div style="font-size:2.4rem">🏁</div>
+            <h2 id="ready-who">플레이어 1</h2>
+            <p>준비되면 시작을 누르세요. 첫 글자를 입력하는 순간 시간이 흐릅니다.</p>
+            <button class="btn" onclick="beginRun()">시작</button>
+        </div>
+    </div>
+
+    <!-- 경주 -->
+    <div class="screen" id="screen-race">
+        <div class="hud">
+            <div><span class="label">타수(분당)</span><span class="value" id="hud-cpm">0</span></div>
+            <div><span class="label">정확도</span><span class="value" id="hud-acc">100%</span></div>
+            <div><span class="label">시간</span><span class="value" id="hud-time">0.0s</span></div>
+        </div>
+        <div class="track">
+            <span class="runner me" id="runner-me" style="left:0">🚗</span>
+            <span class="runner ghost" id="runner-ghost" style="left:0">👻</span>
+            <span class="finish"></span>
+        </div>
+        <div class="passage" id="passage"></div>
+        <input id="typing" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 입력하세요">
+        <p class="msg" id="msg"></p>
+    </div>
+
+    <!-- 결과 -->
+    <div class="screen" id="screen-result">
+        <div class="card">
+            <h2 id="result-title">경주 종료</h2>
+            <div class="board-list" id="result-list"></div>
+            <button class="btn" id="result-next" onclick="afterResult()">다음</button>
+            <button class="btn ghost" onclick="location.reload()">처음으로</button>
+        </div>
+    </div>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "타이핑 레이서",
+ "players": "1~4인",
+ "time": "약 5분",
+ "goal": "문장을 정확하고 빠르게 입력해 먼저 결승선을 넘으세요.",
+ "steps": [
+  "참가자 수를 정합니다. 여러 명이면 한 사람씩 돌아가며 달립니다.",
+  "시작을 누르고, 화면의 문장을 그대로 입력합니다.",
+  "첫 글자를 치는 순간부터 시간이 재집니다.",
+  "맞게 친 글자는 초록, 틀린 글자는 빨강으로 표시됩니다. 지우고 다시 칠 수 있습니다.",
+  "문장을 끝까지 정확히 치면 완주입니다. 분당 타수와 정확도가 기록됩니다."
+ ],
+ "tips": [
+  "혼자 할 때는 내 최고 기록이 유령이 되어 같이 달립니다.",
+  "정확도가 낮으면 타수가 높아도 순위가 밀립니다. 틀리지 않는 편이 빠릅니다.",
+  "최고 기록은 자동 저장됩니다."
+ ]
+}
+</script>
+
+    <script>
+        const PASSAGES = [
+            '오늘도 좋은 하루가 되기를 바랍니다.',
+            '작은 습관이 모여 큰 변화를 만듭니다.',
+            '바람이 부는 날에는 창문을 활짝 열어둡니다.',
+            '천천히 가더라도 멈추지만 않으면 됩니다.',
+            '좋은 질문은 좋은 답보다 값질 때가 많습니다.',
+            '새벽 공기는 언제나 조금 차갑고 맑습니다.',
+            '어제보다 나은 오늘이면 그것으로 충분합니다.',
+            '길을 잃었다면 잠시 멈추고 지도를 펴세요.',
+            '노력은 배신하지 않는다는 말을 믿어 봅니다.',
+            '커피 한 잔의 여유가 하루를 바꾸기도 합니다.',
+            '책 한 권이 사람의 방향을 바꾸기도 합니다.',
+            '별은 어두운 밤에만 제 빛을 보여 줍니다.',
+            '서두르지 않아도 결국 도착하게 되어 있습니다.',
+            '오래 걸린 일일수록 오래 기억에 남습니다.',
+            '지금 이 순간이 가장 젊은 날입니다.'
+        ];
+
+        const BEST_CPM_KEY = 'typing-racer-best-cpm';
+        const GHOST_KEY = 'typing-racer-ghost';
+
+        let playerCount = 1;
+        let current = 0;
+        let results = [];
+        let passage = '';
+        let startedAt = 0;
+        let finished = false;
+        let raceTimer = null;
+        let ghostCpm = 0;
+
+        const $ = (id) => document.getElementById(id);
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            $(id).classList.add('active');
+        }
+
+        function startMatch() {
+            playerCount = Math.min(4, Math.max(1, Number($('player-count').value) || 1));
+            current = 0;
+            results = [];
+            goToReady();
+        }
+
+        function goToReady() {
+            $('ready-who').textContent = playerCount === 1 ? '준비' : `플레이어 ${current + 1}`;
+            showScreen('screen-ready');
+        }
+
+        function beginRun() {
+            passage = PASSAGES[Math.floor(Math.random() * PASSAGES.length)];
+            startedAt = 0;
+            finished = false;
+            ghostCpm = loadBestRecord(GHOST_KEY) ?? 0;
+
+            const input = $('typing');
+            input.value = '';
+            input.disabled = false;
+            $('msg').textContent = ghostCpm ? `유령 기록: 분당 ${ghostCpm}타` : '첫 기록에 도전합니다.';
+            $('msg').className = 'msg';
+            renderPassage('');
+            updateRunners(0, 0);
+            $('hud-cpm').textContent = '0';
+            $('hud-acc').textContent = '100%';
+            $('hud-time').textContent = '0.0s';
+            showScreen('screen-race');
+            input.focus();
+
+            clearInterval(raceTimer);
+            raceTimer = setInterval(onTick, 100);
+        }
+
+        // 입력한 글자를 원문과 한 글자씩 대조해 색을 입힌다.
+        function renderPassage(typed) {
+            const el = $('passage');
+            el.innerHTML = '';
+            for (let i = 0; i < passage.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = passage[i];
+                if (i < typed.length) span.className = typed[i] === passage[i] ? 'done' : 'wrong';
+                else if (i === typed.length) span.className = 'cur';
+                else span.className = 'todo';
+                el.appendChild(span);
+            }
+        }
+
+        function correctCount(typed) {
+            let n = 0;
+            for (let i = 0; i < typed.length && i < passage.length; i++) {
+                if (typed[i] === passage[i]) n++;
+            }
+            return n;
+        }
+
+        function elapsedSec() {
+            return startedAt ? (performance.now() - startedAt) / 1000 : 0;
+        }
+
+        function currentCpm(typed) {
+            const sec = elapsedSec();
+            if (sec < 0.2) return 0;
+            return Math.round((correctCount(typed) / sec) * 60);
+        }
+
+        function onTick() {
+            if (finished) return;
+            const typed = $('typing').value;
+            const sec = elapsedSec();
+            $('hud-time').textContent = `${sec.toFixed(1)}s`;
+            $('hud-cpm').textContent = currentCpm(typed);
+            // 유령은 자기 기록대로 일정하게 달린다.
+            const ghostProgress = ghostCpm ? Math.min(1, (ghostCpm * sec / 60) / passage.length) : 0;
+            updateRunners(Math.min(1, typed.length / passage.length), ghostProgress);
+        }
+
+        function updateRunners(mine, ghost) {
+            $('runner-me').style.left = `${6 + mine * 88}%`;
+            const g = $('runner-ghost');
+            g.style.display = ghostCpm ? '' : 'none';
+            g.style.left = `${6 + ghost * 88}%`;
+        }
+
+        // 붙여넣기·드롭으로 문장을 통째로 넣으면 말도 안 되는 기록이 남는다.
+        // 타이핑 게임이므로 직접 치는 것만 인정한다.
+        ['paste', 'drop'].forEach((evt) => {
+            $('typing').addEventListener(evt, (e) => {
+                e.preventDefault();
+                $('msg').textContent = '붙여넣기는 사용할 수 없습니다. 직접 입력해 주세요.';
+                $('msg').className = 'msg';
+            });
+        });
+
+        $('typing').addEventListener('input', () => {
+            if (finished) return;
+            const typed = $('typing').value;
+            if (!startedAt && typed.length) startedAt = performance.now();
+
+            renderPassage(typed);
+            const correct = correctCount(typed);
+            const acc = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+            $('hud-acc').textContent = `${acc}%`;
+
+            if (typed === passage) finishRun(acc);
+        });
+
+        function finishRun(accuracy) {
+            finished = true;
+            clearInterval(raceTimer);
+            $('typing').disabled = true;
+
+            const sec = elapsedSec();
+            const cpm = Math.round((passage.length / sec) * 60);
+            results.push({ player: current + 1, cpm, accuracy, sec: +sec.toFixed(1) });
+
+            const isBest = saveBestRecord(BEST_CPM_KEY, cpm, false);
+            if (isBest) saveBestRecord(GHOST_KEY, cpm, false);
+
+            $('msg').textContent = isBest ? '🏆 최고 기록 경신!' : '완주!';
+            $('msg').className = 'msg good';
+
+            setTimeout(() => showResult(isBest), 500);
+        }
+
+        function showResult(isBest) {
+            const last = results[results.length - 1];
+            const done = results.length >= playerCount;
+
+            $('result-title').textContent = done ? '최종 결과' : `플레이어 ${last.player} 완주`;
+            $('result-next').textContent = done ? '다시 하기' : '다음 사람 차례';
+
+            const list = $('result-list');
+            list.innerHTML = '';
+
+            const ranked = [...results].sort((a, b) =>
+                // 정확도가 낮으면 타수가 높아도 밀리도록 가중치를 준다.
+                (b.cpm * b.accuracy / 100) - (a.cpm * a.accuracy / 100));
+
+            ranked.forEach((r, i) => {
+                const row = document.createElement('div');
+                row.className = 'board-row' + (done && i === 0 && results.length > 1 ? ' best' : '');
+                const left = document.createElement('span');
+                const rank = document.createElement('span');
+                rank.className = 'rank';
+                rank.textContent = results.length > 1 ? `${i + 1}위` : '기록';
+                left.append(rank, playerCount > 1 ? `플레이어 ${r.player}` : '나');
+                const right = document.createElement('span');
+                right.className = 'stat';
+                right.textContent = `분당 ${r.cpm}타 · 정확도 ${r.accuracy}% · ${r.sec}초`;
+                row.append(left, right);
+                list.appendChild(row);
+            });
+
+            const best = loadBestRecord(BEST_CPM_KEY);
+            if (best !== null) {
+                const row = document.createElement('div');
+                row.className = 'board-row';
+                const left = document.createElement('span');
+                left.textContent = '🏆 최고 기록';
+                const right = document.createElement('span');
+                right.className = 'stat';
+                right.textContent = `분당 ${best}타${isBest ? ' (방금 경신)' : ''}`;
+                row.append(left, right);
+                list.appendChild(row);
+            }
+
+            showScreen('screen-result');
+        }
+
+        function afterResult() {
+            if (results.length >= playerCount) {
+                current = 0;
+                results = [];
+                showScreen('screen-setup');
+                return;
+            }
+            current++;
+            goToReady();
+        }
+    </script>
+</body>
+
+</html>

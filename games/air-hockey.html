@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>네온 에어하키 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b1020;
+            --panel: rgba(255, 255, 255, .05);
+            --border: rgba(255, 255, 255, .14);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --p1: #f472b6;
+            --p2: #38bdf8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 12px 32px;
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+
+        .back { position: absolute; top: 16px; left: 16px; z-index: 20; }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 40px 0 2px;
+            background: linear-gradient(135deg, #f472b6, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub { color: var(--muted); font-size: .82rem; margin-bottom: 10px; text-align: center; }
+
+        .modes { display: flex; gap: 6px; margin-bottom: 10px; }
+
+        .mode-btn {
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--muted);
+            font-family: inherit;
+            font-size: .82rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .mode-btn.active { background: linear-gradient(135deg, #f472b6, #38bdf8); color: #10071a; border-color: transparent; }
+
+        .score {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            padding: 8px 20px;
+            margin-bottom: 10px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+        }
+
+        .score .side { text-align: center; }
+        .score .who { display: block; font-size: .66rem; color: var(--muted); }
+        .score .pts { font-size: 1.5rem; font-weight: 800; }
+        .score .p1 .pts { color: var(--p1); }
+        .score .p2 .pts { color: var(--p2); }
+
+        .rink-wrap { position: relative; }
+
+        canvas {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: #101833;
+            display: block;
+            touch-action: none;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(11, 16, 32, .82);
+            border-radius: 18px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .overlay.hidden { display: none; }
+        .overlay h2 { font-size: 1.4rem; }
+        .overlay p { color: var(--muted); font-size: .88rem; line-height: 1.6; max-width: 300px; }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #f472b6, #38bdf8);
+            color: #10071a;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+
+        .hint { color: var(--muted); font-size: .76rem; margin-top: 10px; text-align: center; max-width: 380px; }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>🏒 네온 에어하키</h1>
+    <p class="sub">한 화면에서 마주 보고 동시에 조작하는 실시간 대결</p>
+
+    <div class="modes">
+        <button class="mode-btn active" data-mode="duo" onclick="setMode('duo')">2인 대결</button>
+        <button class="mode-btn" data-mode="ai" onclick="setMode('ai')">AI와 대결</button>
+    </div>
+
+    <div class="score">
+        <div class="side p1"><span class="pts" id="score-1">0</span><span class="who" id="who-1">아래쪽</span></div>
+        <div class="side"><span class="pts" style="font-size:1rem;color:var(--muted)">:</span></div>
+        <div class="side p2"><span class="pts" id="score-2">0</span><span class="who" id="who-2">위쪽</span></div>
+    </div>
+
+    <div class="rink-wrap">
+        <canvas id="rink" width="360" height="560"></canvas>
+        <div class="overlay" id="overlay">
+            <h2 id="ov-title">준비되셨나요?</h2>
+            <p id="ov-desc">폰을 두 사람 사이에 놓고, 각자 자기 진영의 채를 손가락으로 끌어 움직이세요. 5점 먼저 내면 승리합니다.</p>
+            <button class="btn" id="ov-btn" onclick="startPlay()">시작</button>
+        </div>
+    </div>
+
+    <p class="hint">아래쪽은 화면 아래 절반, 위쪽은 위 절반 안에서만 움직일 수 있습니다.</p>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "네온 에어하키",
+ "players": "2인",
+ "time": "약 5분",
+ "goal": "퍽을 상대 골대에 넣어 5점을 먼저 내세요.",
+ "steps": [
+  "폰을 두 사람 사이에 눕혀 놓고 마주 봅니다.",
+  "각자 자기 진영(화면의 자기 쪽 절반)에서 채를 손가락으로 끌어 움직입니다.",
+  "두 사람이 동시에 조작합니다. 차례를 기다리지 않습니다.",
+  "퍽이 상대 골대에 들어가면 1점입니다.",
+  "5점을 먼저 낸 쪽이 승리합니다."
+ ],
+ "tips": [
+  "채를 빠르게 움직이며 퍽을 맞히면 더 세게 튕겨 나갑니다.",
+  "골대 앞에 붙어 있기보다 조금 앞에서 각도를 막는 편이 안전합니다.",
+  "혼자일 때는 AI와 대결 모드로 연습할 수 있습니다."
+ ]
+}
+</script>
+
+    <script>
+        const canvas = document.getElementById('rink');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        const GOAL_W = 130;
+        const PADDLE_R = 26;
+        const PUCK_R = 14;
+        const WIN_SCORE = 5;
+
+        let mode = 'duo';
+        let running = false;
+        let scores = [0, 0];          // [아래쪽, 위쪽]
+        let puck = null;
+        let paddles = null;
+        let lastFrame = 0;
+        let animId = null;
+        const pointers = new Map();   // 포인터별로 어느 채를 잡았는지
+
+        function resetPositions(servingTo) {
+            puck = { x: W / 2, y: H / 2, vx: 0, vy: servingTo === 0 ? 190 : -190 };
+            paddles = [
+                { x: W / 2, y: H - 70, px: W / 2, py: H - 70 },   // 0: 아래쪽
+                { x: W / 2, y: 70, px: W / 2, py: 70 }            // 1: 위쪽
+            ];
+        }
+
+        function setMode(next) {
+            mode = next;
+            document.querySelectorAll('.mode-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.mode === next));
+            document.getElementById('who-2').textContent = next === 'ai' ? 'AI' : '위쪽';
+            newGame();
+        }
+
+        function newGame() {
+            cancelAnimationFrame(animId);
+            running = false;
+            scores = [0, 0];
+            resetPositions(Math.random() < 0.5 ? 0 : 1);
+            renderScore();
+            showOverlay('준비되셨나요?',
+                mode === 'ai'
+                    ? '아래쪽 채를 손가락으로 끌어 움직이세요. 5점 먼저 내면 승리합니다.'
+                    : '폰을 두 사람 사이에 놓고, 각자 자기 진영의 채를 손가락으로 끌어 움직이세요. 5점 먼저 내면 승리합니다.',
+                '시작');
+            draw();
+        }
+
+        function showOverlay(title, desc, btn) {
+            document.getElementById('ov-title').textContent = title;
+            document.getElementById('ov-desc').textContent = desc;
+            document.getElementById('ov-btn').textContent = btn;
+            document.getElementById('overlay').classList.remove('hidden');
+        }
+
+        function hideOverlay() {
+            document.getElementById('overlay').classList.add('hidden');
+        }
+
+        function startPlay() {
+            if (scores[0] >= WIN_SCORE || scores[1] >= WIN_SCORE) {
+                newGame();
+                return;
+            }
+            hideOverlay();
+            running = true;
+            lastFrame = performance.now();
+            animId = requestAnimationFrame(loop);
+        }
+
+        function renderScore() {
+            document.getElementById('score-1').textContent = scores[0];
+            document.getElementById('score-2').textContent = scores[1];
+        }
+
+        // ── 입력 ──────────────────────────────────────────
+        // 두 손가락이 동시에 들어오므로 포인터 id별로 채를 붙잡아 둔다.
+        function toCanvas(e) {
+            const r = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - r.left) * (W / r.width),
+                y: (e.clientY - r.top) * (H / r.height)
+            };
+        }
+
+        canvas.addEventListener('pointerdown', (e) => {
+            const p = toCanvas(e);
+            // 손가락이 닿은 절반의 채를 잡는다.
+            const idx = p.y > H / 2 ? 0 : 1;
+            if (mode === 'ai' && idx === 1) return;
+            pointers.set(e.pointerId, idx);
+            canvas.setPointerCapture(e.pointerId);
+            movePaddle(idx, p);
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            const idx = pointers.get(e.pointerId);
+            if (idx === undefined) return;
+            movePaddle(idx, toCanvas(e));
+        });
+
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(evt =>
+            canvas.addEventListener(evt, (e) => pointers.delete(e.pointerId)));
+
+        function movePaddle(idx, p) {
+            const pad = paddles[idx];
+            // 자기 진영 밖으로는 나갈 수 없다.
+            const minY = idx === 0 ? H / 2 + PADDLE_R : PADDLE_R;
+            const maxY = idx === 0 ? H - PADDLE_R : H / 2 - PADDLE_R;
+            pad.x = Math.max(PADDLE_R, Math.min(W - PADDLE_R, p.x));
+            pad.y = Math.max(minY, Math.min(maxY, p.y));
+        }
+
+        // ── 물리 ──────────────────────────────────────────
+        function loop(now) {
+            const dt = Math.min(0.032, (now - lastFrame) / 1000);
+            lastFrame = now;
+            update(dt);
+            draw();
+            if (running) animId = requestAnimationFrame(loop);
+        }
+
+        function update(dt) {
+            if (mode === 'ai') updateAi(dt);
+
+            puck.x += puck.vx * dt;
+            puck.y += puck.vy * dt;
+
+            // 좌우 벽
+            if (puck.x < PUCK_R) { puck.x = PUCK_R; puck.vx = Math.abs(puck.vx) * 0.94; }
+            if (puck.x > W - PUCK_R) { puck.x = W - PUCK_R; puck.vx = -Math.abs(puck.vx) * 0.94; }
+
+            // 위아래 벽과 골대
+            const inGoalX = Math.abs(puck.x - W / 2) < GOAL_W / 2;
+            if (puck.y < PUCK_R) {
+                if (inGoalX) return score(0);
+                puck.y = PUCK_R; puck.vy = Math.abs(puck.vy) * 0.94;
+            }
+            if (puck.y > H - PUCK_R) {
+                if (inGoalX) return score(1);
+                puck.y = H - PUCK_R; puck.vy = -Math.abs(puck.vy) * 0.94;
+            }
+
+            // 채와 충돌
+            paddles.forEach((pad) => {
+                const dx = puck.x - pad.x, dy = puck.y - pad.y;
+                const dist = Math.hypot(dx, dy);
+                const min = PADDLE_R + PUCK_R;
+                if (dist === 0 || dist >= min) return;
+
+                const nx = dx / dist, ny = dy / dist;
+                // 겹친 만큼 밀어내 채 안에 끼는 것을 막는다.
+                puck.x = pad.x + nx * min;
+                puck.y = pad.y + ny * min;
+
+                // 채가 움직인 속도를 퍽에 얹는다. 휘두를수록 세게 나간다.
+                const padVx = (pad.x - pad.px) / dt;
+                const padVy = (pad.y - pad.py) / dt;
+                const along = puck.vx * nx + puck.vy * ny;
+                puck.vx += nx * (-2 * along) + padVx * 0.32;
+                puck.vy += ny * (-2 * along) + padVy * 0.32;
+
+                const speed = Math.hypot(puck.vx, puck.vy);
+                const MAX = 900;
+                if (speed > MAX) { puck.vx *= MAX / speed; puck.vy *= MAX / speed; }
+                if (speed < 160) {
+                    const s = 160 / (speed || 1);
+                    puck.vx *= s; puck.vy *= s;
+                }
+            });
+
+            paddles.forEach(p => { p.px = p.x; p.py = p.y; });
+
+            // 마찰
+            puck.vx *= 0.998;
+            puck.vy *= 0.998;
+
+            // 퍽이 거의 멈추면 살짝 밀어 교착을 푼다.
+            if (Math.hypot(puck.vx, puck.vy) < 40) {
+                puck.vy += puck.y < H / 2 ? 60 : -60;
+            }
+        }
+
+        function updateAi(dt) {
+            const pad = paddles[1];
+            // 퍽이 자기 진영에 있으면 쫓아가고, 아니면 골대 앞으로 돌아온다.
+            const targetX = puck.y < H * 0.62 ? puck.x : W / 2;
+            const targetY = puck.y < H * 0.62 ? Math.min(puck.y - 6, H / 2 - PADDLE_R) : 70;
+            const speed = 300 * dt;
+            pad.x += Math.max(-speed, Math.min(speed, targetX - pad.x));
+            pad.y += Math.max(-speed, Math.min(speed, targetY - pad.y));
+            pad.x = Math.max(PADDLE_R, Math.min(W - PADDLE_R, pad.x));
+            pad.y = Math.max(PADDLE_R, Math.min(H / 2 - PADDLE_R, pad.y));
+        }
+
+        function score(side) {
+            scores[side]++;
+            renderScore();
+            running = false;
+            cancelAnimationFrame(animId);
+            pointers.clear();
+
+            const label = side === 0 ? (mode === 'ai' ? '내' : '아래쪽') : (mode === 'ai' ? 'AI' : '위쪽');
+            if (scores[side] >= WIN_SCORE) {
+                showOverlay(`${label} 승리! 🎉`, `최종 ${scores[0]} : ${scores[1]}`, '다시 하기');
+                draw();
+                return;
+            }
+            resetPositions(side === 0 ? 1 : 0);
+            showOverlay(`${label} 득점!`, `${scores[0]} : ${scores[1]}`, '이어서');
+            draw();
+        }
+
+        // ── 그리기 ────────────────────────────────────────
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            ctx.fillStyle = '#101833';
+            ctx.fillRect(0, 0, W, H);
+
+            // 중앙선과 원
+            ctx.strokeStyle = 'rgba(255,255,255,.14)';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(W / 2, H / 2, 54, 0, Math.PI * 2); ctx.stroke();
+
+            // 골대
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = 'rgba(56,189,248,.75)';
+            ctx.beginPath(); ctx.moveTo(W / 2 - GOAL_W / 2, 3); ctx.lineTo(W / 2 + GOAL_W / 2, 3); ctx.stroke();
+            ctx.strokeStyle = 'rgba(244,114,182,.75)';
+            ctx.beginPath(); ctx.moveTo(W / 2 - GOAL_W / 2, H - 3); ctx.lineTo(W / 2 + GOAL_W / 2, H - 3); ctx.stroke();
+
+            // 채
+            drawDisc(paddles[0].x, paddles[0].y, PADDLE_R, '#f472b6');
+            drawDisc(paddles[1].x, paddles[1].y, PADDLE_R, '#38bdf8');
+
+            // 퍽
+            drawDisc(puck.x, puck.y, PUCK_R, '#f8fafc');
+        }
+
+        function drawDisc(x, y, r, color) {
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 18;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'rgba(0,0,0,.35)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        // 화면 높이에 맞춰 링크 크기를 조절한다. 폰을 눕혀 놓고 쓰기 때문이다.
+        function fit() {
+            const maxH = Math.max(320, window.innerHeight - 280);
+            const scale = Math.min(1, maxH / H, (window.innerWidth - 32) / W);
+            canvas.style.width = `${W * scale}px`;
+            canvas.style.height = `${H * scale}px`;
+        }
+        window.addEventListener('resize', fit);
+        fit();
+
+        setMode('duo');
+    </script>
+</body>
+
+</html>

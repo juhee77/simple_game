@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관제실 탈출 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060d16;
+            --panel: rgba(255, 255, 255, .05);
+            --border: rgba(56, 189, 248, .22);
+            --text: #e2f2ff;
+            --muted: #7d99b4;
+            --ok: #4ade80;
+            --warn: #fbbf24;
+            --bad: #f87171;
+            --accent: #38bdf8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #0d1f33 0%, var(--bg) 65%);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.7rem;
+            margin: 44px 0 4px;
+            background: linear-gradient(135deg, #38bdf8, #4ade80);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub { color: var(--muted); font-size: .88rem; margin-bottom: 18px; text-align: center; }
+
+        .screen { display: none; width: 100%; max-width: 460px; }
+        .screen.active { display: block; }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 14px;
+        }
+
+        .card h2 { font-size: 1.15rem; margin-bottom: 10px; }
+        .card p { color: var(--muted); font-size: .9rem; line-height: 1.65; }
+
+        label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+
+        input[type=number] {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.1rem;
+            text-align: center;
+            outline: none;
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 15px;
+            background: linear-gradient(135deg, #38bdf8, #4ade80);
+            color: #04121d;
+            font-family: inherit;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+        .btn:disabled { opacity: .4; cursor: default; }
+
+        .status-bar {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .status-bar div { text-align: center; flex: 1; }
+        .status-bar .label { display: block; font-size: .66rem; color: var(--muted); }
+        .status-bar .value { font-size: 1.15rem; font-weight: 800; font-family: 'Share Tech Mono', monospace; }
+        .status-bar .value.urgent { color: var(--bad); }
+
+        .pass { text-align: center; padding: 30px 20px; }
+        .pass .who { font-size: 1.8rem; font-weight: 800; margin: 12px 0 6px; }
+
+        .station-name {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .station-role { text-align: center; color: var(--muted); font-size: .84rem; margin-bottom: 16px; }
+
+        .manual {
+            background: rgba(56, 189, 248, .08);
+            border: 1px solid rgba(56, 189, 248, .3);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            font-size: .9rem;
+            line-height: 1.75;
+        }
+
+        .manual strong { color: var(--accent); }
+        .manual ul { margin: 8px 0 0 18px; }
+        .manual li { margin-bottom: 4px; }
+
+        .readout {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: .12em;
+            padding: 16px;
+            border-radius: 14px;
+            background: #04121d;
+            border: 1px solid var(--border);
+            margin-bottom: 14px;
+            word-break: break-all;
+        }
+
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+        .keypad button {
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .keypad button:active { background: rgba(56, 189, 248, .25); }
+
+        .options { display: grid; gap: 8px; }
+
+        .option {
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .option:active { background: rgba(56, 189, 248, .2); }
+
+        .feedback { margin-top: 12px; min-height: 24px; font-weight: 700; text-align: center; }
+        .feedback.ok { color: var(--ok); }
+        .feedback.bad { color: var(--bad); }
+
+        .progress { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
+
+        .pip {
+            width: 42px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .pip.done { background: var(--ok); }
+        .pip.current { background: var(--accent); }
+
+        .result-line { font-size: 1.5rem; font-weight: 800; text-align: center; margin-bottom: 10px; }
+        .result-line.ok { color: var(--ok); }
+        .result-line.bad { color: var(--bad); }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>🛰️ 관제실 탈출</h1>
+    <p class="sub">각자 다른 계기판을 보고, 말로만 맞춰 배를 세우세요</p>
+
+    <!-- 설정 -->
+    <div class="screen active" id="screen-setup">
+        <div class="card">
+            <label for="player-count">참가자 수 (3~5명)</label>
+            <input id="player-count" type="number" min="3" max="5" value="4">
+            <button class="btn" onclick="startGame()">임무 시작</button>
+        </div>
+        <div class="card">
+            <h2>이렇게 진행합니다</h2>
+            <p>한 사람이 계기판을 보고, 나머지는 각자 다른 매뉴얼을 가집니다.
+                계기판을 든 사람은 <strong>화면에 보이는 것만</strong> 읽어 주고,
+                매뉴얼을 가진 사람들은 <strong>자기 매뉴얼만</strong> 말합니다.
+                서로 화면을 보여 주면 안 됩니다. 10분 안에 절차 5개를 통과하세요.</p>
+        </div>
+    </div>
+
+    <!-- 매뉴얼 배부 -->
+    <div class="screen" id="screen-brief">
+        <div class="card pass">
+            <div style="font-size:2.4rem">📋</div>
+            <div class="who" id="brief-who">플레이어 1</div>
+            <p>본인만 보고 다음 사람에게 넘겨주세요.</p>
+            <button class="btn" onclick="showManual()">내 매뉴얼 확인</button>
+        </div>
+    </div>
+
+    <div class="screen" id="screen-manual">
+        <div class="card">
+            <div class="station-name" id="manual-title"></div>
+            <div class="station-role" id="manual-role"></div>
+            <div class="manual" id="manual-body"></div>
+            <p style="text-align:center">외우지 말고 <strong>이 화면을 계속 들고 계세요.</strong>
+                다른 사람에게 보여 주면 안 됩니다.</p>
+            <button class="btn" onclick="nextBrief()">확인했습니다</button>
+        </div>
+    </div>
+
+    <!-- 임무 -->
+    <div class="screen" id="screen-play">
+        <div class="status-bar">
+            <div><span class="label">남은 시간</span><span class="value" id="clock">10:00</span></div>
+            <div><span class="label">절차</span><span class="value" id="step-count">1 / 5</span></div>
+            <div><span class="label">경보</span><span class="value" id="alarm">0 / 3</span></div>
+        </div>
+        <div class="progress" id="progress"></div>
+        <div class="card">
+            <div class="station-name">주 계기판</div>
+            <div class="station-role" id="task-hint">계기판을 소리 내어 읽고, 매뉴얼 담당자의 지시를 따르세요</div>
+            <div class="readout" id="readout"></div>
+            <div id="input-area"></div>
+            <p class="feedback" id="feedback"></p>
+        </div>
+    </div>
+
+    <!-- 결과 -->
+    <div class="screen" id="screen-result">
+        <div class="card">
+            <div class="result-line" id="result-line"></div>
+            <p id="result-detail" style="text-align:center"></p>
+            <button class="btn" onclick="location.reload()">다시 하기</button>
+        </div>
+    </div>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "관제실 탈출",
+ "players": "3~5인",
+ "time": "약 20분",
+ "goal": "서로 다른 정보를 말로만 맞춰 절차 5개를 시간 안에 끝내세요.",
+ "steps": [
+  "폰을 돌리며 각자 자기 매뉴얼을 확인합니다. 매뉴얼은 사람마다 다릅니다.",
+  "마지막에 폰을 든 사람이 주 계기판을 맡고, 나머지는 자기 매뉴얼 화면을 계속 들고 있습니다.",
+  "계기판 담당자는 화면에 보이는 것만 읽어 줍니다. 매뉴얼 담당자는 자기 매뉴얼만 말합니다.",
+  "서로 화면을 보여 주면 안 됩니다. 말로만 정답을 좁혀 계기판에 입력합니다.",
+  "10분 안에 절차 5개를 끝내면 성공입니다. 오답 3번이면 실패합니다."
+ ],
+ "tips": [
+  "읽어 줄 때는 본 그대로 읽으세요. 요약하면 매뉴얼과 대조가 안 됩니다.",
+  "매뉴얼 담당자는 자기 표에 없는 경우를 만나면 바로 그렇다고 말해야 합니다.",
+  "한 명이 진행을 맡아 순서를 정리하면 훨씬 빨라집니다."
+ ]
+}
+</script>
+
+    <script>
+        const TOTAL_STEPS = 5;
+        const TIME_LIMIT = 600;
+        const MAX_ALARMS = 3;
+
+        // ── 매뉴얼 ────────────────────────────────────────
+        // 각 담당은 서로 다른 조각만 안다. 혼자서는 어떤 절차도 풀 수 없다.
+        const SYMBOLS = ['◆', '▲', '●', '■', '★'];
+        const COLORS = ['적색', '청색', '녹색', '황색'];
+
+        // 기호 → 기준 자리(0~3). 기호 담당만 안다.
+        const SYMBOL_SLOT = { '◆': 0, '▲': 3, '●': 1, '■': 2, '★': 3 };
+        // 색 → 더할 값. 색 담당만 안다.
+        const COLOR_SHIFT = { '적색': 3, '청색': 7, '녹색': 1, '황색': 5 };
+        // 배선 규칙: 계기판의 알파벳 → 잘라야 할 선 색. 배선 담당만 안다.
+        const WIRE_RULE = { A: '청색', B: '녹색', C: '황색', D: '적색', E: '청색' };
+        // 밸브 규칙: 압력 구간별 조작. 밸브 담당만 안다.
+        const VALVE_RULE = [
+            { max: 30, action: '밸브 완전 개방' },
+            { max: 60, action: '밸브 절반 개방' },
+            { max: 90, action: '밸브 잠금' },
+            { max: 999, action: '비상 배출' }
+        ];
+
+        const STATIONS = [
+            {
+                key: 'symbol',
+                title: '기호 판독반',
+                role: '어떤 자리의 숫자를 읽어야 하는지 압니다',
+                body: () => `계기판에 뜬 <strong>기호</strong>를 듣고, 코드에서 몇 번째 자리를 읽을지 알려 주세요.
+                    <ul>${SYMBOLS.map(s => `<li>${s} → <strong>${SYMBOL_SLOT[s] + 1}번째</strong> 자리</li>`).join('')}</ul>`
+            },
+            {
+                key: 'color',
+                title: '보정반',
+                role: '읽은 숫자에 얼마를 더할지 압니다',
+                body: () => `계기판의 <strong>표시등 색</strong>을 듣고, 그 숫자에 더할 값을 알려 주세요.
+                    더한 값이 10을 넘으면 <strong>10을 뺀 나머지</strong>를 씁니다.
+                    <ul>${COLORS.map(c => `<li>${c} → <strong>+${COLOR_SHIFT[c]}</strong></li>`).join('')}</ul>`
+            },
+            {
+                key: 'wire',
+                title: '배선반',
+                role: '어떤 선을 잘라야 하는지 압니다',
+                body: () => `계기판의 <strong>회로 문자</strong>를 듣고, 잘라야 할 선 색을 알려 주세요.
+                    <ul>${Object.entries(WIRE_RULE).map(([k, v]) => `<li>회로 ${k} → <strong>${v} 선</strong></li>`).join('')}</ul>`
+            },
+            {
+                key: 'valve',
+                title: '압력반',
+                role: '압력에 따른 조작을 압니다',
+                body: () => `계기판의 <strong>압력 수치</strong>를 듣고, 해야 할 조작을 알려 주세요.
+                    <ul>
+                        <li>0 ~ 30 → <strong>밸브 완전 개방</strong></li>
+                        <li>31 ~ 60 → <strong>밸브 절반 개방</strong></li>
+                        <li>61 ~ 90 → <strong>밸브 잠금</strong></li>
+                        <li>91 이상 → <strong>비상 배출</strong></li>
+                    </ul>`
+            }
+        ];
+
+        let playerCount = 4;
+        let assignments = [];   // 각 플레이어가 맡은 매뉴얼
+        let briefIndex = 0;
+        let step = 0;
+        let alarms = 0;
+        let remaining = TIME_LIMIT;
+        let clockTimer = null;
+        let currentTask = null;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function shuffled(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+        function startGame() {
+            playerCount = Math.min(5, Math.max(3, Number(document.getElementById('player-count').value) || 4));
+
+            // 계기판을 맡을 한 명을 빼고 나머지에게 매뉴얼을 나눈다.
+            // 사람이 적으면 한 명이 매뉴얼 두 개를 맡는다.
+            const manualCount = playerCount - 1;
+            const deck = shuffled(STATIONS);
+            assignments = [];
+            for (let i = 0; i < manualCount; i++) assignments.push([]);
+            deck.forEach((station, i) => assignments[i % manualCount].push(station));
+
+            briefIndex = 0;
+            step = 0;
+            alarms = 0;
+            remaining = TIME_LIMIT;
+            goToBrief();
+        }
+
+        function goToBrief() {
+            document.getElementById('brief-who').textContent = `플레이어 ${briefIndex + 1}`;
+            showScreen('screen-brief');
+        }
+
+        function showManual() {
+            const mine = assignments[briefIndex];
+            document.getElementById('manual-title').textContent = mine.map(s => s.title).join(' · ');
+            document.getElementById('manual-role').textContent = mine.map(s => s.role).join(' / ');
+            document.getElementById('manual-body').innerHTML = mine.map(s => s.body()).join('<hr style="border:none;border-top:1px solid rgba(56,189,248,.25);margin:14px 0">');
+            showScreen('screen-manual');
+        }
+
+        function nextBrief() {
+            briefIndex++;
+            if (briefIndex >= assignments.length) return startMission();
+            goToBrief();
+        }
+
+        // ── 절차 생성 ─────────────────────────────────────
+        // 종류마다 계기판에 보이는 정보와 매뉴얼의 정보가 반드시 나뉘도록 만든다.
+        function makeTask() {
+            const kind = pick(['code', 'wire', 'valve']);
+
+            if (kind === 'code') {
+                const digits = Array.from({ length: 4 }, () => randInt(0, 9));
+                const symbol = pick(SYMBOLS);
+                const color = pick(COLORS);
+                const answer = (digits[SYMBOL_SLOT[symbol]] + COLOR_SHIFT[color]) % 10;
+                return {
+                    kind,
+                    readout: `${symbol}  ${color} 표시등\n코드 ${digits.join(' ')}`,
+                    hint: '기호 판독반과 보정반의 지시를 순서대로 따르세요',
+                    input: 'keypad',
+                    answer: String(answer)
+                };
+            }
+
+            if (kind === 'wire') {
+                const letter = pick(Object.keys(WIRE_RULE));
+                return {
+                    kind,
+                    readout: `회로 ${letter}\n연결선 4가닥 대기 중`,
+                    hint: '배선반이 알려 주는 색의 선을 자르세요',
+                    input: 'options',
+                    options: COLORS.map(c => `${c} 선`),
+                    answer: `${WIRE_RULE[letter]} 선`
+                };
+            }
+
+            const pressure = randInt(0, 120);
+            const rule = VALVE_RULE.find(r => pressure <= r.max);
+            return {
+                kind,
+                readout: `압력 ${pressure} kPa`,
+                hint: '압력반이 알려 주는 조작을 고르세요',
+                input: 'options',
+                options: VALVE_RULE.map(r => r.action),
+                answer: rule.action
+            };
+        }
+
+        function startMission() {
+            showScreen('screen-play');
+            renderProgress();
+            nextTask();
+            clearInterval(clockTimer);
+            clockTimer = setInterval(tick, 1000);
+            renderClock();
+        }
+
+        function tick() {
+            remaining--;
+            renderClock();
+            if (remaining <= 0) endGame(false, '시간이 다 되었습니다.');
+        }
+
+        function renderClock() {
+            const el = document.getElementById('clock');
+            const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+            const s = String(remaining % 60).padStart(2, '0');
+            el.textContent = `${m}:${s}`;
+            el.classList.toggle('urgent', remaining <= 60);
+        }
+
+        function renderProgress() {
+            const el = document.getElementById('progress');
+            el.innerHTML = '';
+            for (let i = 0; i < TOTAL_STEPS; i++) {
+                const pip = document.createElement('i');
+                pip.className = 'pip' + (i < step ? ' done' : i === step ? ' current' : '');
+                el.appendChild(pip);
+            }
+            document.getElementById('step-count').textContent = `${Math.min(step + 1, TOTAL_STEPS)} / ${TOTAL_STEPS}`;
+            document.getElementById('alarm').textContent = `${alarms} / ${MAX_ALARMS}`;
+        }
+
+        function nextTask() {
+            currentTask = makeTask();
+            document.getElementById('readout').textContent = currentTask.readout;
+            document.getElementById('task-hint').textContent = currentTask.hint;
+            document.getElementById('feedback').textContent = '';
+            renderInput();
+            renderProgress();
+        }
+
+        function renderInput() {
+            const area = document.getElementById('input-area');
+            area.innerHTML = '';
+
+            if (currentTask.input === 'keypad') {
+                const pad = document.createElement('div');
+                pad.className = 'keypad';
+                for (let n = 1; n <= 9; n++) pad.appendChild(makeKey(String(n)));
+                pad.appendChild(document.createElement('span'));
+                pad.appendChild(makeKey('0'));
+                area.appendChild(pad);
+                return;
+            }
+
+            const box = document.createElement('div');
+            box.className = 'options';
+            currentTask.options.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = 'option';
+                btn.textContent = opt;
+                btn.onclick = () => submit(opt);
+                box.appendChild(btn);
+            });
+            area.appendChild(box);
+        }
+
+        function makeKey(label) {
+            const btn = document.createElement('button');
+            btn.textContent = label;
+            btn.onclick = () => submit(label);
+            return btn;
+        }
+
+        function submit(value) {
+            if (!currentTask) return;
+            const fb = document.getElementById('feedback');
+
+            if (value === currentTask.answer) {
+                step++;
+                fb.textContent = '절차 통과';
+                fb.className = 'feedback ok';
+                if (step >= TOTAL_STEPS) return endGame(true);
+                setTimeout(nextTask, 700);
+                currentTask = null;
+                renderProgress();
+                return;
+            }
+
+            alarms++;
+            // 오답은 시간도 깎는다. 찍어서 넘기는 것을 막기 위해서다.
+            remaining = Math.max(0, remaining - 30);
+            fb.textContent = `경보 발생! 30초 차감 (${alarms}/${MAX_ALARMS})`;
+            fb.className = 'feedback bad';
+            renderClock();
+            renderProgress();
+            if (alarms >= MAX_ALARMS) endGame(false, '경보가 세 번 울려 시스템이 잠겼습니다.');
+        }
+
+        function endGame(won, reason) {
+            clearInterval(clockTimer);
+            currentTask = null;
+            const line = document.getElementById('result-line');
+            line.textContent = won ? '✅ 절차 완료 — 탈출 성공!' : '❌ 임무 실패';
+            line.className = 'result-line ' + (won ? 'ok' : 'bad');
+            const used = TIME_LIMIT - remaining;
+            document.getElementById('result-detail').textContent = won
+                ? `${Math.floor(used / 60)}분 ${used % 60}초 만에 절차 ${TOTAL_STEPS}개를 모두 통과했습니다.`
+                : `${reason} 절차 ${step} / ${TOTAL_STEPS}까지 진행했습니다.`;
+            showScreen('screen-result');
+        }
+    </script>
+</body>
+
+</html>
