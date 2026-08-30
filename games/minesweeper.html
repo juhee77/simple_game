@@ -121,7 +121,7 @@
             box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
         }
     </style>
-    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <script src="../scripts/game-common.js?v=b7c7301f"></script>
 </head>
 
 <body>
@@ -428,6 +428,7 @@
         function endGame(won) {
             gameOver = true;
             clearInterval(timerInterval);
+            if (won) markGameCompleted('minesweeper');   // 오늘의 도전 (승리만 인정)
 
             // Reveal all mines
             for (let i = 0; i < ROWS; i++) {

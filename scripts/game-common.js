@@ -32,6 +32,24 @@ function saveBestRecord(key, value, lowerIsBetter = true) {
     return better;
 }
 
+// ── 오늘의 도전 ────────────────────────────────────────────
+// 허브(daily-challenge)가 "이 게임을 오늘 실제로 끝냈는지" 알아야 하는데,
+// 게임마다 페이지가 따로라 상태를 공유할 방법이 없다. 그래서 각 게임이
+// 완료 시점에 여기로 날짜를 남기고, 허브는 그 날짜만 읽는다.
+// 자기 신고 버튼 대신 실제 완료를 신호로 쓰기 위한 장치다.
+function todayKey(date = new Date()) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function markGameCompleted(slug) {
+    try { localStorage.setItem(`daily-play:${slug}`, todayKey()); } catch { /* 저장 실패는 무시 */ }
+}
+
+function gameCompletedToday(slug) {
+    try { return localStorage.getItem(`daily-play:${slug}`) === todayKey(); } catch { return false; }
+}
+
 // ── 규칙 안내 ──────────────────────────────────────────────
 // 게임 대부분에 규칙 화면이 없어, 오프라인에서 폰을 넘기며 할 때 진행이 자주 막혔다.
 // 각 게임은 <script type="application/json" id="game-rules">에 규칙만 선언하고,

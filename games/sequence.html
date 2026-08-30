@@ -63,7 +63,7 @@
             font-weight: 700;
         }
     </style>
-    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <script src="../scripts/game-common.js?v=b7c7301f"></script>
 </head>
 
 <body>
@@ -253,6 +253,7 @@
 
         function gameOver() {
             acceptingInput = false;
+            markGameCompleted('sequence');   // 오늘의 도전
             setPadsDisabled(true);
 
             if (level > bestLevel) {

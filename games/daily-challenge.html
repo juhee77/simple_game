@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 도전 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=b7c7301f"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: rgba(255, 255, 255, .05);
+            --border: rgba(255, 255, 255, .14);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --done: #4ade80;
+            --accent: #fbbf24;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 44px 0 2px;
+            background: linear-gradient(135deg, #fbbf24, #4ade80);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .today { color: var(--muted); font-size: .88rem; margin-bottom: 18px; }
+
+        .wrap { width: 100%; max-width: 460px; }
+
+        .streak-box {
+            display: flex;
+            gap: 14px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+        }
+
+        .streak-box div { flex: 1; text-align: center; }
+        .streak-box .label { display: block; font-size: .68rem; color: var(--muted); }
+        .streak-box .value { font-size: 1.5rem; font-weight: 800; }
+        #streak-now { color: var(--accent); }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .bar {
+            flex: 1;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, .1);
+            overflow: hidden;
+        }
+
+        .bar span {
+            display: block;
+            height: 100%;
+            border-radius: 5px;
+            background: linear-gradient(90deg, #fbbf24, #4ade80);
+            transition: width .4s ease;
+        }
+
+        .progress-row .count { font-size: .9rem; font-weight: 800; color: var(--muted); white-space: nowrap; }
+
+        .card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            margin-bottom: 10px;
+            border-radius: 18px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: inherit;
+            transition: transform .2s ease, border-color .2s ease;
+        }
+
+        .card:hover { transform: translateX(4px); border-color: rgba(251, 191, 36, .5); }
+        .card.done { border-color: rgba(74, 222, 128, .45); background: rgba(74, 222, 128, .09); }
+
+        .card .icon { font-size: 2rem; width: 44px; text-align: center; flex-shrink: 0; }
+        .card .body { flex: 1; min-width: 0; }
+        .card .name { font-size: 1.05rem; font-weight: 800; }
+        .card .goal { font-size: .82rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+
+        .card .state {
+            font-size: .8rem;
+            font-weight: 800;
+            white-space: nowrap;
+            color: var(--muted);
+        }
+
+        .card.done .state { color: var(--done); }
+
+        .celebrate {
+            display: none;
+            text-align: center;
+            padding: 22px;
+            margin-bottom: 14px;
+            border-radius: 18px;
+            background: rgba(74, 222, 128, .12);
+            border: 1px solid rgba(74, 222, 128, .4);
+        }
+
+        .celebrate.show { display: block; }
+        .celebrate .stamp { font-size: 2.6rem; }
+        .celebrate h2 { font-size: 1.2rem; margin: 6px 0 4px; color: var(--done); }
+        .celebrate p { color: var(--muted); font-size: .88rem; line-height: 1.6; }
+
+        .history { margin-top: 20px; }
+        .history h3 { font-size: .9rem; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
+        .dots { display: flex; gap: 8px; }
+
+        .dot {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+            font-size: .68rem;
+            color: var(--muted);
+        }
+
+        .dot.done { background: rgba(74, 222, 128, .16); border-color: rgba(74, 222, 128, .4); color: var(--done); }
+        .dot .day { display: block; font-size: 1.05rem; margin-bottom: 2px; }
+
+        .note {
+            margin-top: 20px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: .8rem;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>🗓️ 오늘의 도전</h1>
+    <p class="today" id="today-label"></p>
+
+    <div class="wrap">
+        <div class="streak-box">
+            <div><span class="label">연속 일수</span><span class="value" id="streak-now">0</span></div>
+            <div><span class="label">최고 연속</span><span class="value" id="streak-best">0</span></div>
+            <div><span class="label">완료한 날</span><span class="value" id="total-days">0</span></div>
+        </div>
+
+        <div class="celebrate" id="celebrate">
+            <div class="stamp">🏅</div>
+            <h2>오늘의 도장을 찍었습니다!</h2>
+            <p id="celebrate-desc"></p>
+        </div>
+
+        <div class="progress-row">
+            <div class="bar"><span id="bar-fill" style="width:0%"></span></div>
+            <span class="count" id="progress-count">0 / 3</span>
+        </div>
+
+        <div id="challenge-list"></div>
+
+        <div class="history">
+            <h3>최근 7일</h3>
+            <div class="dots" id="history-dots"></div>
+        </div>
+
+        <p class="note">
+            도전 3종은 <strong>날짜마다 정해져</strong> 있어 매일 바뀝니다. 같은 날이면 어느 기기에서든 같은 세 개가 나옵니다.<br>
+            각 게임을 <strong>한 판 끝내면</strong> 자동으로 완료 처리됩니다. 이기지 못해도 끝까지 진행하면 인정됩니다
+            (지뢰찾기만 승리해야 합니다).
+        </p>
+    </div>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "오늘의 도전",
+ "players": "1인",
+ "time": "약 10분",
+ "goal": "매일 바뀌는 미니게임 3종을 모두 끝내고 연속 기록을 쌓으세요.",
+ "steps": [
+  "오늘의 도전 3종이 날짜에 따라 자동으로 정해집니다.",
+  "카드를 눌러 게임으로 이동한 뒤 한 판을 끝까지 진행합니다.",
+  "돌아오면 완료 표시가 자동으로 켜집니다. 따로 체크할 필요가 없습니다.",
+  "3종을 모두 끝내면 그날의 도장을 받고 연속 일수가 1 올라갑니다.",
+  "하루라도 건너뛰면 연속 일수는 다시 1부터 시작합니다."
+ ],
+ "tips": [
+  "대부분의 게임은 이기지 못해도 한 판을 끝내면 인정됩니다.",
+  "지뢰찾기만 예외로 승리해야 완료 처리됩니다.",
+  "기록은 이 기기에만 저장됩니다."
+ ]
+}
+</script>
+
+    <script>
+        // 후보 풀은 '혼자서', '짧게', '끝이 분명한' 게임만 넣는다.
+        // 각 게임은 완료 시점에 markGameCompleted(slug)를 호출하도록 손봐 두었다.
+        const POOL = [
+            { slug: 'hangul-wordle', icon: '🟩', name: '한글 워들', goal: '두 글자 단어를 여섯 번 안에 맞히기' },
+            { slug: 'nonogram', icon: '🧩', name: '노노그램', goal: '숫자 힌트로 픽셀 그림 완성하기' },
+            { slug: 'sokoban', icon: '📦', name: '창고지기', goal: '상자를 목표 지점으로 밀어 넣기' },
+            { slug: 'math', icon: '🔢', name: '1분 산수', goal: '60초 안에 최대한 많이 계산하기' },
+            { slug: 'sequence', icon: '🎯', name: '순서 기억', goal: '빛나는 순서를 그대로 따라 누르기' },
+            { slug: 'stroop', icon: '🎨', name: '색상 혼란 테스트', goal: '단어 뜻 말고 글자 색 고르기' },
+            { slug: 'sliding-puzzle', icon: '🔢', name: '슬라이딩 퍼즐', goal: '빈칸을 밀어 숫자 정렬하기' },
+            { slug: 'memory', icon: '🃏', name: '카드 뒤집기', goal: '숨겨진 카드의 짝 모두 찾기' },
+            { slug: 'minesweeper', icon: '💣', name: '지뢰찾기', goal: '지뢰를 피해 모든 칸 열기' },
+            { slug: 'typing-racer', icon: '⌨️', name: '타이핑 레이서', goal: '문장을 정확하고 빠르게 치기' },
+            { slug: 'whack', icon: '🔨', name: '두더지 잡기', goal: '제한 시간 안에 최대한 많이 잡기' }
+        ];
+
+        const STATE_KEY = 'daily-hub-state';
+
+        // 날짜에서 안정적인 난수를 만든다. 같은 날이면 어느 기기에서든 같은 3종이 나온다.
+        function dateSeed(key) {
+            let h = 2166136261;
+            for (const ch of key) {
+                h ^= ch.charCodeAt(0);
+                h = Math.imul(h, 16777619);
+            }
+            return h >>> 0;
+        }
+
+        // 시드 기반 Fisher-Yates. Math.random을 쓰면 새로고침마다 바뀌어 버린다.
+        function pickThree(key) {
+            let seed = dateSeed(key);
+            const next = () => {
+                seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+                return seed / 4294967296;
+            };
+            const pool = [...POOL];
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(next() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            return pool.slice(0, 3);
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STATE_KEY);
+                const s = raw ? JSON.parse(raw) : null;
+                if (s && typeof s === 'object') {
+                    return {
+                        last: typeof s.last === 'string' ? s.last : null,
+                        streak: Number(s.streak) || 0,
+                        best: Number(s.best) || 0,
+                        history: Array.isArray(s.history) ? s.history.slice(-40) : []
+                    };
+                }
+            } catch { /* 접근이 막혀도 화면은 떠야 한다 */ }
+            return { last: null, streak: 0, best: 0, history: [] };
+        }
+
+        function saveState(s) {
+            try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch { /* 무시 */ }
+        }
+
+        function shiftDate(key, delta) {
+            const [y, m, d] = key.split('-').map(Number);
+            const dt = new Date(y, m - 1, d + delta);
+            return todayKey(dt);
+        }
+
+        // 오늘 3종을 모두 끝냈다면 도장을 찍는다. 하루 걸렀으면 연속 기록은 끊긴다.
+        function stampIfComplete(state, today, allDone) {
+            if (!allDone || state.last === today) return state;
+            state.streak = state.last === shiftDate(today, -1) ? state.streak + 1 : 1;
+            state.last = today;
+            if (state.streak > state.best) state.best = state.streak;
+            if (!state.history.includes(today)) state.history.push(today);
+            state.history = state.history.slice(-40);
+            saveState(state);
+            return state;
+        }
+
+        function render() {
+            const today = todayKey();
+            const picks = pickThree(today);
+            const doneFlags = picks.map(p => gameCompletedToday(p.slug));
+            const doneCount = doneFlags.filter(Boolean).length;
+            const allDone = doneCount === picks.length;
+
+            const state = stampIfComplete(loadState(), today, allDone);
+
+            const dt = new Date();
+            const weekday = ['일', '월', '화', '수', '목', '금', '토'][dt.getDay()];
+            document.getElementById('today-label').textContent =
+                `${dt.getFullYear()}년 ${dt.getMonth() + 1}월 ${dt.getDate()}일 (${weekday})`;
+
+            document.getElementById('streak-now').textContent = state.streak;
+            document.getElementById('streak-best').textContent = state.best;
+            document.getElementById('total-days').textContent = state.history.length;
+
+            document.getElementById('bar-fill').style.width = `${(doneCount / picks.length) * 100}%`;
+            document.getElementById('progress-count').textContent = `${doneCount} / ${picks.length}`;
+
+            const list = document.getElementById('challenge-list');
+            list.innerHTML = '';
+            picks.forEach((p, i) => {
+                const card = document.createElement('a');
+                card.className = 'card' + (doneFlags[i] ? ' done' : '');
+                card.href = `${p.slug}.html`;
+
+                const icon = document.createElement('div');
+                icon.className = 'icon';
+                icon.textContent = p.icon;
+
+                const body = document.createElement('div');
+                body.className = 'body';
+                const name = document.createElement('div');
+                name.className = 'name';
+                name.textContent = p.name;
+                const goal = document.createElement('div');
+                goal.className = 'goal';
+                goal.textContent = p.goal;
+                body.append(name, goal);
+
+                const stateEl = document.createElement('div');
+                stateEl.className = 'state';
+                stateEl.textContent = doneFlags[i] ? '완료 ✓' : '도전하기 →';
+
+                card.append(icon, body, stateEl);
+                list.appendChild(card);
+            });
+
+            const celebrate = document.getElementById('celebrate');
+            celebrate.classList.toggle('show', allDone);
+            if (allDone) {
+                document.getElementById('celebrate-desc').textContent =
+                    state.streak > 1
+                        ? `${state.streak}일 연속입니다. 내일도 새 도전 3종이 기다립니다.`
+                        : '내일 다시 오면 새로운 도전 3종이 준비됩니다.';
+            }
+
+            renderHistory(state, today);
+        }
+
+        function renderHistory(state, today) {
+            const dots = document.getElementById('history-dots');
+            dots.innerHTML = '';
+            const names = ['일', '월', '화', '수', '목', '금', '토'];
+            for (let i = 6; i >= 0; i--) {
+                const key = shiftDate(today, -i);
+                const [y, m, d] = key.split('-').map(Number);
+                const dt = new Date(y, m - 1, d);
+                const dot = document.createElement('div');
+                dot.className = 'dot' + (state.history.includes(key) ? ' done' : '');
+                const day = document.createElement('span');
+                day.className = 'day';
+                day.textContent = state.history.includes(key) ? '🏅' : d;
+                dot.append(day, names[dt.getDay()]);
+                dots.appendChild(dot);
+            }
+        }
+
+        // 게임을 하고 뒤로 돌아왔을 때 곧바로 반영되도록 한다.
+        // 캐시에서 복원된 페이지는 load가 다시 돌지 않으므로 pageshow도 함께 듣는다.
+        window.addEventListener('pageshow', render);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) render();
+        });
+
+        render();
+    </script>
+</body>
+
+</html>

@@ -253,7 +253,7 @@
 
 
     </style>
-    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <script src="../scripts/game-common.js?v=b7c7301f"></script>
 </head>
 <body>
 
@@ -619,6 +619,7 @@
 
             if (isSolved) {
                 // Success!
+                markGameCompleted('nonogram');   // 오늘의 도전
                 clearInterval(elapsedTimer);
                 const isNewRecord = saveBestRecord(bestKey(), elapsed);
                 renderBestTime();

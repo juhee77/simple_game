@@ -75,7 +75,7 @@
             color: var(--accent-primary);
         }
     </style>
-    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <script src="../scripts/game-common.js?v=b7c7301f"></script>
 </head>
 
 <body>
@@ -219,6 +219,7 @@
         function endGame() {
             isRunning = false;
             clearInterval(timer);
+            markGameCompleted('stroop');   // 오늘의 도전
             if (score > bestScore) {
                 bestScore = score;
                 localStorage.setItem('stroop-best-score', String(bestScore));

@@ -169,7 +169,7 @@
             }
         }
     </style>
-    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <script src="../scripts/game-common.js?v=b7c7301f"></script>
 </head>
 
 <body>
@@ -325,6 +325,7 @@
 
         function endGame() {
             isRunning = false;
+            markGameCompleted('whack');   // 오늘의 도전
             clearTimeout(spawnTimeout);
             clearInterval(countdownInterval);
             clearActiveHole();
