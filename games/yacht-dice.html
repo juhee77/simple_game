@@ -258,6 +258,7 @@
         .btn-modal:hover { transform: scale(1.05); }
 
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 <body>
 
@@ -573,7 +574,7 @@
 
         function selectCategory(catId) {
             if (rollsLeft === 3) {
-                alert('주사위를 최소 한 번은 굴려야 점수를 선택할 수 있습니다!');
+                gameAlert('주사위를 최소 한 번은 굴려야 점수를 선택할 수 있습니다!');
                 return;
             }
             if (scores[currentPlayer][catId] !== undefined) return; // Already filled
@@ -712,6 +713,5 @@
  ]
 }
 </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

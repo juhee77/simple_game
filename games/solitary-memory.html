@@ -143,6 +143,7 @@
         .memory-log { font-size: 0.85rem; color: #94a3b8; font-style: italic; margin-top: 15px; text-align: left; border-top: 1px solid var(--border); padding-top: 10px; }
 
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 <body>
 
@@ -402,8 +403,8 @@
         function closeOverlay() { document.getElementById('puzzle-overlay').classList.remove('active'); }
 
         function finishGame() {
-            alert("축하합니다! 당신은 자신의 기억을 되찾고 실험실을 탈출했습니다.");
-            location.href = '../index.html';
+            gameAlert("축하합니다! 당신은 자신의 기억을 되찾고 실험실을 탈출했습니다.")
+                .then(() => { location.href = '../index.html'; });
         }
 
         async function openGDD() {
@@ -419,6 +420,5 @@
             showMsg("지독한 두통과 함께 눈을 떴습니다. 이곳은 어디일까요?");
         };
     </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

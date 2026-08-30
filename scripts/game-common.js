@@ -38,6 +38,54 @@ function saveBestRecord(key, value, lowerIsBetter = true) {
 // 버튼과 모달은 여기서 한 번만 만든다.
 // 게임마다 스타일시트가 제각각이라(공용 CSS를 안 쓰는 페이지가 많다)
 // 규칙 패널 스타일은 스크립트에서 한 번만 주입한다.
+
+// ── 알림 ───────────────────────────────────────────────────
+// 게임 결과와 입력 검증에 브라우저 기본 alert()를 쓰고 있었다. alert은 화면을
+// 가리고 모바일에서 흐름을 끊으므로, 게임 톤에 맞는 모달로 대체한다.
+// 닫으면 resolve되는 Promise를 돌려주므로 "알림 후 이동"도 그대로 표현할 수 있다.
+function gameAlert(message) {
+    injectRulesStyles();   // 모달 스타일을 공유한다
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'rules-overlay';
+        overlay.setAttribute('role', 'alertdialog');
+        overlay.setAttribute('aria-modal', 'true');
+
+        const box = document.createElement('div');
+        box.className = 'rules-box game-alert-box';
+
+        const text = document.createElement('p');
+        text.className = 'game-alert-text';
+        text.textContent = String(message ?? '');
+        box.appendChild(text);
+
+        const ok = document.createElement('button');
+        ok.type = 'button';
+        ok.className = 'rules-close';
+        ok.textContent = '확인';
+        box.appendChild(ok);
+        overlay.appendChild(box);
+
+        let settled = false;
+        const close = () => {
+            if (settled) return;
+            settled = true;
+            document.removeEventListener('keydown', onKey);
+            overlay.remove();
+            resolve();
+        };
+        const onKey = (e) => {
+            if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); close(); }
+        };
+        ok.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+        document.addEventListener('keydown', onKey);
+
+        document.body.appendChild(overlay);
+        ok.focus();
+    });
+}
+
 function injectRulesStyles() {
     if (document.getElementById('rules-panel-styles')) return;
     const style = document.createElement('style');
@@ -68,6 +116,8 @@ function injectRulesStyles() {
  background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:1rem;
  font-weight:700;font-family:inherit;cursor:pointer}
 .rules-close:focus-visible{outline:3px solid #a5b4fc;outline-offset:2px}
+.game-alert-box{max-width:360px;text-align:center}
+.game-alert-text{margin:4px 0 8px;font-size:1.05rem;line-height:1.65;color:#f1f5f9;white-space:pre-line}
 @media (max-width:480px){.rules-box{padding:20px}.rules-fab{right:12px;bottom:12px}}
 `;
     document.head.appendChild(style);

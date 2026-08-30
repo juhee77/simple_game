@@ -170,6 +170,7 @@
         }
 
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 <body>
 
@@ -235,6 +236,8 @@
                 if (!this.ctx) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 }
+                // iOS는 컨텍스트가 suspended로 시작하므로 제스처마다 깨워 준다.
+                if (this.ctx.state === 'suspended') this.ctx.resume();
             }
             playClick() {
                 this.init();
@@ -693,6 +696,5 @@
  ]
 }
 </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

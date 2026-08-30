@@ -53,6 +53,7 @@
         .correct { color: #4ECDC4; }
         .wrong { color: #FF6B6B; }
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 <body>
 
@@ -173,7 +174,7 @@
             drawTime = parseInt(document.getElementById('input-time').value);
             
             if (totalPlayers < 3) {
-                alert("최소 3명 이상 필요합니다.");
+                gameAlert("최소 3명 이상 필요합니다.");
                 return;
             }
 
@@ -329,6 +330,5 @@
  "time": "약 10분"
 }
 </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

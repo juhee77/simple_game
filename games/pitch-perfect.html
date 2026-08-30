@@ -148,6 +148,7 @@
 
     canvas{touch-action:manipulation}
 </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 <body>
 
@@ -391,7 +392,7 @@
             document.getElementById('result-overlay').classList.remove('active');
             if (currentRound >= 5) {
                 // Game Finished
-                alert(`게임 완료! 최종 음감 점수: ${totalScore} / 5000점`);
+                gameAlert(`게임 완료! 최종 음감 점수: ${totalScore} / 5000점`);
                 resetGame();
             } else {
                 currentRound++;
@@ -480,6 +481,5 @@
  "time": "약 5분"
 }
 </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

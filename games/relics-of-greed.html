@@ -261,6 +261,7 @@
         }
 
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 <body>
 
@@ -699,7 +700,7 @@
                 // In our model, all unrevealed cards go back to hand.
             }
             
-            alert(`${p.name} 해골을 뽑았습니다! 카드를 1장 잃습니다.`);
+            gameAlert(`${p.name} 해골을 뽑았습니다! 카드를 1장 잃습니다.`);
             
             endRound(false);
         }
@@ -708,7 +709,7 @@
             const p = players[turnIndex];
             p.score++;
             updatePlayerUI(p.id);
-            alert(`${p.name} 도전 성공! 승점 1점을 얻습니다.`);
+            gameAlert(`${p.name} 도전 성공! 승점 1점을 얻습니다.`);
             
             if (p.score >= 2) {
                 // Win game
@@ -767,6 +768,5 @@
 
         window.onload = initGame;
     </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

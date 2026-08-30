@@ -197,6 +197,7 @@
         .shaking { animation: shake 0.2s infinite; }
 
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 <body>
 
@@ -395,7 +396,7 @@
         async function openGDD() {
             // Re-use standard GDD viewer logic if needed, but manual is more important here
             const gddContent = await fetch('./docs/critical-flight-gdd.md').then(r => r.text());
-            alert("기획서는 'EMERGENCY MANUAL' 버튼을 통해 인게임에서 확인 가능합니다.");
+            gameAlert("기획서는 'EMERGENCY MANUAL' 버튼을 통해 인게임에서 확인 가능합니다.");
         }
 
         window.onload = initGame;
@@ -417,6 +418,5 @@
  "time": "약 15분"
 }
 </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

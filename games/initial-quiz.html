@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>초성 퀴즈 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css?v=2">
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -258,6 +258,7 @@
             flex: 1;
         }
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 
 <body>
@@ -471,7 +472,7 @@
             const name = input.value.trim();
             if (!name) return;
             if (players.some(p => p.name === name)) {
-                alert('이미 등록된 이름입니다.');
+                gameAlert('이미 등록된 이름입니다.');
                 return;
             }
             players.push({ name, score: 0 });
@@ -506,7 +507,7 @@
         // Game Controls
         function startGame() {
             if (activeCategories.length === 0) {
-                alert('최소 하나의 카테고리를 선택해야 합니다.');
+                gameAlert('최소 하나의 카테고리를 선택해야 합니다.');
                 return;
             }
             
@@ -522,7 +523,7 @@
             shuffle(questionPool);
 
             if (questionPool.length === 0) {
-                alert('질문 데이터베이스가 비어있습니다.');
+                gameAlert('질문 데이터베이스가 비어있습니다.');
                 return;
             }
 
@@ -543,7 +544,7 @@
 
         function startQuestion() {
             if (currentQuestionIndex >= questionPool.length) {
-                alert('모든 문제를 풀었습니다! 게임이 리셋됩니다.');
+                gameAlert('모든 문제를 풀었습니다! 게임이 리셋됩니다.');
                 resetGame();
                 return;
             }
@@ -641,7 +642,6 @@
  "time": "약 15분"
 }
 </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

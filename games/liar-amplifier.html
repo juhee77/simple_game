@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>거짓말 증폭기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css?v=2">
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -216,6 +216,7 @@
             }
         }
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 
 <body>
@@ -464,7 +465,7 @@
         function submitLine() {
             const addition = lineInput.value.trim();
             if (!addition) {
-                alert('덧붙일 한 줄을 입력하세요.');
+                gameAlert('덧붙일 한 줄을 입력하세요.');
                 return;
             }
 
@@ -533,7 +534,6 @@
  "time": "약 10분"
 }
 </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>네온 잰말놀이 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css?v=2">
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
@@ -419,6 +419,7 @@
             }
         }
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 <body>
     <div class="game-container">
@@ -823,7 +824,7 @@
                 // Just use the first player
                 players = [players[0]];
             } else if (players.length < 2) {
-                alert("참가자는 최소 2명이어야 합니다!");
+                gameAlert("참가자는 최소 2명이어야 합니다!");
                 return;
             }
 
@@ -1176,6 +1177,5 @@
  ]
 }
 </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

@@ -173,6 +173,7 @@
         .btn-main:hover { transform: scale(1.05); }
 
     </style>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
 </head>
 <body>
 
@@ -294,7 +295,7 @@
 
         function placeBet(amount) {
             if (p1.chips < amount || p2.chips < amount) {
-                alert('칩이 부족합니다!');
+                gameAlert('칩이 부족합니다!');
                 return;
             }
             p1.chips -= amount;
@@ -393,7 +394,7 @@
                     p1.status = 'bust';
                     // Auto Stand and shift
                     activePlayer = 'p2';
-                    alert('플레이어 1 버스트(Bust)!');
+                    gameAlert('플레이어 1 버스트(Bust)!');
                 }
             } else if (activePlayer === 'p2') {
                 p2.hand.push(drawCard());
@@ -467,12 +468,12 @@
             document.getElementById('result-overlay').classList.remove('active');
             
             if (p1.chips <= 0) {
-                alert('플레이어 1이 파산했습니다! 플레이어 2의 최종 승리!');
+                gameAlert('플레이어 1이 파산했습니다! 플레이어 2의 최종 승리!');
                 resetGame();
                 return;
             }
             if (p2.chips <= 0) {
-                alert('플레이어 2가 파산했습니다! 플레이어 1의 최종 승리!');
+                gameAlert('플레이어 2가 파산했습니다! 플레이어 1의 최종 승리!');
                 resetGame();
                 return;
             }
@@ -522,6 +523,5 @@
  "time": "약 10분"
 }
 </script>
-<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>
