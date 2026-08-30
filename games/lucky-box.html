@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>네온 럭키 박스 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
+<link rel="stylesheet" href="../styles/game-common.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
@@ -111,6 +111,23 @@ initGame();
 }
 initGame();
 </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "네온 럭키 박스",
+ "goal": "꽝을 피해 상자를 여세요.",
+ "steps": [
+  "참가자 수를 정하고 시작합니다.",
+  "돌아가며 상자를 하나씩 엽니다.",
+  "상자 안에는 당첨이나 꽝이 들어 있습니다.",
+  "꽝을 연 사람이 벌칙을 받습니다."
+ ],
+ "tips": [
+  "벌칙 내용을 미리 정해 두면 바로 이어집니다."
+ ],
+ "players": "2~30인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

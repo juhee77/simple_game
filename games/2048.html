@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2048 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -173,6 +173,8 @@
         const GRID_SIZE = 4;
         const BEST_SCORE_KEY = '2048-best';
         const GAME_STATE_KEY = '2048-state';
+        const WIN_VALUE = 2048;
+        let winAcknowledged = false;
         const SWIPE_THRESHOLD = 30;
         const boardElement = document.getElementById('game-2048');
         let grid = [];
@@ -229,7 +231,7 @@
         }
 
         function saveGameState() {
-            localStorage.setItem(GAME_STATE_KEY, JSON.stringify({ grid, score }));
+            localStorage.setItem(GAME_STATE_KEY, JSON.stringify({ grid, score, winAcknowledged }));
         }
 
         function loadGameState() {
@@ -251,6 +253,8 @@
 
                 grid = savedState.grid.map(row => [...row]);
                 score = savedState.score;
+                // 이미 2048을 달성한 판이면 알림을 다시 띄우지 않는다.
+                winAcknowledged = savedState.winAcknowledged === true || hasReachedGoal();
                 return true;
             } catch {
                 return false;
@@ -294,7 +298,13 @@
                 updateUI();
                 saveGameState();
 
-                if (isGameOver()) {
+                if (!winAcknowledged && hasReachedGoal()) {
+                    winAcknowledged = true;
+                    saveGameState();
+                    setTimeout(() => {
+                        alert(`🎉 ${WIN_VALUE} 달성! 점수: ${score}\n계속 이어서 더 큰 타일에 도전할 수 있습니다.`);
+                    }, 200);
+                } else if (isGameOver()) {
                     setTimeout(() => alert('게임 오버! 점수: ' + score), 200);
                 }
             }
@@ -321,6 +331,10 @@
             return newLine;
         }
 
+        function hasReachedGoal() {
+            return grid.some(row => row.some(v => v >= WIN_VALUE));
+        }
+
         function isGameOver() {
             // Check for empty cells
             for (let i = 0; i < GRID_SIZE; i++) {
@@ -342,6 +356,7 @@
 
         function resetGame() {
             localStorage.removeItem(GAME_STATE_KEY);
+            winAcknowledged = false;
             initGame();
         }
 
@@ -394,7 +409,26 @@
         // Initialize
         initGame();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "2048",
+ "goal": "같은 숫자를 합쳐 2048 타일을 만드세요.",
+ "steps": [
+  "방향키 또는 스와이프로 모든 타일을 한 방향으로 밉니다.",
+  "맞닿은 같은 숫자 두 개가 만나면 합쳐지며 점수가 오릅니다.",
+  "움직일 때마다 빈칸에 2 또는 4가 새로 생깁니다.",
+  "2048을 만들면 달성 알림이 뜨고, 원하면 계속 이어서 더 큰 타일에 도전할 수 있습니다.",
+  "더 이상 움직일 수 없으면 게임이 끝납니다."
+ ],
+ "tips": [
+  "한쪽 구석에 가장 큰 타일을 고정해 두면 오래 버틸 수 있습니다.",
+  "최고 점수와 진행 중인 판은 자동 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

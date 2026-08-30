@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>무작위 팀/조 나누기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -408,8 +408,9 @@
 
         function parseNames() {
             const val = document.getElementById('names-input').value;
-            // Split by comma, space, or newline and clean empty items
-            return val.split(/[,\s\n]+/)
+            // 줄바꿈과 쉼표만 구분자로 쓴다. 공백까지 나누면 "김 철수"나
+            // "John Smith" 같은 이름이 두 사람으로 쪼개지기 때문이다.
+            return val.split(/[,\n\r]+/)
                 .map(n => n.trim())
                 .filter(n => n.length > 0);
         }
@@ -502,11 +503,17 @@
                 members: []
             }));
 
-            // Assign names round-robin to keep sizes even
-            shuffled.forEach((name, idx) => {
-                const teamIdx = idx % numTeams;
-                teams[teamIdx].members.push(name);
-            });
+            if (splitMode === 'members') {
+                // 요청한 인원수를 그대로 지키도록 앞에서부터 splitValue명씩 채운다.
+                shuffled.forEach((name, idx) => {
+                    teams[Math.min(Math.floor(idx / splitValue), numTeams - 1)].members.push(name);
+                });
+            } else {
+                // 팀 개수를 지정한 경우엔 인원이 고르게 퍼지도록 번갈아 배정한다.
+                shuffled.forEach((name, idx) => {
+                    teams[idx % numTeams].members.push(name);
+                });
+            }
 
             // Assign Names
             const funNamesEnabled = document.getElementById('funny-names-checkbox').checked;
@@ -586,7 +593,24 @@
             });
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "무작위 팀 나누기",
+ "goal": "명단을 넣으면 무작위로 팀을 짜 줍니다.",
+ "steps": [
+  "이름 목록을 줄바꿈이나 쉼표로 구분해 붙여넣습니다. 이름 안의 공백은 유지됩니다.",
+  "'총 N개 팀' 또는 '한 팀당 N명' 중 방식을 고릅니다.",
+  "팀 나누기를 누르면 셔플 후 결과가 나옵니다.",
+  "복사 버튼으로 결과를 단톡방에 붙여넣을 수 있습니다."
+ ],
+ "tips": [
+  "재미있는 팀 이름 옵션을 켜면 무작위 팀명이 붙습니다."
+ ],
+ "players": "2~60인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

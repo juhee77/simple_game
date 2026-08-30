@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Shadow Syndicate</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 <style>
   :root {
     --bg: #1a1512;
@@ -109,6 +109,8 @@
 </style>
 </head>
 <body>
+<a href="../index.html" class="back-btn" style="position:fixed;top:14px;left:14px;z-index:9999;display:inline-block;padding:8px 14px;border-radius:999px;font-size:0.85rem;font-weight:700;text-decoration:none;background:rgba(0,0,0,0.65);color:#fff;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(4px);">← 메인</a>
+
 
   <!-- Overlay Screens -->
   <div id="screen-intro" class="overlay-screen">
@@ -201,6 +203,8 @@
   </div>
 
 <script>
+// sort(()=>Math.random()-.5)는 균등 분포가 아니므로 Fisher-Yates로 섞는다
+function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 // ==========================================
 // GAME STATE & DATA
 // ==========================================
@@ -261,7 +265,7 @@ function generateDeck(eraNum) {
   }
   
   // Shuffle
-  return cards.sort(() => Math.random() - 0.5).slice(0, 15);
+  return shuffleArray(cards).slice(0, 15);
 }
 
 // ==========================================
@@ -555,5 +559,6 @@ async function openGDD() {
 function closeGDD() { document.getElementById('gdd-modal').classList.remove('open'); }
 window.onclick = function(e) { if(e.target == document.getElementById('gdd-modal')) closeGDD(); }
 </script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

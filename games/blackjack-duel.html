@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>블랙잭 듀얼 - Blackjack Duel</title>
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
@@ -504,5 +504,24 @@
         showBetOverlay();
 
     </script>
+<script type="application/json" id="game-rules">
+{
+ "title": "블랙잭 듀얼",
+ "goal": "21을 넘기지 않으면서 상대보다 높은 합을 만드세요.",
+ "steps": [
+  "매 라운드 칩을 베팅합니다.",
+  "카드를 더 받을지(히트) 멈출지(스탠드) 고릅니다.",
+  "합이 21을 넘으면 그 라운드는 즉시 패배(버스트)입니다.",
+  "둘 다 멈추면 21에 더 가까운 쪽이 라운드를 가져갑니다.",
+  "상대의 칩을 모두 가져오면 승리합니다."
+ ],
+ "tips": [
+  "에이스는 상황에 따라 1 또는 11로 계산됩니다."
+ ],
+ "players": "2인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

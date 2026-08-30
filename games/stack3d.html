@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>큐브 스택 3D - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -492,7 +492,25 @@
         updateStats();
         drawScene();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "큐브 스택 3D",
+ "goal": "움직이는 블록을 정확히 겹쳐 탑을 높이 쌓으세요.",
+ "steps": [
+  "블록이 좌우로 움직입니다.",
+  "스페이스·엔터·클릭·터치로 블록을 떨어뜨립니다.",
+  "아래 블록과 어긋난 부분은 잘려 나갑니다.",
+  "블록이 완전히 빗나가면 게임이 끝납니다."
+ ],
+ "tips": [
+  "딱 맞게 쌓으면 잘리지 않아 다음 블록이 넓게 유지됩니다.",
+  "최고 높이는 자동 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

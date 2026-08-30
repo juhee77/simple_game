@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>합계 100 만들기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -535,7 +535,25 @@
             showScreen('setup');
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "합계 100 만들기",
+ "goal": "100을 넘기지 않으면서 100에 가장 가깝게 만드세요.",
+ "steps": [
+  "각자 비밀 숫자 손패를 받습니다.",
+  "폰을 돌려가며 자기 차례에 카드를 한 장 내려놓습니다.",
+  "합계가 공개되지만 누가 무엇을 냈는지는 감춰집니다.",
+  "100을 넘기면 그 사람은 탈락합니다.",
+  "마지막에 100에 가장 가까운 사람이 승리합니다."
+ ],
+ "tips": [
+  "큰 카드를 오래 들고 있으면 낼 곳이 없어집니다."
+ ],
+ "players": "2~8인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>룰렛 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -167,7 +167,8 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-    </style>
+    canvas{touch-action:manipulation}
+</style>
 </head>
 
 <body>
@@ -370,7 +371,24 @@
             drawRoulette();
         });
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "룰렛",
+ "goal": "룰렛을 돌려 무작위로 하나를 고르세요.",
+ "steps": [
+  "항목을 입력해 룰렛 칸을 채웁니다.",
+  "돌리기를 누르면 룰렛이 회전합니다.",
+  "멈춘 곳이 결과입니다.",
+  "항목을 바꿔 다시 돌릴 수 있습니다."
+ ],
+ "tips": [
+  "벌칙, 메뉴, 순서 정하기에 두루 쓸 수 있습니다."
+ ],
+ "players": "1~30인",
+ "time": "약 1분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

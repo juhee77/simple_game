@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>스네이크 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -338,7 +338,24 @@
         updateStats();
         drawBoard();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "스네이크",
+ "goal": "먹이를 먹어 몸을 최대한 길게 키우세요.",
+ "steps": [
+  "방향키나 스와이프로 방향을 바꿉니다.",
+  "먹이를 먹으면 몸이 한 칸 길어지고 점수가 오릅니다.",
+  "벽이나 자기 몸에 부딪히면 게임이 끝납니다."
+ ],
+ "tips": [
+  "가장자리를 따라 돌면 안전하게 길이를 늘릴 수 있습니다.",
+  "최고 점수는 자동 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

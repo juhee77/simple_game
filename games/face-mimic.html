@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>네온 표정 따라하기 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
+<link rel="stylesheet" href="../styles/game-common.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
@@ -47,6 +47,8 @@ h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#f472b6,
 </div>
 
 <script>
+// sort(()=>Math.random()-.5)는 균등 분포가 아니므로 Fisher-Yates로 섞는다
+function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 const emojis=['😂','😍','🤔','😱','😎','🤩','😡','🙄','🥳','🥺','😴','👽','🤡','👻','🦁','🐶'];
 let totalPlayers=4, currentPlayer=1, targetEmoji='', phase='show';
 
@@ -95,7 +97,7 @@ function render(){
             let rand = emojis[Math.floor(Math.random()*emojis.length)];
             if(!options.includes(rand)) options.push(rand);
         }
-        options.sort(() => Math.random() - 0.5);
+        options = shuffleArray(options);
         
         container.innerHTML = `
             <p class="info" style="color:#94a3b8;margin-bottom:15px">이전 플레이어가 지었던 표정은 무엇일까요?</p>
@@ -127,6 +129,23 @@ function checkAnswer(selected){
     }
 }
 </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "네온 표정 따라하기",
+ "goal": "상대의 표정을 보고 원래 이모지를 맞히세요.",
+ "steps": [
+  "한 명이 화면의 이모지를 혼자 확인합니다.",
+  "말 없이 표정으로만 그 이모지를 흉내 냅니다.",
+  "나머지가 보기 중에서 정답을 고릅니다.",
+  "맞히면 점수를 얻고 다음 사람에게 넘깁니다."
+ ],
+ "tips": [
+  "손이나 소리는 쓰지 않기로 하면 훨씬 어려워집니다."
+ ],
+ "players": "2~30인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

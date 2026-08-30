@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>무작위 순서 정하기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -348,7 +348,8 @@
 
         function parseNames() {
             const val = document.getElementById('names-input').value;
-            return val.split(/[,\s\n]+/)
+            // 이름 안의 공백이 사라지지 않도록 줄바꿈/쉼표만 구분자로 쓴다.
+            return val.split(/[,\n\r]+/)
                 .map(n => n.trim())
                 .filter(n => n.length > 0);
         }
@@ -430,10 +431,13 @@
                 else if (rank === 2) icon = '🥈';
                 else if (rank === 3) icon = '🥉';
 
-                div.innerHTML = `
-                    <div class="rank-badge">${icon}</div>
-                    <div class="item-content">${item}</div>
-                `;
+                const badge = document.createElement('div');
+                badge.className = 'rank-badge';
+                badge.textContent = icon;
+                const content = document.createElement('div');
+                content.className = 'item-content';
+                content.textContent = item;   // 참가자 이름은 HTML로 해석하지 않는다
+                div.append(badge, content);
                 
                 // Staggered animation
                 div.style.animationDelay = `${Math.min(idx * 0.05, 1.5)}s`;
@@ -468,7 +472,24 @@
             });
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "무작위 순서 정하기",
+ "goal": "발표 순서나 벌칙 순번을 공정하게 정하세요.",
+ "steps": [
+  "이름 목록을 붙여넣거나, 참가자 수만 입력합니다(숫자 모드).",
+  "이름은 줄바꿈이나 쉼표로 구분합니다. 이름 안의 공백은 그대로 유지됩니다.",
+  "순서 뽑기를 누르면 무작위 순위가 정해집니다.",
+  "복사 버튼으로 결과를 단톡방에 바로 붙여넣을 수 있습니다."
+ ],
+ "tips": [
+  "1~3위에는 메달이 표시됩니다."
+ ],
+ "players": "2~100인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

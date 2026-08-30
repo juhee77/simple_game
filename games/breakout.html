@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>벽돌 깨기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -361,7 +361,25 @@
 
         resetGame();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "벽돌 깨기",
+ "goal": "공을 튕겨 모든 벽돌을 부수세요.",
+ "steps": [
+  "← → 방향키나 화면 드래그로 패들을 좌우로 움직입니다.",
+  "공이 패들에 맞고 튕겨 올라가 벽돌을 부숩니다.",
+  "공을 바닥으로 떨어뜨리면 생명이 줄어듭니다.",
+  "모든 벽돌을 부수면 클리어입니다."
+ ],
+ "tips": [
+  "패들 가장자리에 맞히면 공의 각도가 크게 꺾입니다.",
+  "최고 점수는 자동 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

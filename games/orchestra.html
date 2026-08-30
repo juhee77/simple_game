@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>사운드 오케스트라 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
+<link rel="stylesheet" href="../styles/game-common.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
@@ -49,6 +49,7 @@ marimba:{notes:[196,220,246.94,261.63,293.66,329.63,349.23,392],type:'triangle',
 function selectInst(name){
 currentInst=name;
 if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+if(audioCtx.state==='suspended')audioCtx.resume(); // iOS는 suspended로 시작한다
 document.getElementById('instruments').style.display='none';
 document.getElementById('back-inst').style.display='';
 const pads=document.getElementById('pads');pads.style.display='grid';
@@ -66,6 +67,23 @@ setTimeout(()=>{el.style.background=color+'40';el.style.transform=''},150);
 }
 function backToSelect(){document.getElementById('instruments').style.display='grid';document.getElementById('pads').style.display='none';document.getElementById('back-inst').style.display='none'}
 </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "사운드 오케스트라",
+ "goal": "각자 악기를 골라 함께 소리를 맞춰 보세요.",
+ "steps": [
+  "악기를 하나 고릅니다.",
+  "화면의 패드를 눌러 음을 냅니다.",
+  "여러 명이 각자 기기로 다른 악기를 골라 동시에 연주합니다.",
+  "악기 선택으로 돌아가 다른 악기로 바꿀 수 있습니다."
+ ],
+ "tips": [
+  "소리가 안 나면 화면을 한 번 터치해 주세요. 첫 터치에서 오디오가 켜집니다."
+ ],
+ "players": "1~6인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

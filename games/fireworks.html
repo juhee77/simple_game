@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>불꽃놀이 메이커 - Fireworks Maker</title>
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@800&display=swap" rel="stylesheet">
@@ -108,7 +108,8 @@
             100% { opacity: 0.3; }
         }
 
-    </style>
+    canvas{touch-action:manipulation}
+</style>
 </head>
 <body>
 
@@ -171,6 +172,8 @@
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
+            // iOS는 컨텍스트가 suspended로 시작하므로 사용자 제스처마다 깨워 준다.
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function playExplosionSound() {
@@ -389,5 +392,23 @@
         loop();
 
     </script>
+<script type="application/json" id="game-rules">
+{
+ "title": "불꽃놀이 메이커",
+ "goal": "원하는 대로 밤하늘에 불꽃을 터뜨려 보세요.",
+ "steps": [
+  "화면을 탭하면 그 위치로 불꽃이 올라갑니다.",
+  "색과 폭발 형태를 골라 바꿀 수 있습니다.",
+  "자동 발사를 켜면 계속 터집니다.",
+  "볼륨 슬라이더로 소리를 조절합니다."
+ ],
+ "tips": [
+  "승패가 없는 감상용입니다. 소리를 켜면 훨씬 좋습니다."
+ ],
+ "players": "1인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

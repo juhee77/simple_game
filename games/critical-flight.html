@@ -2,13 +2,12 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>크리티컬 플라이트 - Critical Flight</title>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Marked.js -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
         :root {
@@ -401,5 +400,23 @@
 
         window.onload = initGame;
     </script>
+<script type="application/json" id="game-rules">
+{
+ "title": "크리티컬 플라이트",
+ "goal": "서로 다른 화면을 말로 맞춰 비행기를 착륙시키세요.",
+ "steps": [
+  "두 사람이 각자 다른 역할 화면을 봅니다. 서로 화면을 보면 안 됩니다.",
+  "한 명은 조종실 계기를, 다른 한 명은 매뉴얼을 봅니다.",
+  "말로만 정보를 주고받아 어떤 조작이 필요한지 알아냅니다.",
+  "제한 시간 안에 절차를 마치면 착륙 성공입니다."
+ ],
+ "tips": [
+  "용어를 미리 통일해 두면 훨씬 빨라집니다."
+ ],
+ "players": "2인",
+ "time": "약 15분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

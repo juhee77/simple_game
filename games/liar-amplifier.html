@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>거짓말 증폭기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -516,7 +516,24 @@
             showScreen('setup');
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "거짓말 증폭기",
+ "goal": "한 줄씩 덧붙여 그럴듯한 헛소리를 완성하세요.",
+ "steps": [
+  "폰을 돌려가며 자기 차례에 이야기를 한 줄만 덧붙입니다.",
+  "차례마다 말투 미션이 주어집니다. 그 말투를 지켜야 합니다.",
+  "앞사람의 내용을 부정하지 말고 이어받습니다.",
+  "정해진 바퀴가 끝나면 전체 이야기를 소리 내어 읽습니다."
+ ],
+ "tips": [
+  "구체적인 숫자와 이름을 넣을수록 그럴듯해집니다."
+ ],
+ "players": "3~10인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

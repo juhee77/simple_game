@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>사다리 타기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -170,7 +170,8 @@
                 min-width: 40px;
             }
         }
-    </style>
+    canvas{touch-action:manipulation}
+</style>
 </head>
 
 <body>
@@ -646,7 +647,24 @@
             animating = false;
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "사다리 타기",
+ "goal": "사다리를 타고 무작위로 결과를 배정하세요.",
+ "steps": [
+  "참가자 이름을 줄바꿈이나 쉼표로 구분해 입력합니다.",
+  "각 줄에 해당하는 결과(당첨, 벌칙 등)를 적습니다.",
+  "사다리 만들기를 누르면 무작위 가로줄이 생깁니다.",
+  "이름을 누르면 경로를 따라가며 결과가 공개됩니다."
+ ],
+ "tips": [
+  "결과를 먼저 가려 두면 긴장감이 살아납니다."
+ ],
+ "players": "2~30인",
+ "time": "약 1분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>지뢰찾기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -146,6 +146,10 @@
                 <span class="status-label">시간</span>
                 <div class="status-value" id="timer">0</div>
             </div>
+            <div class="status-item">
+                <span class="status-label">최고 기록</span>
+                <div class="status-value" id="best-time">-</div>
+            </div>
         </div>
 
         <div class="game-board">
@@ -178,6 +182,9 @@
         let longPressKey = null;
         let suppressClickKey = null;
 
+        let currentLevel = 'easy';
+        const bestKey = () => `minesweeper-best-${currentLevel}`;
+
         const difficulties = {
             easy: { rows: 10, cols: 10, mines: 10 },
             medium: { rows: 12, cols: 12, mines: 20 },
@@ -206,6 +213,7 @@
         }
 
         function setDifficulty(level, button) {
+            currentLevel = level;
             const config = difficulties[level];
             ROWS = config.rows;
             COLS = config.cols;
@@ -228,15 +236,36 @@
             clearLongPressState();
             suppressClickKey = null;
 
-            // Place mines
+            // 지뢰는 첫 클릭 시점에 배치한다 (placeMines 참고).
+            renderBoard();
+            updateUI();
+            renderBestTime();
+        }
+
+        function renderBestTime() {
+            const best = loadBestRecord(bestKey());
+            document.getElementById('best-time').textContent = best === null ? '-' : `${best}초`;
+        }
+
+        // 첫 클릭 칸과 그 주변 8칸을 비워 두고 지뢰를 배치한다.
+        // 첫 수에 즉사하지 않게 하고, 곧바로 빈 영역이 열리도록 하기 위함이다.
+        function placeMines(safeRow, safeCol) {
+            const totalCells = ROWS * COLS;
+            // 안전지대를 다 빼면 지뢰를 못 놓는 좁은 판에서는 클릭한 칸만 보호한다.
+            const wideSafe = totalCells - 9 >= MINES;
+
+            const isSafe = (row, col) => {
+                if (row === safeRow && col === safeCol) return true;
+                return wideSafe && Math.abs(row - safeRow) <= 1 && Math.abs(col - safeCol) <= 1;
+            };
+
             let minesPlaced = 0;
             while (minesPlaced < MINES) {
                 const row = Math.floor(Math.random() * ROWS);
                 const col = Math.floor(Math.random() * COLS);
-                if (board[row][col] !== -1) {
-                    board[row][col] = -1;
-                    minesPlaced++;
-                }
+                if (board[row][col] === -1 || isSafe(row, col)) continue;
+                board[row][col] = -1;
+                minesPlaced++;
             }
 
             // Calculate numbers
@@ -247,9 +276,6 @@
                     }
                 }
             }
-
-            renderBoard();
-            updateUI();
         }
 
         function countAdjacentMines(row, col) {
@@ -330,6 +356,7 @@
 
             if (!gameStarted) {
                 gameStarted = true;
+                placeMines(row, col);
                 timerInterval = setInterval(() => {
                     timer++;
                     document.getElementById('timer').textContent = timer;
@@ -412,9 +439,15 @@
                 }
             }
 
+            let isNewRecord = false;
+            if (won) {
+                isNewRecord = saveBestRecord(bestKey(), timer);
+                renderBestTime();
+            }
+
             setTimeout(() => {
                 if (won) {
-                    alert(`🎉 승리! 시간: ${timer}초`);
+                    alert(`🎉 승리! 시간: ${timer}초${isNewRecord ? '\n🏆 최고 기록 경신!' : ''}`);
                 } else {
                     alert('💥 게임 오버!');
                 }
@@ -438,7 +471,25 @@
         // Initialize
         initGame();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "지뢰찾기",
+ "goal": "지뢰를 피해 지뢰가 아닌 칸을 모두 여세요.",
+ "steps": [
+  "난이도를 고르고 아무 칸이나 클릭합니다. 첫 클릭은 절대 지뢰가 아닙니다.",
+  "숫자는 그 칸에 맞닿은 8칸 안의 지뢰 개수입니다.",
+  "지뢰라고 확신하는 칸은 우클릭(모바일은 길게 누르기)으로 깃발을 꽂습니다.",
+  "지뢰가 아닌 칸을 전부 열면 승리합니다."
+ ],
+ "tips": [
+  "숫자 1 옆에 닫힌 칸이 하나뿐이면 그 칸이 지뢰입니다.",
+  "난이도별 최고 기록이 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

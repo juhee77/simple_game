@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Marked.js -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 
     <style>
         :root {
@@ -173,7 +173,8 @@
             .status-panel { gap: 20px; padding: 10px 15px; }
         }
 
-    </style>
+    canvas{touch-action:manipulation}
+</style>
 </head>
 <body>
 
@@ -517,5 +518,6 @@
         window.onload = initGame;
         window.addEventListener('resize', resize);
     </script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>QR 가든 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>씨앗 코드 가든 - 미니게임 천국</title>
+<link rel="stylesheet" href="../styles/game-common.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
@@ -26,8 +26,8 @@ p.sub{color:#94a3b8;margin-bottom:20px;text-align:center}
 </head>
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
-<h1>🌸 QR 가든</h1>
-<p class="sub">씨앗 코드를 공유해 함께 정원을 가꾸세요!</p>
+<h1>🌸 씨앗 코드 가든</h1>
+<p class="sub">같은 씨앗 코드를 넣으면 누구에게나 같은 정원이 자랍니다!</p>
 <div class="seed-input">
 <input id="seed" placeholder="씨앗 코드 (예: 1234)">
 <button class="btn btn-plant" onclick="plantFromSeed()">심기 🌱</button>
@@ -42,10 +42,19 @@ p.sub{color:#94a3b8;margin-bottom:20px;text-align:center}
 const flowers=['🌸','🌺','🌻','🌷','🌹','🌼','💐','🌿','🍀','🌵','🌴','🎋','🌾','🌱','🍁','🍂','🌳','🪻','🪷','💮'];
 const garden=document.getElementById('garden');let count=0;
 function seededRandom(seed){let s=seed;return function(){s=(s*16807)%2147483647;return(s-1)/2147483646}}
-function addFlower(x,y,emoji,size){
+const SAVE_KEY='qr-garden-plants';
+let plants=[];
+function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(plants))}catch{}}
+function restore(){
+try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return;
+const saved=JSON.parse(raw);if(!Array.isArray(saved))return;
+saved.forEach(f=>addFlower(f.x,f.y,f.e,f.s,true));}catch{}
+}
+function addFlower(x,y,emoji,size,skipSave){
 const el=document.createElement('div');el.className='flower';el.textContent=emoji;
 el.style.left=x+'%';el.style.top=y+'%';el.style.fontSize=size+'rem';
 garden.appendChild(el);count++;document.getElementById('flower-count').textContent=count;
+if(!skipSave){plants.push({x,y,e:emoji,s:size});persist();}
 }
 function plantRandom(e){
 const rect=garden.getBoundingClientRect();
@@ -60,8 +69,26 @@ const rng=seededRandom(numSeed);
 for(let i=0;i<5;i++){addFlower(10+rng()*80,10+rng()*80,flowers[Math.floor(rng()*flowers.length)],1.5+rng()*2)}
 }
 function autoPlant(){for(let i=0;i<10;i++)addFlower(5+Math.random()*90,5+Math.random()*90,flowers[Math.floor(Math.random()*flowers.length)],1.5+Math.random()*2)}
-function clearGarden(){garden.innerHTML='';count=0;document.getElementById('flower-count').textContent=0}
+function clearGarden(){garden.innerHTML='';count=0;plants=[];persist();document.getElementById('flower-count').textContent=0}
+restore(); // 저장해 둔 정원을 복원한다
 </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "씨앗 코드 가든",
+ "goal": "씨앗 코드를 공유해 같은 정원을 함께 가꾸세요.",
+ "steps": [
+  "정원의 빈 곳을 탭하면 그 자리에 꽃이 심어집니다.",
+  "씨앗 코드를 입력하고 심기를 누르면 그 코드에 정해진 꽃이 자랍니다.",
+  "같은 코드를 넣으면 누구의 기기에서든 똑같은 정원이 나옵니다.",
+  "정원은 자동 저장되어 다시 열어도 남아 있습니다."
+ ],
+ "tips": [
+  "코드를 친구에게 알려 주면 같은 정원을 볼 수 있습니다."
+ ],
+ "players": "1~8인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

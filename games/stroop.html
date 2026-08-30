@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>색상 혼란 테스트 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -245,7 +245,25 @@
         buildAnswerButtons();
         updateStats();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "색상 혼란 테스트",
+ "goal": "단어의 뜻이 아니라 글자의 '색'을 고르세요.",
+ "steps": [
+  "색 이름이 적힌 단어가 나타납니다.",
+  "단어의 뜻은 무시하고 글자가 칠해진 색을 고릅니다.",
+  "예를 들어 파란 글씨로 '빨강'이라 적혀 있으면 답은 파랑입니다.",
+  "제한 시간 안에 최대한 많이 맞힙니다."
+ ],
+ "tips": [
+  "소리 내어 읽지 말고 색만 보세요.",
+  "최고 점수는 자동 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 3분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

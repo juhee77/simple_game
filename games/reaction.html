@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>반응 속도 테스트 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -288,7 +288,25 @@
 
         updateHistory();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "반응 속도",
+ "goal": "화면이 초록색으로 바뀌는 순간 가장 빠르게 반응하세요.",
+ "steps": [
+  "시작하면 화면이 빨간색이 됩니다.",
+  "초록색으로 바뀔 때까지 기다립니다. 바뀌는 시점은 매번 다릅니다.",
+  "초록색이 되는 즉시 클릭·터치하거나 스페이스바를 누릅니다.",
+  "반응 시간이 밀리초 단위로 기록됩니다."
+ ],
+ "tips": [
+  "초록색이 되기 전에 누르면 패널티가 있습니다.",
+  "최고 기록은 자동 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 1분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

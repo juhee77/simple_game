@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>침묵 경매 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -1003,7 +1003,25 @@
             startRound();
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "침묵 경매",
+ "goal": "가장 적은 단어로 제시어를 설명해 내세요.",
+ "steps": [
+  "폰을 돌려가며 각자 '몇 단어 안에 설명할 수 있는지' 비밀 입찰합니다.",
+  "가장 적은 단어를 부른 사람이 설명에 도전합니다.",
+  "입찰한 단어 수를 넘기면 실패입니다.",
+  "성공하면 기본 점수에 저단어 보너스를 더해 받습니다.",
+  "라운드를 반복하고 최고 점수를 낸 사람이 승리합니다."
+ ],
+ "tips": [
+  "무리하게 낮게 부르면 설명을 못 끝내고 0점이 됩니다."
+ ],
+ "players": "3~10인",
+ "time": "약 15분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

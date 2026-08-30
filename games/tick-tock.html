@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>네온 폭탄 돌리기 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
+<link rel="stylesheet" href="../styles/game-common.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
@@ -57,7 +57,7 @@ input:focus{border-color:#ef4444}
 <button class="btn" onclick="location.reload()" style="background:white;color:black">다시 시작</button>
 </div>
 <script>
-let totalPlayers=4,currentPlayer=1,timeLeft,timer,quizzes=[],currentQ=0;
+let totalPlayers=4,currentPlayer=1,fuseMs=0,startedAt=0,minMs=0,timer,quizzes=[],currentQ=0;
 const categories=[
 {q:'수도가 서울인 나라는?',a:'한국'},
 {q:'1+1=?',a:'2'},{q:'바나나의 색은?',a:'노란색'},
@@ -97,21 +97,36 @@ function init(){
     let minT = 20, maxT = 40;
     if(timerMode === 'short') { minT = 10; maxT = 20; }
     else if(timerMode === 'long') { minT = 40; maxT = 80; }
-    
-    timeLeft = minT + Math.floor(Math.random() * (maxT - minT));
-    quizzes = [...categories].sort(() => Math.random() - .5);
+
+    minMs = minT * 1000;
+    fuseMs = (minT + Math.random() * (maxT - minT)) * 1000;
+    startedAt = performance.now();
+
+    quizzes = shuffled(categories);
     currentQ = 0; showQuiz();
     const bomb = document.getElementById('bomb');
     if(timer) clearInterval(timer);
     timer = setInterval(() => {
-        timeLeft -= 0.1;
-        if(timeLeft < 5) bomb.classList.add('fast');
-        document.getElementById('timer-text').textContent = timeLeft > 3 ? '틱... 탁...' : '⚠️ 곧 터집니다!';
-        if(timeLeft <= 0) { clearInterval(timer); explode() }
+        // 남은 시간이 아니라 '경과 시간'으로만 연출한다. 남은 시간을 노출하면
+        // 언제 터질지 모른다는 이 게임의 유일한 긴장 요소가 사라지기 때문이다.
+        const elapsed = performance.now() - startedAt;
+        if(elapsed > minMs * 0.7) bomb.classList.add('fast');
+        document.getElementById('timer-text').textContent =
+            elapsed > minMs * 0.7 ? '틱! 탁! 틱! 탁!' : '틱... 탁...';
+        if(elapsed >= fuseMs) { clearInterval(timer); explode() }
     }, 100);
 }
+
+function shuffled(arr){
+    const a = [...arr];
+    for(let i = a.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
 function showQuiz(){
-    if(currentQ >= quizzes.length) currentQ = 0;
+    if(currentQ >= quizzes.length) { quizzes = shuffled(categories); currentQ = 0; }
     canSkip = false;
     document.getElementById('quiz').textContent = quizzes[currentQ].q;
     document.getElementById('player-label').textContent = `플레이어 ${currentPlayer}`;
@@ -121,33 +136,31 @@ function showQuiz(){
     document.getElementById('answer').focus();
 
     clearTimeout(hintTimeout);
+    // 10초가 지나면 '패스'를 허용하되 정답은 알려주지 않는다. 정답을 노출하면
+    // 모를 때 10초만 기다렸다 넘기는 것이 최적 전략이 되어 퀴즈가 무의미해진다.
+    // 패스해도 폰은 넘어가지 않고 새 문제만 받으므로, 모르는 만큼 시간을 잃는다.
     hintTimeout = setTimeout(() => {
         canSkip = true;
-        const correct = quizzes[currentQ].a;
-        document.getElementById('answer').placeholder = `정답: ${correct}`;
-        document.getElementById('submit-btn').textContent = `몰라요! (정답: ${correct})`;
+        document.getElementById('answer').placeholder = '모르겠으면 비워두고 패스';
+        document.getElementById('submit-btn').textContent = '패스 (새 문제 받기)';
     }, 10000);
 }
 function submit(){
     const input = document.getElementById('answer');
     const ans = input.value.trim().toLowerCase();
     const correct = quizzes[currentQ].a.toLowerCase();
-    
-    if(ans === correct || (canSkip && ans === '')) {
+
+    if(ans === correct) {
+        // 정답이어야만 폰이 다음 사람에게 넘어간다.
         currentPlayer = (currentPlayer % totalPlayers) + 1;
         currentQ++;
         showQuiz();
         input.style.borderColor = '#2ed573';
         setTimeout(() => input.style.borderColor = '', 300);
-    } else if (canSkip && ans !== '') {
-        // Even if hint is shown, if they type something wrong, check it
-        if(ans === correct) {
-            currentPlayer = (currentPlayer % totalPlayers) + 1;
-            currentQ++;
-            showQuiz();
-        } else {
-            shake();
-        }
+    } else if (canSkip && ans === '') {
+        // 패스: 폰은 그대로 두고 새 문제만 받는다.
+        currentQ++;
+        showQuiz();
     } else {
         shake();
     }
@@ -168,6 +181,24 @@ document.getElementById('loser-text').textContent = `플레이어 ${currentPlaye
 setTimeout(()=>{document.getElementById('exploded').style.display='flex'},500);
 }
 </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "네온 폭탄 돌리기",
+ "goal": "폭탄이 터지기 전에 문제를 풀고 넘기세요.",
+ "steps": [
+  "참가자 수와 폭발 타이머 난이도를 고릅니다.",
+  "자기 차례에 나온 퀴즈의 정답을 입력합니다.",
+  "정답을 맞혀야만 다음 사람에게 넘어갑니다.",
+  "10초가 지나면 패스할 수 있지만, 폰은 그대로 두고 새 문제만 받습니다.",
+  "폭탄이 터질 때 들고 있던 사람이 벌칙입니다."
+ ],
+ "tips": [
+  "언제 터질지는 아무도 모릅니다. 패스는 시간을 잃는 선택입니다."
+ ],
+ "players": "2~30인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

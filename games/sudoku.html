@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>스도쿠 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -170,6 +170,10 @@
                 <span class="status-label">남은 칸</span>
                 <div class="status-value" id="remaining">0</div>
             </div>
+            <div class="status-item">
+                <span class="status-label">최고 기록</span>
+                <div class="status-value" id="best-time">-</div>
+            </div>
         </div>
 
         <div class="game-board">
@@ -204,6 +208,8 @@
         let timer = 0;
         let timerInterval;
 
+        const bestKey = () => `sudoku-best-${difficulty}`;
+
         const difficultyLevels = {
             easy: 40,    // 40 cells filled
             medium: 30,  // 30 cells filled
@@ -233,16 +239,26 @@
             const cellsToFill = difficultyLevels[difficulty];
             const cellsToRemove = 81 - cellsToFill;
 
-            let removed = 0;
-            while (removed < cellsToRemove) {
-                const row = Math.floor(Math.random() * 9);
-                const col = Math.floor(Math.random() * 9);
+            // 칸을 무작위로 비우되, 해가 둘 이상으로 갈라지면 되돌린다.
+            // 유일해가 아니면 플레이어가 논리적으로 맞는 답을 넣어도 오답 처리되기 때문이다.
+            const positions = [];
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) positions.push([i, j]);
+            }
+            for (let i = positions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [positions[i], positions[j]] = [positions[j], positions[i]];
+            }
 
-                if (board[row][col] !== 0) {
-                    board[row][col] = 0;
+            let removed = 0;
+            for (const [row, col] of positions) {
+                if (removed >= cellsToRemove) break;
+                const backup = board[row][col];
+                board[row][col] = 0;
+                if (countSolutions(board, 2) === 1) {
                     removed++;
                 } else {
-                    fixed[row][col] = false;
+                    board[row][col] = backup;
                 }
             }
 
@@ -256,13 +272,41 @@
             }
         }
 
+        // 해가 몇 개인지 limit까지만 센다. 1이면 유일해.
+        function countSolutions(grid, limit) {
+            let row = -1, col = -1;
+            outer:
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    if (grid[i][j] === 0) { row = i; col = j; break outer; }
+                }
+            }
+            if (row === -1) return 1;
+
+            let found = 0;
+            for (let num = 1; num <= 9; num++) {
+                if (!isValidMove(grid, row, col, num)) continue;
+                grid[row][col] = num;
+                found += countSolutions(grid, limit - found);
+                grid[row][col] = 0;
+                if (found >= limit) break;
+            }
+            return found;
+        }
+
         function fillBoard(board) {
             const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
             for (let i = 0; i < 9; i++) {
                 for (let j = 0; j < 9; j++) {
                     if (board[i][j] === 0) {
-                        const shuffled = numbers.sort(() => Math.random() - 0.5);
+                        // 공유 배열을 그대로 정렬하면 재귀 하위 호출이 상위 루프의
+                        // 순회 대상을 뒤섞으므로, 복사본을 Fisher-Yates로 섞는다.
+                        const shuffled = [...numbers];
+                        for (let k = shuffled.length - 1; k > 0; k--) {
+                            const m = Math.floor(Math.random() * (k + 1));
+                            [shuffled[k], shuffled[m]] = [shuffled[m], shuffled[k]];
+                        }
 
                         for (let num of shuffled) {
                             if (isValidMove(board, i, j, num)) {
@@ -387,9 +431,12 @@
             // Check if completed
             if (isComplete()) {
                 clearInterval(timerInterval);
+                const solved = checkSolution(true);
+                const isNewRecord = solved && saveBestRecord(bestKey(), timer);
+                if (solved) renderBestTime();
                 setTimeout(() => {
-                    if (checkSolution(true)) {
-                        alert(`🎉 축하합니다! 완성했습니다!\n시간: ${formatTime(timer)}`);
+                    if (solved) {
+                        alert(`🎉 축하합니다! 완성했습니다!\n시간: ${formatTime(timer)}${isNewRecord ? '\n🏆 최고 기록 경신!' : ''}`);
                     }
                 }, 300);
             }
@@ -405,9 +452,18 @@
         }
 
         function checkSolution(silent = false) {
+            // 저장된 해와 1:1로 비교하지 않고 스도쿠 규칙 자체로 판정한다.
             for (let i = 0; i < 9; i++) {
                 for (let j = 0; j < 9; j++) {
-                    if (board[i][j] !== solution[i][j]) {
+                    const num = board[i][j];
+                    if (num === 0) {
+                        if (!silent) alert('아직 비어 있는 칸이 있습니다!');
+                        return false;
+                    }
+                    board[i][j] = 0;
+                    const ok = isValidMove(board, i, j, num);
+                    board[i][j] = num;
+                    if (!ok) {
                         if (!silent) alert('아직 틀린 곳이 있습니다!');
                         return false;
                     }
@@ -415,6 +471,11 @@
             }
             if (!silent) alert('🎉 정답입니다!');
             return true;
+        }
+
+        function renderBestTime() {
+            const best = loadBestRecord(bestKey());
+            document.getElementById('best-time').textContent = best === null ? '-' : formatTime(best);
         }
 
         function showHint() {
@@ -462,6 +523,7 @@
 
             generateSudoku();
             renderBoard();
+            renderBestTime();
 
             timerInterval = setInterval(() => {
                 timer++;
@@ -481,7 +543,26 @@
         // Initialize
         newGame();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "스도쿠",
+ "goal": "가로·세로·3x3 칸에 1~9를 겹치지 않게 채우세요.",
+ "steps": [
+  "난이도를 고르면 퍼즐이 생성됩니다.",
+  "빈칸을 선택하고 숫자를 입력합니다(키보드도 됩니다).",
+  "각 가로줄, 세로줄, 3x3 상자 안에 1~9가 한 번씩만 들어가야 합니다.",
+  "힌트 버튼으로 한 칸의 정답을 볼 수 있습니다.",
+  "모두 채우면 자동으로 정답을 확인합니다."
+ ],
+ "tips": [
+  "모든 퍼즐은 정답이 하나뿐이도록 만들어집니다.",
+  "난이도별 최고 기록이 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 15분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>텔레파시 스케치 릴레이</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
@@ -262,7 +262,7 @@
                 resultText.innerHTML = `<span class="correct">정답입니다!</span>`;
             } else {
                 document.getElementById('result-title').innerText = "💥 텔레파시 실패 💥";
-                resultText.innerHTML = `<span class="wrong">오답: ${guess}</span>`;
+                resultText.innerHTML = `<span class="wrong">오답: ${escapeHtml(guess)}</span>`;
             }
             document.getElementById('result-word').innerText = currentWord;
             showScreen('screen-result');
@@ -312,5 +312,23 @@
         });
 
     </script>
+<script type="application/json" id="game-rules">
+{
+ "title": "텔레파시 스케치 릴레이",
+ "goal": "번갈아 그린 그림으로 마지막 사람이 정답을 맞히게 하세요.",
+ "steps": [
+  "첫 사람들이 제시어를 혼자 확인합니다. 마지막 사람은 보면 안 됩니다.",
+  "폰을 돌려가며 한 명씩 이어서 그림을 그립니다.",
+  "글자나 숫자는 쓸 수 없습니다.",
+  "마지막 사람이 완성된 그림만 보고 정답을 맞힙니다."
+ ],
+ "tips": [
+  "앞사람이 그린 것을 지우지 말고 살려서 이어 그리세요."
+ ],
+ "players": "3~10인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>음정 맞히기 - Pitch Perfect</title>
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@800&display=swap" rel="stylesheet">
@@ -146,7 +146,8 @@
             box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
         }
 
-    </style>
+    canvas{touch-action:manipulation}
+</style>
 </head>
 <body>
 
@@ -232,6 +233,9 @@
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
+            // iOS는 컨텍스트가 suspended로 시작한다. 깨우지 않으면 소리가 나지 않아
+            // 청음 게임 자체가 성립하지 않는다.
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function generateRandomFreq() {
@@ -458,5 +462,24 @@
         generateRandomFreq();
 
     </script>
+<script type="application/json" id="game-rules">
+{
+ "title": "음정 맞히기",
+ "goal": "들려준 기준 음과 같은 높이를 슬라이더로 맞추세요.",
+ "steps": [
+  "재생 버튼으로 기준 음을 듣습니다.",
+  "슬라이더를 움직여 같은 높이라고 생각하는 음을 맞춥니다.",
+  "비교 재생으로 두 소리를 번갈아 들어 봅니다.",
+  "제출하면 실제 주파수와의 오차가 점수로 나옵니다."
+ ],
+ "tips": [
+  "소리가 안 나면 화면을 한 번 터치하세요. 첫 터치에서 오디오가 켜집니다.",
+  "이어폰을 쓰면 훨씬 정확합니다."
+ ],
+ "players": "1인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

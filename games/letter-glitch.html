@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>한 글자씩 망가뜨리기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -639,7 +639,7 @@
 
         function showResult() {
             finalPhrase.textContent = currentPhrase || '(빈 문장)';
-            resultSummary.innerHTML = `시작 문장 <strong>${seedPhrase}</strong>가 총 <strong>${history.length}번</strong> 수정되어 이렇게 바뀌었습니다.`;
+            resultSummary.innerHTML = `시작 문장 <strong>${escapeHtml(seedPhrase)}</strong>가 총 <strong>${history.length}번</strong> 수정되어 이렇게 바뀌었습니다.`;
             historyList.innerHTML = '';
 
             history.forEach((entry, index) => {
@@ -665,7 +665,24 @@
             showScreen('setup');
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "한 글자씩 망가뜨리기",
+ "goal": "한 번에 한 글자만 바꿔 문장을 가장 이상하게 만드세요.",
+ "steps": [
+  "시작 문장을 정하거나 무작위로 받습니다.",
+  "폰을 돌려가며 자기 차례에 글자 하나만 추가·삭제·교체합니다.",
+  "한 번에 두 글자 이상은 바꿀 수 없습니다.",
+  "정해진 바퀴를 돌고 나서 처음과 끝 문장을 비교합니다."
+ ],
+ "tips": [
+  "말이 되게 유지할지, 망가뜨릴지 미리 정하면 방향이 잡힙니다."
+ ],
+ "players": "3~10인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

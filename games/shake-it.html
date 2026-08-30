@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>네온 흔들기 대결 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
+<link rel="stylesheet" href="../styles/game-common.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
@@ -78,6 +78,23 @@ document.getElementById('grade').textContent=g;
 }
 function reset(){document.getElementById('game').style.display='';document.getElementById('result').style.display='none';document.getElementById('start-btn').style.display='';altTap.style.display='none';countEl.textContent='0';timerEl.textContent='30초';barEl.style.width='100%'}
 </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "네온 흔들기 대결",
+ "goal": "30초 동안 폰을 가장 많이 흔드세요.",
+ "steps": [
+  "기울기·모션 센서 사용을 허용합니다.",
+  "시작하면 30초 타이머가 돌아갑니다.",
+  "폰을 꽉 잡고 최대한 빠르게 흔듭니다.",
+  "끝나면 흔든 횟수가 기록됩니다. 한 명씩 돌아가며 비교합니다."
+ ],
+ "tips": [
+  "폰을 놓치지 않게 손목 스트랩이나 케이스를 쓰세요."
+ ],
+ "players": "1~8인",
+ "time": "약 1분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

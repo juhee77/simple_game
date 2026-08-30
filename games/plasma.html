@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>플라즈마 드리프트 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -483,7 +483,24 @@
         updateStats();
         drawScene();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "플라즈마 드리프트",
+ "goal": "파편을 피하며 에너지를 모아 오래 살아남으세요.",
+ "steps": [
+  "방향키, WASD, 또는 화면 터치 패드로 이동합니다.",
+  "떠다니는 에너지 조각을 모읍니다.",
+  "운석 파편에 부딪히면 게임이 끝납니다.",
+  "생존 시간이 기록으로 남습니다."
+ ],
+ "tips": [
+  "최고 생존 시간은 자동 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

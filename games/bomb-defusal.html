@@ -6,7 +6,7 @@
     <title>폭탄 해체반 - Bomb Defusal Squad</title>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 
     <style>
         :root {
@@ -171,6 +171,17 @@
     </div>
 
     <script>
+        // sort(() => Math.random() - 0.5)는 균등 분포가 아니다. 카드 드래프팅처럼
+        // 공정성이 승패에 직결되는 곳에서는 Fisher-Yates로 섞는다.
+        function shuffleArray(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
         // Game Config
         let timeLeft = 180;
         let strikes = 0;
@@ -214,7 +225,7 @@
 
             // Keypad config
             const symbols = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ'];
-            let selectedSymbols = symbols.sort(() => Math.random() - 0.5).slice(0, 4);
+            let selectedSymbols = shuffleArray(symbols).slice(0, 4);
             let displayOrder = [...selectedSymbols].sort((a, b) => symbols.indexOf(a) - symbols.indexOf(b));
 
             return {
@@ -400,5 +411,6 @@
 
         window.onload = resetGame;
     </script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

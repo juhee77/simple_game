@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>빙고 넘버 마스터 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
+<link rel="stylesheet" href="../styles/game-common.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
@@ -46,6 +46,8 @@ h1{font-size:1.8rem;margin:40px 0 10px;background:linear-gradient(135deg,#f97316
 <button class="btn" onclick="generateBoard()" style="background:rgba(255,255,255,.1)">새 빙고판</button>
 </div>
 <script>
+// sort(()=>Math.random()-.5)는 균등 분포가 아니므로 Fisher-Yates로 섞는다
+function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 let calledNumbers=[],board=[],marked=Array(25).fill(false);marked[12]=true;
 function switchTab(t){document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',i===(t==='host'?0:1))});document.querySelectorAll('.panel').forEach((el,i)=>{el.classList.toggle('active',i===(t==='host'?0:1))})}
 function drawNumber(){
@@ -61,8 +63,7 @@ document.getElementById('called-list').innerHTML=calledNumbers.map(n=>`<span cla
 }
 function generateBoard(){
 const nums=[];for(let i=1;i<=75;i++)nums.push(i);
-nums.sort(()=>Math.random()-.5);
-board=nums.slice(0,25);board[12]=0;
+board=shuffleArray(nums).slice(0,25);board[12]=0;
 marked=Array(25).fill(false);marked[12]=true;
 renderBoard();
 }
@@ -82,6 +83,23 @@ document.getElementById('bingo-count').textContent=cnt;
 }
 generateBoard();
 </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "빙고 넘버 마스터",
+ "goal": "뽑힌 번호로 빙고판의 한 줄을 먼저 완성하세요.",
+ "steps": [
+  "게임을 시작하면 5x5 빙고판이 무작위로 만들어집니다(가운데는 무료 칸).",
+  "진행자가 번호 뽑기를 누르면 1~75 중 하나가 공개됩니다.",
+  "내 판에 그 번호가 있으면 칸을 눌러 표시합니다.",
+  "가로·세로·대각선 중 한 줄을 먼저 완성하면 빙고입니다."
+ ],
+ "tips": [
+  "여러 명이 각자 기기로 열면 각자 다른 판을 받습니다."
+ ],
+ "players": "2~30인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

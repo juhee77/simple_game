@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>미스터리 미로 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
+<link rel="stylesheet" href="../styles/game-common.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
@@ -110,6 +110,23 @@ canvas.addEventListener('pointermove',e=>{
 canvas.addEventListener('pointerup',()=>drawing=false);
 canvas.addEventListener('pointerleave',()=>drawing=false);
 </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "미스터리 미로",
+ "goal": "다 함께 미로를 만들고, 그 미로를 탈출하세요.",
+ "steps": [
+  "참가자 수를 정합니다.",
+  "폰을 돌려가며 각자 미로의 벽을 조금씩 그립니다.",
+  "모두의 차례가 끝나면 미로가 완성됩니다.",
+  "완성된 미로를 따라 출구까지 이동합니다."
+ ],
+ "tips": [
+  "너무 막아 두면 아무도 못 나갑니다. 길은 남겨 두세요."
+ ],
+ "players": "1~30인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

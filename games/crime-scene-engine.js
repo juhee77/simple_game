@@ -64,6 +64,7 @@ function renderLobby() {
         <div class="s-tag">${s.catEmoji} ${s.tag || s.cat}</div>
         <div class="s-title">${s.title}</div>
         <div class="s-desc">${s.desc}</div>
+        <div class="s-desc" style="opacity:.75;">👥 필요 인원 ${s.players}명 + GM 1명 = 총 ${s.players + 1}명</div>
       </div>
       <div>
         <span style="font-size: 0.8rem; background: ${s.status === 'done' ? 'var(--success)' : 'var(--text-sub)'}; color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
@@ -119,7 +120,7 @@ function openScenario(id) {
   grid.innerHTML = s.roles.map(r => `
     <div class="role-btn" onclick="openRole('${r.id}')">
       <div class="rb-icon">${r.emoji}</div>
-      <div class="rb-type">${r.isGM ? 'Game Master' : '참여자'}</div>
+      <div class="rb-type">${r.isGM ? 'Game Master · ⚠️ 스포일러' : '참여자'}</div>
       <div class="rb-name">${r.name} <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-sub);">${r.age || ''}</span></div>
       <div class="rb-job">${r.job}</div>
     </div>`).join('');
@@ -153,7 +154,9 @@ function openRole(roleId) {
   _clueReg.length = 0; // Reset clue registry
 
   document.getElementById('rv-top-title').textContent = r.isGM ? '📋 GM 패키지' : `${r.emoji} ${r.name}`;
-  document.getElementById('rv-content').innerHTML = r.isGM ? buildGMContent(s) : buildPlayerContent(r, s);
+  // GM 패키지에는 진범과 진상이 그대로 들어 있다. 참여자가 무심코 열어
+  // 게임을 통째로 날리는 일이 없도록 한 번 더 확인을 받는다.
+  document.getElementById('rv-content').innerHTML = r.isGM ? buildGMGate() : buildPlayerContent(r, s);
 
   goTo('role-view');
   startTimerLoop();
@@ -350,6 +353,32 @@ function refreshClues(sId) {
       if(name) name.textContent = name.getAttribute('data-original-name') || name.textContent;
     });
   }
+}
+
+// ══════════════════════════════════════
+// GM SPOILER GATE
+// ══════════════════════════════════════
+function buildGMGate() {
+  return `
+    <div class="rv-hero" style="text-align:center;">
+      <div style="font-size:3rem; margin-bottom:12px;">⚠️</div>
+      <div class="rv-name">GM 전용 · 스포일러 경고</div>
+      <div class="rv-job" style="margin-top:12px; line-height:1.7;">
+        이 화면에는 <strong>진범의 이름과 사건의 전말</strong>이 그대로 적혀 있습니다.<br>
+        게임을 진행하는 GM만 열어 주세요.
+      </div>
+      <button class="game-start-btn" style="margin-top:24px;" onclick="revealGMContent()">
+        나는 GM입니다 · 진행 자료 열기
+      </button>
+      <div style="margin-top:14px;">
+        <button class="back-btn" onclick="goTo('scenario-view')">← 역할 선택으로 돌아가기</button>
+      </div>
+    </div>`;
+}
+
+function revealGMContent() {
+  if(!currentScenario) return;
+  document.getElementById('rv-content').innerHTML = buildGMContent(currentScenario);
 }
 
 // ══════════════════════════════════════

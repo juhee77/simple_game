@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>두더지 잡기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -355,7 +355,24 @@
         createGrid();
         updateStats();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "두더지 잡기",
+ "goal": "튀어나오는 두더지를 제한 시간 안에 최대한 많이 잡으세요.",
+ "steps": [
+  "시작하면 구멍에서 두더지가 무작위로 튀어나옵니다.",
+  "두더지를 클릭·터치해서 잡습니다.",
+  "사라지기 전에 잡아야 점수가 오릅니다.",
+  "시간이 끝나면 잡은 수가 점수가 됩니다."
+ ],
+ "tips": [
+  "최고 점수는 자동 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 3분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

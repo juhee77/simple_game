@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>밸런스 게임 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -438,7 +438,24 @@
             document.getElementById('balance-arena').style.display = 'none';
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "밸런스 게임",
+ "goal": "두 선택지 중 하나를 고르고 이유를 놓고 토론하세요.",
+ "steps": [
+  "일반 / 매운맛 / 커플 중 모드를 고릅니다.",
+  "화면에 두 가지 선택지가 나오면 각자 하나를 고릅니다.",
+  "고른 이유를 돌아가며 이야기합니다. 여기서 대화가 터집니다.",
+  "다음 질문 버튼으로 계속 진행합니다."
+ ],
+ "tips": [
+  "정답이 없는 게임입니다. 설득이 곧 승리입니다."
+ ],
+ "players": "2~12인",
+ "time": "약 15분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

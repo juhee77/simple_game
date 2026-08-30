@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>미니 생태계 - Ecosystem Sim</title>
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -105,7 +105,8 @@
             padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; color:#000;
         }
 
-    </style>
+    canvas{touch-action:manipulation}
+</style>
 </head>
 <body>
 
@@ -469,5 +470,23 @@
         startSimLoop();
 
     </script>
+<script type="application/json" id="game-rules">
+{
+ "title": "미니 생태계",
+ "goal": "풀·토끼·여우의 개체수가 어떻게 변하는지 관찰하세요.",
+ "steps": [
+  "초기 개체수와 번식·포식 조건을 설정합니다.",
+  "시뮬레이션을 시작하면 격자 위에서 생물들이 자동으로 움직입니다.",
+  "토끼는 풀을 먹고, 여우는 토끼를 먹습니다.",
+  "그래프로 개체수 변화를 확인합니다."
+ ],
+ "tips": [
+  "여우가 너무 많으면 토끼가 사라지고, 이어서 여우도 굶습니다."
+ ],
+ "players": "1인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>태양계 3D - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -478,7 +478,23 @@
         });
 
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "태양계 3D",
+ "goal": "태양계를 3D로 돌려 보며 살펴보세요.",
+ "steps": [
+  "드래그하면 시점이 회전합니다.",
+  "휠이나 두 손가락으로 확대·축소합니다.",
+  "행성을 누르면 정보가 표시됩니다."
+ ],
+ "tips": [
+  "승패가 없는 감상·학습용입니다."
+ ],
+ "players": "1인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

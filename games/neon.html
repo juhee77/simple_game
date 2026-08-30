@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>네온 터널 러너 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -352,7 +352,24 @@
         updateStats();
         drawScene(0);
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "네온 터널 러너",
+ "goal": "장애물을 피해 최대한 멀리 달리세요.",
+ "steps": [
+  "← → 방향키, 화면의 좌우 버튼, 또는 스와이프로 차선을 바꿉니다.",
+  "터널 속 장애물을 피해 계속 달립니다.",
+  "속도는 갈수록 빨라집니다.",
+  "부딪히면 그 지점까지의 거리가 기록됩니다."
+ ],
+ "tips": [
+  "최고 거리 기록은 자동 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

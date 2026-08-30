@@ -43,11 +43,22 @@ document.addEventListener('DOMContentLoaded', () => {
         history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
     }
 
-    function parsePlayers(p) {
-        if (!p) return [1, 100];
-        if (p.endsWith('+')) return [parseInt(p), 100];
-        return [parseInt(p), parseInt(p)];
+    // 카드는 지원 인원의 하한/상한을 모두 선언한다. 예전에는 "2+" 한 값만 있어
+    // 상한을 100으로 가정했고, 그 탓에 2인 전용 게임이 대인원 필터에 걸렸다.
+    function parsePlayers(card) {
+        const min = parseInt(card.dataset.minPlayers, 10);
+        const max = parseInt(card.dataset.maxPlayers, 10);
+        return [Number.isFinite(min) ? min : 1, Number.isFinite(max) ? max : 99];
     }
+
+    // 필터가 요구하는 인원 구간과 게임이 지원하는 구간이 겹치는지 본다.
+    const PLAYER_RANGES = {
+        '1': [1, 1],
+        '2': [2, 2],
+        '3-4': [3, 4],
+        '5-7': [5, 7],
+        '8+': [8, Infinity]
+    };
 
     // --- Core Display Logic ---
     function updateDisplay() {
@@ -107,11 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 3. Player filter check
             if (show && state.players !== 'all') {
-                const [minP, maxP] = parsePlayers(card.dataset.players);
-                if (state.players === '1' && !(minP <= 1 && maxP >= 1)) show = false;
-                else if (state.players === '2' && !(minP <= 2 && maxP >= 2)) show = false;
-                else if (state.players === '3-4' && !(minP <= 4 && maxP >= 3)) show = false;
-                else if (state.players === '5+' && !(maxP >= 5)) show = false;
+                const [minP, maxP] = parsePlayers(card);
+                const range = PLAYER_RANGES[state.players];
+                if (range && !(minP <= range[1] && maxP >= range[0])) show = false;
             }
 
             // 4. Time filter check
@@ -119,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const t = parseInt(card.dataset.time || '0', 10);
                 if (state.time === '5' && t > 5) show = false;
                 else if (state.time === '15' && (t <= 5 || t > 15)) show = false;
-                else if (state.time === '30+' && t <= 15) show = false;
+                else if (state.time === '15+' && t <= 15) show = false;
             }
 
             card.style.display = show ? 'flex' : 'none';

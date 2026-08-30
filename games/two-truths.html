@@ -262,6 +262,8 @@
         const synth = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(type) {
+            // iOS는 컨텍스트가 suspended로 시작하므로 재생 직전에 깨운다.
+            if (synth.state === 'suspended') synth.resume();
             const osc = synth.createOscillator();
             const gain = synth.createGain();
             osc.connect(gain);
@@ -311,7 +313,7 @@
             players.forEach((p, idx) => {
                 const chip = document.createElement('div');
                 chip.style.cssText = 'background:rgba(217, 70, 239, 0.15); border:1px solid var(--border-color); padding:6px 12px; border-radius:30px; font-size:0.9rem; display:flex; align-items:center; gap:8px;';
-                chip.innerHTML = `<span>${p.name}</span><i class="ri-close-line" style="cursor:pointer;" onclick="removePlayer(${idx})"></i>`;
+                chip.innerHTML = `<span>${escapeHtml(p.name)}</span><i class="ri-close-line" style="cursor:pointer;" onclick="removePlayer(${idx})"></i>`;
                 chips.appendChild(chip);
             });
         }
@@ -489,12 +491,31 @@
             sorted.forEach((p, idx) => {
                 const item = document.createElement('div');
                 item.className = 'leaderboard-item';
-                item.innerHTML = `<span class="player-tag">${idx + 1}등. ${p.name}</span><span class="score-tag">${p.score} 점</span>`;
+                item.innerHTML = `<span class="player-tag">${idx + 1}등. ${escapeHtml(p.name)}</span><span class="score-tag">${p.score} 점</span>`;
                 list.appendChild(item);
             });
             playSound('success');
         }
 
     </script>
+<script type="application/json" id="game-rules">
+{
+ "title": "두 개의 진실, 하나의 거짓",
+ "goal": "세 이야기 중 하나뿐인 거짓말을 골라내세요.",
+ "steps": [
+  "참가자를 등록합니다.",
+  "자기 차례에 자신에 대한 이야기 세 가지를 씁니다. 그중 둘은 진실, 하나는 거짓입니다.",
+  "폰을 넘겨 나머지가 어느 것이 거짓인지 고릅니다.",
+  "정답을 공개하고 맞힌 사람이 점수를 얻습니다.",
+  "모두 한 번씩 출제하고 최고 점수를 낸 사람이 승리합니다."
+ ],
+ "tips": [
+  "거짓말은 너무 황당하지 않게, 진실은 조금 의외인 것으로 고르면 어렵습니다."
+ ],
+ "players": "2~12인",
+ "time": "약 15분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

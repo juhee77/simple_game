@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>오목 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -136,6 +136,8 @@
         let board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
         let currentPlayer = 1; // 1: black, 2: white
         let moveHistory = [];
+        let undoUsedThisTurn = false;
+        let gameResult = '';
         let gameOver = false;
 
         function initBoard() {
@@ -159,6 +161,7 @@
 
             board[row][col] = currentPlayer;
             moveHistory.push({ row, col, player: currentPlayer });
+            undoUsedThisTurn = false;
 
             const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
             cell.classList.add('occupied', currentPlayer === 1 ? 'black' : 'white');
@@ -166,7 +169,17 @@
             if (checkWin(row, col)) {
                 gameOver = true;
                 const winner = currentPlayer === 1 ? '흑돌' : '백돌';
+                gameResult = `${winner} 승리`;
+                updateUI();
                 setTimeout(() => alert(`🎉 ${winner} 승리!`), 100);
+                return;
+            }
+
+            if (moveHistory.length === BOARD_SIZE * BOARD_SIZE) {
+                gameOver = true;
+                gameResult = '무승부';
+                updateUI();
+                setTimeout(() => alert('무승부입니다! 판이 모두 찼습니다.'), 100);
                 return;
             }
 
@@ -215,6 +228,13 @@
 
         function undoMove() {
             if (moveHistory.length === 0 || gameOver) return;
+            // 연속 무르기를 막는다. 핫시트라 제한이 없으면 한쪽이 상대 수까지
+            // 계속 되돌릴 수 있어 대국이 성립하지 않는다.
+            if (undoUsedThisTurn) {
+                alert('한 차례에 한 번만 무를 수 있습니다.');
+                return;
+            }
+            undoUsedThisTurn = true;
 
             const lastMove = moveHistory.pop();
             board[lastMove.row][lastMove.col] = 0;
@@ -230,6 +250,8 @@
             board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
             currentPlayer = 1;
             moveHistory = [];
+            undoUsedThisTurn = false;
+            gameResult = '';
             gameOver = false;
             initBoard();
             updateUI();
@@ -237,7 +259,8 @@
 
         function updateUI() {
             document.getElementById('move-count').textContent = moveHistory.length;
-            document.getElementById('current-player-text').textContent = currentPlayer === 1 ? '흑돌' : '백돌';
+            document.getElementById('current-player-text').textContent =
+                gameResult || (currentPlayer === 1 ? '흑돌' : '백돌');
             const indicator = document.getElementById('player-indicator');
             indicator.className = 'player-indicator ' + (currentPlayer === 1 ? 'black' : 'white');
         }
@@ -246,7 +269,25 @@
         initBoard();
         updateUI();
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "오목",
+ "goal": "가로·세로·대각선으로 돌 5개를 먼저 연결하세요.",
+ "steps": [
+  "흑돌이 먼저 두고, 번갈아 한 수씩 놓습니다.",
+  "빈 교차점을 눌러 돌을 놓습니다.",
+  "어느 방향이든 자기 돌 5개가 연속되면 승리합니다.",
+  "무르기는 한 차례에 한 번만 쓸 수 있습니다.",
+  "판이 모두 차면 무승부입니다."
+ ],
+ "tips": [
+  "금수 규칙은 없습니다. 선공인 흑이 유리하니 번갈아 선공하면 공평합니다."
+ ],
+ "players": "2인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

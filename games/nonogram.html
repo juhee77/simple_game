@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>노노그램 - Nonogram Matrix</title>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -271,6 +271,10 @@
         <div class="selector-row" id="puzzle-selector">
             <!-- Puzzle levels will be injected here -->
         </div>
+        <div class="selector-row" style="gap:20px; color:var(--text-muted); font-size:0.9rem;">
+            <span>시간 <strong id="elapsed" style="color:var(--text-main);">0:00</strong></span>
+            <span>최고 기록 <strong id="best-time" style="color:var(--text-main);">-</strong></span>
+        </div>
     </div>
 
     <!-- Main Game Board Grid layout containing hints and cells -->
@@ -295,6 +299,8 @@
         <div class="modal">
             <h2>MATRIX CLEAR</h2>
             <p>신호 복원에 성공했습니다!</p>
+            <p>소요 시간 <strong id="clear-time">0:00</strong></p>
+            <p id="clear-record" style="display:none;">🏆 최고 기록 경신!</p>
             <button class="btn-main" onclick="closeClearModal()">완료</button>
         </div>
     </div>
@@ -371,6 +377,28 @@
         let puzzleIndex = 0;
         let activeTool = 'fill'; // 'fill' or 'x'
         let boardState = []; // 0: empty, 1: filled, 2: X-marked
+        let elapsed = 0;
+        let elapsedTimer = null;
+        const bestKey = () => `nonogram-best-${currentSize}-${puzzleIndex}`;
+
+        function formatElapsed(sec) {
+            return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+        }
+
+        function renderBestTime() {
+            const best = loadBestRecord(bestKey());
+            document.getElementById('best-time').textContent = best === null ? '-' : formatElapsed(best);
+        }
+
+        function startTimer() {
+            clearInterval(elapsedTimer);
+            elapsed = 0;
+            document.getElementById('elapsed').textContent = formatElapsed(0);
+            elapsedTimer = setInterval(() => {
+                elapsed++;
+                document.getElementById('elapsed').textContent = formatElapsed(elapsed);
+            }, 1000);
+        }
         let isMouseDown = false;
         let dragMode = null; // 'fill', 'empty', 'x'
 
@@ -447,6 +475,8 @@
         }
 
         function loadPuzzle() {
+            startTimer();
+            renderBestTime();
             const puzzle = PUZZLES[currentSize][puzzleIndex];
             const { rowHints, colHints } = generateHints(puzzle.grid);
             
@@ -588,6 +618,11 @@
 
             if (isSolved) {
                 // Success!
+                clearInterval(elapsedTimer);
+                const isNewRecord = saveBestRecord(bestKey(), elapsed);
+                renderBestTime();
+                document.getElementById('clear-time').textContent = formatElapsed(elapsed);
+                document.getElementById('clear-record').style.display = isNewRecord ? '' : 'none';
                 document.getElementById('clear-overlay').classList.add('active');
             }
         }
@@ -611,5 +646,24 @@
         loadPuzzle();
 
     </script>
+<script type="application/json" id="game-rules">
+{
+ "title": "노노그램",
+ "goal": "숫자 힌트를 읽고 칠할 칸을 찾아 그림을 완성하세요.",
+ "steps": [
+  "크기와 퍼즐을 고릅니다.",
+  "행과 열의 숫자는 연속해서 칠해야 하는 칸 수입니다.",
+  "칠하기 도구로 칸을 채우고, X 도구로 확실히 빈 칸을 표시합니다.",
+  "모든 칸이 힌트와 맞으면 자동으로 완성 처리됩니다."
+ ],
+ "tips": [
+  "숫자 여러 개는 그 순서대로, 사이에 최소 한 칸을 비우고 배치됩니다.",
+  "퍼즐별 최고 기록이 저장됩니다."
+ ],
+ "players": "1인",
+ "time": "약 10분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

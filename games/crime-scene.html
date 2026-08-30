@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>크라임씬 - 미니게임 천국</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Noto+Sans+KR:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="crime-scene-styles.css">
@@ -17,6 +17,9 @@
     <div class="hero-sub">누가, 어디서, 어떻게 — 당신이 밝혀라</div>
   </div>
   <div class="scenario-list" id="scenario-list"></div>
+  <div style="text-align:center;padding:24px 0 40px;">
+    <a href="../index.html" class="back-btn" style="text-decoration:none;">← 미니게임 천국으로</a>
+  </div>
 </div>
 
 <!-- ══ SCENARIO VIEW ══ -->
@@ -74,5 +77,25 @@
 <script src="crime-scene-data.js"></script>
 <script src="crime-scene-svgs.js"></script>
 <script src="crime-scene-engine.js"></script>
+<script type="application/json" id="game-rules">
+{
+ "title": "네온 크라임씬",
+ "goal": "토론과 심문으로 우리 중 숨은 범인을 찾아내세요.",
+ "steps": [
+  "GM 1명과 용의자 5~6명이 필요합니다(총 6~7명).",
+  "각자 자기 역할 카드만 확인합니다. GM 패키지는 진범이 적혀 있으니 절대 열지 마세요.",
+  "GM이 사건 개요를 읽고 라운드를 진행합니다.",
+  "알리바이와 단서를 공유하며 서로를 추궁합니다.",
+  "마지막에 범인을 투표로 지목하고 GM이 진상을 공개합니다."
+ ],
+ "tips": [
+  "범인도 자기 목표가 따로 있습니다. 무조건 숨기만 하면 안 됩니다.",
+  "역할 카드의 비밀은 추궁받을 때 조금씩 흘리는 게 재미있습니다."
+ ],
+ "players": "6~7인",
+ "time": "약 60분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

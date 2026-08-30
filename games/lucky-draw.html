@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>네온 럭키 드로우 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -179,7 +179,8 @@
             pointer-events: none;
             z-index: 1;
         }
-    </style>
+    canvas{touch-action:manipulation}
+</style>
 </head>
 
 <body>
@@ -351,7 +352,24 @@
             confettiCanvas.height = window.innerHeight;
         });
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "네온 럭키 드로우",
+ "goal": "참가자 중에서 당첨자를 무작위로 뽑으세요.",
+ "steps": [
+  "참가자 이름을 입력합니다.",
+  "뽑을 인원수를 정합니다.",
+  "추첨 버튼을 누르면 연출과 함께 당첨자가 공개됩니다.",
+  "다시 뽑기로 새로 추첨할 수 있습니다."
+ ],
+ "tips": [
+  "경품 추첨이나 발표자 정하기에 쓰기 좋습니다."
+ ],
+ "players": "2~30인",
+ "time": "약 1분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

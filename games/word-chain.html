@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>단어 연상 릴레이 - 미니게임 천국</title>
-<link rel="stylesheet" href="../styles/game-common.css">
+<link rel="stylesheet" href="../styles/game-common.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Outfit',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
@@ -27,13 +27,18 @@ h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#10b981,
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
 <h1>💬 단어 연상 릴레이</h1>
-<div class="player-label" id="player-label">플레이어 1</div>
-<div class="chain" id="chain"></div>
-<div class="input-area" id="input-area">
+<div class="setup" id="setup">
+<p style="color:#94a3b8;margin:20px 0">몇 명이서 하나요? 순서대로 폰을 넘기며 진행합니다.</p>
+<input id="player-count" type="number" min="2" max="12" value="4" style="width:120px;padding:14px;text-align:center;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.15);border-radius:16px;color:#fff;font-size:1.2rem;font-family:inherit;outline:none">
+<div><button class="btn" onclick="startGame()">시작하기</button></div>
+</div>
+<div class="player-label" id="player-label" style="display:none">플레이어 1</div>
+<div class="chain" id="chain" style="display:none"></div>
+<div class="input-area" id="input-area" style="display:none">
 <input id="word-input" placeholder="연상되는 단어 입력" onkeydown="if(event.key==='Enter' && !event.isComposing)addWord()">
 <button onclick="addWord()">입력!</button>
 </div>
-<button class="btn" onclick="showResult()">결과 보기</button>
+<button class="btn" id="result-btn" onclick="showResult()" style="display:none">결과 보기</button>
 <div class="result" id="result">
 <h2>📝 전체 연상 흐름</h2>
 <div class="full-chain" id="full-chain"></div>
@@ -42,15 +47,23 @@ h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#10b981,
 </div>
 <script>
 const colors=['#ff4757','#1e90ff','#2ed573','#ffa502','#8b5cf6','#ec4899','#06b6d4','#14b8a6'];
-let words=[],player=1;
+let words=[],totalPlayers=4,turn=0;
 const startWords=['사랑','바다','커피','꿈','음악','여름','별','책'];
-const firstWord=startWords[Math.floor(Math.random()*startWords.length)];
-words.push(firstWord);
-renderChain();
+function startGame(){
+totalPlayers=Math.min(12,Math.max(2,+document.getElementById('player-count').value||4));
+words=[startWords[Math.floor(Math.random()*startWords.length)]];turn=0;
+document.getElementById('setup').style.display='none';
+['player-label','chain','input-area','result-btn'].forEach(id=>document.getElementById(id).style.display='');
+document.getElementById('input-area').style.display='flex';
+renderChain();updateLabel();document.getElementById('word-input').focus();
+}
+function updateLabel(){
+document.getElementById('player-label').textContent=`플레이어 ${turn%totalPlayers+1}`;
+}
 function addWord(){
 const input=document.getElementById('word-input'),w=input.value.trim();
-if(!w)return;words.push(w);player++;
-document.getElementById('player-label').textContent=`플레이어 ${player}`;
+if(!w)return;words.push(w);turn++;
+updateLabel();
 input.value='';renderChain();input.focus();
 }
 function renderChain(){
@@ -63,13 +76,30 @@ chain.scrollTop=chain.scrollHeight;
 }
 function showResult(){
 document.getElementById('input-area').style.display='none';
-document.querySelector('.btn').style.display='none';
+document.getElementById('result-btn').style.display='none';
 document.getElementById('player-label').style.display='none';
 document.getElementById('result').style.display='block';
 document.getElementById('full-chain').innerHTML=words.map((w,i)=>`<span style="color:${colors[i%colors.length]}">${w}${i<words.length-1?' →':''}</span>`).join('');
-document.getElementById('stats').textContent=`총 ${words.length}개 단어, ${player-1}명 참여`;
+document.getElementById('stats').textContent=`${totalPlayers}명 참여 · 총 ${words.length}개 단어 · ${turn}턴 진행`;
 }
 </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "단어 연상 릴레이",
+ "goal": "앞 단어에서 연상되는 단어를 이어 붙이세요.",
+ "steps": [
+  "참가자 수를 정하고 시작합니다.",
+  "시작 단어가 하나 주어집니다.",
+  "자기 차례에 앞 단어에서 떠오르는 단어를 입력하고 폰을 넘깁니다.",
+  "충분히 돌았으면 결과 보기로 전체 흐름을 확인합니다."
+ ],
+ "tips": [
+  "끝말잇기가 아니라 '연상'입니다. 이유를 설명하면 더 재미있습니다."
+ ],
+ "players": "2~12인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

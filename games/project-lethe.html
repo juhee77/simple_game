@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Project Lethe</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 <style>
   :root {
     --bg: #0a0a0c;
@@ -107,6 +107,8 @@
 </style>
 </head>
 <body>
+<a href="../index.html" class="back-btn" style="position:fixed;top:14px;left:14px;z-index:9999;display:inline-block;padding:8px 14px;border-radius:999px;font-size:0.85rem;font-weight:700;text-decoration:none;background:rgba(0,0,0,0.65);color:#fff;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(4px);">← 메인</a>
+
 
   <!-- GDD Button & Modal -->
   <button id="gdd-btn" onclick="openGDD()">🔍 GDD</button>
@@ -462,5 +464,6 @@ async function openGDD() {
 function closeGDD() { document.getElementById('gdd-modal').classList.remove('open'); }
 window.onclick = function(e) { if(e.target == document.getElementById('gdd-modal')) closeGDD(); }
 </script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>초성 퀴즈 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -624,7 +624,24 @@
             renderScoreboard();
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "초성 퀴즈",
+ "goal": "초성만 보고 단어를 가장 먼저 외치세요.",
+ "steps": [
+  "참가자를 등록하고 카테고리를 고릅니다(여러 개 선택 가능).",
+  "화면에 초성이 뜨면 제한 시간 안에 정답을 외칩니다.",
+  "진행자가 맞힌 사람의 점수를 눌러 올려 줍니다.",
+  "라운드를 마치고 최고 점수를 낸 사람이 승리합니다."
+ ],
+ "tips": [
+  "소리 내어 외치는 게임입니다. 조용한 곳에서는 손을 먼저 드는 규칙을 정하세요."
+ ],
+ "players": "2~12인",
+ "time": "약 15분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

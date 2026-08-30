@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D 키네틱 파티클 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -434,7 +434,23 @@
             }
         });
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "3D 키네틱 파티클",
+ "goal": "손끝을 따라 움직이는 빛무리를 감상하세요.",
+ "steps": [
+  "화면 위에서 손가락이나 마우스를 움직입니다.",
+  "수만 개의 입자가 그 움직임에 반응합니다.",
+  "탭하면 입자가 흩어졌다 다시 모입니다."
+ ],
+ "tips": [
+  "승패가 없는 감상용입니다."
+ ],
+ "players": "1인",
+ "time": "약 5분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>

@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>블러프 좌표 사냥 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -726,7 +726,25 @@
             startRound();
         }
     </script>
-    <script src="../scripts/game-common.js"></script>
+    <script type="application/json" id="game-rules">
+{
+ "title": "블러프 좌표 사냥",
+ "goal": "보물 좌표와 진짜 정보원을 함께 찾아내세요.",
+ "steps": [
+  "폰을 돌려가며 각자 자기 힌트를 혼자 확인합니다.",
+  "한 명(정보원)만 진짜 힌트를, 나머지는 가짜 힌트를 받습니다.",
+  "모두 모여 힌트를 공유하며 토론합니다. 거짓 힌트도 섞여 있습니다.",
+  "보물 좌표와 정보원이 누구인지 각각 투표합니다.",
+  "둘 다 맞히면 추격자 팀, 하나라도 틀리면 정보원 쪽이 유리해집니다."
+ ],
+ "tips": [
+  "자기 힌트가 진짜인지 가짜인지는 본인도 확신할 수 없습니다."
+ ],
+ "players": "3~8인",
+ "time": "약 15분"
+}
+</script>
+<script src="../scripts/game-common.js?v=2"></script>
 </body>
 
 </html>
