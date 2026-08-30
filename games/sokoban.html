@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>창고지기 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: rgba(255, 255, 255, .05);
+            --border: rgba(255, 255, 255, .14);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --wall: #4b5f7a;
+            --floor: #131c2e;
+            --goal: #f59e0b;
+            --box: #f97316;
+            --box-done: #22c55e;
+            --player: #38bdf8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+            touch-action: manipulation;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.7rem;
+            margin: 44px 0 4px;
+            background: linear-gradient(135deg, #f97316, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub { color: var(--muted); font-size: .88rem; margin-bottom: 14px; text-align: center; }
+
+        .hud {
+            display: flex;
+            gap: 18px;
+            padding: 10px 20px;
+            margin-bottom: 14px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .hud div { text-align: center; }
+        .hud .label { display: block; font-size: .68rem; color: var(--muted); }
+        .hud .value { font-size: 1.1rem; font-weight: 800; }
+
+        .levels { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 420px; margin-bottom: 16px; }
+
+        .lv {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--muted);
+            font-family: inherit;
+            font-weight: 700;
+            font-size: .85rem;
+            cursor: pointer;
+        }
+
+        .lv.active { background: linear-gradient(135deg, #f97316, #38bdf8); color: #0b1220; border-color: transparent; }
+        .lv.cleared { color: var(--box-done); border-color: rgba(34, 197, 94, .5); }
+        .lv.cleared.active { color: #0b1220; }
+
+        .grid {
+            display: grid;
+            gap: 2px;
+            padding: 10px;
+            background: rgba(0, 0, 0, .3);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .tile {
+            width: var(--cell);
+            height: var(--cell);
+            border-radius: 6px;
+            background: var(--floor);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .tile.wall { background: var(--wall); box-shadow: inset 0 0 0 2px rgba(255,255,255,.08); }
+        .tile.void { background: transparent; }
+
+        .tile.goal::after {
+            content: '';
+            position: absolute;
+            width: 34%;
+            height: 34%;
+            border-radius: 50%;
+            background: var(--goal);
+            opacity: .55;
+        }
+
+        .piece {
+            width: 76%;
+            height: 76%;
+            border-radius: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .piece.box { background: var(--box); box-shadow: inset 0 0 0 3px rgba(0, 0, 0, .22); }
+        .piece.box.done { background: var(--box-done); }
+        .piece.player { background: var(--player); border-radius: 50%; }
+
+        .pad { display: grid; grid-template-columns: repeat(3, 58px); gap: 8px; margin-bottom: 14px; }
+
+        .pad button {
+            height: 52px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--text);
+            font-size: 1.3rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .pad button:active { background: rgba(255, 255, 255, .14); }
+        .pad .spacer { visibility: hidden; }
+
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 12px 22px;
+            background: linear-gradient(135deg, #f97316, #38bdf8);
+            color: #0b1220;
+            font-family: inherit;
+            font-size: .95rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+        .btn:disabled { opacity: .4; cursor: default; }
+
+        .msg { margin-top: 14px; min-height: 24px; font-weight: 700; text-align: center; }
+        .msg.good { color: var(--box-done); }
+
+        .hint { color: var(--muted); font-size: .78rem; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>📦 창고지기</h1>
+    <p class="sub">상자를 모두 목표 지점으로 밀어 넣으세요</p>
+
+    <div class="hud">
+        <div><span class="label">스테이지</span><span class="value" id="hud-level">1</span></div>
+        <div><span class="label">이동</span><span class="value" id="hud-moves">0</span></div>
+        <div><span class="label">남은 상자</span><span class="value" id="hud-left">0</span></div>
+        <div><span class="label">최소 이동</span><span class="value" id="hud-best">-</span></div>
+    </div>
+
+    <div class="levels" id="levels"></div>
+    <div class="grid" id="grid"></div>
+
+    <div class="pad">
+        <span class="spacer"></span>
+        <button onclick="move(0,-1)" aria-label="위로">↑</button>
+        <span class="spacer"></span>
+        <button onclick="move(-1,0)" aria-label="왼쪽으로">←</button>
+        <button onclick="move(0,1)" aria-label="아래로">↓</button>
+        <button onclick="move(1,0)" aria-label="오른쪽으로">→</button>
+    </div>
+
+    <div class="actions">
+        <button class="btn ghost" id="undo-btn" onclick="undo()">되돌리기</button>
+        <button class="btn ghost" onclick="loadLevel(current)">다시 시작</button>
+        <button class="btn" id="next-btn" onclick="nextLevel()">다음 스테이지</button>
+    </div>
+
+    <p class="msg" id="msg"></p>
+    <p class="hint">방향키·WASD 또는 아래 버튼으로 움직입니다. 되돌리기는 Z 키입니다.</p>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "창고지기",
+ "players": "1인",
+ "time": "약 20분",
+ "goal": "상자를 모두 목표 지점 위로 밀어 넣으세요.",
+ "steps": [
+  "방향키, WASD, 또는 화면 아래 버튼으로 일꾼을 움직입니다.",
+  "상자는 밀 수만 있고 당길 수는 없습니다. 일꾼이 상자 반대편에 서야 밀 수 있습니다.",
+  "상자 뒤에 벽이나 다른 상자가 있으면 밀리지 않습니다.",
+  "모든 상자가 목표 지점 위에 올라가면 스테이지를 통과합니다.",
+  "막히면 되돌리기(Z)나 다시 시작으로 언제든 복구할 수 있습니다."
+ ],
+ "tips": [
+  "상자를 구석으로 밀면 다시는 뺄 수 없습니다. 밀기 전에 되돌아올 길을 먼저 생각하세요.",
+  "벽에 붙은 상자는 그 벽을 따라서만 움직일 수 있습니다.",
+  "스테이지별 최소 이동 기록이 저장됩니다."
+ ]
+}
+</script>
+
+    <script>
+        // 맵 기호: # 벽, @ 일꾼, $ 상자, . 목표, * 목표 위 상자, + 목표 위 일꾼, 공백 바닥
+        const LEVELS = [
+            ['#####',
+             '#@$.#',
+             '#####'],
+
+            ['######',
+             '#@ $.#',
+             '#    #',
+             '######'],
+
+            ['#######',
+             '#  .  #',
+             '# $$  #',
+             '#  @  #',
+             '#  .  #',
+             '#######'],
+
+            ['#######',
+             '#.    #',
+             '# $$# #',
+             '# @   #',
+             '#  .  #',
+             '#######'],
+
+            ['########',
+             '#      #',
+             '# .$@$.#',
+             '#      #',
+             '########'],
+
+            ['#######',
+             '#..   #',
+             '# $$  #',
+             '#  @  #',
+             '#     #',
+             '#######'],
+
+            ['########',
+             '#   #  #',
+             '# $ $  #',
+             '# #. . #',
+             '#   @  #',
+             '########'],
+
+            ['########',
+             '#..    #',
+             '#  $$  #',
+             '#  #   #',
+             '#   @  #',
+             '########'],
+
+            ['#########',
+             '#   #   #',
+             '# $ $ $ #',
+             '# . . . #',
+             '#   @   #',
+             '#########'],
+
+            ['########',
+             '#. #   #',
+             '#  $   #',
+             '# #$## #',
+             '#  .  @#',
+             '########'],
+
+            ['#########',
+             '#  ...  #',
+             '#  $$$  #',
+             '#   @   #',
+             '#  # #  #',
+             '#########'],
+
+            ['#########',
+             '#@      #',
+             '# $#$#$ #',
+             '# .  .  #',
+             '#    .  #',
+             '#########']
+        ];
+
+        const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+
+        let grid = [];       // 벽/목표 같은 고정 지형
+        let boxes = new Set();
+        let player = { x: 0, y: 0 };
+        let goals = new Set();
+        let history = [];
+        let moves = 0;
+        let current = 0;
+        let solved = false;
+
+        const key = (x, y) => `${x},${y}`;
+        const bestKey = (lv) => `sokoban-best-${lv}`;
+        const clearKey = (lv) => `sokoban-clear-${lv}`;
+
+        function parseLevel(rows) {
+            grid = []; boxes = new Set(); goals = new Set();
+            rows.forEach((row, y) => {
+                const line = [];
+                [...row].forEach((ch, x) => {
+                    line.push(ch === '#' ? 'wall' : ch === ' ' && false ? 'void' : 'floor');
+                    if (ch === '.' || ch === '*' || ch === '+') goals.add(key(x, y));
+                    if (ch === '$' || ch === '*') boxes.add(key(x, y));
+                    if (ch === '@' || ch === '+') player = { x, y };
+                });
+                grid.push(line);
+            });
+        }
+
+        function isWall(x, y) {
+            return !grid[y] || !grid[y][x] || grid[y][x] === 'wall';
+        }
+
+        function loadLevel(index) {
+            current = index;
+            parseLevel(LEVELS[index]);
+            history = [];
+            moves = 0;
+            solved = false;
+            setMessage('');
+            document.getElementById('next-btn').disabled = true;
+            renderLevels();
+            render();
+        }
+
+        function render() {
+            const rows = LEVELS[current];
+            const cols = Math.max(...rows.map(r => r.length));
+            const cell = Math.min(46, Math.floor(Math.min(340, window.innerWidth - 56) / cols));
+            const el = document.getElementById('grid');
+            el.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
+            el.style.setProperty('--cell', `${cell}px`);
+            el.innerHTML = '';
+
+            for (let y = 0; y < rows.length; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const tile = document.createElement('div');
+                    const ch = rows[y][x] ?? ' ';
+                    tile.className = 'tile';
+                    if (ch === '#') tile.classList.add('wall');
+                    if (goals.has(key(x, y))) tile.classList.add('goal');
+
+                    if (boxes.has(key(x, y))) {
+                        const piece = document.createElement('i');
+                        piece.className = 'piece box' + (goals.has(key(x, y)) ? ' done' : '');
+                        tile.appendChild(piece);
+                    } else if (player.x === x && player.y === y) {
+                        const piece = document.createElement('i');
+                        piece.className = 'piece player';
+                        tile.appendChild(piece);
+                    }
+                    el.appendChild(tile);
+                }
+            }
+
+            const left = [...boxes].filter(b => !goals.has(b)).length;
+            document.getElementById('hud-level').textContent = current + 1;
+            document.getElementById('hud-moves').textContent = moves;
+            document.getElementById('hud-left').textContent = left;
+            const best = loadBestRecord(bestKey(current));
+            document.getElementById('hud-best').textContent = best === null ? '-' : `${best}회`;
+            document.getElementById('undo-btn').disabled = history.length === 0;
+        }
+
+        function renderLevels() {
+            const el = document.getElementById('levels');
+            el.innerHTML = '';
+            LEVELS.forEach((_, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'lv' + (i === current ? ' active' : '') +
+                    (loadBestRecord(clearKey(i)) ? ' cleared' : '');
+                btn.textContent = i + 1;
+                btn.onclick = () => loadLevel(i);
+                el.appendChild(btn);
+            });
+        }
+
+        function move(dx, dy) {
+            if (solved) return;
+            const nx = player.x + dx, ny = player.y + dy;
+            if (isWall(nx, ny)) return;
+
+            const snapshot = { player: { ...player }, boxes: new Set(boxes), moves };
+
+            if (boxes.has(key(nx, ny))) {
+                // 상자는 밀 수만 있다. 상자 너머가 벽이거나 다른 상자면 움직이지 않는다.
+                const bx = nx + dx, by = ny + dy;
+                if (isWall(bx, by) || boxes.has(key(bx, by))) return;
+                boxes.delete(key(nx, ny));
+                boxes.add(key(bx, by));
+            }
+
+            history.push(snapshot);
+            player = { x: nx, y: ny };
+            moves++;
+            render();
+            checkWin();
+        }
+
+        function undo() {
+            if (!history.length || solved) return;
+            const prev = history.pop();
+            player = prev.player;
+            boxes = prev.boxes;
+            moves = prev.moves;
+            setMessage('');
+            render();
+        }
+
+        function checkWin() {
+            const done = [...boxes].every(b => goals.has(b));
+            if (!done) return;
+            solved = true;
+            const isRecord = saveBestRecord(bestKey(current), moves);
+            saveBestRecord(clearKey(current), 1, false);
+            renderLevels();
+            render();
+            setMessage(
+                `스테이지 ${current + 1} 통과! ${moves}회 이동${isRecord ? ' · 🏆 최소 이동 기록 경신' : ''}`,
+                'good'
+            );
+            document.getElementById('next-btn').disabled = current >= LEVELS.length - 1;
+            if (current >= LEVELS.length - 1) {
+                setMessage('마지막 스테이지까지 모두 통과했습니다! 🎉', 'good');
+            }
+        }
+
+        function nextLevel() {
+            if (current < LEVELS.length - 1) loadLevel(current + 1);
+        }
+
+        function setMessage(text, kind) {
+            const el = document.getElementById('msg');
+            el.textContent = text;
+            el.className = 'msg' + (kind ? ' ' + kind : '');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const k = e.key.toLowerCase();
+            const map = {
+                arrowup: DIRS.up, w: DIRS.up,
+                arrowdown: DIRS.down, s: DIRS.down,
+                arrowleft: DIRS.left, a: DIRS.left,
+                arrowright: DIRS.right, d: DIRS.right
+            };
+            if (map[k]) { e.preventDefault(); move(...map[k]); }
+            else if (k === 'z') { e.preventDefault(); undo(); }
+            else if (k === 'r') { e.preventDefault(); loadLevel(current); }
+        });
+
+        window.addEventListener('resize', render);
+
+        // 마지막으로 깬 스테이지 다음부터 이어서 시작한다.
+        let start = 0;
+        while (start < LEVELS.length - 1 && loadBestRecord(clearKey(start))) start++;
+        loadLevel(start);
+    </script>
+</body>
+
+</html>

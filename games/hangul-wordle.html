@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한글 워들 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=6650036c"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: rgba(255, 255, 255, .05);
+            --border: rgba(255, 255, 255, .14);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --hit: #22c55e;
+            --near: #eab308;
+            --miss: #475569;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 44px 0 4px;
+            background: linear-gradient(135deg, #22c55e, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub { color: var(--muted); font-size: .9rem; margin-bottom: 16px; text-align: center; }
+
+        .modes { display: flex; gap: 8px; margin-bottom: 14px; }
+
+        .mode-btn {
+            padding: 8px 18px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--muted);
+            font-family: inherit;
+            font-size: .9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .mode-btn.active { background: linear-gradient(135deg, #22c55e, #38bdf8); color: #06210f; border-color: transparent; }
+
+        .stats {
+            display: flex;
+            gap: 22px;
+            margin-bottom: 18px;
+            padding: 10px 20px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .stat { text-align: center; }
+        .stat .label { font-size: .7rem; color: var(--muted); display: block; }
+        .stat .value { font-size: 1.15rem; font-weight: 800; }
+
+        .board { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+        .row { display: flex; gap: 8px; }
+
+        /* 한 칸은 음절 하나. 아래 세 개의 막대가 초성·중성·종성 판정을 나타낸다. */
+        .cell {
+            width: 76px;
+            height: 88px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .03);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 2.2rem;
+            font-weight: 800;
+        }
+
+        .cell.filled { border-color: rgba(255, 255, 255, .38); }
+        .cell.revealed { background: rgba(255, 255, 255, .06); }
+
+        .bars { display: flex; gap: 4px; }
+
+        .bar {
+            width: 18px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .bar.hit { background: var(--hit); }
+        .bar.near { background: var(--near); }
+        .bar.miss { background: var(--miss); }
+        .bar.none { opacity: .25; }
+
+        .legend { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; color: var(--muted); font-size: .78rem; margin-bottom: 16px; }
+        .legend span { display: flex; align-items: center; gap: 6px; }
+        .swatch { width: 14px; height: 6px; border-radius: 3px; display: inline-block; }
+
+        .input-row { display: flex; gap: 8px; width: 100%; max-width: 340px; }
+
+        #guess {
+            flex: 1;
+            padding: 14px 18px;
+            border-radius: 999px;
+            border: 2px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.2rem;
+            text-align: center;
+            outline: none;
+        }
+
+        #guess:focus { border-color: #22c55e; }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #22c55e, #38bdf8);
+            color: #06210f;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn:disabled { opacity: .45; cursor: default; }
+
+        .msg { margin-top: 14px; min-height: 26px; font-weight: 700; text-align: center; }
+        .msg.warn { color: var(--near); }
+        .msg.good { color: var(--hit); }
+
+        .result { display: none; margin-top: 18px; text-align: center; max-width: 340px; }
+        .result.show { display: block; }
+        .result .answer { font-size: 1.6rem; font-weight: 800; margin: 6px 0 4px; }
+        .result .desc { color: var(--muted); font-size: .9rem; margin-bottom: 14px; }
+
+        @media (max-width: 420px) {
+            .cell { width: 64px; height: 78px; font-size: 1.9rem; }
+            .bar { width: 15px; }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>🟩 한글 워들</h1>
+    <p class="sub">두 글자 단어를 여섯 번 안에 맞혀보세요<br>자음·모음 하나하나가 힌트가 됩니다</p>
+
+    <div class="modes">
+        <button class="mode-btn active" id="mode-daily" onclick="setMode('daily')">오늘의 단어</button>
+        <button class="mode-btn" id="mode-free" onclick="setMode('free')">무한 모드</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat"><span class="label">연속 정답</span><span class="value" id="streak">0</span></div>
+        <div class="stat"><span class="label">최고 연속</span><span class="value" id="best-streak">0</span></div>
+        <div class="stat"><span class="label">푼 횟수</span><span class="value" id="solved">0</span></div>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="legend">
+        <span><i class="swatch" style="background:var(--hit)"></i>자리·글자 모두 맞음</span>
+        <span><i class="swatch" style="background:var(--near)"></i>단어에 있지만 자리가 다름</span>
+        <span><i class="swatch" style="background:var(--miss)"></i>단어에 없음</span>
+    </div>
+
+    <div class="input-row">
+        <input id="guess" maxlength="2" placeholder="두 글자" autocomplete="off"
+            onkeydown="if(event.key==='Enter' && !event.isComposing)submitGuess()">
+        <button class="btn" id="submit-btn" onclick="submitGuess()">입력</button>
+    </div>
+
+    <p class="msg" id="msg"></p>
+
+    <div class="result" id="result">
+        <div class="answer" id="result-answer"></div>
+        <div class="desc" id="result-desc"></div>
+        <button class="btn" id="again-btn" onclick="nextRound()">다음 단어</button>
+    </div>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "한글 워들",
+ "players": "1인",
+ "time": "약 5분",
+ "goal": "숨겨진 두 글자 단어를 여섯 번 안에 맞히세요.",
+ "steps": [
+  "두 글자로 된 단어를 입력하고 엔터를 누릅니다.",
+  "판정은 글자가 아니라 자음·모음 단위로 이뤄집니다. 한 글자 아래 막대 세 개가 각각 첫소리·가운뎃소리·받침을 뜻합니다.",
+  "초록은 자리와 자모가 모두 맞음, 노랑은 단어 어딘가에 있지만 자리가 다름, 회색은 단어에 없음입니다.",
+  "받침이 없는 자리는 흐린 막대로 표시되며, 정답에도 받침이 없어야 초록이 됩니다.",
+  "여섯 번 안에 맞히면 성공입니다."
+ ],
+ "tips": [
+  "'오늘의 단어'는 날짜마다 하나로 정해져 있어 매일 새 문제가 나옵니다.",
+  "첫 추측은 모음이 다양한 단어로 시작하면 정보를 많이 얻습니다.",
+  "연속 정답 기록은 자동 저장됩니다."
+ ]
+}
+</script>
+
+    <script>
+        const MAX_TRIES = 6;
+        const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+        const JUNG = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+        const JONG = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
+        const WORDS = [
+            '가방','가족','가을','가위','간식','갈비','감자','강물','강산','개미',
+            '거리','거울','건강','겨울','경기','계단','고기','고민','고추','곡식',
+            '골목','공기','공원','공책','과일','과자','교실','구두','구름','국수',
+            '군인','그늘','그릇','그림','근육','금고','기분','기술','기억','기차',
+            '기침','김밥','나라','나무','나비','나사','낙엽','날개','날씨','남매',
+            '냄비','냉면','노래','노을','녹차','논밭','농구','눈물','눈썹','다리',
+            '단추','달력','담요','대문','대화','도시','도장','독서','돌담','동네',
+            '동생','돼지','두부','등불','딸기','땅콩','라면','로봇','마늘','마루',
+            '마술','마음','만두','말씀','매미','머리','먼지','메모','명함','모래',
+            '모자','목수','목표','문어','문제','물감','물결','미소','바퀴','바다',
+            '바람','바위','박수','반죽','반지','발명','발톱','밤길','방법','배구',
+            '배꼽','배추','백지','버섯','버스','번개','벌집','베개','벼락','변화',
+            '별빛','병원','보리','보물','복도','볼펜','부엌','북극','분필','불꽃',
+            '붕대','비누','비늘','빗물','빨래','사과','사슴','사진','산책','상자',
+            '색깔','생각','서점','석양','선물','설탕','성격','세계','소금','소망',
+            '소설','손님','솔개','수건','수박','수업','숙제','순서','술잔','숫자',
+            '스승','시간','시계','시장','식빵','신발','실수','심장','아들','아침',
+            '악기','안개','안경','약속','양말','어깨','얼음','엄지','여름','여행',
+            '연필','열쇠','영화','예술','오리','오후','온천','온도','옷장','완두',
+            '왕관','요리','우산','우유','운동','유리','은행','음악','의자','이불',
+            '인사','인형','일기','자두','자유','작가','잔디','장갑','장미','재료',
+            '저녁','전화','정원','제자','조개','종이','주말','주먹','줄기','중심',
+            '지갑','지도','지붕','직업','진주','질문','짜장','참새','창문','책상',
+            '천둥','천막','철학','청소','초록','추억','축구','출발','충전','치약',
+            '친구','칠판','침대','칫솔','커피','코피','콩밥','크림','타월','탁구',
+            '태양','택시','토끼','통장','튤립','파도','파랑','팔찌','편지','포도',
+            '폭포','표범','풍선','필통','하늘','학교','한복','항구','해변','햇살',
+            '행운','향기','허리','헬멧','현관','호수','홍차','화분','환영','회의',
+            '휴지','흔적','흙길','힘줄'
+        ];
+
+        let answer = '';
+        let mode = 'daily';
+        let guesses = [];
+        let finished = false;
+
+        const STATS_KEY = 'hangul-wordle-stats';
+        const DAILY_KEY = 'hangul-wordle-daily';
+
+        // ── 한글 자모 분해 ────────────────────────────────
+        // 완성형 한글은 (초성*21 + 중성)*28 + 종성 순서로 배열되어 있다.
+        function decompose(syllable) {
+            const code = syllable.charCodeAt(0) - 0xAC00;
+            if (code < 0 || code > 11171) return null;
+            return [
+                CHO[Math.floor(code / 588)],
+                JUNG[Math.floor((code % 588) / 28)],
+                JONG[code % 28]
+            ];
+        }
+
+        function isCompleteHangul(ch) {
+            const code = ch.charCodeAt(0);
+            return code >= 0xAC00 && code <= 0xD7A3;
+        }
+
+        // 두 글자를 초성·중성·종성 6칸으로 편다. 받침이 없으면 빈 문자열이 들어간다.
+        function toSlots(word) {
+            return [...word].flatMap(decompose);
+        }
+
+        // ── 판정 ─────────────────────────────────────────
+        // 워들과 같은 2패스 방식. 정확히 맞은 자리를 먼저 소진해야
+        // 같은 자모가 여러 번 나올 때 노랑이 과하게 붙지 않는다.
+        function judge(guessSlots, answerSlots) {
+            const marks = new Array(6).fill('miss');
+            const remaining = [];
+
+            for (let i = 0; i < 6; i++) {
+                if (guessSlots[i] === answerSlots[i]) marks[i] = 'hit';
+                else remaining.push(answerSlots[i]);
+            }
+            for (let i = 0; i < 6; i++) {
+                if (marks[i] === 'hit') continue;
+                // 받침 없음끼리는 위치가 달라도 노랑을 주지 않는다. 정보가 아니기 때문이다.
+                if (guessSlots[i] === '') continue;
+                const at = remaining.indexOf(guessSlots[i]);
+                if (at !== -1) {
+                    marks[i] = 'near';
+                    remaining.splice(at, 1);
+                }
+            }
+            return marks;
+        }
+
+        // ── 단어 선택 ────────────────────────────────────
+        function todayKey() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        // 날짜에서 안정적으로 인덱스를 뽑아, 같은 날이면 누구에게나 같은 단어가 나오게 한다.
+        function dailyIndex() {
+            let h = 0;
+            for (const ch of todayKey()) h = (h * 31 + ch.charCodeAt(0)) % 1000003;
+            return h % WORDS.length;
+        }
+
+        function pickWord() {
+            return mode === 'daily'
+                ? WORDS[dailyIndex()]
+                : WORDS[Math.floor(Math.random() * WORDS.length)];
+        }
+
+        // ── 기록 ─────────────────────────────────────────
+        function loadStats() {
+            try {
+                const raw = localStorage.getItem(STATS_KEY);
+                const s = raw ? JSON.parse(raw) : null;
+                if (s && typeof s === 'object') {
+                    return { streak: s.streak || 0, best: s.best || 0, solved: s.solved || 0 };
+                }
+            } catch { /* 저장소 접근이 막혀도 게임은 진행된다 */ }
+            return { streak: 0, best: 0, solved: 0 };
+        }
+
+        function saveStats(s) {
+            try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch { /* 무시 */ }
+        }
+
+        function renderStats() {
+            const s = loadStats();
+            document.getElementById('streak').textContent = s.streak;
+            document.getElementById('best-streak').textContent = s.best;
+            document.getElementById('solved').textContent = s.solved;
+        }
+
+        function recordResult(won) {
+            const s = loadStats();
+            if (won) {
+                s.streak += 1;
+                s.solved += 1;
+                if (s.streak > s.best) s.best = s.streak;
+            } else {
+                s.streak = 0;
+            }
+            saveStats(s);
+            renderStats();
+        }
+
+        function dailyDone() {
+            try { return localStorage.getItem(DAILY_KEY) === todayKey(); } catch { return false; }
+        }
+
+        function markDailyDone() {
+            try { localStorage.setItem(DAILY_KEY, todayKey()); } catch { /* 무시 */ }
+        }
+
+        // ── 렌더 ─────────────────────────────────────────
+        function renderBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            for (let r = 0; r < MAX_TRIES; r++) {
+                const row = document.createElement('div');
+                row.className = 'row';
+                const entry = guesses[r];
+                for (let c = 0; c < 2; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (entry) {
+                        cell.classList.add('filled', 'revealed');
+                        cell.append(entry.word[c]);
+                        const bars = document.createElement('div');
+                        bars.className = 'bars';
+                        for (let k = 0; k < 3; k++) {
+                            const bar = document.createElement('i');
+                            const idx = c * 3 + k;
+                            bar.className = 'bar ' + entry.marks[idx];
+                            if (entry.slots[idx] === '') bar.classList.add('none');
+                            bars.appendChild(bar);
+                        }
+                        cell.appendChild(bars);
+                    } else {
+                        const bars = document.createElement('div');
+                        bars.className = 'bars';
+                        for (let k = 0; k < 3; k++) {
+                            const bar = document.createElement('i');
+                            bar.className = 'bar';
+                            bars.appendChild(bar);
+                        }
+                        cell.appendChild(bars);
+                    }
+                    row.appendChild(cell);
+                }
+                board.appendChild(row);
+            }
+        }
+
+        function setMessage(text, kind) {
+            const el = document.getElementById('msg');
+            el.textContent = text;
+            el.className = 'msg' + (kind ? ' ' + kind : '');
+        }
+
+        // ── 진행 ─────────────────────────────────────────
+        function submitGuess() {
+            if (finished) return;
+            const input = document.getElementById('guess');
+            const word = input.value.trim();
+
+            if (word.length !== 2) return setMessage('두 글자로 입력해 주세요.', 'warn');
+            if (![...word].every(isCompleteHangul)) return setMessage('완성된 한글 두 글자만 입력할 수 있어요.', 'warn');
+
+            const slots = toSlots(word);
+            const marks = judge(slots, toSlots(answer));
+            guesses.push({ word, slots, marks });
+            renderBoard();
+            input.value = '';
+
+            if (word === answer) return endRound(true);
+            if (guesses.length >= MAX_TRIES) return endRound(false);
+
+            setMessage(`${MAX_TRIES - guesses.length}번 남았습니다.`);
+            input.focus();
+        }
+
+        function endRound(won) {
+            finished = true;
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('guess').disabled = true;
+            recordResult(won);
+            if (mode === 'daily') markDailyDone();
+
+            setMessage(won ? `${guesses.length}번 만에 맞혔습니다!` : '아쉽습니다.', won ? 'good' : 'warn');
+            document.getElementById('result-answer').textContent = `정답: ${answer}`;
+            document.getElementById('result-desc').textContent = mode === 'daily'
+                ? '오늘의 단어는 하루에 하나입니다. 무한 모드로 더 풀어보세요.'
+                : '새 단어로 계속 도전할 수 있습니다.';
+            document.getElementById('again-btn').textContent = mode === 'daily' ? '무한 모드로 계속하기' : '다음 단어';
+            document.getElementById('result').classList.add('show');
+        }
+
+        function nextRound() {
+            if (mode === 'daily') setMode('free');
+            else startRound();
+        }
+
+        function startRound() {
+            answer = pickWord();
+            guesses = [];
+            finished = false;
+            document.getElementById('submit-btn').disabled = false;
+            const input = document.getElementById('guess');
+            input.disabled = false;
+            input.value = '';
+            document.getElementById('result').classList.remove('show');
+            renderBoard();
+
+            if (mode === 'daily' && dailyDone()) {
+                setMessage('오늘의 단어는 이미 풀었습니다. 무한 모드로 즐겨보세요.', 'warn');
+            } else {
+                setMessage(`${MAX_TRIES}번의 기회가 있습니다.`);
+            }
+            input.focus();
+        }
+
+        function setMode(next) {
+            mode = next;
+            document.getElementById('mode-daily').classList.toggle('active', next === 'daily');
+            document.getElementById('mode-free').classList.toggle('active', next === 'free');
+            startRound();
+        }
+
+        renderStats();
+        startRound();
+    </script>
+</body>
+
+</html>
