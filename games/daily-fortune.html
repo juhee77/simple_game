@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 운세 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=b7c7301f"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=308950af">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #14091f;
+            --panel: rgba(255, 255, 255, .06);
+            --border: rgba(255, 255, 255, .15);
+            --text: #f8fafc;
+            --muted: #a99bbd;
+            --gold: #fbbf24;
+            --accent: #c084fc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #2a1445 0%, var(--bg) 60%);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 44px 0 2px;
+            background: linear-gradient(135deg, #fbbf24, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .today { color: var(--muted); font-size: .88rem; margin-bottom: 18px; }
+
+        .wrap { width: 100%; max-width: 440px; }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+
+        label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+
+        .input-row { display: flex; gap: 8px; }
+
+        #name {
+            flex: 1;
+            padding: 14px 18px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.05rem;
+            outline: none;
+        }
+
+        #name:focus { border-color: var(--accent); }
+
+        .btn {
+            border: none;
+            border-radius: 14px;
+            padding: 14px 22px;
+            background: linear-gradient(135deg, #fbbf24, #c084fc);
+            color: #1a0b28;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn.ghost {
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .recent { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+
+        .recent button {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .04);
+            color: var(--muted);
+            font-family: inherit;
+            font-size: .82rem;
+            cursor: pointer;
+        }
+
+        .recent button:hover { color: var(--text); border-color: var(--accent); }
+
+        .result { display: none; }
+        .result.show { display: block; }
+
+        .headline { text-align: center; padding: 24px 20px 20px; }
+        .headline .who { font-size: .85rem; color: var(--muted); }
+        .headline .emoji { font-size: 3.2rem; margin: 6px 0; }
+        .headline .grade { font-size: 2rem; font-weight: 800; color: var(--gold); }
+        .headline .score { font-size: .9rem; color: var(--muted); margin-top: 4px; }
+
+        .meter { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .1); overflow: hidden; margin-top: 14px; }
+        .meter span { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #fbbf24, #c084fc); }
+
+        .lines { display: flex; flex-direction: column; gap: 10px; }
+
+        .line { display: flex; align-items: center; gap: 12px; }
+        .line .name { width: 66px; font-size: .88rem; color: var(--muted); flex-shrink: 0; }
+        .line .stars { font-size: 1rem; letter-spacing: .1em; color: var(--gold); }
+        .line .note { font-size: .82rem; color: var(--muted); flex: 1; text-align: right; }
+
+        .lucky { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+        .lucky div {
+            text-align: center;
+            padding: 14px 8px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+        }
+
+        .lucky .label { display: block; font-size: .68rem; color: var(--muted); margin-bottom: 4px; }
+        .lucky .value { font-size: 1rem; font-weight: 800; }
+
+        .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 50%; vertical-align: -3px; margin-right: 5px; }
+
+        .saying {
+            padding: 16px 18px;
+            border-radius: 14px;
+            background: rgba(192, 132, 252, .12);
+            border: 1px solid rgba(192, 132, 252, .35);
+            font-size: .95rem;
+            line-height: 1.7;
+        }
+
+        .saying strong { color: var(--accent); }
+
+        .actions { display: flex; gap: 8px; }
+        .actions .btn { flex: 1; }
+
+        .disclaimer {
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: .76rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>🔮 오늘의 운세</h1>
+    <p class="today" id="today-label"></p>
+
+    <div class="wrap">
+        <div class="card">
+            <label for="name">이름을 넣어보세요</label>
+            <div class="input-row">
+                <input id="name" maxlength="12" placeholder="예: 김주희" autocomplete="off"
+                    onkeydown="if(event.key==='Enter' && !event.isComposing)showFortune()">
+                <button class="btn" onclick="showFortune()">운세 보기</button>
+            </div>
+            <div class="recent" id="recent"></div>
+        </div>
+
+        <div class="result" id="result">
+            <div class="card headline">
+                <div class="who" id="r-who"></div>
+                <div class="emoji" id="r-emoji">🌙</div>
+                <div class="grade" id="r-grade"></div>
+                <div class="score" id="r-score"></div>
+                <div class="meter"><span id="r-meter" style="width:0%"></span></div>
+            </div>
+
+            <div class="card">
+                <div class="lines" id="r-lines"></div>
+            </div>
+
+            <div class="card lucky">
+                <div><span class="label">행운의 색</span><span class="value" id="r-color"></span></div>
+                <div><span class="label">행운의 숫자</span><span class="value" id="r-number"></span></div>
+                <div><span class="label">행운의 시간</span><span class="value" id="r-hour"></span></div>
+            </div>
+
+            <div class="card">
+                <div class="saying" id="r-saying"></div>
+            </div>
+
+            <div class="actions">
+                <button class="btn ghost" onclick="copyResult()">📋 결과 복사</button>
+                <button class="btn ghost" onclick="clearName()">다른 사람 보기</button>
+            </div>
+
+            <p class="disclaimer">
+                재미로 보는 운세입니다. 이름과 날짜로만 정해지므로,<br>
+                <strong>같은 날 다시 봐도 결과는 그대로</strong>입니다.
+            </p>
+        </div>
+    </div>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "오늘의 운세",
+ "players": "1인 이상",
+ "time": "약 1분",
+ "goal": "이름을 넣고 오늘의 운세를 확인하세요.",
+ "steps": [
+  "이름을 입력하고 운세 보기를 누릅니다.",
+  "총운과 항목별 운세, 행운의 색·숫자·시간이 나옵니다.",
+  "결과는 이름과 날짜로만 정해집니다. 같은 날 다시 봐도 똑같이 나옵니다.",
+  "다른 사람 보기로 친구들 것도 뽑아 서로 비교해 보세요.",
+  "결과 복사로 단톡방에 바로 올릴 수 있습니다."
+ ],
+ "tips": [
+  "날이 바뀌면 새 운세가 나옵니다.",
+  "최근에 본 이름은 아래 버튼으로 다시 부를 수 있습니다.",
+  "재미로 보는 콘텐츠입니다. 실제 예측이 아닙니다."
+ ]
+}
+</script>
+
+    <script>
+        const RECENT_KEY = 'daily-fortune-recent';
+
+        // 등급 구간은 아래 점수 범위(35~100)에 맞춰 나눴다.
+        // 재미로 보는 콘텐츠라 '흉' 같은 부정 등급은 두지 않는다.
+        const GRADES = [
+            { min: 90, name: '대길', emoji: '🌟', tone: '뭘 해도 풀리는 날' },
+            { min: 78, name: '길', emoji: '😊', tone: '기분 좋게 흘러가는 날' },
+            { min: 64, name: '중길', emoji: '🙂', tone: '무난하게 괜찮은 날' },
+            { min: 50, name: '소길', emoji: '😌', tone: '작은 행운이 있는 날' },
+            { min: 0, name: '평', emoji: '🍀', tone: '천천히 가도 좋은 날' }
+        ];
+
+        const CATEGORIES = [
+            { key: '애정운', notes: ['먼저 연락해 보세요', '오해가 풀립니다', '기대는 조금만', '뜻밖의 안부가 옵니다', '표현을 아끼지 마세요'] },
+            { key: '금전운', notes: ['지갑을 조심하세요', '작은 지출이 늘어요', '뜻밖의 이득이 있어요', '큰 결제는 미루세요', '아껴 쓴 보람이 옵니다'] },
+            { key: '일운', notes: ['오전에 집중이 잘 돼요', '미뤄둔 일을 끝낼 때', '서두르면 실수합니다', '도움을 청하면 풀려요', '기록해 두면 좋습니다'] },
+            { key: '건강운', notes: ['물을 자주 드세요', '조금 걸으면 좋아요', '잠을 충분히', '어깨를 펴 보세요', '무리하지 마세요'] }
+        ];
+
+        const COLORS = [
+            ['빨강', '#ef4444'], ['주황', '#f97316'], ['노랑', '#facc15'], ['초록', '#22c55e'],
+            ['하늘', '#38bdf8'], ['파랑', '#3b82f6'], ['보라', '#a855f7'], ['분홍', '#ec4899'],
+            ['하양', '#f1f5f9'], ['검정', '#334155'], ['민트', '#2dd4bf'], ['베이지', '#d6c7a1']
+        ];
+
+        const SAYINGS = [
+            '고민하던 일이 있다면 오늘은 <strong>일단 시작</strong>하는 쪽이 낫습니다.',
+            '오늘은 <strong>듣는 쪽</strong>에 서면 얻는 게 많습니다.',
+            '작게 시작한 일이 <strong>생각보다 멀리</strong> 갑니다.',
+            '완벽하게 하려다 늦어집니다. <strong>일단 끝내는</strong> 게 이깁니다.',
+            '오래 미뤄둔 연락 하나가 <strong>하루를 바꿉니다</strong>.',
+            '오늘은 <strong>혼자 있는 시간</strong>이 꽤 도움이 됩니다.',
+            '누군가의 부탁을 <strong>거절해도 괜찮은</strong> 날입니다.',
+            '지출보다 <strong>기록</strong>이 중요한 하루입니다.',
+            '결정을 서두르지 마세요. <strong>내일 봐도 늦지 않습니다</strong>.',
+            '기대를 조금 낮추면 <strong>훨씬 즐거워집니다</strong>.',
+            '오늘 만나는 사람에게 <strong>먼저 웃어</strong> 보세요.',
+            '계획대로 안 되더라도 <strong>그게 더 나은 길</strong>일 수 있습니다.'
+        ];
+
+        // 이름과 날짜만으로 값을 정한다. 같은 날 다시 봐도 결과가 흔들리면
+        // 운세로서 신뢰가 안 생기기 때문에 무작위를 쓰지 않는다.
+        function seedFrom(text) {
+            let h = 2166136261;
+            for (const ch of text) {
+                h ^= ch.charCodeAt(0);
+                h = Math.imul(h, 16777619);
+            }
+            return h >>> 0;
+        }
+
+        function makeRandom(seed) {
+            let s = seed || 1;
+            return () => {
+                s = (Math.imul(s, 1103515245) + 12345) >>> 0;
+                return s / 4294967296;
+            };
+        }
+
+        function gradeFor(score) {
+            return GRADES.find(g => score >= g.min);
+        }
+
+        function buildFortune(name, dateKey) {
+            const rand = makeRandom(seedFrom(`${name}|${dateKey}`));
+            // 35점 아래는 만들지 않는다. 최저 등급도 '평'으로 읽히게 하기 위함이다.
+            const total = 35 + Math.floor(rand() * 66);
+            const grade = gradeFor(total);
+
+            // 항목 별점은 총운을 기준으로 흔든다. 총운이 98점인데 세부 항목이
+            // 별 두 개씩이면 앞뒤가 맞지 않아 믿음이 가지 않는다.
+            const base = 2 + Math.round(((total - 35) / 65) * 2.6);   // 2~5
+            const lines = CATEGORIES.map(cat => ({
+                key: cat.key,
+                stars: Math.max(2, Math.min(5, base + Math.floor(rand() * 3) - 1)),
+                note: cat.notes[Math.floor(rand() * cat.notes.length)]
+            }));
+
+            const color = COLORS[Math.floor(rand() * COLORS.length)];
+            const number = Math.floor(rand() * 45) + 1;
+            const hour = Math.floor(rand() * 24);
+            const saying = SAYINGS[Math.floor(rand() * SAYINGS.length)];
+
+            return { name, total, grade, lines, color, number, hour, saying };
+        }
+
+        // ── 최근 본 이름 ─────────────────────────────────
+        function loadRecent() {
+            try {
+                const raw = localStorage.getItem(RECENT_KEY);
+                const list = raw ? JSON.parse(raw) : [];
+                return Array.isArray(list) ? list.filter(v => typeof v === 'string').slice(0, 6) : [];
+            } catch { return []; }
+        }
+
+        function pushRecent(name) {
+            const list = loadRecent().filter(v => v !== name);
+            list.unshift(name);
+            try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 6))); } catch { /* 무시 */ }
+            renderRecent();
+        }
+
+        function renderRecent() {
+            const box = document.getElementById('recent');
+            box.innerHTML = '';
+            loadRecent().forEach(name => {
+                const btn = document.createElement('button');
+                btn.textContent = name;
+                btn.onclick = () => { document.getElementById('name').value = name; showFortune(); };
+                box.appendChild(btn);
+            });
+        }
+
+        // ── 표시 ─────────────────────────────────────────
+        let current = null;
+
+        function showFortune() {
+            const name = document.getElementById('name').value.trim();
+            if (!name) return gameAlert('이름을 넣어 주세요.');
+
+            const f = buildFortune(name, todayKey());
+            current = f;
+
+            document.getElementById('r-who').textContent = `${name} 님의 오늘`;
+            document.getElementById('r-emoji').textContent = f.grade.emoji;
+            document.getElementById('r-grade').textContent = f.grade.name;
+            document.getElementById('r-score').textContent = `${f.grade.tone} · ${f.total}점`;
+            document.getElementById('r-meter').style.width = `${f.total}%`;
+
+            const lines = document.getElementById('r-lines');
+            lines.innerHTML = '';
+            f.lines.forEach(l => {
+                const row = document.createElement('div');
+                row.className = 'line';
+                const name = document.createElement('span');
+                name.className = 'name';
+                name.textContent = l.key;
+                const stars = document.createElement('span');
+                stars.className = 'stars';
+                stars.textContent = '★'.repeat(l.stars) + '☆'.repeat(5 - l.stars);
+                const note = document.createElement('span');
+                note.className = 'note';
+                note.textContent = l.note;
+                row.append(name, stars, note);
+                lines.appendChild(row);
+            });
+
+            const colorEl = document.getElementById('r-color');
+            colorEl.innerHTML = '';
+            const swatch = document.createElement('i');
+            swatch.className = 'swatch';
+            swatch.style.background = f.color[1];
+            colorEl.append(swatch, f.color[0]);
+
+            document.getElementById('r-number').textContent = f.number;
+            document.getElementById('r-hour').textContent = `${String(f.hour).padStart(2, '0')}시`;
+            document.getElementById('r-saying').innerHTML = f.saying;
+
+            document.getElementById('result').classList.add('show');
+            pushRecent(name);
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function clearName() {
+            document.getElementById('result').classList.remove('show');
+            const input = document.getElementById('name');
+            input.value = '';
+            input.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function copyResult() {
+            if (!current) return;
+            const f = current;
+            const stars = f.lines.map(l => `${l.key} ${'★'.repeat(l.stars)}${'☆'.repeat(5 - l.stars)} ${l.note}`).join('\n');
+            const text =
+                `🔮 ${f.name} 님의 오늘의 운세 (${todayKey()})\n` +
+                `${f.grade.emoji} ${f.grade.name} · ${f.total}점 — ${f.grade.tone}\n\n` +
+                `${stars}\n\n` +
+                `행운의 색 ${f.color[0]} · 숫자 ${f.number} · 시간 ${String(f.hour).padStart(2, '0')}시\n` +
+                `${f.saying.replace(/<[^>]*>/g, '')}`;
+
+            navigator.clipboard.writeText(text)
+                .then(() => gameAlert('결과를 복사했습니다. 단톡방에 붙여넣어 보세요!'))
+                .catch(() => gameAlert('복사에 실패했습니다. 화면을 직접 캡처해 주세요.'));
+        }
+
+        const dt = new Date();
+        const weekday = ['일', '월', '화', '수', '목', '금', '토'][dt.getDay()];
+        document.getElementById('today-label').textContent =
+            `${dt.getFullYear()}년 ${dt.getMonth() + 1}월 ${dt.getDate()}일 (${weekday})`;
+        renderRecent();
+    </script>
+</body>
+
+</html>
