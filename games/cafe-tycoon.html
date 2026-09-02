@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>골목 카페 운영기 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=b7c7301f"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=bed20c1e">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1a1410;
+            --panel: rgba(255, 255, 255, .06);
+            --border: rgba(255, 255, 255, .14);
+            --text: #f7f1e8;
+            --muted: #b3a494;
+            --accent: #d9a441;
+            --ok: #6ec27a;
+            --bad: #e2725b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #2b2018 0%, var(--bg) 62%);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.7rem;
+            margin: 52px 0 2px;
+            text-align: center;
+        }
+
+        h1 .grad {
+            background: linear-gradient(135deg, #d9a441, #e2725b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub { color: var(--muted); font-size: .86rem; margin-bottom: 16px; text-align: center; }
+
+        .wrap { width: 100%; max-width: 470px; }
+
+        .hud {
+            display: flex;
+            gap: 10px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .hud div { flex: 1; text-align: center; min-width: 0; }
+        .hud .label { display: block; font-size: .64rem; color: var(--muted); }
+
+        .hud .value {
+            font-size: 1.02rem;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #hud-cash { font-size: .95rem; }
+        #hud-cash { color: var(--accent); }
+        #hud-rep.low { color: var(--bad); }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 12px;
+        }
+
+        .card h2 { font-size: 1.02rem; margin-bottom: 4px; }
+        .card .hint { color: var(--muted); font-size: .79rem; line-height: 1.6; margin-bottom: 12px; }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .menu-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+        }
+
+        .menu-row.off { opacity: .42; }
+        .menu-row .icon { font-size: 1.5rem; width: 32px; text-align: center; flex-shrink: 0; }
+        .menu-row .info { flex: 1; min-width: 0; }
+        .menu-row .name { font-weight: 700; font-size: .94rem; }
+        .menu-row .cost { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+        .price-box { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+        .price-box button {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .06);
+            color: var(--text);
+            font-family: inherit; font-size: .95rem; font-weight: 700;
+            cursor: pointer;
+        }
+
+        .price-box .val { width: 58px; text-align: center; font-weight: 800; font-size: .9rem; }
+
+        .toggle {
+            width: 34px; height: 34px; flex-shrink: 0;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--muted);
+            font-family: inherit; font-size: .95rem;
+            cursor: pointer;
+        }
+
+        .toggle.on { background: rgba(217, 164, 65, .22); border-color: var(--accent); color: var(--accent); }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 15px;
+            background: linear-gradient(135deg, #d9a441, #e2725b);
+            color: #241a10;
+            font-family: inherit;
+            font-size: 1.02rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+        .btn:disabled { opacity: .4; cursor: default; }
+
+        .log { max-height: 260px; overflow-y: auto; }
+
+        .log-row {
+            display: flex;
+            gap: 10px;
+            padding: 9px 12px;
+            margin-bottom: 5px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .035);
+            font-size: .84rem;
+            line-height: 1.5;
+        }
+
+        .log-row .who { flex-shrink: 0; }
+        .log-row.good { border-left: 3px solid var(--ok); }
+        .log-row.bad { border-left: 3px solid var(--bad); }
+
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .07);
+            font-size: .92rem;
+        }
+
+        .stat-line:last-child { border-bottom: none; }
+        .stat-line .v { font-weight: 800; }
+        .stat-line .v.plus { color: var(--ok); }
+        .stat-line .v.minus { color: var(--bad); }
+
+        .event {
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+            background: rgba(217, 164, 65, .12);
+            border: 1px solid rgba(217, 164, 65, .34);
+            font-size: .89rem;
+            line-height: 1.7;
+        }
+
+        .event strong { color: var(--accent); }
+
+        .up-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px;
+            margin-bottom: 8px;
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+        }
+
+        .up-row .info { flex: 1; min-width: 0; }
+        .up-row .name { font-weight: 700; font-size: .93rem; }
+        .up-row .desc { font-size: .75rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+
+        .up-row button {
+            flex-shrink: 0;
+            padding: 9px 14px;
+            border-radius: 999px;
+            border: none;
+            background: var(--accent);
+            color: #241a10;
+            font-family: inherit; font-size: .82rem; font-weight: 800;
+            cursor: pointer;
+        }
+
+        .up-row button:disabled { background: rgba(255, 255, 255, .1); color: var(--muted); cursor: default; }
+        .up-row.owned { opacity: .5; }
+
+        .ending { text-align: center; padding: 26px 20px; }
+        .ending .grade { font-size: 2.4rem; font-weight: 900; color: var(--accent); margin: 8px 0; }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>☕ <span class="grad">골목 카페 운영기</span></h1>
+    <p class="sub">30일 동안 메뉴와 가격을 정하며 가게를 키워보세요</p>
+
+    <div class="wrap">
+        <div class="hud">
+            <div><span class="label">일차</span><span class="value" id="hud-day">1</span></div>
+            <div><span class="label">현금(원)</span><span class="value" id="hud-cash">0</span></div>
+            <div><span class="label">평판</span><span class="value" id="hud-rep">0</span></div>
+            <div><span class="label">단골</span><span class="value" id="hud-reg">0</span></div>
+        </div>
+
+        <!-- 아침: 준비 -->
+        <div class="screen active" id="screen-plan">
+            <div class="event" id="today-event" style="display:none"></div>
+
+            <div class="card">
+                <h2>오늘 팔 메뉴</h2>
+                <p class="hint">파는 메뉴를 켜고 가격을 정하세요. 비싸면 손님이 줄고, 싸면 남는 게 없습니다.</p>
+                <div id="menu-list"></div>
+            </div>
+
+            <button class="btn" onclick="openShop()">가게 열기</button>
+            <button class="btn ghost" onclick="showUpgrades()">설비 보기</button>
+        </div>
+
+        <!-- 낮: 영업 결과 -->
+        <div class="screen" id="screen-day">
+            <div class="card">
+                <h2 id="day-title">영업 종료</h2>
+                <p class="hint" id="day-sub"></p>
+                <div class="log" id="day-log"></div>
+            </div>
+
+            <div class="card">
+                <div class="stat-line"><span>매출</span><span class="v plus" id="r-sales">0</span></div>
+                <div class="stat-line"><span>재료비</span><span class="v minus" id="r-cost">0</span></div>
+                <div class="stat-line"><span>고정비 (임대·인건)</span><span class="v minus" id="r-fixed">0</span></div>
+                <div class="stat-line"><span>오늘 순이익</span><span class="v" id="r-profit">0</span></div>
+                <div class="stat-line"><span>평판 변화</span><span class="v" id="r-rep">0</span></div>
+            </div>
+
+            <button class="btn" onclick="nextDay()">다음 날</button>
+        </div>
+
+        <!-- 설비 -->
+        <div class="screen" id="screen-shop">
+            <div class="card">
+                <h2>설비 투자</h2>
+                <p class="hint">한 번 사면 계속 효과가 남습니다. 현금이 부족하면 살 수 없습니다.</p>
+                <div id="upgrade-list"></div>
+            </div>
+            <button class="btn ghost" onclick="showScreen('screen-plan')">돌아가기</button>
+        </div>
+
+        <!-- 종료 -->
+        <div class="screen" id="screen-end">
+            <div class="card ending">
+                <div style="font-size:2.6rem" id="end-emoji">🏆</div>
+                <div class="grade" id="end-grade"></div>
+                <p class="hint" id="end-desc" style="margin-bottom:14px"></p>
+                <div class="stat-line"><span>최종 자산</span><span class="v" id="end-cash">0</span></div>
+                <div class="stat-line"><span>최고 평판</span><span class="v" id="end-rep">0</span></div>
+                <div class="stat-line"><span>단골 수</span><span class="v" id="end-reg">0</span></div>
+                <div class="stat-line"><span>최고 기록</span><span class="v" id="end-best">-</span></div>
+            </div>
+            <button class="btn" onclick="resetGame()">새로 시작</button>
+        </div>
+    </div>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "골목 카페 운영기",
+ "players": "1인",
+ "time": "약 30분",
+ "goal": "30일 동안 카페를 운영해 자산과 평판을 최대한 키우세요.",
+ "steps": [
+  "아침에 오늘 팔 메뉴를 켜고 가격을 정합니다.",
+  "가게를 열면 손님이 찾아옵니다. 손님마다 원하는 메뉴와 낼 수 있는 값이 다릅니다.",
+  "영업이 끝나면 매출에서 재료비와 고정비를 뺀 순이익이 정산됩니다.",
+  "번 돈으로 설비를 사면 그 효과가 계속 남습니다.",
+  "30일이 지나면 최종 자산과 평판으로 등급이 매겨집니다."
+ ],
+ "tips": [
+  "값을 올리면 마진은 커지지만 손님이 줄고 평판이 떨어집니다.",
+  "평판이 오르면 손님이 늘고, 손님이 몰리면 자리가 모자라 평판이 깎입니다.",
+  "단골은 값에 덜 민감합니다. 초반에 평판을 쌓아두면 뒤가 편합니다.",
+  "진행 상황은 자동 저장되어 닫았다 열어도 이어집니다."
+ ]
+}
+</script>
+
+    <script>
+        // ── 데이터 ───────────────────────────────────────
+        const MENUS = [
+            { id: 'americano', icon: '☕', name: '아메리카노', cost: 800,  base: 3000, appeal: { student: 1.0, office: 1.2, cafe: 0.8 } },
+            { id: 'latte',     icon: '🥛', name: '카페라떼',   cost: 1300, base: 4500, appeal: { student: 0.9, office: 1.1, cafe: 1.2 } },
+            { id: 'dessert',   icon: '🍰', name: '수제 케이크', cost: 2200, base: 6000, appeal: { student: 0.6, office: 0.7, cafe: 1.6 } },
+            { id: 'sandwich',  icon: '🥪', name: '샌드위치',   cost: 2600, base: 6500, appeal: { student: 1.3, office: 1.4, cafe: 0.5 } },
+            { id: 'ade',       icon: '🍋', name: '수제 에이드', cost: 1100, base: 4800, appeal: { student: 1.4, office: 0.6, cafe: 1.0 } }
+        ];
+
+        // 손님 유형. 값에 민감한 정도와 원하는 메뉴가 다르다.
+        const GUESTS = {
+            student: { label: '학생',   priceSense: 2.2, budget: 5200 },
+            office:  { label: '직장인', priceSense: 1.3, budget: 8500 },
+            cafe:    { label: '카페러', priceSense: 0.9, budget: 11000 }
+        };
+
+        const UPGRADES = [
+            { id: 'grinder', name: '좋은 그라인더', price: 75000,  desc: '커피 품질이 올라 평판이 매일 조금씩 오릅니다', effect: '평판 +1/일' },
+            { id: 'seats',   name: '좌석 6석 추가', price: 120000,  desc: '자리 부족으로 손님을 돌려보내는 일이 줄어듭니다', effect: '수용 +6' },
+            { id: 'sign',    name: '골목 간판',     price: 65000,  desc: '지나가던 사람이 더 들어옵니다', effect: '방문 +15%' },
+            { id: 'part',    name: '알바 채용',     price: 95000,  desc: '대기 줄이 줄지만 인건비가 늘어납니다', effect: '수용 +5 · 고정비 +1.2만/일' },
+            { id: 'oven',    name: '제빵 오븐',     price: 130000,  desc: '디저트 원가가 내려가고 더 잘 팔립니다', effect: '디저트 원가 -30%' }
+        ];
+
+        const EVENTS = [
+            { id: 'rain',    text: '비가 옵니다. 지나가는 사람이 줄었습니다.',                 visit: 0.7,  rep: 0 },
+            { id: 'sunny',   text: '날이 좋습니다. 산책 나온 사람이 많습니다.',               visit: 1.25, rep: 0 },
+            { id: 'company', text: '근처 회사 회식이 있습니다. 직장인이 몰려옵니다.',          visit: 1.3,  rep: 0, boost: 'office' },
+            { id: 'exam',    text: '시험 기간입니다. 학생들이 오래 앉아 있습니다.',            visit: 1.2,  rep: 0, boost: 'student', stay: true },
+            { id: 'sns',     text: '누군가 SNS에 가게 사진을 올렸습니다.',                    visit: 1.15, rep: 3 },
+            { id: 'quiet',   text: '조용한 하루입니다.',                                      visit: 1.0,  rep: 0 },
+            { id: 'noise',   text: '앞 도로 공사로 소음이 심합니다.',                          visit: 0.85, rep: -2 }
+        ];
+
+        const SAVE_KEY = 'cafe-tycoon-save';
+        const BEST_KEY = 'cafe-tycoon-best';
+        const TOTAL_DAYS = 30;
+        const BASE_SEATS = 10;
+        const BASE_FIXED = 58000;   // 임대료 + 기본 인건비
+        const MAX_REGULARS = 30;    // 단골이 무한히 늘면 후반이 저절로 굴러간다
+
+        // ── 상태 ─────────────────────────────────────────
+        let state = null;
+
+        function freshState() {
+            return {
+                day: 1,
+                cash: 150000,
+                rep: 30,
+                regulars: 0,
+                bestRep: 30,
+                prices: Object.fromEntries(MENUS.map(m => [m.id, Math.round(m.base * 1.15 / 100) * 100])),
+                open: Object.fromEntries(MENUS.map(m => [m.id, ['americano', 'latte', 'ade'].includes(m.id)])),
+                owned: [],
+                event: null,
+                finished: false
+            };
+        }
+
+        // ── 저장 ─────────────────────────────────────────
+        function save() {
+            try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { /* 무시 */ }
+        }
+
+        function load() {
+            try {
+                const raw = localStorage.getItem(SAVE_KEY);
+                if (!raw) return null;
+                const s = JSON.parse(raw);
+                // 저장 구조가 바뀌었을 수 있으니 최소한의 형태만 확인한다.
+                if (typeof s !== 'object' || typeof s.day !== 'number' || !s.prices) return null;
+                return { ...freshState(), ...s };
+            } catch { return null; }
+        }
+
+        // ── 하루 시뮬레이션 ──────────────────────────────
+        // 이 함수가 재미를 좌우한다. 값을 올리면 마진이 커지지만 손님이 줄고,
+        // 손님이 몰리면 자리가 모자라 평판이 깎이도록 서로 물리게 만들었다.
+        function simulateDay(st, rand = Math.random) {
+            const ev = st.event || EVENTS.find(e => e.id === 'quiet');
+            const seats = BASE_SEATS
+                + (st.owned.includes('seats') ? 6 : 0)
+                + (st.owned.includes('part') ? 5 : 0);
+
+            // 방문 의향: 평판과 단골이 손님을 부른다.
+            let visitors = Math.round(
+                (10 + st.rep * 0.35 + Math.min(st.regulars, MAX_REGULARS) * 0.45)
+                * ev.visit
+                * (st.owned.includes('sign') ? 1.15 : 1)
+            );
+
+            const openMenus = MENUS.filter(m => st.open[m.id]);
+            if (!openMenus.length) {
+                return { sales: 0, cost: 0, fixed: fixedCost(st), served: 0, turned: 0,
+                         repDelta: -4, newRegulars: 0, log: [{ type: 'bad', who: '😶', text: '파는 메뉴가 없어 손님이 그냥 돌아갔습니다.' }] };
+            }
+
+            let sales = 0, cost = 0, served = 0, turned = 0, tooPricey = 0, newRegulars = 0;
+            const log = [];
+            const types = Object.keys(GUESTS);
+
+            for (let i = 0; i < visitors; i++) {
+                if (served >= seats * 2) { turned++; continue; }   // 하루 회전율 한계
+
+                let type = types[Math.floor(rand() * types.length)];
+                if (ev.boost && rand() < 0.45) type = ev.boost;
+                const g = GUESTS[type];
+
+                // 이 손님이 살 만한 메뉴를 고른다. 예산을 넘으면 후보에서 빠진다.
+                const affordable = openMenus.filter(m => st.prices[m.id] <= g.budget);
+                if (!affordable.length) { tooPricey++; continue; }
+
+                const scored = affordable.map(m => {
+                    const ratio = st.prices[m.id] / m.base;          // 1.0이 기준가
+                    const priceFactor = Math.max(0.05, 1 - (ratio - 1) * g.priceSense);
+                    const menuBonus = st.owned.includes('oven') && m.id === 'dessert' ? 1.25 : 1;
+                    return { m, score: m.appeal[type] * priceFactor * menuBonus * (0.7 + rand() * 0.6) };
+                });
+                scored.sort((a, b) => b.score - a.score);
+                const pick = scored[0];
+
+                // 점수가 너무 낮으면 그냥 나간다. 비싸다고 느낀 것이다.
+                if (pick.score < 0.38) { tooPricey++; continue; }
+
+                const menu = pick.m;
+                let unitCost = menu.cost;
+                if (menu.id === 'dessert' && st.owned.includes('oven')) unitCost = Math.round(unitCost * 0.7);
+
+                sales += st.prices[menu.id];
+                cost += unitCost;
+                served++;
+
+                if (st.regulars + newRegulars < MAX_REGULARS && rand() < 0.05 + st.rep / 1500) newRegulars++;
+            }
+
+            // 평판: 값이 비싸 돌아간 손님과 자리가 없어 못 받은 손님이 깎는다.
+            let repDelta = 0;
+            if (served > 0) repDelta += Math.min(4, served / 9);
+            repDelta -= turned * 0.15;
+            repDelta -= tooPricey * 0.11;
+            // 값이 기준보다 높으면 "그 집 비싸다"는 말이 돈다. 자리가 꽉 차 있어도
+            // 이 평판은 깎이므로, 무작정 올리기만 하는 전략이 통하지 않는다.
+            const avgRatio = openMenus.reduce((a, m) => a + st.prices[m.id] / m.base, 0) / openMenus.length;
+            repDelta -= (avgRatio - 1) * 7;
+            repDelta += ev.rep;
+            if (st.owned.includes('grinder')) repDelta += 1;
+            repDelta = Math.round(repDelta * 10) / 10;
+
+            // 평판이 떨어지는 날에는 단골도 조금씩 발길을 끊는다.
+            const lostRegulars = repDelta < 0
+                ? Math.min(st.regulars, Math.round(-repDelta * 0.9))
+                : 0;
+            if (lostRegulars > 0) newRegulars -= lostRegulars;
+
+            if (turned > 0) log.push({ type: 'bad', who: '🚶', text: `자리가 없어 ${turned}명이 돌아갔습니다.` });
+            if (tooPricey > 0) log.push({ type: 'bad', who: '💸', text: `값이 부담스러워 ${tooPricey}명이 그냥 나갔습니다.` });
+            if (served > 0) log.push({ type: 'good', who: '☕', text: `${served}명에게 판매했습니다.` });
+            if (newRegulars > 0) log.push({ type: 'good', who: '💛', text: `단골 ${newRegulars}명이 늘었습니다.` });
+            else if (newRegulars < 0) log.push({ type: 'bad', who: '💔', text: `단골 ${-newRegulars}명이 발길을 끊었습니다.` });
+
+            return { sales, cost, fixed: fixedCost(st), served, turned, repDelta, newRegulars, log, visitors };
+        }
+
+        const RENT_HIKE_DAY = 15;   // 이 날 임대 재계약. 후반이 저절로 굴러가지 않게 한다.
+
+        function fixedCost(st) {
+            const rent = st.day > RENT_HIKE_DAY ? 1.3 : 1;
+            return Math.round(BASE_FIXED * rent) + (st.owned.includes('part') ? 12000 : 0);
+        }
+
+        // ── 화면 ─────────────────────────────────────────
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        const won = (n) => `${Math.round(n).toLocaleString()}원`;
+
+        function renderHud() {
+            document.getElementById('hud-day').textContent = `${state.day}/${TOTAL_DAYS}`;
+            document.getElementById('hud-cash').textContent = Math.round(state.cash).toLocaleString();
+            const rep = document.getElementById('hud-rep');
+            rep.textContent = Math.round(state.rep);
+            rep.classList.toggle('low', state.rep < 20);
+            document.getElementById('hud-reg').textContent = state.regulars;
+        }
+
+        function renderMenus() {
+            const box = document.getElementById('menu-list');
+            box.innerHTML = '';
+            MENUS.forEach(m => {
+                const row = document.createElement('div');
+                row.className = 'menu-row' + (state.open[m.id] ? '' : ' off');
+
+                const toggle = document.createElement('button');
+                toggle.className = 'toggle' + (state.open[m.id] ? ' on' : '');
+                toggle.textContent = state.open[m.id] ? '✓' : '';
+                toggle.setAttribute('aria-label', `${m.name} 판매 ${state.open[m.id] ? '중지' : '시작'}`);
+                toggle.onclick = () => { state.open[m.id] = !state.open[m.id]; save(); renderMenus(); };
+
+                const icon = document.createElement('div');
+                icon.className = 'icon';
+                icon.textContent = m.icon;
+
+                const info = document.createElement('div');
+                info.className = 'info';
+                const name = document.createElement('div');
+                name.className = 'name';
+                name.textContent = m.name;
+                const cost = document.createElement('div');
+                cost.className = 'cost';
+                let unit = m.cost;
+                if (m.id === 'dessert' && state.owned.includes('oven')) unit = Math.round(unit * 0.7);
+                const margin = state.prices[m.id] - unit;
+                cost.textContent = `원가 ${won(unit)} · 마진 ${won(margin)}`;
+                info.append(name, cost);
+
+                const price = document.createElement('div');
+                price.className = 'price-box';
+                const minus = document.createElement('button');
+                minus.textContent = '−';
+                minus.onclick = () => changePrice(m.id, -500);
+                const val = document.createElement('span');
+                val.className = 'val';
+                val.textContent = state.prices[m.id].toLocaleString();
+                const plus = document.createElement('button');
+                plus.textContent = '+';
+                plus.onclick = () => changePrice(m.id, 500);
+                price.append(minus, val, plus);
+
+                row.append(toggle, icon, info, price);
+                box.appendChild(row);
+            });
+        }
+
+        function changePrice(id, delta) {
+            const m = MENUS.find(x => x.id === id);
+            const next = state.prices[id] + delta;
+            state.prices[id] = Math.max(m.cost + 200, Math.min(m.base * 2.5, next));
+            save();
+            renderMenus();
+        }
+
+        function rollEvent() {
+            state.event = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+            const box = document.getElementById('today-event');
+            box.style.display = '';
+            box.innerHTML = '';
+            const day = document.createElement('strong');
+            day.textContent = `${state.day}일차 · `;
+            box.append(day, state.event.text);
+        }
+
+        // ── 진행 ─────────────────────────────────────────
+        function openShop() {
+            const r = simulateDay(state);
+
+            const profit = r.sales - r.cost - r.fixed;
+            state.cash += profit;
+            state.rep = Math.max(0, Math.min(100, state.rep + r.repDelta));
+            state.bestRep = Math.max(state.bestRep, state.rep);
+            state.regulars = Math.max(0, state.regulars + r.newRegulars);
+            save();
+
+            document.getElementById('day-title').textContent = `${state.day}일차 영업 종료`;
+            document.getElementById('day-sub').textContent =
+                `${r.visitors ?? 0}명이 가게 앞을 지나갔고, ${r.served}명이 주문했습니다.`;
+
+            const log = document.getElementById('day-log');
+            log.innerHTML = '';
+            r.log.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'log-row ' + (item.type || '');
+                const who = document.createElement('span');
+                who.className = 'who';
+                who.textContent = item.who;
+                const text = document.createElement('span');
+                text.textContent = item.text;
+                row.append(who, text);
+                log.appendChild(row);
+            });
+
+            document.getElementById('r-sales').textContent = won(r.sales);
+            document.getElementById('r-cost').textContent = won(r.cost);
+            document.getElementById('r-fixed').textContent = won(r.fixed);
+            const pf = document.getElementById('r-profit');
+            pf.textContent = (profit >= 0 ? '+' : '−') + won(Math.abs(profit));
+            pf.className = 'v ' + (profit >= 0 ? 'plus' : 'minus');
+            const rp = document.getElementById('r-rep');
+            rp.textContent = (r.repDelta >= 0 ? '+' : '') + r.repDelta;
+            rp.className = 'v ' + (r.repDelta >= 0 ? 'plus' : 'minus');
+
+            if (state.cash < fixedCost(state) * 2) {
+                const row = document.createElement('div');
+                row.className = 'log-row bad';
+                const who = document.createElement('span');
+                who.className = 'who';
+                who.textContent = '⚠️';
+                const text = document.createElement('span');
+                text.textContent = state.cash < 0
+                    ? '현금이 바닥났습니다. 다음 날로 넘어가면 폐업합니다.'
+                    : '현금이 이틀치 고정비도 안 됩니다. 값이나 메뉴 구성을 손봐야 합니다.';
+                row.append(who, text);
+                log.appendChild(row);
+            }
+
+            renderHud();
+            showScreen('screen-day');
+        }
+
+        function nextDay() {
+            if (state.cash < 0) return endGame('bankrupt');
+            state.day++;
+            if (state.day > TOTAL_DAYS) return endGame('done');
+            rollEvent();
+            if (state.day === RENT_HIKE_DAY + 1) {
+                const box = document.getElementById('today-event');
+                box.innerHTML = '';
+                const t = document.createElement('strong');
+                t.textContent = `${state.day}일차 · 임대 재계약 `;
+                box.append(t, `건물주가 월세를 올렸습니다. 오늘부터 고정비가 ${won(fixedCost(state))}입니다.`);
+            }
+            renderHud();
+            renderMenus();
+            save();
+            showScreen('screen-plan');
+        }
+
+        function showUpgrades() {
+            const box = document.getElementById('upgrade-list');
+            box.innerHTML = '';
+            UPGRADES.forEach(u => {
+                const owned = state.owned.includes(u.id);
+                const row = document.createElement('div');
+                row.className = 'up-row' + (owned ? ' owned' : '');
+
+                const info = document.createElement('div');
+                info.className = 'info';
+                const name = document.createElement('div');
+                name.className = 'name';
+                name.textContent = `${u.name} · ${u.effect}`;
+                const desc = document.createElement('div');
+                desc.className = 'desc';
+                desc.textContent = u.desc;
+                info.append(name, desc);
+
+                const btn = document.createElement('button');
+                btn.textContent = owned ? '보유' : won(u.price);
+                btn.disabled = owned || state.cash < u.price;
+                btn.onclick = () => buyUpgrade(u.id);
+
+                row.append(info, btn);
+                box.appendChild(row);
+            });
+            showScreen('screen-shop');
+        }
+
+        function buyUpgrade(id) {
+            const u = UPGRADES.find(x => x.id === id);
+            if (state.owned.includes(id) || state.cash < u.price) return;
+            state.cash -= u.price;
+            state.owned.push(id);
+            save();
+            renderHud();
+            renderMenus();
+            showUpgrades();
+        }
+
+        function endGame(reason) {
+            state.finished = true;
+            save();
+            const score = state.cash + state.bestRep * 3000 + state.regulars * 5000;
+            const isBest = saveBestRecord(BEST_KEY, score, false);
+
+            let grade, emoji, desc;
+            if (reason === 'bankrupt') {
+                grade = '폐업'; emoji = '📉';
+                desc = '현금이 바닥났습니다. 값과 메뉴 구성을 다시 짜 보세요.';
+            } else if (score >= 1100000) {
+                grade = '골목의 명소'; emoji = '🏆';
+                desc = '줄 서는 가게가 되었습니다.';
+            } else if (score >= 700000) {
+                grade = '단골 맛집'; emoji = '🌟';
+                desc = '동네에서 이름이 알려졌습니다.';
+            } else if (score >= 400000) {
+                grade = '자리 잡은 가게'; emoji = '☕';
+                desc = '한 달을 무사히 넘겼습니다.';
+            } else {
+                grade = '버텨낸 한 달'; emoji = '🌱';
+                desc = '적자는 면했지만 갈 길이 멉니다.';
+            }
+
+            document.getElementById('end-emoji').textContent = emoji;
+            document.getElementById('end-grade').textContent = grade;
+            document.getElementById('end-desc').textContent = desc + (isBest ? ' 🏅 최고 기록 경신!' : '');
+            document.getElementById('end-cash').textContent = won(state.cash);
+            document.getElementById('end-rep').textContent = Math.round(state.bestRep);
+            document.getElementById('end-reg').textContent = state.regulars;
+            const best = loadBestRecord(BEST_KEY);
+            document.getElementById('end-best').textContent = best === null ? '-' : `${Math.round(best).toLocaleString()}점`;
+
+            renderHud();
+            showScreen('screen-end');
+        }
+
+        function resetGame() {
+            state = freshState();
+            rollEvent();
+            save();
+            renderHud();
+            renderMenus();
+            showScreen('screen-plan');
+        }
+
+        // ── 시작 ─────────────────────────────────────────
+        const saved = load();
+        if (saved && !saved.finished) {
+            state = saved;
+            if (!state.event) rollEvent();
+            else {
+                const box = document.getElementById('today-event');
+                box.style.display = '';
+                box.innerHTML = '';
+                const day = document.createElement('strong');
+                day.textContent = `${state.day}일차 · `;
+                box.append(day, state.event.text);
+            }
+            renderHud();
+            renderMenus();
+        } else {
+            resetGame();
+        }
+    </script>
+</body>
+
+</html>
