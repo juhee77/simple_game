@@ -49,7 +49,150 @@ function startTimerLoop() {
     if(display) display.textContent = el >= 0 ? fmtTime(el) : '--:--';
     if(phase) phase.textContent = el >= 0 ? getPhaseLabel(el) : '게임 미시작';
     refreshClues(currentScenario.id);
+    if (document.getElementById('director-view').classList.contains('active')) renderDirector();
   }, 1000);
+}
+
+// ══════════════════════════════════════
+// 자동 진행 (GM 없이)
+// ══════════════════════════════════════
+// GM은 정해진 시점에 정해진 글을 읽는 역할뿐이라 앱이 대신할 수 있다.
+// 자동 모드에서는 GM 역할 카드를 감추고, 이 화면이 순서를 안내한다.
+// 사람 하나가 진행에 묶이지 않으므로 5명만 모여도 플레이할 수 있다.
+
+const AUTO_KEY = 'cs_auto_mode';
+let revealed = false;   // 진상 공개 후에는 진행 화면을 다시 그리지 않는다
+
+function isAutoMode() {
+  try { return localStorage.getItem(AUTO_KEY) !== 'off'; } catch { return true; }
+}
+
+function setAutoMode(on) {
+  try { localStorage.setItem(AUTO_KEY, on ? 'on' : 'off'); } catch { /* 무시 */ }
+  if (currentScenario) openScenario(currentScenario.id);
+}
+
+// 각 단계의 시작 분과 길이. getPhaseLabel의 구간과 맞춰 두었다.
+function buildPhases(s) {
+  const gd = s.gmData || {};
+  return [
+    { at: 0,  min: 5,  title: '오프닝',
+      script: gd.openingScript ? gd.openingScript.replace(/^"|"$/g, '') : s.overview,
+      hint: '한 사람이 소리 내어 읽어 주세요. 다 읽으면 각자 역할 카드를 확인합니다.' },
+    { at: 5,  min: 10, title: '1라운드 심문',
+      script: '자유롭게 서로를 심문하세요.\n알리바이의 시각과 장소가 어긋나는 곳을 찾습니다.',
+      hint: gd.round1Note, hintAt: 10 },
+    { at: 15, min: 5,  title: '중간 투표',
+      script: '지금까지 가장 의심스러운 사람을 한 명씩 지목해 보세요.\n아직 확정이 아닙니다.',
+      hint: gd.voteNote },
+    { at: 20, min: 15, title: '2라운드 심문',
+      script: '본격적으로 알리바이를 깨 보세요.\n숨겨둔 비밀을 흘려도 좋은 시점입니다.',
+      hint: gd.round2Note, hintAt: 28 },
+    { at: 35, min: 10, title: '최후 변론',
+      script: '한 사람씩 돌아가며 자신이 범인이 아닌 이유를 말합니다.\n끝나면 최종 투표를 합니다.',
+      hint: '변론은 1인당 1분 정도가 적당합니다.' },
+    { at: 45, min: 0,  title: '진실 공개',
+      script: '최종 투표를 마쳤다면 아래 버튼으로 진상을 확인하세요.',
+      hint: null }
+  ];
+}
+
+function currentPhaseIndex(phases, min) {
+  let idx = 0;
+  phases.forEach((p, i) => { if (min >= p.at) idx = i; });
+  return idx;
+}
+
+function renderDirector() {
+  if (!currentScenario) return;
+  // 시계와 단계 목록은 계속 갱신하되, 공개된 진상은 지우지 않는다.
+  const s = currentScenario;
+  const phases = buildPhases(s);
+  const sec = getElapsed(s.id);
+  const started = sec >= 0;
+  const min = started ? Math.floor(sec / 60) : -1;
+
+  document.getElementById('dr-time').textContent = started ? fmtTime(sec) : '00:00';
+
+  const idx = started ? currentPhaseIndex(phases, min) : 0;
+  const phase = phases[idx];
+
+  document.getElementById('dr-phase').textContent = started ? phase.title : '시작 대기 중';
+  if (revealed) { renderSteps(phases, idx, started); return; }
+  document.getElementById('dr-title').textContent = started ? `${idx + 1}. ${phase.title}` : '준비';
+
+  document.getElementById('dr-script').textContent = started
+    ? phase.script
+    : '역할 선택 화면에서 게임 시작을 누르면 진행이 시작됩니다.';
+
+  // 힌트는 정해진 시각이 지나야 열린다. GM이 "막힐 때 던지던" 것을 대신한다.
+  const hintEl = document.getElementById('dr-hint');
+  const hintReady = started && phase.hint && (!phase.hintAt || min >= phase.hintAt);
+  hintEl.style.display = hintReady ? '' : 'none';
+  if (hintReady) hintEl.textContent = `💡 ${phase.hint}`;
+
+  // 남은 시간과 진행 막대
+  const remainEl = document.getElementById('dr-remain');
+  const barEl = document.getElementById('dr-bar');
+  if (started && phase.min > 0) {
+    const into = sec - phase.at * 60;
+    const total = phase.min * 60;
+    const left = Math.max(0, total - into);
+    remainEl.textContent = `이 단계 남은 시간 약 ${Math.ceil(left / 60)}분`;
+    barEl.style.width = `${Math.min(100, (into / total) * 100)}%`;
+  } else {
+    remainEl.textContent = started ? '마무리 단계입니다' : '';
+    barEl.style.width = started ? '100%' : '0%';
+  }
+
+  renderSteps(phases, idx, started);
+
+  // 진실 공개는 최후 변론까지 간 뒤에만 열어 준다. 일찍 누르면 게임이 끝난다.
+  const reveal = document.getElementById('dr-reveal');
+  reveal.disabled = !started || min < 35;
+  reveal.textContent = reveal.disabled
+    ? '🔒 최후 변론이 끝나면 열립니다'
+    : '🔓 진실 공개하기';
+}
+
+function renderSteps(phases, idx, started) {
+  const steps = document.getElementById('dr-steps');
+  steps.innerHTML = '';
+  phases.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'dr-step' + (started && i < idx ? ' done' : started && i === idx ? ' now' : '');
+    const num = document.createElement('span');
+    num.className = 'num';
+    num.textContent = i + 1;
+    const label = document.createElement('span');
+    label.textContent = p.title;
+    const dur = document.createElement('span');
+    dur.className = 'dur';
+    dur.textContent = p.min > 0 ? `${p.at}~${p.at + p.min}분` : `${p.at}분~`;
+    row.append(num, label, dur);
+    steps.appendChild(row);
+  });
+}
+
+function askReveal() {
+  if (!currentScenario) return;
+  const ok = confirm('진상을 공개하면 게임이 끝납니다.\n최종 투표를 모두 마쳤나요?');
+  if (!ok) return;
+
+  const gd = currentScenario.gmData || {};
+  revealed = true;   // 이후 renderDirector가 이 내용을 덮어쓰지 않게 한다
+
+  document.getElementById('dr-title').textContent = `진범은 ${gd.culpritName} 였습니다`;
+  document.getElementById('dr-script').textContent =
+    (gd.closingScript || '').replace(/^"|"$/g, '');
+
+  const hint = document.getElementById('dr-hint');
+  hint.style.display = '';
+  hint.innerHTML = (gd.truth || '').replace(/\n/g, '<br>');
+
+  const btn = document.getElementById('dr-reveal');
+  btn.disabled = true;
+  btn.textContent = '진상이 공개되었습니다';
 }
 
 // ══════════════════════════════════════
@@ -64,7 +207,7 @@ function renderLobby() {
         <div class="s-tag">${s.catEmoji} ${s.tag || s.cat}</div>
         <div class="s-title">${s.title}</div>
         <div class="s-desc">${s.desc}</div>
-        <div class="s-desc" style="opacity:.75;">👥 필요 인원 ${s.players}명 + GM 1명 = 총 ${s.players + 1}명</div>
+        <div class="s-desc" style="opacity:.75;">👥 ${s.players}명 (자동 진행) · GM을 두면 ${s.players + 1}명</div>
       </div>
       <div>
         <span style="font-size: 0.8rem; background: ${s.status === 'done' ? 'var(--success)' : 'var(--text-sub)'}; color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
@@ -103,6 +246,13 @@ function openScenario(id) {
   const startText = document.getElementById('start-btn-text');
   const timerDisp = document.getElementById('game-timer-display');
   
+  const auto = isAutoMode();
+  document.getElementById('mode-auto').classList.toggle('active', auto);
+  document.getElementById('mode-gm').classList.toggle('active', !auto);
+  document.getElementById('mode-auto-count').textContent = `${s.players}명`;
+  document.getElementById('mode-gm-count').textContent = `${s.players + 1}명`;
+  document.getElementById('director-link').style.display = auto ? '' : 'none';
+
   if (elapsed >= 0) {
     startBtn.classList.add('started');
     startIcon.textContent = '✓';
@@ -111,13 +261,15 @@ function openScenario(id) {
   } else {
     startBtn.classList.remove('started');
     startIcon.textContent = '▶';
-    startText.textContent = '게임 시작 (GM이 누르세요)';
+    startText.textContent = auto ? '게임 시작' : '게임 시작 (GM이 누르세요)';
     timerDisp.textContent = '';
   }
 
   // Role grid rendering
   const grid = document.getElementById('role-grid');
-  grid.innerHTML = s.roles.map(r => `
+  // 자동 모드에서는 GM 카드를 내보내지 않는다. 진행은 앱이 맡는다.
+  const visibleRoles = isAutoMode() ? s.roles.filter(r => !r.isGM) : s.roles;
+  grid.innerHTML = visibleRoles.map(r => `
     <div class="role-btn" onclick="openRole('${r.id}')">
       <div class="rb-icon">${r.emoji}</div>
       <div class="rb-type">${r.isGM ? 'Game Master · ⚠️ 스포일러' : '참여자'}</div>
@@ -140,6 +292,10 @@ function handleGameStart() {
   document.getElementById('start-btn-text').textContent = '게임 진행 중';
   startBtn.classList.add('started');
   document.getElementById('game-timer-display').textContent = '경과: 00:00';
+  if (isAutoMode()) {
+    document.getElementById('director-link').style.display = '';
+    renderDirector();
+  }
 }
 
 // ══════════════════════════════════════
@@ -486,6 +642,10 @@ function goTo(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(viewId).classList.add('active');
   window.scrollTo(0, 0);
+  if (viewId === 'director-view') {
+    renderDirector();
+    startTimerLoop();
+  }
 }
 
 // Init

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>크라임씬 - 미니게임 천국</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Noto+Sans+KR:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="crime-scene-styles.css">
+<link rel="stylesheet" href="crime-scene-styles.css?v=fe61c7a5">
     <script src="../scripts/game-common.js?v=b7c7301f"></script>
 </head>
 <body>
@@ -35,12 +35,27 @@
     <div class="s-hero-overview" id="sv-overview"></div>
     <div class="s-hero-meta" id="sv-meta"></div>
   </div>
+  <div class="mode-picker" id="mode-picker">
+    <div class="mode-picker-title">진행 방식</div>
+    <button class="mode-btn" id="mode-auto" onclick="setAutoMode(true)">
+      <strong>자동 진행</strong>
+      <span>앱이 순서를 안내합니다. <b id="mode-auto-count">5명</b>이면 됩니다</span>
+    </button>
+    <button class="mode-btn" id="mode-gm" onclick="setAutoMode(false)">
+      <strong>GM이 진행</strong>
+      <span>한 명이 진행을 맡습니다. <b id="mode-gm-count">6명</b> 필요</span>
+    </button>
+  </div>
+
   <div class="game-start-wrap">
     <button class="game-start-btn" id="game-start-btn" onclick="handleGameStart()">
       <span id="start-btn-icon">▶</span>
-      <span id="start-btn-text">게임 시작 (GM이 누르세요)</span>
+      <span id="start-btn-text">게임 시작</span>
     </button>
     <div class="game-timer-display" id="game-timer-display"></div>
+    <button class="director-link" id="director-link" onclick="goTo('director-view')" style="display:none">
+      🎬 진행 화면 열기
+    </button>
   </div>
   <div class="role-select-section">
     <div class="section-eyebrow">역할을 선택하세요</div>
@@ -64,6 +79,33 @@
   <div class="rv-wrap" id="rv-content"></div>
 </div>
 
+
+<!-- ══ DIRECTOR (자동 진행) ══ -->
+<div id="director-view" class="view">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goTo('scenario-view')">← 역할 선택</button>
+    <span class="top-bar-title">자동 진행</span>
+  </div>
+  <div class="dr-wrap">
+    <div class="dr-clock">
+      <div class="dr-time" id="dr-time">00:00</div>
+      <div class="dr-phase" id="dr-phase">시작 대기 중</div>
+      <div class="dr-progress"><span id="dr-bar" style="width:0%"></span></div>
+      <div class="dr-remain" id="dr-remain"></div>
+    </div>
+
+    <div class="dr-card" id="dr-card">
+      <div class="dr-card-title" id="dr-title">준비</div>
+      <div class="dr-script" id="dr-script"></div>
+      <div class="dr-hint" id="dr-hint" style="display:none"></div>
+    </div>
+
+    <div class="dr-steps" id="dr-steps"></div>
+
+    <button class="dr-reveal-btn" id="dr-reveal" onclick="askReveal()">🔓 진실 공개하기</button>
+  </div>
+</div>
+
 <!-- IMAGE MODAL -->
 <div class="img-modal-backdrop" id="img-modal" onclick="closeModal(event)">
   <div class="img-modal-box">
@@ -75,25 +117,26 @@
   </div>
 </div>
 
-<script src="crime-scene-data.js"></script>
-<script src="crime-scene-svgs.js"></script>
-<script src="crime-scene-engine.js"></script>
+<script src="crime-scene-data.js?v=24a7b037"></script>
+<script src="crime-scene-svgs.js?v=60985fc1"></script>
+<script src="crime-scene-engine.js?v=ab187897"></script>
 <script type="application/json" id="game-rules">
 {
  "title": "네온 크라임씬",
  "goal": "토론과 심문으로 우리 중 숨은 범인을 찾아내세요.",
  "steps": [
-  "GM 1명과 용의자 5~6명이 필요합니다(총 6~7명).",
-  "각자 자기 역할 카드만 확인합니다. GM 패키지는 진범이 적혀 있으니 절대 열지 마세요.",
-  "GM이 사건 개요를 읽고 라운드를 진행합니다.",
-  "알리바이와 단서를 공유하며 서로를 추궁합니다.",
-  "마지막에 범인을 투표로 지목하고 GM이 진상을 공개합니다."
+  "시나리오를 고르고 진행 방식을 정합니다. 자동 진행이면 GM 없이 용의자 수만큼만 모이면 됩니다.",
+  "각자 자기 역할 카드만 확인합니다. 비밀은 먼저 말하지 말고 추궁받을 때 흘리세요.",
+  "게임 시작을 누르면 진행 화면이 순서와 남은 시간을 안내합니다.",
+  "알리바이와 단서를 공유하며 서로를 추궁합니다. 단서는 시간이 지나면 자동으로 열립니다.",
+  "최후 변론 뒤 범인을 투표로 지목하고, 진행 화면에서 진상을 공개합니다."
  ],
  "tips": [
   "범인도 자기 목표가 따로 있습니다. 무조건 숨기만 하면 안 됩니다.",
-  "역할 카드의 비밀은 추궁받을 때 조금씩 흘리는 게 재미있습니다."
+  "범인이 아닌 사람도 숨길 게 있습니다. 거짓말한다고 다 범인은 아닙니다.",
+  "4인 시나리오 「폐업 전야의 레코드숍」은 네 명만 모여도 됩니다."
  ],
- "players": "6~7인",
+ "players": "4~7인",
  "time": "약 60분"
 }
 </script>

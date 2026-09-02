@@ -22,6 +22,12 @@ const ASSETS = [
     'scripts/game-common.js',
     'styles/main.css',
     'styles/game-common.css',
+    // 크라임씬 전용 자산. 같은 폴더에서 상대경로로 불러 쓰는데,
+    // 버전이 없어 데이터를 고쳐도 브라우저가 옛 파일을 계속 쓰는 일이 있었다.
+    'games/crime-scene-data.js',
+    'games/crime-scene-engine.js',
+    'games/crime-scene-svgs.js',
+    'games/crime-scene-styles.css',
 ];
 
 const hashes = new Map(
