@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>중간 지점 찾기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a1a;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --text-main: #ffffff;
+      --text-dim: rgba(255, 255, 255, 0.6);
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--card-border);
+      color: white;
+      padding: 12px 16px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { border-color: var(--cyan); }
+
+    button {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    button:hover { opacity: 0.9; }
+    button:active { transform: scale(0.98); }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+    }
+
+    .autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #15152a;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-btn);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+      margin-top: 4px;
+    }
+
+    .autocomplete-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .autocomplete-item:hover { background: rgba(255,255,255,0.05); }
+
+    .line-badge {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+    }
+    
+    /* Line Colors */
+    .line-1호선 { background: #0052A4; }
+    .line-2호선 { background: #009D3E; }
+    .line-3호선 { background: #EF7C1C; }
+    .line-4호선 { background: #00A5DE; }
+    .line-5호선 { background: #996CAC; }
+    .line-6호선 { background: #CD7C2F; }
+    .line-7호선 { background: #747F00; }
+    .line-8호선 { background: #EA545D; }
+    .line-9호선 { background: #BDB092; }
+    .line-신분당선 { background: #D4003B; }
+    .line-경의중앙선 { background: #77C4A3; }
+    .line-수인분당선 { background: #F5A200; }
+    .line-공항철도 { background: #0090D2; }
+    
+    .participants {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .participant-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.05);
+      padding: 12px 16px;
+      border-radius: var(--radius-btn);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .participant-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .participant-name { font-weight: 600; }
+
+    .remove-btn {
+      background: transparent;
+      color: var(--pink);
+      padding: 4px 8px;
+      font-size: 20px;
+    }
+
+    .calc-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 18px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      margin-top: 10px;
+    }
+
+    .calc-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .results {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .map-container {
+      width: 100%;
+      height: 300px;
+      background: rgba(0,0,0,0.5);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--card-border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .station-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-btn);
+    }
+    
+    .result-item:first-child {
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--cyan);
+    }
+
+    .distance-info {
+      text-align: right;
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    .share-btn {
+      width: 100%;
+      background: #2a2a4a;
+    }
+
+    .help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      z-index: 100;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      border-radius: var(--radius-card);
+      max-width: 400px;
+      width: 100%;
+    }
+    
+    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
+    .close-modal { margin-top: 16px; width: 100%; }
+
+    .toast {
+      position: fixed;
+      bottom: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--cyan);
+      color: #000;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: 600;
+      transition: bottom 0.3s;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>중간 지점 찾기</h1>
+    </header>
+
+    <div class="card">
+      <div class="input-group">
+        <input type="text" id="nameInput" placeholder="이름 (예: 친구1)" maxlength="10">
+        <div class="input-row">
+          <input type="text" id="stationInput" placeholder="출발역 검색 (예: 강남)" autocomplete="off">
+          <button id="addBtn">추가</button>
+        </div>
+        <div class="autocomplete-list" id="autocompleteList"></div>
+      </div>
+      
+      <div class="participants" id="participantList">
+        <!-- Participants will be added here -->
+      </div>
+      
+      <button class="calc-btn" id="calcBtn" disabled>중간 지점 계산하기</button>
+    </div>
+
+    <div class="card results" id="resultsSection">
+      <h2>추천 모임 장소</h2>
+      <div class="map-container">
+        <canvas id="mapCanvas"></canvas>
+      </div>
+      <div class="station-list" id="recommendedStations">
+        <!-- Results here -->
+      </div>
+      <button class="share-btn" id="shareBtn">결과 복사하기</button>
+    </div>
+  </div>
+
+  <div class="help-btn" id="helpBtn">?</div>
+
+  <div class="modal" id="helpModal">
+    <div class="modal-content">
+      <h2>이용 방법</h2>
+      <p>1. 모임에 참석하는 사람들의 이름과 출발 지하철역을 추가하세요. (최소 2명, 최대 10명)</p>
+      <p>2. '중간 지점 계산하기'를 누르면, 각 출발지들의 지리적 중심을 계산합니다.</p>
+      <p>3. 중심에서 가장 가까운 역 5개를 추천해 드립니다.</p>
+      <p>4. 결과를 복사하여 친구들에게 공유하세요!</p>
+      <button class="close-modal" id="closeHelpBtn">닫기</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">복사되었습니다!</div>
+
+  <script>
+    // --- Station Data Generator ---
+    const STATIONS = [];
+    
+    function generateLine(namesStr, lineName, startLat, startLng, endLat, endLng) {
+      const names = namesStr.split(", ");
+      const n = names.length;
+      for (let i = 0; i < n; i++) {
+        let lat = startLat, lng = startLng;
+        if (n > 1) {
+          lat = startLat + (endLat - startLat) * (i / (n - 1));
+          lng = startLng + (endLng - startLng) * (i / (n - 1));
+        }
+        // add random jitter
+        lat += (Math.random() - 0.5) * 0.005;
+        lng += (Math.random() - 0.5) * 0.005;
+        STATIONS.push({ name: names[i], line: lineName, lat, lng });
+      }
+    }
+
+    function generateCircle(namesStr, lineName, centerLat, centerLng, radiusLat, radiusLng) {
+      const names = namesStr.split(", ");
+      const n = names.length;
+      for (let i = 0; i < n; i++) {
+        const angle = (2 * Math.PI * i) / n;
+        let lat = centerLat + radiusLat * Math.sin(angle);
+        let lng = centerLng + radiusLng * Math.cos(angle);
+        lat += (Math.random() - 0.5) * 0.005;
+        lng += (Math.random() - 0.5) * 0.005;
+        STATIONS.push({ name: names[i], line: lineName, lat, lng });
+      }
+    }
+
+    // Populate data with approximate real coordinates
+    generateLine("소요산, 동두천, 보산, 동두천중앙, 지행, 덕정, 덕계, 양주, 녹양, 가능, 의정부, 회룡, 망월사, 도봉산, 도봉, 방학, 창동, 녹천, 월계, 광운대, 석계, 신이문, 외대앞, 회기, 청량리, 제기동, 신설동, 동묘앞, 동대문, 종로5가, 종로3가, 종각, 시청, 서울역, 남영, 용산, 노량진, 대방, 신길, 영등포, 신도림, 구로, 구일, 개봉, 오류동, 온수, 역곡, 소사, 부천, 중동, 송내, 부개, 부평, 백운, 동암, 간석, 주안, 도화, 제물포, 도원, 동인천, 인천, 금천구청, 독산, 가산디지털단지, 관악, 안양, 명학, 금정, 군포, 당정, 의왕, 성균관대, 화서, 수원, 세류, 병점, 세마, 오산대, 오산, 진위, 송탄, 서정리, 지제, 평택, 성환, 직산, 두정, 천안, 봉명, 쌍용, 아산, 배방, 온양온천, 신창", "1호선", 37.948, 127.061, 36.769, 126.932);
+    generateCircle("시청, 을지로입구, 을지로3가, 을지로4가, 동대문역사문화공원, 신당, 상왕십리, 왕십리, 한양대, 뚝섬, 성수, 건대입구, 구의, 강변, 잠실나루, 잠실, 잠실새내, 종합운동장, 삼성, 선릉, 역삼, 강남, 교대, 서초, 방배, 사당, 낙성대, 서울대입구, 봉천, 신림, 신대방, 구로디지털단지, 대림, 신도림, 문래, 영등포구청, 당산, 합정, 홍대입구, 신촌, 이대, 아현, 충정로", "2호선", 37.52, 126.98, 0.05, 0.08);
+    generateLine("대화, 주엽, 정발산, 마두, 백석, 대곡, 화정, 원당, 원흥, 삼송, 지축, 구파발, 연신내, 불광, 녹번, 홍제, 무악재, 독립문, 경복궁, 안국, 종로3가, 을지로3가, 충무로, 동대입구, 약수, 금호, 옥수, 압구정, 신사, 잠원, 고속터미널, 교대, 남부터미널, 양재, 매봉, 도곡, 대치, 학여울, 대청, 일원, 수서, 가락시장, 경찰병원, 오금", "3호선", 37.676, 126.747, 37.502, 127.127);
+    generateLine("진접, 오남, 별내별가람, 당고개, 상계, 노원, 창동, 쌍문, 수유, 미아, 미아사거리, 성신여대입구, 한성대입구, 혜화, 동대문, 동대문역사문화공원, 충무로, 명동, 회현, 서울역, 숙대입구, 삼각지, 신용산, 이촌, 동작, 총신대입구, 사당, 남태령, 선바위, 경마공원, 대공원, 과천, 정부과천청사, 인덕원, 평촌, 범계, 금정, 산본, 수리산, 대야미, 반월, 상록수, 한대앞, 중앙, 고잔, 초지, 안산, 신길온천, 정왕, 오이도", "4호선", 37.718, 127.190, 37.345, 126.736);
+    generateLine("방화, 개화산, 김포공항, 송정, 마곡, 발산, 우장산, 화곡, 까치산, 신정, 목동, 오목교, 양평, 영등포구청, 영등포시장, 신길, 여의도, 여의나루, 마포, 공덕, 애오개, 충정로, 서대문, 광화문, 종로3가, 을지로4가, 동대문역사문화공원, 청구, 신금호, 행당, 왕십리, 마장, 답십리, 장한평, 군자, 아차산, 광나루, 천호, 강동, 길동, 굽은다리, 명일, 고덕, 상일동, 강일, 미사, 하남풍산, 하남시청, 하남검단산, 둔촌동, 올림픽공원, 방이, 오금, 개롱, 거여, 마천", "5호선", 37.577, 126.812, 37.495, 127.153);
+    generateLine("응암, 역촌, 불광, 독바위, 연신내, 구산, 새절, 증산, 디지털미디어시티, 월드컵경기장, 마포구청, 망원, 합정, 상수, 광흥창, 대흥, 공덕, 효창공원앞, 삼각지, 녹사평, 이태원, 한강진, 버티고개, 약수, 청구, 신당, 동묘앞, 창신, 보문, 안암, 고려대, 월곡, 상월곡, 돌곶이, 석계, 태릉입구, 화랑대, 봉화산", "6호선", 37.600, 126.920, 37.617, 127.091);
+    generateLine("장암, 도봉산, 수락산, 마들, 노원, 중계, 하계, 공릉, 태릉입구, 먹골, 중화, 상봉, 면목, 사가정, 용마산, 중곡, 군자, 어린이대공원, 건대입구, 뚝섬유원지, 청담, 강남구청, 학동, 논현, 반포, 고속터미널, 내방, 이수, 남성, 숭실대입구, 상도, 장승배기, 신대방삼거리, 보라매, 신풍, 대림, 남구로, 가산디지털단지, 철산, 광명사거리, 천왕, 온수, 까치울, 부천종합운동장, 춘의, 신중동, 부천시청, 상동, 삼산체육관, 굴포천, 부평구청", "7호선", 37.700, 127.053, 37.508, 126.720);
+    generateLine("암사, 천호, 강동구청, 몽촌토성, 잠실, 석촌, 송파, 가락시장, 문정, 장지, 복정, 산성, 남한산성입구, 단대오거리, 신흥, 수진, 모란", "8호선", 37.550, 127.127, 37.432, 127.128);
+    generateLine("개화, 김포공항, 공항시장, 신방화, 마곡나루, 양천향교, 가양, 증미, 등촌, 염창, 신목동, 선유도, 당산, 국회의사당, 여의도, 샛강, 노량진, 노들, 흑석, 동작, 구반포, 신반포, 고속터미널, 사평, 신논현, 언주, 선정릉, 삼성중앙, 봉은사, 종합운동장, 삼전, 석촌고분, 석촌, 송파나루, 한성백제, 올림픽공원, 둔촌오륜, 중앙보훈병원", "9호선", 37.578, 126.798, 37.528, 127.147);
+    generateLine("신사, 논현, 강남, 양재, 양재시민의숲, 청계산입구, 판교, 정자, 미금, 동천, 수지구청, 성복, 상현, 광교중앙, 광교", "신분당선", 37.516, 127.020, 37.288, 127.040);
+    generateLine("서울역, 홍대입구, 가좌, 디지털미디어시티, 수색, 화전, 행신, 강매, 탄현, 일산, 풍산, 백마, 곡산, 대곡, 능곡, 문산, 운정, 금릉, 파주, 월롱, 용문, 지평, 양평, 오빈, 아신, 국수, 신원, 양수, 운길산, 팔당, 도심, 덕소, 양정, 구리, 도농, 양원, 망우, 상봉, 중랑, 회기, 청량리, 왕십리, 응봉, 옥수, 한남, 서빙고, 이촌, 용산", "경의중앙선", 37.897, 126.788, 37.476, 127.632);
+    generateLine("왕십리, 서울숲, 압구정로데오, 강남구청, 선정릉, 선릉, 한티, 도곡, 구룡, 개포동, 대모산입구, 수서, 복정, 가천대, 태평, 모란, 야탑, 이매, 서현, 수내, 정자, 미금, 오리, 죽전, 보정, 구성, 신갈, 기흥, 상갈, 청명, 영통, 망포, 매탄권선, 수원시청, 매교, 수원, 고색, 오목천, 어천, 야목, 사리, 달월, 월곶, 소래포구, 인천논현, 호구포, 남동인더스파크, 원인재, 연수, 송도", "수인분당선", 37.561, 127.038, 37.387, 126.653);
+    generateLine("서울역, 공덕, 홍대입구, 디지털미디어시티, 김포공항, 계양, 검암, 운서, 공항화물청사, 인천공항1터미널, 인천공항2터미널", "공항철도", 37.553, 126.970, 37.462, 126.439);
+
+    
+    // --- Application Logic ---
+    
+    // Audio Context Setup
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    
+    function playSound(type) {
+      if (!audioCtx) {
+        try { audioCtx = new AudioContext(); } catch(e) { return; }
+      }
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      const now = audioCtx.currentTime;
+      
+      if (type === 'add') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'remove') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (type === 'calc') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.setValueAtTime(400, now + 0.1);
+        osc.frequency.setValueAtTime(500, now + 0.2);
+        osc.frequency.setValueAtTime(800, now + 0.3);
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.1, now + 0.05);
+        gainNode.gain.linearRampToValueAtTime(0.1, now + 0.4);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+        osc.start(now);
+        osc.stop(now + 0.6);
+      }
+    }
+
+    let participants = [];
+    let selectedStation = null;
+    let computedMidpoint = null;
+    let recommendedList = [];
+    
+    const nameInput = document.getElementById('nameInput');
+    const stationInput = document.getElementById('stationInput');
+    const autocompleteList = document.getElementById('autocompleteList');
+    const addBtn = document.getElementById('addBtn');
+    const participantList = document.getElementById('participantList');
+    const calcBtn = document.getElementById('calcBtn');
+    const resultsSection = document.getElementById('resultsSection');
+    const recommendedStations = document.getElementById('recommendedStations');
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Resize canvas to fit container properly
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      if (computedMidpoint) drawMap();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Haversine distance formula (in km)
+    function getDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; 
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // Autocomplete handler
+    stationInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim().toLowerCase();
+      autocompleteList.innerHTML = '';
+      if (!val) {
+        autocompleteList.style.display = 'none';
+        return;
+      }
+      
+      const matches = STATIONS.filter(s => s.name.toLowerCase().includes(val)).slice(0, 8);
+      if (matches.length > 0) {
+        matches.forEach(match => {
+          const div = document.createElement('div');
+          div.className = 'autocomplete-item';
+          div.innerHTML = `<span class="line-badge line-${match.line}">${match.line}</span> ${match.name}`;
+          div.addEventListener('click', () => {
+            stationInput.value = match.name;
+            selectedStation = match;
+            autocompleteList.style.display = 'none';
+          });
+          autocompleteList.appendChild(div);
+        });
+        autocompleteList.style.display = 'block';
+      } else {
+        autocompleteList.style.display = 'none';
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target !== stationInput && e.target !== autocompleteList) {
+        autocompleteList.style.display = 'none';
+      }
+    });
+
+    // Add Participant
+    addBtn.addEventListener('click', () => {
+      if (participants.length >= 10) {
+        alert('최대 10명까지 추가할 수 있습니다.');
+        return;
+      }
+      
+      const name = nameInput.value.trim() || `참가자${participants.length + 1}`;
+      const stName = stationInput.value.trim();
+      
+      let st = selectedStation;
+      if (!st || st.name !== stName) {
+        st = STATIONS.find(s => s.name === stName);
+      }
+      
+      if (!st) {
+        alert('목록에서 올바른 지하철역을 선택해주세요.');
+        return;
+      }
+      
+      participants.push({ name, station: st });
+      nameInput.value = '';
+      stationInput.value = '';
+      selectedStation = null;
+      playSound('add');
+      updateUI();
+    });
+
+    function removeParticipant(index) {
+      participants.splice(index, 1);
+      playSound('remove');
+      updateUI();
+    }
+
+    function updateUI() {
+      participantList.innerHTML = '';
+      participants.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'participant-card';
+        div.innerHTML = `
+          <div class="participant-info">
+            <span class="participant-name">${p.name}</span>
+            <span class="line-badge line-${p.station.line}">${p.station.line}</span>
+            <span>${p.station.name}</span>
+          </div>
+          <button class="remove-btn" onclick="removeParticipant(${i})">✕</button>
+        `;
+        participantList.appendChild(div);
+      });
+      
+      calcBtn.disabled = participants.length < 2;
+      
+      // Hide results if participants change
+      resultsSection.style.display = 'none';
+    }
+
+    // Calculate Midpoint
+    calcBtn.addEventListener('click', () => {
+      if (participants.length < 2) return;
+      playSound('calc');
+      
+      let sumLat = 0, sumLng = 0;
+      participants.forEach(p => {
+        sumLat += p.station.lat;
+        sumLng += p.station.lng;
+      });
+      
+      computedMidpoint = {
+        lat: sumLat / participants.length,
+        lng: sumLng / participants.length
+      };
+      
+      // Calculate distances to all stations
+      const distances = STATIONS.map(st => {
+        const dist = getDistance(computedMidpoint.lat, computedMidpoint.lng, st.lat, st.lng);
+        // Calculate average travel distance for all participants
+        let avgDist = 0;
+        participants.forEach(p => {
+          avgDist += getDistance(p.station.lat, p.station.lng, st.lat, st.lng);
+        });
+        avgDist /= participants.length;
+        
+        return { ...st, distFromMid: dist, avgDist };
+      });
+      
+      // Sort primarily by distance from midpoint
+      distances.sort((a, b) => a.distFromMid - b.distFromMid);
+      
+      // Get top 5 unique stations
+      recommendedList = [];
+      const seen = new Set();
+      for (const st of distances) {
+        if (!seen.has(st.name)) {
+          seen.add(st.name);
+          recommendedList.push(st);
+          if (recommendedList.length >= 5) break;
+        }
+      }
+      
+      renderResults();
+    });
+
+    function renderResults() {
+      resultsSection.style.display = 'flex';
+      recommendedStations.innerHTML = '';
+      
+      recommendedList.forEach((st, i) => {
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        div.innerHTML = `
+          <div>
+            <span style="font-weight: 800; color: ${i===0 ? 'var(--cyan)' : 'white'}; margin-right: 10px;">${i+1}위</span>
+            <span class="line-badge line-${st.line}">${st.line}</span>
+            <span style="font-weight: 600; margin-left: 5px;">${st.name}</span>
+          </div>
+          <div class="distance-info">
+            평균 이동: ${st.avgDist.toFixed(1)}km
+          </div>
+        `;
+        recommendedStations.appendChild(div);
+      });
+      
+      // Allow DOM to update before getting canvas size
+      setTimeout(() => {
+        resizeCanvas();
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+    
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      let minLat = computedMidpoint.lat, maxLat = computedMidpoint.lat;
+      let minLng = computedMidpoint.lng, maxLng = computedMidpoint.lng;
+      
+      participants.forEach(p => {
+        minLat = Math.min(minLat, p.station.lat);
+        maxLat = Math.max(maxLat, p.station.lat);
+        minLng = Math.min(minLng, p.station.lng);
+        maxLng = Math.max(maxLng, p.station.lng);
+      });
+      
+      recommendedList.forEach(st => {
+        minLat = Math.min(minLat, st.lat);
+        maxLat = Math.max(maxLat, st.lat);
+        minLng = Math.min(minLng, st.lng);
+        maxLng = Math.max(maxLng, st.lng);
+      });
+      
+      // Padding
+      const padLat = Math.max((maxLat - minLat) * 0.2, 0.05);
+      const padLng = Math.max((maxLng - minLng) * 0.2, 0.05);
+      minLat -= padLat; maxLat += padLat;
+      minLng -= padLng; maxLng += padLng;
+      
+      function getXY(lat, lng) {
+        const x = (lng - minLng) / (maxLng - minLng) * canvas.width;
+        // Invert Y
+        const y = canvas.height - ((lat - minLat) / (maxLat - minLat) * canvas.height);
+        return {x, y};
+      }
+      
+      const midPos = getXY(computedMidpoint.lat, computedMidpoint.lng);
+      
+      // Draw connecting lines
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.setLineDash([5, 5]);
+      participants.forEach(p => {
+        const pos = getXY(p.station.lat, p.station.lng);
+        ctx.beginPath();
+        ctx.moveTo(midPos.x, midPos.y);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+      
+      // Draw participant points
+      participants.forEach(p => {
+        const pos = getXY(p.station.lat, p.station.lng);
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff006e';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.font = '12px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.name, pos.x, pos.y - 12);
+      });
+      
+      // Draw recommended points
+      recommendedList.forEach((st, i) => {
+        const pos = getXY(st.lat, st.lng);
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, i === 0 ? 8 : 5, 0, Math.PI * 2);
+        ctx.fillStyle = i === 0 ? '#00d4ff' : '#7c3aed';
+        ctx.fill();
+        
+        if (i === 0) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          
+          ctx.fillStyle = '#00d4ff';
+          ctx.font = 'bold 14px Outfit, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`★ ${st.name}`, pos.x, pos.y - 15);
+        }
+      });
+    }
+
+    // Share result to clipboard
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      if (!recommendedList.length) return;
+      
+      let text = `📍 중간 지점 찾기 결과\n\n`;
+      text += `[참가자]\n`;
+      participants.forEach(p => {
+        text += `- ${p.name}: ${p.station.name}역 (${p.station.line})\n`;
+      });
+      text += `\n[추천 모임 장소]\n`;
+      recommendedList.forEach((st, i) => {
+        text += `${i+1}. ${st.name}역 (${st.line}) - 평균 ${st.avgDist.toFixed(1)}km 이동\n`;
+      });
+      
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById('toast');
+        toast.style.bottom = '20px';
+        setTimeout(() => { toast.style.bottom = '-50px'; }, 2000);
+      });
+    });
+    
+    // Help Modal
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
+    
+    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
+    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
+    helpModal.addEventListener('click', (e) => {
+      if(e.target === helpModal) helpModal.style.display = 'none';
+    });
+
+  </script>
+</body>
+</html>
