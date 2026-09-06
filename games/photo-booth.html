@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>네온 4컷 사진관 | 미니게임 천국</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #0b0b1a;
+      --card-bg: rgba(22, 22, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .video-container {
+      width: 100%;
+      height: 280px;
+      background: #000;
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      position: relative;
+      border: 2px solid var(--cyan);
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .countdown-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      font-weight: 800;
+      color: var(--yellow);
+      text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);
+    }
+
+    .cam-controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      flex: 1;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border: none;
+      color: white;
+      padding: 14px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--card-border);
+      color: white;
+    }
+
+    .gallery-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--cyan);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .photo-thumb {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 2px solid transparent;
+      cursor: pointer;
+      position: relative;
+      background: #111;
+    }
+
+    .photo-thumb.selected {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
+    }
+
+    .badge-num {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: var(--cyan);
+      color: black;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .frame-customizer {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .color-options {
+      display: flex;
+      gap: 10px;
+    }
+
+    .color-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .color-dot.active { border-color: white; transform: scale(1.1); }
+
+    input[type="text"] {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--card-border);
+      color: white;
+      padding: 12px 16px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .preview-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    canvas {
+      max-width: 240px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      z-index: 100;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      border-radius: var(--radius-card);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
+    .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>네온 4컷 사진관</h1>
+    </header>
+
+    <div class="card">
+      <div class="video-container">
+        <video id="webcam" autoplay playsinline muted></video>
+        <div class="countdown-overlay" id="countdownOverlay">3</div>
+      </div>
+
+      <div class="cam-controls">
+        <button class="btn-secondary" onclick="toggleCamera()">🔄 전/후면 전환</button>
+        <button onclick="startPhotoShoot()">📸 촬영 (3초 타이머)</button>
+      </div>
+
+      <div class="gallery-title">
+        <span>🖼️ 촬영한 사진 갤러리</span>
+        <span id="photoCount" style="color: var(--cyan);">0 / 10장</span>
+      </div>
+
+      <div class="photo-grid" id="photoGrid"></div>
+
+      <div class="frame-customizer" id="customizerSection" style="display: none;">
+        <div class="gallery-title">🎨 4컷 프레임 스타일 설정</div>
+        <div class="color-options">
+          <div class="color-dot active" style="background:#ff006e" onclick="setFrameColor('#ff006e', this)"></div>
+          <div class="color-dot" style="background:#00d4ff" onclick="setFrameColor('#00d4ff', this)"></div>
+          <div class="color-dot" style="background:#7c3aed" onclick="setFrameColor('#7c3aed', this)"></div>
+          <div class="color-dot" style="background:#111122" onclick="setFrameColor('#111122', this)"></div>
+          <div class="color-dot" style="background:#ffffff" onclick="setFrameColor('#ffffff', this)"></div>
+        </div>
+        <input type="text" id="frameTitle" placeholder="프레임 문구 (예: 우정 영원히 2026)" value="NEON PHOTO 4-CUT">
+        <button onclick="render4CutFrame()" style="background: linear-gradient(135deg, var(--cyan), var(--purple));">✨ 4컷 프레임 완성하기</button>
+      </div>
+
+      <div class="preview-container" id="previewContainer">
+        <canvas id="fourCutCanvas"></canvas>
+        <button onclick="download4Cut()" style="width: 100%;">📥 네컷 사진 다운로드 (PNG)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="help-btn" id="helpBtn">?</div>
+
+  <div class="modal" id="helpModal">
+    <div class="modal-content">
+      <h2>이용 방법</h2>
+      <p>1. 고정된 위치에서 <strong>'📸 촬영'</strong> 버튼을 눌러 총 10장까지 자유롭게 포즈를 취하며 촬영하세요.</p>
+      <p>2. 촬영한 사진 갤러리에서 마음에 드는 <strong>베스트 4장</strong>을 순서대로 클릭하세요.</p>
+      <p>3. 네온 프레임 색상과 문구를 고른 후 <strong>'4컷 프레임 완성하기'</strong>를 누르면 실제 4컷 사진처럼 저장 가능합니다!</p>
+      <button class="close-modal" id="closeHelpBtn">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    let currentStream = null;
+    let facingMode = 'user';
+    const capturedPhotos = [];
+    const selectedIndices = [];
+    let activeFrameColor = '#ff006e';
+
+    const video = document.getElementById('webcam');
+    const countdownOverlay = document.getElementById('countdownOverlay');
+    const photoGrid = document.getElementById('photoGrid');
+    const photoCount = document.getElementById('photoCount');
+
+    async function initCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+      try {
+        currentStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+        video.srcObject = currentStream;
+      } catch (e) {
+        console.error("Camera access error:", e);
+      }
+    }
+    initCamera();
+
+    function toggleCamera() {
+      facingMode = (facingMode === 'user') ? 'environment' : 'user';
+      initCamera();
+    }
+
+    function startPhotoShoot() {
+      if (capturedPhotos.length >= 10) {
+        alert('최대 10장까지 촬영할 수 있습니다.');
+        return;
+      }
+
+      let count = 3;
+      countdownOverlay.textContent = count;
+      countdownOverlay.style.display = 'flex';
+
+      const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdownOverlay.textContent = count;
+        } else {
+          clearInterval(timer);
+          countdownOverlay.style.display = 'none';
+          snapPhoto();
+        }
+      }, 1000);
+    }
+
+    function snapPhoto() {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = video.videoWidth || 640;
+      tempCanvas.height = video.videoHeight || 480;
+      const ctx = tempCanvas.getContext('2d');
+
+      if (facingMode === 'user') {
+        ctx.translate(tempCanvas.width, 0);
+        ctx.scale(-1, 1);
+      }
+
+      ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+      const dataUrl = tempCanvas.toDataURL('image/jpeg');
+
+      capturedPhotos.push(dataUrl);
+      updateGallery();
+    }
+
+    function updateGallery() {
+      photoGrid.innerHTML = '';
+      photoCount.textContent = `${capturedPhotos.length} / 10장`;
+
+      capturedPhotos.forEach((dataUrl, idx) => {
+        const wrap = document.createElement('div');
+        wrap.style.position = 'relative';
+
+        const img = document.createElement('img');
+        img.className = 'photo-thumb';
+        img.src = dataUrl;
+
+        const selPos = selectedIndices.indexOf(idx);
+        if (selPos !== -1) {
+          img.classList.add('selected');
+          const badge = document.createElement('div');
+          badge.className = 'badge-num';
+          badge.textContent = selPos + 1;
+          wrap.appendChild(badge);
+        }
+
+        img.onclick = () => toggleSelectPhoto(idx);
+        wrap.appendChild(img);
+        photoGrid.appendChild(wrap);
+      });
+
+      if (selectedIndices.length === 4) {
+        document.getElementById('customizerSection').style.display = 'flex';
+      } else {
+        document.getElementById('customizerSection').style.display = 'none';
+      }
+    }
+
+    function toggleSelectPhoto(idx) {
+      const pos = selectedIndices.indexOf(idx);
+      if (pos !== -1) {
+        selectedIndices.splice(pos, 1);
+      } else {
+        if (selectedIndices.length >= 4) {
+          alert('4컷 프레임용 사진은 4장만 선택 가능합니다.');
+          return;
+        }
+        selectedIndices.push(idx);
+      }
+      updateGallery();
+    }
+
+    function setFrameColor(color, el) {
+      activeFrameColor = color;
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function render4CutFrame() {
+      if (selectedIndices.length !== 4) return;
+
+      const canvas = document.getElementById('fourCutCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const itemW = 400;
+      const itemH = 300;
+      const padding = 24;
+      const gap = 16;
+      const headerH = 20;
+      const footerH = 80;
+
+      canvas.width = itemW + padding * 2;
+      canvas.height = headerH + padding + (itemH * 4) + (gap * 3) + footerH;
+
+      // Draw Frame BG
+      ctx.fillStyle = activeFrameColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      let loadedCount = 0;
+      selectedIndices.forEach((photoIdx, slot) => {
+        const img = new Image();
+        img.onload = () => {
+          const y = headerH + padding + slot * (itemH + gap);
+          ctx.drawImage(img, padding, y, itemW, itemH);
+
+          loadedCount++;
+          if (loadedCount === 4) {
+            // Draw Footer Text
+            const title = document.getElementById('frameTitle').value.trim() || 'NEON PHOTO 4-CUT';
+            ctx.fillStyle = (activeFrameColor === '#ffffff') ? '#111122' : '#ffffff';
+            ctx.font = 'bold 20px Outfit, Pretendard, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, canvas.width / 2, canvas.height - 35);
+
+            document.getElementById('previewContainer').style.display = 'flex';
+            document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
+          }
+        };
+        img.src = capturedPhotos[photoIdx];
+      });
+    }
+
+    function download4Cut() {
+      const canvas = document.getElementById('fourCutCanvas');
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `neon_4cut_${Date.now()}.png`;
+      a.click();
+    }
+
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
+    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
+    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
+  </script>
+</body>
+</html>

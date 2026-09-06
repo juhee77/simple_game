@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>그룹 성향 레이더 | 미니게임 천국</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #0b0b1a;
+      --card-bg: rgba(22, 22, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--card-border);
+      color: white;
+      padding: 12px 16px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input[type="text"]:focus { border-color: var(--cyan); }
+
+    button {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .q-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-btn);
+      padding: 14px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .q-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
+    .member-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .member-tag {
+      background: rgba(0, 212, 255, 0.15);
+      border: 1px solid var(--cyan);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .results {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 320px;
+      background: rgba(0,0,0,0.5);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--card-border);
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .match-info {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(255,255,255,0.05);
+      padding: 16px;
+      border-radius: var(--radius-btn);
+    }
+
+    .match-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .match-val {
+      font-weight: 700;
+      color: var(--yellow);
+    }
+
+    .help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      z-index: 100;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      border-radius: var(--radius-card);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
+    .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>그룹 성향 레이더</h1>
+    </header>
+
+    <div class="card">
+      <div class="input-row">
+        <input type="text" id="memberName" placeholder="참가자 이름 (예: 철수)">
+        <button onclick="addMemberAnswers()">성향 등록</button>
+      </div>
+
+      <div class="q-card">
+        <div class="q-title">1. 모임 활동 성향</div>
+        <div class="range-labels"><span>🏠 얌전한 집돌이</span><span>🔥 아웃도어 핫플</span></div>
+        <input type="range" id="q1" min="1" max="5" value="3">
+      </div>
+
+      <div class="q-card">
+        <div class="q-title">2. 매운맛 식성</div>
+        <div class="range-labels"><span>👶 순한맛 맵찔이</span><span>🌶️ 극강 맵부심</span></div>
+        <input type="range" id="q2" min="1" max="5" value="3">
+      </div>
+
+      <div class="q-card">
+        <div class="q-title">3. 약속 & 여행 계획</div>
+        <div class="range-labels"><span>🎲 즉흥 P 스타일</span><span>📋 철저한 J 계획</span></div>
+        <input type="range" id="q3" min="1" max="5" value="3">
+      </div>
+
+      <div class="q-card">
+        <div class="q-title">4. 모임 텐션</div>
+        <div class="range-labels"><span>☕ 차분한 대화</span><span>🎉 시끌벅적 인싸</span></div>
+        <input type="range" id="q4" min="1" max="5" value="3">
+      </div>
+
+      <div class="q-card">
+        <div class="q-title">5. 생활 패턴</div>
+        <div class="range-labels"><span>☀️ 아침형 인간</span><span>🌙 밤샘 올빼미</span></div>
+        <input type="range" id="q5" min="1" max="5" value="3">
+      </div>
+
+      <div class="member-list" id="memberList"></div>
+
+      <button style="width: 100%; padding: 14px; background: linear-gradient(135deg, var(--cyan), var(--purple)); font-size: 16px;" id="calcBtn" onclick="generateRadar()" disabled>레이더 차트 & 케미 분석하기</button>
+    </div>
+
+    <div class="card results" id="resultsSection">
+      <h2>그룹 성향 방위도</h2>
+      <div class="chart-container">
+        <canvas id="radarCanvas"></canvas>
+      </div>
+
+      <div class="match-info">
+        <div class="match-row">
+          <span>✨ 그룹 궁합 조화도</span>
+          <span class="match-val" id="harmonyVal">92점</span>
+        </div>
+        <div class="match-row">
+          <span>💖 최고의 꿀케미 조합</span>
+          <span class="match-val" id="bestPairVal">-</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="help-btn" id="helpBtn">?</div>
+
+  <div class="modal" id="helpModal">
+    <div class="modal-content">
+      <h2>이용 방법</h2>
+      <p>각 참가자가 이름을 적고 5가지 질문의 슬라이더를 맞춘 뒤 '성향 등록'을 누르세요 (최소 2명).</p>
+      <p>'레이더 차트 분석'을 누르면 그룹 전체의 성향 레이더 차트와 궁합 꿀케미 조합을 시각화해 줍니다.</p>
+      <button class="close-modal" id="closeHelpBtn">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    const members = [];
+    const colors = ['#00d4ff', '#ff006e', '#ffd166', '#06d6a0', '#7c3aed', '#ff9f1c'];
+
+    function addMemberAnswers() {
+      const name = document.getElementById('memberName').value.trim();
+      if (!name) {
+        alert('이름을 입력해주세요.');
+        return;
+      }
+
+      const q1 = parseInt(document.getElementById('q1').value, 10);
+      const q2 = parseInt(document.getElementById('q2').value, 10);
+      const q3 = parseInt(document.getElementById('q3').value, 10);
+      const q4 = parseInt(document.getElementById('q4').value, 10);
+      const q5 = parseInt(document.getElementById('q5').value, 10);
+
+      members.push({
+        name,
+        scores: [q1, q2, q3, q4, q5],
+        color: colors[members.length % colors.length]
+      });
+
+      document.getElementById('memberName').value = '';
+      updateMemberList();
+    }
+
+    function updateMemberList() {
+      const list = document.getElementById('memberList');
+      list.innerHTML = '';
+      members.forEach((m, idx) => {
+        const tag = document.createElement('div');
+        tag.className = 'member-tag';
+        tag.style.borderColor = m.color;
+        tag.innerHTML = `<span style="color:${m.color}">●</span> ${m.name} <span onclick="removeMember(${idx})" style="cursor:pointer;margin-left:4px;">✕</span>`;
+        list.appendChild(tag);
+      });
+
+      document.getElementById('calcBtn').disabled = members.length < 2;
+    }
+
+    function removeMember(idx) {
+      members.splice(idx, 1);
+      updateMemberList();
+    }
+
+    function generateRadar() {
+      document.getElementById('resultsSection').style.display = 'flex';
+      drawRadarChart();
+      calculateChemistry();
+
+      setTimeout(() => {
+        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+
+    function drawRadarChart() {
+      const canvas = document.getElementById('radarCanvas');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2 + 10;
+      const radius = Math.min(centerX, centerY) - 50;
+
+      const labels = ['핫플선호', '맵부심', '계획J', '인싸텐션', '밤샘올빼미'];
+      const numAxes = labels.length;
+
+      // Grid circles
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1;
+      for (let r = 1; r <= 5; r++) {
+        ctx.beginPath();
+        for (let i = 0; i < numAxes; i++) {
+          const angle = (Math.PI * 2 / numAxes) * i - Math.PI / 2;
+          const x = centerX + (radius * (r / 5)) * Math.cos(angle);
+          const y = centerY + (radius * (r / 5)) * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      // Axis lines & labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 12px Outfit, sans-serif';
+      ctx.textAlign = 'center';
+
+      for (let i = 0; i < numAxes; i++) {
+        const angle = (Math.PI * 2 / numAxes) * i - Math.PI / 2;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        const labelX = centerX + (radius + 22) * Math.cos(angle);
+        const labelY = centerY + (radius + 22) * Math.sin(angle);
+        ctx.fillText(labels[i], labelX, labelY + 4);
+      }
+
+      // Member polygons
+      members.forEach(m => {
+        ctx.beginPath();
+        for (let i = 0; i < numAxes; i++) {
+          const angle = (Math.PI * 2 / numAxes) * i - Math.PI / 2;
+          const valRatio = m.scores[i] / 5;
+          const x = centerX + (radius * valRatio) * Math.cos(angle);
+          const y = centerY + (radius * valRatio) * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = m.color;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.fillStyle = m.color + '22';
+        ctx.fill();
+
+        // Dots
+        for (let i = 0; i < numAxes; i++) {
+          const angle = (Math.PI * 2 / numAxes) * i - Math.PI / 2;
+          const valRatio = m.scores[i] / 5;
+          const x = centerX + (radius * valRatio) * Math.cos(angle);
+          const y = centerY + (radius * valRatio) * Math.sin(angle);
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = m.color;
+          ctx.fill();
+        }
+      });
+    }
+
+    function calculateChemistry() {
+      let minDiff = Infinity;
+      let bestPair = '';
+      let totalDiff = 0;
+      let count = 0;
+
+      for (let i = 0; i < members.length; i++) {
+        for (let j = i + 1; j < members.length; j++) {
+          let diff = 0;
+          for (let k = 0; k < 5; k++) {
+            diff += Math.abs(members[i].scores[k] - members[j].scores[k]);
+          }
+          totalDiff += diff;
+          count++;
+
+          if (diff < minDiff) {
+            minDiff = diff;
+            bestPair = `${members[i].name} ❤️ ${members[j].name}`;
+          }
+        }
+      }
+
+      const avgDiff = totalDiff / count;
+      const harmony = Math.max(50, Math.round(100 - avgDiff * 4));
+
+      document.getElementById('harmonyVal').textContent = `${harmony}점`;
+      document.getElementById('bestPairVal').textContent = bestPair || '-';
+    }
+
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
+    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
+    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
+  </script>
+</body>
+</html>
