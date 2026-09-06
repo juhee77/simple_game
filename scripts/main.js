@@ -24,9 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize state
     const initialHash = window.location.hash.substring(1);
-    const rememberedCategory = localStorage.getItem(LAST_CATEGORY_KEY);
-    if (initialHash || rememberedCategory) {
-        state.category = initialHash || rememberedCategory;
+    if (initialHash && getCategoryCard(initialHash)) {
+        state.category = initialHash;
+    } else {
+        state.category = null;
     }
 
     function getCardTitle(card) {
