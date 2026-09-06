@@ -149,7 +149,7 @@
       color: white;
     }
 
-    .gallery-title {
+    .section-label {
       font-size: 15px;
       font-weight: 700;
       color: var(--cyan);
@@ -164,6 +164,10 @@
       gap: 8px;
     }
 
+    .photo-thumb-wrap {
+      position: relative;
+    }
+
     .photo-thumb {
       width: 100%;
       aspect-ratio: 1;
@@ -171,7 +175,6 @@
       object-fit: cover;
       border: 2px solid transparent;
       cursor: pointer;
-      position: relative;
       background: #111;
     }
 
@@ -197,8 +200,44 @@
     .frame-customizer {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
       margin-top: 10px;
+    }
+
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .option-sub-title {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .layout-options {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+
+    .layout-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      padding: 10px 14px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .layout-btn.active {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
     }
 
     .color-options {
@@ -214,6 +253,29 @@
     }
 
     .color-dot.active { border-color: white; transform: scale(1.1); }
+
+    .filter-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      padding: 8px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background: rgba(255, 209, 102, 0.15);
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
 
     input[type="text"] {
       background: rgba(0,0,0,0.3);
@@ -235,7 +297,7 @@
     }
 
     canvas {
-      max-width: 240px;
+      max-width: 280px;
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
@@ -301,7 +363,7 @@
         <button onclick="startPhotoShoot()">📸 촬영 (3초 타이머)</button>
       </div>
 
-      <div class="gallery-title">
+      <div class="section-label">
         <span>🖼️ 촬영한 사진 갤러리</span>
         <span id="photoCount" style="color: var(--cyan);">0 / 10장</span>
       </div>
@@ -309,21 +371,51 @@
       <div class="photo-grid" id="photoGrid"></div>
 
       <div class="frame-customizer" id="customizerSection" style="display: none;">
-        <div class="gallery-title">🎨 4컷 프레임 스타일 설정</div>
-        <div class="color-options">
-          <div class="color-dot active" style="background:#ff006e" onclick="setFrameColor('#ff006e', this)"></div>
-          <div class="color-dot" style="background:#00d4ff" onclick="setFrameColor('#00d4ff', this)"></div>
-          <div class="color-dot" style="background:#7c3aed" onclick="setFrameColor('#7c3aed', this)"></div>
-          <div class="color-dot" style="background:#111122" onclick="setFrameColor('#111122', this)"></div>
-          <div class="color-dot" style="background:#ffffff" onclick="setFrameColor('#ffffff', this)"></div>
+        <div class="section-label">🎨 4컷 프레임 스타일 설정</div>
+
+        <div class="option-group">
+          <div class="option-sub-title">1. 프레임 레이아웃 배치</div>
+          <div class="layout-options">
+            <button class="layout-btn active" onclick="setLayout('v4', this)">📱 세로 4컷 (1x4)</button>
+            <button class="layout-btn" onclick="setLayout('grid2x2', this)">🖼️ 2x2 그리드</button>
+            <button class="layout-btn" onclick="setLayout('film', this)">🎞️ 레트로 필름</button>
+            <button class="layout-btn" onclick="setLayout('wide', this)">💌 와이드 가로 (4x1)</button>
+          </div>
         </div>
-        <input type="text" id="frameTitle" placeholder="프레임 문구 (예: 우정 영원히 2026)" value="NEON PHOTO 4-CUT">
+
+        <div class="option-group">
+          <div class="option-sub-title">2. 프레임 컬러 앤 배경</div>
+          <div class="color-options">
+            <div class="color-dot active" style="background:#ff006e" onclick="setFrameColor('#ff006e', this)"></div>
+            <div class="color-dot" style="background:#00d4ff" onclick="setFrameColor('#00d4ff', this)"></div>
+            <div class="color-dot" style="background:#ffd166" onclick="setFrameColor('#ffd166', this)"></div>
+            <div class="color-dot" style="background:#7c3aed" onclick="setFrameColor('#7c3aed', this)"></div>
+            <div class="color-dot" style="background:#111122" onclick="setFrameColor('#111122', this)"></div>
+            <div class="color-dot" style="background:#ffffff" onclick="setFrameColor('#ffffff', this)"></div>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-sub-title">3. 사진 필터 효과</div>
+          <div class="filter-options">
+            <button class="filter-btn active" onclick="setFilter('none', this)">원본</button>
+            <button class="filter-btn" onclick="setFilter('bw', this)">클래식 흑백</button>
+            <button class="filter-btn" onclick="setFilter('sepia', this)">빈티지 세피아</button>
+            <button class="filter-btn" onclick="setFilter('glow', this)">네온 브라이트</button>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-sub-title">4. 기념 문구</div>
+          <input type="text" id="frameTitle" placeholder="프레임 문구 (예: 우정 영원히 2026)" value="NEON PHOTO 4-CUT">
+        </div>
+
         <button onclick="render4CutFrame()" style="background: linear-gradient(135deg, var(--cyan), var(--purple));">✨ 4컷 프레임 완성하기</button>
       </div>
 
       <div class="preview-container" id="previewContainer">
         <canvas id="fourCutCanvas"></canvas>
-        <button onclick="download4Cut()" style="width: 100%;">📥 네컷 사진 다운로드 (PNG)</button>
+        <button onclick="download4Cut()" style="width: 100%;">📥 완성된 4컷 사진 다운로드 (PNG)</button>
       </div>
     </div>
   </div>
@@ -333,9 +425,9 @@
   <div class="modal" id="helpModal">
     <div class="modal-content">
       <h2>이용 방법</h2>
-      <p>1. 고정된 위치에서 <strong>'📸 촬영'</strong> 버튼을 눌러 총 10장까지 자유롭게 포즈를 취하며 촬영하세요.</p>
-      <p>2. 촬영한 사진 갤러리에서 마음에 드는 <strong>베스트 4장</strong>을 순서대로 클릭하세요.</p>
-      <p>3. 네온 프레임 색상과 문구를 고른 후 <strong>'4컷 프레임 완성하기'</strong>를 누르면 실제 4컷 사진처럼 저장 가능합니다!</p>
+      <p>1. <strong>'📸 촬영'</strong>을 눌러 총 10장까지 포즈를 취하며 촬영합니다.</p>
+      <p>2. 촬영 갤러리에서 마음에 드는 <strong>베스트 4장</strong>을 클릭합니다.</p>
+      <p>3. <strong>세로 4컷 / 2x2 그리드 / 필름 스트립 / 와이드 4컷</strong> 중 레이아웃과 색상, 필터를 선택하고 완성합니다!</p>
       <button class="close-modal" id="closeHelpBtn">닫기</button>
     </div>
   </div>
@@ -346,6 +438,8 @@
     const capturedPhotos = [];
     const selectedIndices = [];
     let activeFrameColor = '#ff006e';
+    let activeLayout = 'v4';
+    let activeFilter = 'none';
 
     const video = document.getElementById('webcam');
     const countdownOverlay = document.getElementById('countdownOverlay');
@@ -419,7 +513,7 @@
 
       capturedPhotos.forEach((dataUrl, idx) => {
         const wrap = document.createElement('div');
-        wrap.style.position = 'relative';
+        wrap.className = 'photo-thumb-wrap';
 
         const img = document.createElement('img');
         img.className = 'photo-thumb';
@@ -460,10 +554,34 @@
       updateGallery();
     }
 
+    function setLayout(layout, el) {
+      activeLayout = layout;
+      document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+    }
+
     function setFrameColor(color, el) {
       activeFrameColor = color;
       document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
       el.classList.add('active');
+    }
+
+    function setFilter(filter, el) {
+      activeFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function applyFilterToContext(ctx) {
+      if (activeFilter === 'bw') {
+        ctx.filter = 'grayscale(100%) contrast(110%)';
+      } else if (activeFilter === 'sepia') {
+        ctx.filter = 'sepia(80%) warm(110%)';
+      } else if (activeFilter === 'glow') {
+        ctx.filter = 'saturate(150%) brightness(110%) contrast(105%)';
+      } else {
+        ctx.filter = 'none';
+      }
     }
 
     function render4CutFrame() {
@@ -476,31 +594,74 @@
       const itemH = 300;
       const padding = 24;
       const gap = 16;
-      const headerH = 20;
-      const footerH = 80;
+      const footerH = 70;
 
-      canvas.width = itemW + padding * 2;
-      canvas.height = headerH + padding + (itemH * 4) + (gap * 3) + footerH;
+      if (activeLayout === 'v4') {
+        // Vertical 1x4
+        canvas.width = itemW + padding * 2;
+        canvas.height = padding + (itemH * 4) + (gap * 3) + footerH;
+      } else if (activeLayout === 'grid2x2') {
+        // 2x2 Grid
+        canvas.width = padding * 2 + itemW * 2 + gap;
+        canvas.height = padding + itemH * 2 + gap + footerH;
+      } else if (activeLayout === 'film') {
+        // Retro Film Strip
+        canvas.width = itemW + padding * 3;
+        canvas.height = padding + (itemH * 4) + (gap * 3) + footerH;
+      } else if (activeLayout === 'wide') {
+        // Wide 4x1
+        canvas.width = padding * 2 + itemW * 4 + gap * 3;
+        canvas.height = padding + itemH + footerH;
+      }
 
       // Draw Frame BG
-      ctx.fillStyle = activeFrameColor;
+      ctx.fillStyle = activeLayout === 'film' ? '#0a0a0a' : activeFrameColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Film Holes if film mode
+      if (activeLayout === 'film') {
+        ctx.fillStyle = '#ffffff';
+        for (let y = 15; y < canvas.height - 30; y += 25) {
+          ctx.fillRect(8, y, 10, 14);
+          ctx.fillRect(canvas.width - 18, y, 10, 14);
+        }
+      }
 
       let loadedCount = 0;
       selectedIndices.forEach((photoIdx, slot) => {
         const img = new Image();
         img.onload = () => {
-          const y = headerH + padding + slot * (itemH + gap);
-          ctx.drawImage(img, padding, y, itemW, itemH);
+          let x = 0, y = 0;
+
+          if (activeLayout === 'v4') {
+            x = padding;
+            y = padding + slot * (itemH + gap);
+          } else if (activeLayout === 'grid2x2') {
+            const col = slot % 2;
+            const row = Math.floor(slot / 2);
+            x = padding + col * (itemW + gap);
+            y = padding + row * (itemH + gap);
+          } else if (activeLayout === 'film') {
+            x = padding + 12;
+            y = padding + slot * (itemH + gap);
+          } else if (activeLayout === 'wide') {
+            x = padding + slot * (itemW + gap);
+            y = padding;
+          }
+
+          ctx.save();
+          applyFilterToContext(ctx);
+          ctx.drawImage(img, x, y, itemW, itemH);
+          ctx.restore();
 
           loadedCount++;
           if (loadedCount === 4) {
             // Draw Footer Text
             const title = document.getElementById('frameTitle').value.trim() || 'NEON PHOTO 4-CUT';
-            ctx.fillStyle = (activeFrameColor === '#ffffff') ? '#111122' : '#ffffff';
-            ctx.font = 'bold 20px Outfit, Pretendard, sans-serif';
+            ctx.fillStyle = (activeFrameColor === '#ffffff' && activeLayout !== 'film') ? '#111122' : '#ffffff';
+            ctx.font = 'bold 22px Outfit, Pretendard, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(title, canvas.width / 2, canvas.height - 35);
+            ctx.fillText(title, canvas.width / 2, canvas.height - 25);
 
             document.getElementById('previewContainer').style.display = 'flex';
             document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
