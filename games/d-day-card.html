@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D-Day & 모임 카운트다운 | 미니게임 천국</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #0b0b1a;
+      --card-bg: rgba(22, 22, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    input, select {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--card-border);
+      color: white;
+      padding: 12px 16px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus, select:focus { border-color: var(--cyan); }
+
+    .color-picker {
+      display: flex;
+      gap: 10px;
+    }
+
+    .color-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .color-dot.active { border-color: white; transform: scale(1.1); }
+
+    .dday-banner {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(255, 0, 110, 0.3));
+      border: 1px solid var(--cyan);
+      border-radius: var(--radius-card);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+    }
+
+    .dday-tag {
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(0, 212, 255, 0.2);
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    .dday-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: white;
+    }
+
+    .dday-count-display {
+      font-size: 38px;
+      font-weight: 800;
+      color: var(--yellow);
+      text-shadow: 0 0 15px rgba(255, 209, 102, 0.6);
+      letter-spacing: 1px;
+    }
+
+    .dday-timer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .timer-box {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px 4px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .timer-num {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--cyan);
+    }
+
+    .timer-unit {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .action-btn {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border: none;
+      color: white;
+      padding: 14px;
+      border-radius: var(--radius-btn);
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .preview-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    canvas {
+      max-width: 320px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      z-index: 100;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      border-radius: var(--radius-card);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
+    .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>D-Day & 모임 카운트다운</h1>
+    </header>
+
+    <div class="card">
+      <div class="form-group">
+        <input type="text" id="eventTitle" placeholder="이벤트 / 모임 이름 (예: 제주도 우정 여행)" value="우리들의 네온 파티">
+        <input type="datetime-local" id="eventDate">
+        <input type="text" id="eventDesc" placeholder="부제목 / 한줄 문구 (예: 드디어 다같이 모이는 날!)" value="설레는 모임까지 남은 시간">
+        
+        <div style="font-size:13px; color:var(--text-dim); font-weight:600;">카드 테마 컬러</div>
+        <div class="color-picker">
+          <div class="color-dot active" style="background:#ff006e" onclick="setTheme('#ff006e', this)"></div>
+          <div class="color-dot" style="background:#00d4ff" onclick="setTheme('#00d4ff', this)"></div>
+          <div class="color-dot" style="background:#ffd166" onclick="setTheme('#ffd166', this)"></div>
+          <div class="color-dot" style="background:#7c3aed" onclick="setTheme('#7c3aed', this)"></div>
+        </div>
+      </div>
+
+      <div class="dday-banner" id="ddayBanner">
+        <div class="dday-tag" id="bannerTag">🥳 UPCOMING EVENT</div>
+        <div class="dday-title" id="bannerTitle">우리들의 네온 파티</div>
+        <div class="dday-count-display" id="bannerCount">D-DAY</div>
+
+        <div class="dday-timer-grid">
+          <div class="timer-box"><span class="timer-num" id="tDays">0</span><span class="timer-unit">일</span></div>
+          <div class="timer-box"><span class="timer-num" id="tHours">0</span><span class="timer-unit">시간</span></div>
+          <div class="timer-box"><span class="timer-num" id="tMins">0</span><span class="timer-unit">분</span></div>
+          <div class="timer-box"><span class="timer-num" id="tSecs">0</span><span class="timer-unit">초</span></div>
+        </div>
+      </div>
+
+      <button class="action-btn" onclick="generateDDayCard()">✨ D-Day 카드 이미지 생성하기</button>
+
+      <div class="preview-container" id="previewContainer">
+        <canvas id="ddayCanvas"></canvas>
+        <button class="action-btn" onclick="downloadDDayCard()" style="width:100%;">📥 D-Day 카드 다운로드 (PNG)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="help-btn" id="helpBtn">?</div>
+
+  <div class="modal" id="helpModal">
+    <div class="modal-content">
+      <h2>이용 방법</h2>
+      <p>1. <strong>이벤트 이름과 날짜/시간</strong>을 입력하면 실시간 D-Day 카운트다운 타이머가 시작됩니다.</p>
+      <p>2. <strong>'D-Day 카드 이미지 생성하기'</strong>를 누르면 예쁜 네온 D-Day 카드로 완성하여 이미지 다운로드 및 공유가 가능합니다!</p>
+      <button class="close-modal" id="closeHelpBtn">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    let activeTheme = '#ff006e';
+    let targetTime = null;
+
+    // Set default date to 7 days from now
+    const now = new Date();
+    now.setDate(now.getDate() + 7);
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('eventDate').value = now.toISOString().slice(0, 16);
+
+    function setTheme(color, el) {
+      activeTheme = color;
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+      el.classList.add('active');
+
+      const banner = document.getElementById('ddayBanner');
+      banner.style.borderColor = color;
+      banner.style.boxShadow = `0 0 20px ${color}44`;
+    }
+
+    function updateTimer() {
+      const dateVal = document.getElementById('eventDate').value;
+      if (!dateVal) return;
+
+      targetTime = new Date(dateVal).getTime();
+      const current = new Date().getTime();
+      const diff = targetTime - current;
+
+      const title = document.getElementById('eventTitle').value.trim() || 'D-Day 이벤트';
+      document.getElementById('bannerTitle').textContent = title;
+
+      if (diff <= 0) {
+        document.getElementById('bannerCount').textContent = 'D - DAY!';
+        document.getElementById('bannerTag').textContent = '🎉 EVENT DAY';
+        document.getElementById('tDays').textContent = '0';
+        document.getElementById('tHours').textContent = '0';
+        document.getElementById('tMins').textContent = '0';
+        document.getElementById('tSecs').textContent = '0';
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('bannerCount').textContent = `D - ${days}`;
+      document.getElementById('tDays').textContent = days;
+      document.getElementById('tHours').textContent = hours;
+      document.getElementById('tMins').textContent = mins;
+      document.getElementById('tSecs').textContent = secs;
+    }
+
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    document.getElementById('eventTitle').addEventListener('input', updateTimer);
+    document.getElementById('eventDate').addEventListener('change', updateTimer);
+
+    function generateDDayCard() {
+      const canvas = document.getElementById('ddayCanvas');
+      canvas.width = 600;
+      canvas.height = 750;
+      const ctx = canvas.getContext('2d');
+
+      // Background Gradient
+      const grad = ctx.createLinearGradient(0, 0, 600, 750);
+      grad.addColorStop(0, '#0b0b1a');
+      grad.addColorStop(0.5, '#161635');
+      grad.addColorStop(1, '#251645');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 600, 750);
+
+      // Neon Frame Border
+      ctx.strokeStyle = activeTheme;
+      ctx.lineWidth = 6;
+      ctx.strokeRect(20, 20, 560, 710);
+
+      // Title & Subtitle
+      const title = document.getElementById('eventTitle').value.trim() || 'D-Day 이벤트';
+      const desc = document.getElementById('eventDesc').value.trim() || '설레는 모임까지 남은 시간';
+
+      ctx.fillStyle = activeTheme;
+      ctx.font = 'bold 22px Outfit, Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🥳 UPCOMING EVENT', 300, 100);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px Outfit, Pretendard, sans-serif';
+      ctx.fillText(title, 300, 180);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '18px Outfit, Pretendard, sans-serif';
+      ctx.fillText(desc, 300, 230);
+
+      // Main D-Day Big Number
+      const days = document.getElementById('tDays').textContent;
+      const daysText = (days === '0' && targetTime && targetTime <= new Date().getTime()) ? 'D - DAY!' : `D - ${days}`;
+
+      ctx.fillStyle = '#ffd166';
+      ctx.font = 'bold 84px Outfit, sans-serif';
+      ctx.shadowColor = 'rgba(255, 209, 102, 0.8)';
+      ctx.shadowBlur = 30;
+      ctx.fillText(daysText, 300, 390);
+      ctx.shadowBlur = 0;
+
+      // Realtime Detailed Timer Sub-box
+      const hours = document.getElementById('tHours').textContent;
+      const mins = document.getElementById('tMins').textContent;
+      const secs = document.getElementById('tSecs').textContent;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(80, 470, 440, 120);
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(80, 470, 440, 120);
+
+      ctx.fillStyle = '#00d4ff';
+      ctx.font = 'bold 28px Outfit, sans-serif';
+      ctx.fillText(`${days}일  ${hours}시간  ${mins}분  ${secs}초`, 300, 540);
+
+      // Footer
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'bold 16px Outfit, sans-serif';
+      ctx.fillText('MINI GAME PARADISE | NEON D-DAY CARD', 300, 680);
+
+      document.getElementById('previewContainer').style.display = 'flex';
+      document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function downloadDDayCard() {
+      const canvas = document.getElementById('ddayCanvas');
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `dday_card_${Date.now()}.png`;
+      a.click();
+    }
+
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
+    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
+    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
+  </script>
+</body>
+</html>

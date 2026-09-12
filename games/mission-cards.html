@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>파티 미션 & 진실게임 카드 | 미니게임 천국</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #0b0b1a;
+      --card-bg: rgba(22, 22, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tab-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      padding: 10px 6px;
+      border-radius: var(--radius-btn);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .card-scene {
+      width: 100%;
+      height: 320px;
+      perspective: 1000px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .card-3d {
+      width: 240px;
+      height: 300px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+    }
+
+    .card-3d.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 2px solid var(--card-border);
+    }
+
+    .card-front {
+      background: linear-gradient(135deg, #161630, #251645);
+      border-color: var(--pink);
+    }
+
+    .card-front-icon {
+      font-size: 56px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 10px rgba(255, 0, 110, 0.6));
+    }
+
+    .card-front-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--pink);
+    }
+
+    .card-back {
+      background: linear-gradient(135deg, #101026, #1c2645);
+      border-color: var(--cyan);
+      transform: rotateY(180deg);
+      gap: 16px;
+    }
+
+    .card-badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: rgba(0, 212, 255, 0.2);
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    .card-mission-text {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.5;
+      color: white;
+      word-break: keep-all;
+    }
+
+    .draw-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 17px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border: none;
+      color: white;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+    }
+
+    .custom-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--card-border);
+      color: white;
+      padding: 12px 14px;
+      border-radius: var(--radius-btn);
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type="text"]:focus { border-color: var(--cyan); }
+
+    .help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      z-index: 100;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      border-radius: var(--radius-card);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
+    .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>파티 미션 & 진실게임</h1>
+    </header>
+
+    <div class="card">
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="setMode('mild', this)">🧊 순한맛 (아이스브레이킹)</button>
+        <button class="tab-btn" onclick="setMode('spicy', this)">🌶️ 매운맛 (도전 미션)</button>
+        <button class="tab-btn" onclick="setMode('truth', this)">⚖️ 진실 혹은 도전</button>
+      </div>
+
+      <div class="card-scene" onclick="toggleFlip()">
+        <div class="card-3d" id="card3d">
+          <div class="card-face card-front">
+            <div class="card-front-icon">🃏</div>
+            <div class="card-front-text">터치해서 카드 뒤집기</div>
+            <div style="font-size:12px; color:var(--text-dim); margin-top:8px;">(또는 카드 뽑기 버튼)</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-badge" id="cardBadge">순한맛 미션</div>
+            <div class="card-mission-text" id="missionText">카드를 뽑아주세요!</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="draw-btn" onclick="drawCard()">🃏 새로운 카드 뽑기</button>
+
+      <div style="font-size:13px; color:var(--cyan); font-weight:700; margin-top:10px;">➕ 직접 미션 카드 추가하기</div>
+      <div class="custom-input-row">
+        <input type="text" id="customMissionInput" placeholder="우리 모임 전용 미션을 입력하세요">
+        <button onclick="addCustomMission()" style="background:var(--pink); border:none; padding:12px 16px; border-radius:12px; color:white; font-weight:700; cursor:pointer;">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="help-btn" id="helpBtn">?</div>
+
+  <div class="modal" id="helpModal">
+    <div class="modal-content">
+      <h2>이용 방법</h2>
+      <p>1. 모임 분위기에 맞게 <strong>순한맛 / 매운맛 / 진실 혹은 도전</strong> 모드를 선택하세요.</p>
+      <p>2. <strong>'새로운 카드 뽑기'</strong>를 누르거나 3D 카드를 터치하여 미션을 확인하고 수행하세요.</p>
+      <p>3. 커스텀 미션을 입력하여 우리 모임만의 특별한 카드를 카드 덱에 직접 추가할 수도 있습니다!</p>
+      <button class="close-modal" id="closeHelpBtn">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    const decks = {
+      mild: [
+        "오늘 모임에서 첫인상이 가장 좋았던 사람 1명 칭찬하기!",
+        "최근에 가장 크게 웃었던 웃긴 에피소드 말하기!",
+        "시계 방향 옆 사람과 3초간 웃음 참기 눈맞춤 대결!",
+        "최근 가장 자주 듣는 플레이리스트 노래 한 곡 추천하기!",
+        "자신이 가진 의외의 반전 매력 1가지 소개하기!",
+        "최근에 먹었던 음식 중 가장 맛있었던 메뉴 소개하기!",
+        "오른쪽 사람에게 기분 좋아지는 짧은 덕담 한마디 건네기!",
+        "자신이 제일 좋아하는 여행지와 그 이유 말하기!",
+        "오늘 모임 오기 전에 있었던 소소한 일상 이야기 공유하기!",
+        "자신의 소소한 힐링 취미 1가지 말하기!"
+      ],
+      spicy: [
+        "최근 스마트폰 검색 기록 또는 유튜브 시청 목록 1개 공개!",
+        "오른쪽 사람에게 잘 어울리는 찰떡 귀여운 별명 지어주기!",
+        "10초간 무반주로 자신이 좋아하는 노래 한 소절 부르기!",
+        "자신의 핸드폰 갤러리에서 가장 최근에 찍은 사진 1장 설명하기!",
+        "오늘 모임 사람 중 1명에게 하트 이모티콘 칭찬 톡 남기기!",
+        "가장 최근에 했던 사소한 거짓말 1가지 솔직 고백하기!",
+        "오늘 참가자들의 첫인상과 지금 인상의 차이점 말하기!",
+        "자신만의 독특한 습관이나 머피의 법칙 말해보기!",
+        "지금 옆 사람과 윙크 크로스 아이 콘택트 3초!",
+        "최근에 산 가장 만족스러운 물건 하나 자랑하기!"
+      ],
+      truth: [
+        "[진실] 오늘 모임에 오기 전 가장 걱정했던 부분은?",
+        "[도전] 오른쪽 사람의 표정과 포즈 똑같이 5초간 따라하기!",
+        "[진실] 살면서 가장 기억에 남는 최고의 인생 순간은?",
+        "[도전] 오늘 모임 사람들과 다 함께 셀카 한 장 찍기!",
+        "[진실] 나만 알고 있는 나 자신의 귀여운 비밀 한 가지!",
+        "[도전] 15초 동안 아무 말도 안 하고 카리스마 표정 유지하기!",
+        "[진실] 10억 로또에 당첨되면 가장 먼저 하고 싶은 일은?",
+        "[도전] 오늘 모임 주인공에게 멋진 응원의 박수 유도하기!"
+      ]
+    };
+
+    let currentMode = 'mild';
+    let isFlipped = false;
+
+    // Web Audio Sound setup
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playFlipSound() {
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    }
+
+    function setMode(mode, el) {
+      currentMode = mode;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+
+      const card3d = document.getElementById('card3d');
+      card3d.classList.remove('flipped');
+      isFlipped = false;
+    }
+
+    function toggleFlip() {
+      const card3d = document.getElementById('card3d');
+      if (!isFlipped) {
+        drawCard();
+      } else {
+        card3d.classList.remove('flipped');
+        isFlipped = false;
+        playFlipSound();
+      }
+    }
+
+    function drawCard() {
+      const card3d = document.getElementById('card3d');
+      const list = decks[currentMode];
+      const randomMission = list[Math.floor(Math.random() * list.length)];
+
+      const badgeText = currentMode === 'mild' ? '🧊 순한맛 미션' : currentMode === 'spicy' ? '🌶️ 매운맛 도전' : '⚖️ 진실 혹은 도전';
+      document.getElementById('cardBadge').textContent = badgeText;
+      document.getElementById('missionText').textContent = randomMission;
+
+      card3d.classList.add('flipped');
+      isFlipped = true;
+      playFlipSound();
+    }
+
+    function addCustomMission() {
+      const input = document.getElementById('customMissionInput');
+      const val = input.value.trim();
+      if (!val) {
+        alert('미션 내용을 입력해주세요.');
+        return;
+      }
+
+      decks[currentMode].push(`[커스텀] ${val}`);
+      input.value = '';
+      alert(`'${val}' 미션이 덱에 추가되었습니다!`);
+    }
+
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
+    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
+    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
+  </script>
+</body>
+</html>
