@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D 네온 주사위 & 동전 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=b7c7301f"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=bed20c1e">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <style>
@@ -25,6 +27,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
       font-family: 'Outfit', 'Pretendard', sans-serif;
@@ -228,16 +231,25 @@
     </div>
   </div>
 
-  <div class="help-btn" id="helpBtn">?</div>
 
-  <div class="modal" id="helpModal">
-    <div class="modal-content">
-      <h2>이용 방법</h2>
-      <p>1. <strong>주사위 또는 동전 모드</strong>를 선택하세요.</p>
-      <p>2. 버튼을 누르면 3D 회전 애니메이션과 사운드 효과와 함께 무작위 결과가 결정됩니다.</p>
-      <button class="close-modal" id="closeHelpBtn">닫기</button>
-    </div>
-  </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "3D 네온 주사위 & 동전",
+ "players": "1~30인",
+ "time": "1분",
+ "goal": "주사위나 동전이 없을 때 대신 굴려 줍니다.",
+ "steps": [
+  "주사위와 동전 중 필요한 것을 고릅니다.",
+  "버튼을 누르면 회전 애니메이션과 함께 결과가 정해집니다.",
+  "결과를 보고 순서를 정하거나 내기를 가리세요."
+ ],
+ "tips": [
+  "결과는 매번 새로 뽑습니다. 직전 결과가 다음에 영향을 주지 않습니다.",
+  "순서 정하기, 벌칙 뽑기, 내기 등 무엇이든 이 한 번으로 정할 수 있습니다."
+ ]
+}
+  </script>
 
   <script>
     let mode = 'dice';
@@ -439,12 +451,6 @@
     }
 
     setTimeout(resizeCanvas, 50);
-
-    const helpBtn = document.getElementById('helpBtn');
-    const helpModal = document.getElementById('helpModal');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
-    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
   </script>
 </body>
 </html>

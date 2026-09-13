@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>실시간 음감 & Pitch 맞추기 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=b7c7301f"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=bed20c1e">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <style>
@@ -25,6 +27,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
       font-family: 'Outfit', 'Pretendard', sans-serif;
@@ -223,7 +226,7 @@
     </header>
 
     <div class="card">
-      <button class="mic-start-btn" id="micBtn" onclick="initMic()">🎤 마이크 켜고 음감 게임 시작</button>
+      <button class="mic-start-btn" id="micBtn" onclick="toggleMic()">🎤 마이크 켜고 음감 게임 시작</button>
 
       <div class="score-banner">
         <span>🏆 도전 점수</span>
@@ -242,16 +245,28 @@
     </div>
   </div>
 
-  <div class="help-btn" id="helpBtn">?</div>
 
-  <div class="modal" id="helpModal">
-    <div class="modal-content">
-      <h2>이용 방법</h2>
-      <p>1. <strong>'마이크 켜기'</strong>를 눌러 권한을 허용합니다.</p>
-      <p>2. 화면 상단에 제시되는 <strong>목표 음정(예: A4 440Hz)</strong>을 목소리로 소리 내어 1초 이상 정확히 유지하면 점수가 올라갑니다!</p>
-      <button class="close-modal" id="closeHelpBtn">닫기</button>
-    </div>
-  </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "실시간 음감 & Pitch 맞추기",
+ "players": "1~10인",
+ "time": "약 5분",
+ "goal": "화면에 제시된 음정을 목소리로 정확히 내어 점수를 올리세요.",
+ "steps": [
+  "「마이크 켜고 음감 게임 시작」을 눌러 권한을 허용합니다.",
+  "화면 위쪽의 목표 음정(예: A4 440Hz)을 확인합니다.",
+  "그 음을 소리 내어 1초 이상 유지하면 점수가 오릅니다.",
+  "다 했으면 같은 버튼을 눌러 마이크를 끕니다."
+ ],
+ "tips": [
+  "조용한 곳에서 해야 주변 소리에 흔들리지 않습니다.",
+  "가사 없이 \"음\" 하고 허밍하는 편이 음을 맞추기 쉽습니다.",
+  "여럿이 돌아가며 점수를 겨뤄 보세요.",
+  "다른 탭으로 옮기거나 페이지를 나가면 마이크가 자동으로 꺼집니다."
+ ]
+}
+  </script>
 
   <script>
     let audioCtx = null;
@@ -284,14 +299,54 @@
         source.connect(analyser);
 
         isListening = true;
-        document.getElementById('micBtn').textContent = '🎙️ 음정 측정 중...';
+        document.getElementById('micBtn').textContent = '🛑 마이크 끄기 (측정 중...)';
         document.getElementById('micBtn').style.background = '#06d6a0';
 
         updatePitch();
       } catch (e) {
         alert('마이크 접근 권한이 필요합니다.');
+        stopMic();
       }
     }
+
+    // 마이크를 끄는 길이 아예 없어서, 한 번 켜면 탭을 닫을 때까지 녹음이 열려 있었다.
+    // 트랙을 멈추지 않으면 브라우저의 녹음 표시도 그대로 남는다.
+    function stopMic() {
+      isListening = false;
+
+      if (micStream) {
+        micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+      }
+      if (audioCtx) {
+        audioCtx.close().catch(() => {});
+        audioCtx = null;
+      }
+      analyser = null;
+
+      const btn = document.getElementById('micBtn');
+      if (btn) {
+        btn.textContent = '🎤 마이크 켜고 음감 게임 시작';
+        btn.style.background = '';
+      }
+      const note = document.getElementById('noteText');
+      const freq = document.getElementById('freqText');
+      if (note) note.textContent = '--';
+      if (freq) freq.textContent = '0.0 Hz';
+    }
+
+    function toggleMic() {
+      isListening ? stopMic() : initMic();
+    }
+
+    // 페이지를 벗어나거나 뒤로 가도 마이크가 남지 않게 한다.
+    window.addEventListener('pagehide', stopMic);
+    window.addEventListener('beforeunload', stopMic);
+
+    // 탭을 숨기면 측정할 이유가 없다. 배터리와 녹음 표시 양쪽에 낫다.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && isListening) stopMic();
+    });
 
     function autoCorrelate(buf, sampleRate) {
       const SIZE = buf.length;
@@ -375,12 +430,6 @@
 
       requestAnimationFrame(updatePitch);
     }
-
-    const helpBtn = document.getElementById('helpBtn');
-    const helpModal = document.getElementById('helpModal');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
-    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
   </script>
 </body>
 </html>

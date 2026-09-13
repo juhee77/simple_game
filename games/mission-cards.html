@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>파티 미션 & 진실게임 카드 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=b7c7301f"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=bed20c1e">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <style>
@@ -25,6 +27,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
       font-family: 'Outfit', 'Pretendard', sans-serif;
@@ -309,17 +312,28 @@
     </div>
   </div>
 
-  <div class="help-btn" id="helpBtn">?</div>
 
-  <div class="modal" id="helpModal">
-    <div class="modal-content">
-      <h2>이용 방법</h2>
-      <p>1. 모임 분위기에 맞게 <strong>순한맛 / 매운맛 / 진실 혹은 도전</strong> 모드를 선택하세요.</p>
-      <p>2. <strong>'새로운 카드 뽑기'</strong>를 누르거나 3D 카드를 터치하여 미션을 확인하고 수행하세요.</p>
-      <p>3. 커스텀 미션을 입력하여 우리 모임만의 특별한 카드를 카드 덱에 직접 추가할 수도 있습니다!</p>
-      <button class="close-modal" id="closeHelpBtn">닫기</button>
-    </div>
-  </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "파티 미션 & 진실게임 카드",
+ "players": "2~30인",
+ "time": "약 5분",
+ "goal": "카드를 뽑아 미션을 수행하며 어색한 분위기를 풉니다.",
+ "steps": [
+  "모임 분위기에 맞춰 순한맛·매운맛·진실 혹은 도전 중 하나를 고릅니다.",
+  "「새로운 카드 뽑기」를 누르거나 카드를 직접 터치해 뒤집습니다.",
+  "나온 미션을 수행합니다.",
+  "폰을 옆 사람에게 넘겨 이어 갑니다."
+ ],
+ "tips": [
+  "한 바퀴를 다 돌기 전에는 같은 카드가 다시 나오지 않습니다.",
+  "처음 만난 사이라면 순한맛부터 시작하세요.",
+  "우리 모임만의 미션을 직접 추가할 수 있습니다. 추가한 카드도 덱에 섞입니다.",
+  "부담스러운 미션은 넘겨도 됩니다. 분위기를 풀자고 하는 겁니다."
+ ]
+}
+  </script>
 
   <script>
     const decks = {
@@ -408,10 +422,45 @@
       }
     }
 
+    // 뽑은 카드를 빼지 않고 매번 독립 추첨을 하면, 10장짜리 덱에서는
+    // 세 번만 뽑아도 28% 확률로 같은 카드가 다시 나온다(다섯 번이면 70%).
+    // 그래서 덱을 섞어 놓고 한 장씩 꺼내 쓰고, 다 쓰면 다시 섞는다.
+    const drawBags = {};
+
+    function shuffled(list) {
+      const a = list.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function nextMission(mode) {
+      const list = decks[mode];
+      let bag = drawBags[mode];
+
+      // 카드를 직접 추가했다면 덱이 늘었으므로 새로 섞는다.
+      if (!bag || !bag.length || bag.deckSize !== list.length) {
+        bag = shuffled(list);
+        bag.deckSize = list.length;
+        // 한 바퀴 돌아 다시 섞을 때, 방금 본 카드가 연달아 나오지 않게 뒤로 민다.
+        if (bag.length > 1 && bag[0] === lastShown[mode]) {
+          bag.push(bag.shift());
+        }
+        drawBags[mode] = bag;
+      }
+
+      const pick = bag.shift();
+      lastShown[mode] = pick;
+      return pick;
+    }
+
+    const lastShown = {};
+
     function drawCard() {
       const card3d = document.getElementById('card3d');
-      const list = decks[currentMode];
-      const randomMission = list[Math.floor(Math.random() * list.length)];
+      const randomMission = nextMission(currentMode);
 
       const badgeText = currentMode === 'mild' ? '🧊 순한맛 미션' : currentMode === 'spicy' ? '🌶️ 매운맛 도전' : '⚖️ 진실 혹은 도전';
       document.getElementById('cardBadge').textContent = badgeText;
@@ -434,12 +483,6 @@
       input.value = '';
       alert(`'${val}' 미션이 덱에 추가되었습니다!`);
     }
-
-    const helpBtn = document.getElementById('helpBtn');
-    const helpModal = document.getElementById('helpModal');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
-    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
   </script>
 </body>
 </html>

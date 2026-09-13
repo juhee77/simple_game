@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>D-Day & 모임 카운트다운 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=b7c7301f"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=bed20c1e">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <style>
@@ -25,6 +27,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
       font-family: 'Outfit', 'Pretendard', sans-serif;
@@ -365,17 +368,28 @@
     </div>
   </div>
 
-  <div class="help-btn" id="helpBtn">?</div>
 
-  <div class="modal" id="helpModal">
-    <div class="modal-content">
-      <h2>이용 방법</h2>
-      <p>1. <strong>프리셋 카테고리</strong>를 고르거나 이벤트 이름과 목표 날짜를 입력합니다.</p>
-      <p>2. 원하는 <strong>네온 테마 색상 및 나만의 사진 배경</strong>을 첨부할 수 있습니다.</p>
-      <p>3. <strong>'네온 D-Day 포스터 카드 생성'</strong>을 클릭하면 인스타그램/카카오톡 공유용 포스터 이미지가 제작됩니다.</p>
-      <button class="close-modal" id="closeHelpBtn">닫기</button>
-    </div>
-  </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "D-Day & 모임 카운트다운",
+ "players": "1인",
+ "time": "1분",
+ "goal": "모임이나 기념일까지 남은 날을 세고, 공유할 포스터 카드를 만듭니다.",
+ "steps": [
+  "카테고리 프리셋을 고르면 이름과 날짜가 대략 채워집니다.",
+  "이벤트 이름, 목표 날짜와 시각, 한 줄 문구를 입력합니다.",
+  "테마 색을 고르고, 원하면 배경 사진을 첨부합니다.",
+  "「네온 D-Day 포스터 카드 생성」을 누르면 미리보기가 만들어집니다.",
+  "다운로드해서 단톡방이나 SNS에 공유하세요."
+ ],
+ "tips": [
+  "D-Day는 날짜 차이로 셉니다. 모임이 오전이든 밤이든 같은 날이면 같은 숫자가 나옵니다.",
+  "이미 지난 날짜를 넣으면 며칠 지났는지 D+숫자로 보여줍니다.",
+  "아래 시·분·초는 실제로 남은 시간이라 1초마다 줄어듭니다."
+ ]
+}
+  </script>
 
   <script>
     let activeTheme = '#ff006e';
@@ -424,36 +438,53 @@
       reader.readAsDataURL(file);
     }
 
+    // D-Day는 '며칠 남았나'가 아니라 '날짜가 며칠 차이나나'로 센다.
+    // 밀리초 차이를 내림하면 같은 날짜인데도 모임이 오전이면 D-6, 밤이면 D-7로 갈린다.
+    // 우리는 "9월 20일 모임은 D-7"이라고 말하지, 몇 시인지로 바꿔 부르지 않는다.
+    function dayDiff(target, now) {
+      const a = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+      const b = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      // 자정 기준끼리 빼고 반올림한다. 서머타임 등으로 24시간이 아닌 날이 있어도 안전하다.
+      return Math.round((a - b) / 86400000);
+    }
+
+    // 남은 날짜 문구. 지난 날은 D+n으로 적는다.
+    // 예전에는 작년 생일을 넣어도 "D - DAY!"라고 표시했다.
+    function ddayLabel(days) {
+      if (days === 0) return 'D - DAY!';
+      return days > 0 ? `D - ${days}` : `D + ${-days}`;
+    }
+
     function updateTimer() {
       const dateVal = document.getElementById('eventDate').value;
       if (!dateVal) return;
 
-      targetTime = new Date(dateVal).getTime();
-      const current = new Date().getTime();
-      const diff = targetTime - current;
+      const target = new Date(dateVal);
+      if (isNaN(target)) return;
+
+      const now = new Date();
+      targetTime = target.getTime();
+      const diff = targetTime - now.getTime();
+      const days = dayDiff(target, now);
 
       const title = document.getElementById('eventTitle').value.trim() || 'D-Day 이벤트';
       document.getElementById('bannerTitle').textContent = title;
+      document.getElementById('bannerCount').textContent = ddayLabel(days);
 
       if (diff <= 0) {
-        document.getElementById('bannerCount').textContent = 'D - DAY!';
-        document.getElementById('tDays').textContent = '0';
+        // 이미 지난 시각이면 카운트다운은 멈추되, 며칠 지났는지는 위에 남긴다.
+        document.getElementById('tDays').textContent = days < 0 ? -days : '0';
         document.getElementById('tHours').textContent = '0';
         document.getElementById('tMins').textContent = '0';
         document.getElementById('tSecs').textContent = '0';
         return;
       }
 
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const secs = Math.floor((diff % (1000 * 60)) / 1000);
-
-      document.getElementById('bannerCount').textContent = `D - ${days}`;
+      // 시·분·초는 실제 남은 시간 그대로 보여준다(날짜 칸만 달력 기준).
       document.getElementById('tDays').textContent = days;
-      document.getElementById('tHours').textContent = hours;
-      document.getElementById('tMins').textContent = mins;
-      document.getElementById('tSecs').textContent = secs;
+      document.getElementById('tHours').textContent = Math.floor((diff % 86400000) / 3600000);
+      document.getElementById('tMins').textContent = Math.floor((diff % 3600000) / 60000);
+      document.getElementById('tSecs').textContent = Math.floor((diff % 60000) / 1000);
     }
 
     setInterval(updateTimer, 1000);
@@ -525,8 +556,8 @@
       ctx.fillText(desc, 300, 235);
 
       // 5. Main D-Day Big Number Display
-      const days = document.getElementById('tDays').textContent;
-      const daysText = (days === '0' && targetTime && targetTime <= new Date().getTime()) ? 'D - DAY!' : `D - ${days}`;
+      const dateVal = document.getElementById('eventDate').value;
+      const daysText = dateVal ? ddayLabel(dayDiff(new Date(dateVal), new Date())) : 'D - DAY!';
 
       ctx.fillStyle = '#ffd166';
       ctx.font = 'bold 96px Outfit, sans-serif';
@@ -566,12 +597,6 @@
       a.download = `dday_poster_${Date.now()}.png`;
       a.click();
     }
-
-    const helpBtn = document.getElementById('helpBtn');
-    const helpModal = document.getElementById('helpModal');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
-    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
   </script>
 </body>
 </html>

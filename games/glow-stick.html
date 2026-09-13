@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>네온 야광봉 & 응원 전광판 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=b7c7301f"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=bed20c1e">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <style>
@@ -25,6 +27,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
       font-family: 'Outfit', 'Pretendard', sans-serif;
@@ -242,17 +245,27 @@
     </div>
   </div>
 
-  <div class="help-btn" id="helpBtn">?</div>
 
-  <div class="modal" id="helpModal">
-    <div class="modal-content">
-      <h2>이용 방법</h2>
-      <p>1. 원하는 <strong>네온 야광봉 색상과 응원 문구</strong>를 입력하세요.</p>
-      <p>2. 화면을 터치하면 화려한 <strong>파티클 팡파레 효과</strong>가 터집니다.</p>
-      <p>3. <strong>'전체 화면 모드'</strong>로 전화기를 흔들며 콘서트/파티룸 현장에서 활용할 수 있습니다.</p>
-      <button class="close-modal" id="closeHelpBtn">닫기</button>
-    </div>
-  </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "네온 야광봉 & 응원 전광판",
+ "players": "1~30인",
+ "time": "제한 없음",
+ "goal": "휴대폰을 야광봉이나 응원 문구 전광판으로 씁니다.",
+ "steps": [
+  "야광봉 색을 고릅니다.",
+  "전광판에 띄울 응원 문구를 입력합니다.",
+  "화면을 터치하면 파티클 효과가 터집니다.",
+  "「전체 화면 야광봉 모드」를 켜고 흔드세요."
+ ],
+ "tips": [
+  "전체 화면 모드에서는 화면이 저절로 꺼지지 않습니다. 손을 대지 않아도 계속 켜져 있습니다.",
+  "여럿이 서로 다른 색을 고르면 객석 느낌이 납니다.",
+  "밝기를 최대로 올리면 훨씬 잘 보입니다."
+ ]
+}
+  </script>
 
   <script>
     let activeColor = '#ff006e';
@@ -346,19 +359,42 @@
     }
     requestAnimationFrame(animate);
 
+    // 야광봉은 들고 흔드는 물건이라 화면을 만지지 않는다.
+    // 그대로 두면 폰이 1분도 안 돼 화면을 꺼버려서 도구가 무용지물이 된다.
+    let wakeLock = null;
+
+    async function keepScreenOn() {
+      if (!('wakeLock' in navigator)) return;   // 지원 안 하는 브라우저는 그냥 넘어간다
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        // 탭이 가려졌다 돌아오면 잠금이 풀려 있으므로 다시 잡아야 한다.
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      } catch (e) {
+        // 배터리 절약 모드 등에서 거부될 수 있다. 야광봉 자체는 계속 쓸 수 있으니 조용히 넘어간다.
+      }
+    }
+
+    function releaseScreenLock() {
+      if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && document.fullscreenElement) keepScreenOn();
+    });
+
     function toggleFullScreen() {
       if (!document.fullscreenElement) {
-        viewport.requestFullscreen().catch(err => alert("전체화면 모드를 시작할 수 없습니다."));
+        viewport.requestFullscreen()
+          .then(keepScreenOn)
+          .catch(err => alert("전체화면 모드를 시작할 수 없습니다."));
       } else {
         document.exitFullscreen();
       }
     }
 
-    const helpBtn = document.getElementById('helpBtn');
-    const helpModal = document.getElementById('helpModal');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
-    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) releaseScreenLock();
+    });
   </script>
 </body>
 </html>
