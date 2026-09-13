@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실시간 음감 & Pitch 맞추기 | 미니게임 천국</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #0b0b1a;
+      --card-bg: rgba(22, 22, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mic-start-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 17px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border: none;
+      color: white;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+    }
+
+    .pitch-display-box {
+      width: 100%;
+      background: rgba(0,0,0,0.4);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--card-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .target-note-badge {
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(255, 209, 102, 0.2);
+      color: var(--yellow);
+      font-weight: 700;
+      border: 1px solid var(--yellow);
+    }
+
+    .note-big {
+      font-size: 64px;
+      font-weight: 800;
+      color: var(--cyan);
+      text-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+    }
+
+    .freq-hz {
+      font-size: 16px;
+      color: var(--text-dim);
+    }
+
+    .cents-meter-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 5px;
+      position: relative;
+      margin-top: 8px;
+    }
+
+    .cents-meter-pointer {
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--cyan);
+      transform: translateX(-50%);
+      transition: left 0.1s linear;
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .score-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.05);
+      padding: 12px 16px;
+      border-radius: var(--radius-btn);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      z-index: 100;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      border-radius: var(--radius-card);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
+    .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>실시간 음감 & Pitch 맞추기</h1>
+    </header>
+
+    <div class="card">
+      <button class="mic-start-btn" id="micBtn" onclick="initMic()">🎤 마이크 켜고 음감 게임 시작</button>
+
+      <div class="score-banner">
+        <span>🏆 도전 점수</span>
+        <span style="color:var(--yellow)" id="scoreText">0 점</span>
+      </div>
+
+      <div class="pitch-display-box">
+        <div class="target-note-badge" id="targetBadge">목표 음정: A4 (440Hz)</div>
+        <div class="note-big" id="noteText">--</div>
+        <div class="freq-hz" id="freqText">0.0 Hz</div>
+
+        <div class="cents-meter-bg">
+          <div class="cents-meter-pointer" id="meterPointer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="help-btn" id="helpBtn">?</div>
+
+  <div class="modal" id="helpModal">
+    <div class="modal-content">
+      <h2>이용 방법</h2>
+      <p>1. <strong>'마이크 켜기'</strong>를 눌러 권한을 허용합니다.</p>
+      <p>2. 화면 상단에 제시되는 <strong>목표 음정(예: A4 440Hz)</strong>을 목소리로 소리 내어 1초 이상 정확히 유지하면 점수가 올라갑니다!</p>
+      <button class="close-modal" id="closeHelpBtn">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    let audioCtx = null;
+    let analyser = null;
+    let micStream = null;
+    let isListening = false;
+    let score = 0;
+    let holdTime = 0;
+
+    const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const targetNotes = [
+      { name: "C4", freq: 261.63 },
+      { name: "E4", freq: 329.63 },
+      { name: "G4", freq: 392.00 },
+      { name: "A4", freq: 440.00 },
+      { name: "C5", freq: 523.25 }
+    ];
+    let currentTarget = targetNotes[3]; // Default A4
+
+    async function initMic() {
+      if (isListening) return;
+
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+
+        const source = audioCtx.createMediaStreamSource(micStream);
+        source.connect(analyser);
+
+        isListening = true;
+        document.getElementById('micBtn').textContent = '🎙️ 음정 측정 중...';
+        document.getElementById('micBtn').style.background = '#06d6a0';
+
+        updatePitch();
+      } catch (e) {
+        alert('마이크 접근 권한이 필요합니다.');
+      }
+    }
+
+    function autoCorrelate(buf, sampleRate) {
+      const SIZE = buf.length;
+      let rms = 0;
+      for (let i = 0; i < SIZE; i++) {
+        const val = buf[i];
+        rms += val * val;
+      }
+      rms = Math.sqrt(rms / SIZE);
+      if (rms < 0.01) return -1; // Silent
+
+      let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+      for (let i = 0; i < SIZE / 2; i++) {
+        if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+      }
+      for (let i = 1; i < SIZE / 2; i++) {
+        if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+      }
+
+      buf = buf.slice(r1, r2);
+      const c = new Float32Array(buf.length);
+      for (let i = 0; i < buf.length; i++) {
+        for (let j = 0; j < buf.length - i; j++) {
+          c[i] = c[i] + buf[j] * buf[j + i];
+        }
+      }
+
+      let d = 0;
+      while (c[d] > c[d + 1]) d++;
+      let maxval = -1, maxpos = -1;
+      for (let i = d; i < buf.length; i++) {
+        if (c[i] > maxval) {
+          maxval = c[i];
+          maxpos = i;
+        }
+      }
+      let T0 = maxpos;
+
+      return sampleRate / T0;
+    }
+
+    function updatePitch() {
+      if (!isListening) return;
+
+      const buf = new Float32Array(2048);
+      analyser.getFloatTimeDomainData(buf);
+      const freq = autoCorrelate(buf, audioCtx.sampleRate);
+
+      if (freq !== -1) {
+        const midiNum = Math.round(12 * (Math.log(freq / 440) / Math.log(2)) + 69);
+        const noteIndex = (midiNum % 12 + 12) % 12;
+        const octave = Math.floor(midiNum / 12) - 1;
+        const noteStr = noteNames[noteIndex] + octave;
+
+        document.getElementById('noteText').textContent = noteStr;
+        document.getElementById('freqText').textContent = `${freq.toFixed(1)} Hz`;
+
+        // Check target match
+        const diff = Math.abs(freq - currentTarget.freq);
+        const meterPct = Math.min(Math.max((freq - currentTarget.freq) / 50 * 50 + 50, 0), 100);
+        document.getElementById('meterPointer').style.left = `${meterPct}%`;
+
+        if (diff < 15) {
+          holdTime += 1;
+          if (holdTime > 20) { // Held for ~1s
+            score += 100;
+            holdTime = 0;
+            document.getElementById('scoreText').textContent = `${score} 점`;
+
+            // Switch to next target
+            currentTarget = targetNotes[Math.floor(Math.random() * targetNotes.length)];
+            document.getElementById('targetBadge').textContent = `목표 음정: ${currentTarget.name} (${currentTarget.freq}Hz)`;
+          }
+        } else {
+          holdTime = 0;
+        }
+      } else {
+        document.getElementById('noteText').textContent = '--';
+        document.getElementById('freqText').textContent = '0.0 Hz';
+      }
+
+      requestAnimationFrame(updatePitch);
+    }
+
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
+    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
+    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
+  </script>
+</body>
+</html>

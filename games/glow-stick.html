@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>네온 야광봉 & 응원 전광판 | 미니게임 천국</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #0b0b1a;
+      --card-bg: rgba(22, 22, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .glow-viewport {
+      width: 100%;
+      height: 320px;
+      border-radius: var(--radius-card);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid var(--pink);
+      box-shadow: 0 0 25px rgba(255, 0, 110, 0.4);
+      transition: box-shadow 0.3s;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .banner-overlay {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      transform: translateY(-50%);
+      white-space: nowrap;
+      font-size: 32px;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+      pointer-events: none;
+      animation: marquee 8s linear infinite;
+    }
+
+    @keyframes marquee {
+      0% { transform: translate(100%, -50%); }
+      100% { transform: translate(-100%, -50%); }
+    }
+
+    .color-bar {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .color-dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .color-dot.active { border-color: white; transform: scale(1.15); }
+
+    input[type="text"] {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--card-border);
+      color: white;
+      padding: 12px 16px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input[type="text"]:focus { border-color: var(--cyan); }
+
+    .fullscreen-btn {
+      width: 100%;
+      padding: 14px;
+      font-weight: 800;
+      font-size: 16px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border: none;
+      color: white;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+    }
+
+    .help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      z-index: 100;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      border-radius: var(--radius-card);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
+    .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>네온 야광봉 & 응원 전광판</h1>
+    </header>
+
+    <div class="card">
+      <div class="glow-viewport" id="viewport" onclick="triggerGlowBurst(event)">
+        <canvas id="glowCanvas"></canvas>
+        <div class="banner-overlay" id="bannerOverlay">🎉 NEON PARTY NIGHT 🎉</div>
+      </div>
+
+      <div style="font-size:13px; color:var(--text-dim); font-weight:600; text-align:center;">터치하거나 야광봉 색상을 선택하세요</div>
+
+      <div class="color-bar">
+        <div class="color-dot active" style="background:#ff006e" onclick="setColor('#ff006e', this)"></div>
+        <div class="color-dot" style="background:#00d4ff" onclick="setColor('#00d4ff', this)"></div>
+        <div class="color-dot" style="background:#ffd166" onclick="setColor('#ffd166', this)"></div>
+        <div class="color-dot" style="background:#06d6a0" onclick="setColor('#06d6a0', this)"></div>
+        <div class="color-dot" style="background:#7c3aed" onclick="setColor('#7c3aed', this)"></div>
+      </div>
+
+      <input type="text" id="cheerInput" placeholder="응원 전광판 문구 입력 (예: 우정 영원히!)" value="🎉 NEON PARTY NIGHT 🎉">
+
+      <button class="fullscreen-btn" onclick="toggleFullScreen()">📺 전체 화면 야광봉 모드</button>
+    </div>
+  </div>
+
+  <div class="help-btn" id="helpBtn">?</div>
+
+  <div class="modal" id="helpModal">
+    <div class="modal-content">
+      <h2>이용 방법</h2>
+      <p>1. 원하는 <strong>네온 야광봉 색상과 응원 문구</strong>를 입력하세요.</p>
+      <p>2. 화면을 터치하면 화려한 <strong>파티클 팡파레 효과</strong>가 터집니다.</p>
+      <p>3. <strong>'전체 화면 모드'</strong>로 전화기를 흔들며 콘서트/파티룸 현장에서 활용할 수 있습니다.</p>
+      <button class="close-modal" id="closeHelpBtn">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    let activeColor = '#ff006e';
+    const particles = [];
+
+    const canvas = document.getElementById('glowCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = document.getElementById('viewport');
+    const bannerOverlay = document.getElementById('bannerOverlay');
+    const cheerInput = document.getElementById('cheerInput');
+
+    function resizeCanvas() {
+      canvas.width = viewport.clientWidth;
+      canvas.height = viewport.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 50);
+
+    cheerInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim() || '🎉 NEON PARTY NIGHT 🎉';
+      bannerOverlay.textContent = val;
+    });
+
+    function setColor(color, el) {
+      activeColor = color;
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+      el.classList.add('active');
+
+      viewport.style.borderColor = color;
+      viewport.style.boxShadow = `0 0 30px ${color}66`;
+    }
+
+    function triggerGlowBurst(e) {
+      if (navigator.vibrate) navigator.vibrate(40);
+
+      const rect = viewport.getBoundingClientRect();
+      const x = e ? (e.clientX - rect.left) : (canvas.width / 2);
+      const y = e ? (e.clientY - rect.top) : (canvas.height / 2);
+
+      for (let i = 0; i < 30; i++) {
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 8,
+          vy: (Math.random() - 0.5) * 8,
+          size: Math.random() * 6 + 2,
+          color: activeColor,
+          alpha: 1.0,
+          decay: Math.random() * 0.03 + 0.01
+        });
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(11, 11, 26, 0.2)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Render Glow Aura Center
+      const grad = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, 10,
+        canvas.width / 2, canvas.height / 2, canvas.width / 1.5
+      );
+      grad.addColorStop(0, activeColor + '44');
+      grad.addColorStop(1, 'rgba(11, 11, 26, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Render Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= p.decay;
+
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        viewport.requestFullscreen().catch(err => alert("전체화면 모드를 시작할 수 없습니다."));
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
+    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
+    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
+  </script>
+</body>
+</html>

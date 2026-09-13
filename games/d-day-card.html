@@ -98,6 +98,38 @@
       gap: 12px;
     }
 
+    .sub-label {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .preset-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .preset-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .preset-btn.active {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
     input, select {
       background: rgba(0,0,0,0.3);
       border: 1px solid var(--card-border);
@@ -125,41 +157,55 @@
 
     .color-dot.active { border-color: white; transform: scale(1.1); }
 
+    .bg-upload-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px dashed var(--card-border);
+      color: var(--text-dim);
+      padding: 10px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+    }
+
     .dday-banner {
       background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(255, 0, 110, 0.3));
-      border: 1px solid var(--cyan);
+      border: 2px solid var(--pink);
       border-radius: var(--radius-card);
-      padding: 24px 20px;
+      padding: 28px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 14px;
       text-align: center;
-      box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+      box-shadow: 0 0 30px rgba(255, 0, 110, 0.3);
+      position: relative;
+      overflow: hidden;
     }
 
     .dday-tag {
       font-size: 13px;
-      padding: 4px 12px;
+      padding: 4px 14px;
       border-radius: 20px;
       background: rgba(0, 212, 255, 0.2);
       color: var(--cyan);
       font-weight: 700;
+      border: 1px solid var(--cyan);
     }
 
     .dday-title {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 800;
       color: white;
     }
 
     .dday-count-display {
-      font-size: 38px;
+      font-size: 46px;
       font-weight: 800;
       color: var(--yellow);
-      text-shadow: 0 0 15px rgba(255, 209, 102, 0.6);
-      letter-spacing: 1px;
+      text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);
+      letter-spacing: 2px;
     }
 
     .dday-timer-grid {
@@ -171,17 +217,17 @@
     }
 
     .timer-box {
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.5);
       padding: 10px 4px;
-      border-radius: 10px;
-      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
     .timer-num {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 800;
       color: var(--cyan);
     }
@@ -213,7 +259,7 @@
     canvas {
       max-width: 320px;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
     }
 
     .help-btn {
@@ -268,21 +314,37 @@
 
     <div class="card">
       <div class="form-group">
-        <input type="text" id="eventTitle" placeholder="이벤트 / 모임 이름 (예: 제주도 우정 여행)" value="우리들의 네온 파티">
+        <div class="sub-label">1. 카테고리 프리셋 선택</div>
+        <div class="preset-row">
+          <button class="preset-btn active" onclick="setPreset('🥳 모임 / 파티', '우리들의 네온 파티', '설레는 모임까지 남은 시간', 7, this)">🥳 파티/모임</button>
+          <button class="preset-btn" onclick="setPreset('✈️ 여행 / 휴가', '제주도 힐링 우정 여행', '떠나는 날까지 카운트다운', 14, this)">✈️ 여행/휴가</button>
+          <button class="preset-btn" onclick="setPreset('🎂 생일 / 기념일', 'HAPPY BIRTHDAY PARTY', '특별한 날을 축하해!', 3, this)">🎂 생일/기념일</button>
+          <button class="preset-btn" onclick="setPreset('🎓 종강 / 졸업', '자유를 향한 종강 카운트다운', '시험 끝나고 놀 준비 완료!', 10, this)">🎓 종강/졸업</button>
+          <button class="preset-btn" onclick="setPreset('🎯 목표 D-Day', '목표 달성의 날', '끝까지 파이팅!', 30, this)">🎯 목표/시험</button>
+        </div>
+
+        <div class="sub-label">2. 이벤트 세부 설정</div>
+        <input type="text" id="eventTitle" placeholder="이벤트 / 모임 이름" value="우리들의 네온 파티">
         <input type="datetime-local" id="eventDate">
-        <input type="text" id="eventDesc" placeholder="부제목 / 한줄 문구 (예: 드디어 다같이 모이는 날!)" value="설레는 모임까지 남은 시간">
+        <input type="text" id="eventDesc" placeholder="부제목 / 한줄 문구" value="설레는 모임까지 남은 시간">
         
-        <div style="font-size:13px; color:var(--text-dim); font-weight:600;">카드 테마 컬러</div>
+        <div class="sub-label">3. 테마 컬러 및 배경</div>
         <div class="color-picker">
           <div class="color-dot active" style="background:#ff006e" onclick="setTheme('#ff006e', this)"></div>
           <div class="color-dot" style="background:#00d4ff" onclick="setTheme('#00d4ff', this)"></div>
           <div class="color-dot" style="background:#ffd166" onclick="setTheme('#ffd166', this)"></div>
           <div class="color-dot" style="background:#7c3aed" onclick="setTheme('#7c3aed', this)"></div>
+          <div class="color-dot" style="background:#06d6a0" onclick="setTheme('#06d6a0', this)"></div>
         </div>
+
+        <label class="bg-upload-btn">
+          📷 커스텀 배경 사진 첨부 (선택)
+          <input type="file" id="bgImgInput" accept="image/*" style="display:none;" onchange="handleBgUpload(event)">
+        </label>
       </div>
 
       <div class="dday-banner" id="ddayBanner">
-        <div class="dday-tag" id="bannerTag">🥳 UPCOMING EVENT</div>
+        <div class="dday-tag" id="bannerTag">🥳 모임 / 파티</div>
         <div class="dday-title" id="bannerTitle">우리들의 네온 파티</div>
         <div class="dday-count-display" id="bannerCount">D-DAY</div>
 
@@ -294,11 +356,11 @@
         </div>
       </div>
 
-      <button class="action-btn" onclick="generateDDayCard()">✨ D-Day 카드 이미지 생성하기</button>
+      <button class="action-btn" onclick="generateDDayCard()">✨ 네온 D-Day 포스터 카드 생성</button>
 
       <div class="preview-container" id="previewContainer">
         <canvas id="ddayCanvas"></canvas>
-        <button class="action-btn" onclick="downloadDDayCard()" style="width:100%;">📥 D-Day 카드 다운로드 (PNG)</button>
+        <button class="action-btn" onclick="downloadDDayCard()" style="width:100%;">📥 D-Day 포스터 카드 다운로드 (PNG)</button>
       </div>
     </div>
   </div>
@@ -308,8 +370,9 @@
   <div class="modal" id="helpModal">
     <div class="modal-content">
       <h2>이용 방법</h2>
-      <p>1. <strong>이벤트 이름과 날짜/시간</strong>을 입력하면 실시간 D-Day 카운트다운 타이머가 시작됩니다.</p>
-      <p>2. <strong>'D-Day 카드 이미지 생성하기'</strong>를 누르면 예쁜 네온 D-Day 카드로 완성하여 이미지 다운로드 및 공유가 가능합니다!</p>
+      <p>1. <strong>프리셋 카테고리</strong>를 고르거나 이벤트 이름과 목표 날짜를 입력합니다.</p>
+      <p>2. 원하는 <strong>네온 테마 색상 및 나만의 사진 배경</strong>을 첨부할 수 있습니다.</p>
+      <p>3. <strong>'네온 D-Day 포스터 카드 생성'</strong>을 클릭하면 인스타그램/카카오톡 공유용 포스터 이미지가 제작됩니다.</p>
       <button class="close-modal" id="closeHelpBtn">닫기</button>
     </div>
   </div>
@@ -317,12 +380,26 @@
   <script>
     let activeTheme = '#ff006e';
     let targetTime = null;
+    let customBgImg = null;
 
-    // Set default date to 7 days from now
-    const now = new Date();
-    now.setDate(now.getDate() + 7);
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('eventDate').value = now.toISOString().slice(0, 16);
+    // Set initial target date
+    setPreset('🥳 모임 / 파티', '우리들의 네온 파티', '설레는 모임까지 남은 시간', 7, document.querySelector('.preset-btn'));
+
+    function setPreset(tag, title, desc, addDays, el) {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      document.getElementById('bannerTag').textContent = tag;
+      document.getElementById('eventTitle').value = title;
+      document.getElementById('eventDesc').value = desc;
+
+      const d = new Date();
+      d.setDate(d.getDate() + addDays);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      document.getElementById('eventDate').value = d.toISOString().slice(0, 16);
+
+      updateTimer();
+    }
 
     function setTheme(color, el) {
       activeTheme = color;
@@ -331,7 +408,20 @@
 
       const banner = document.getElementById('ddayBanner');
       banner.style.borderColor = color;
-      banner.style.boxShadow = `0 0 20px ${color}44`;
+      banner.style.boxShadow = `0 0 30px ${color}55`;
+    }
+
+    function handleBgUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const img = new Image();
+        img.onload = () => { customBgImg = img; alert('커스텀 배경 사진이 등록되었습니다!'); };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     function updateTimer() {
@@ -347,7 +437,6 @@
 
       if (diff <= 0) {
         document.getElementById('bannerCount').textContent = 'D - DAY!';
-        document.getElementById('bannerTag').textContent = '🎉 EVENT DAY';
         document.getElementById('tDays').textContent = '0';
         document.getElementById('tHours').textContent = '0';
         document.getElementById('tMins').textContent = '0';
@@ -376,69 +465,95 @@
     function generateDDayCard() {
       const canvas = document.getElementById('ddayCanvas');
       canvas.width = 600;
-      canvas.height = 750;
+      canvas.height = 850;
       const ctx = canvas.getContext('2d');
 
-      // Background Gradient
-      const grad = ctx.createLinearGradient(0, 0, 600, 750);
-      grad.addColorStop(0, '#0b0b1a');
-      grad.addColorStop(0.5, '#161635');
-      grad.addColorStop(1, '#251645');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 600, 750);
+      // 1. Draw Background
+      if (customBgImg) {
+        ctx.drawImage(customBgImg, 0, 0, 600, 850);
+        ctx.fillStyle = 'rgba(11, 11, 26, 0.75)';
+        ctx.fillRect(0, 0, 600, 850);
+      } else {
+        const grad = ctx.createLinearGradient(0, 0, 600, 850);
+        grad.addColorStop(0, '#0b0b1a');
+        grad.addColorStop(0.5, '#181230');
+        grad.addColorStop(1, '#2c1445');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 600, 850);
 
-      // Neon Frame Border
+        // Draw Stars/Particles
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 40; i++) {
+          const sx = (Math.sin(i * 99) * 0.5 + 0.5) * 600;
+          const sy = (Math.cos(i * 33) * 0.5 + 0.5) * 850;
+          const sr = (i % 3) + 1;
+          ctx.globalAlpha = (i % 5 + 3) / 10;
+          ctx.beginPath();
+          ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+      }
+
+      // 2. Neon Frame Border & Glow
       ctx.strokeStyle = activeTheme;
       ctx.lineWidth = 6;
-      ctx.strokeRect(20, 20, 560, 710);
+      ctx.shadowColor = activeTheme;
+      ctx.shadowBlur = 20;
+      ctx.strokeRect(20, 20, 560, 810);
+      ctx.shadowBlur = 0;
 
-      // Title & Subtitle
+      // 3. Category Tag
+      const tagText = document.getElementById('bannerTag').textContent;
+      ctx.fillStyle = activeTheme;
+      ctx.fillRect(200, 75, 200, 36);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 15px Outfit, Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(tagText, 300, 98);
+
+      // 4. Title & Subtitle
       const title = document.getElementById('eventTitle').value.trim() || 'D-Day 이벤트';
       const desc = document.getElementById('eventDesc').value.trim() || '설레는 모임까지 남은 시간';
 
-      ctx.fillStyle = activeTheme;
-      ctx.font = 'bold 22px Outfit, Pretendard, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('🥳 UPCOMING EVENT', 300, 100);
-
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 36px Outfit, Pretendard, sans-serif';
-      ctx.fillText(title, 300, 180);
+      ctx.fillText(title, 300, 185);
 
       ctx.fillStyle = '#94a3b8';
       ctx.font = '18px Outfit, Pretendard, sans-serif';
-      ctx.fillText(desc, 300, 230);
+      ctx.fillText(desc, 300, 235);
 
-      // Main D-Day Big Number
+      // 5. Main D-Day Big Number Display
       const days = document.getElementById('tDays').textContent;
       const daysText = (days === '0' && targetTime && targetTime <= new Date().getTime()) ? 'D - DAY!' : `D - ${days}`;
 
       ctx.fillStyle = '#ffd166';
-      ctx.font = 'bold 84px Outfit, sans-serif';
-      ctx.shadowColor = 'rgba(255, 209, 102, 0.8)';
-      ctx.shadowBlur = 30;
-      ctx.fillText(daysText, 300, 390);
+      ctx.font = 'bold 96px Outfit, sans-serif';
+      ctx.shadowColor = 'rgba(255, 209, 102, 0.9)';
+      ctx.shadowBlur = 35;
+      ctx.fillText(daysText, 300, 410);
       ctx.shadowBlur = 0;
 
-      // Realtime Detailed Timer Sub-box
+      // 6. Realtime Detailed Timer Sub-box
       const hours = document.getElementById('tHours').textContent;
       const mins = document.getElementById('tMins').textContent;
       const secs = document.getElementById('tSecs').textContent;
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-      ctx.fillRect(80, 470, 440, 120);
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.4)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+      ctx.fillRect(70, 510, 460, 130);
+      ctx.strokeStyle = activeTheme;
       ctx.lineWidth = 2;
-      ctx.strokeRect(80, 470, 440, 120);
+      ctx.strokeRect(70, 510, 460, 130);
 
       ctx.fillStyle = '#00d4ff';
-      ctx.font = 'bold 28px Outfit, sans-serif';
-      ctx.fillText(`${days}일  ${hours}시간  ${mins}분  ${secs}초`, 300, 540);
+      ctx.font = 'bold 30px Outfit, sans-serif';
+      ctx.fillText(`${days}일  ${hours}시간  ${mins}분  ${secs}초`, 300, 585);
 
-      // Footer
+      // 7. Footer
       ctx.fillStyle = '#64748b';
-      ctx.font = 'bold 16px Outfit, sans-serif';
-      ctx.fillText('MINI GAME PARADISE | NEON D-DAY CARD', 300, 680);
+      ctx.font = 'bold 15px Outfit, sans-serif';
+      ctx.fillText('MINI GAME PARADISE | NEON D-DAY POSTER', 300, 770);
 
       document.getElementById('previewContainer').style.display = 'flex';
       document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
@@ -448,7 +563,7 @@
       const canvas = document.getElementById('ddayCanvas');
       const a = document.createElement('a');
       a.href = canvas.toDataURL('image/png');
-      a.download = `dday_card_${Date.now()}.png`;
+      a.download = `dday_poster_${Date.now()}.png`;
       a.click();
     }
 
