@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>편의점 야간 알바 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=b7c7301f"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=bed20c1e">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b1020;
+            --panel: rgba(255, 255, 255, .06);
+            --border: rgba(255, 255, 255, .14);
+            --text: #eef2ff;
+            --muted: #95a3c4;
+            --accent: #5eead4;
+            --warn: #fbbf24;
+            --ok: #4ade80;
+            --bad: #f87171;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            padding: 0;
+            background: radial-gradient(circle at 50% -10%, #16224a 0%, var(--bg) 60%);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .page { width: 100%; max-width: 470px; padding: 20px 16px 40px; }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 { font-size: 1.6rem; margin: 52px 0 2px; text-align: center; }
+
+        h1 .grad {
+            background: linear-gradient(135deg, #5eead4, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub { color: var(--muted); font-size: .85rem; margin-bottom: 16px; text-align: center; }
+
+        .hud {
+            display: flex;
+            gap: 8px;
+            padding: 11px 12px;
+            margin-bottom: 10px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+        }
+
+        .hud div { flex: 1; text-align: center; min-width: 0; }
+        .hud .label { display: block; font-size: .62rem; color: var(--muted); }
+        .hud .value { font-size: .98rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #hud-pay { color: var(--accent); }
+        #hud-strike.hot { color: var(--bad); }
+
+        .boss-bar {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 9px 13px;
+            margin-bottom: 10px;
+            border-radius: 999px;
+            background: rgba(129, 140, 248, .12);
+            border: 1px solid rgba(129, 140, 248, .32);
+            font-size: .76rem;
+            font-weight: 700;
+            color: #c7d2fe;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 17px;
+            padding: 17px;
+            margin-bottom: 11px;
+        }
+
+        .card h2 { font-size: 1rem; margin-bottom: 4px; }
+        .card .hint { color: var(--muted); font-size: .78rem; line-height: 1.6; margin-bottom: 12px; }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 14px;
+            background: linear-gradient(135deg, #5eead4, #818cf8);
+            color: #0b1020;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+        .btn:disabled { opacity: .4; cursor: default; }
+
+        /* 선택지 */
+        .choice {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 13px 15px;
+            margin-bottom: 8px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .choice:disabled { opacity: .38; cursor: default; }
+        .choice .ct { font-weight: 700; font-size: .93rem; }
+        .choice .cd { font-size: .75rem; color: var(--muted); margin-top: 3px; line-height: 1.55; }
+
+        /* 시계 */
+        .clock {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .clock .time {
+            font-size: 2.3rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #5eead4, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .clock .slot { font-size: .73rem; color: var(--muted); }
+
+        .bar {
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .09);
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .bar i { display: block; height: 100%; background: linear-gradient(90deg, #5eead4, #818cf8); }
+
+        /* 상태 게이지 */
+        .gauges { display: flex; gap: 8px; margin-bottom: 11px; }
+
+        .gauge {
+            flex: 1;
+            padding: 9px 10px;
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .gauge .gl { font-size: .62rem; color: var(--muted); display: block; }
+        .gauge .gv { font-size: .95rem; font-weight: 800; }
+        .gauge.low .gv { color: var(--bad); }
+
+        /* 재고 / 발주 */
+        .item-row {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            grid-template-areas: "icon name qty" "meta meta meta";
+            align-items: center;
+            column-gap: 10px;
+            row-gap: 5px;
+            padding: 11px 12px;
+            margin-bottom: 7px;
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+        }
+
+        .item-row .icon { grid-area: icon; font-size: 1.35rem; width: 28px; text-align: center; }
+        .item-row .name { grid-area: name; font-weight: 700; font-size: .9rem; }
+        .item-row .meta { grid-area: meta; font-size: .7rem; color: var(--muted); }
+        .item-row .qty { grid-area: qty; display: flex; align-items: center; gap: 4px; }
+
+        .item-row .qty button {
+            width: 27px; height: 27px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .06);
+            color: var(--text);
+            font-family: inherit; font-size: .9rem; font-weight: 700;
+            cursor: pointer;
+        }
+
+        .item-row .qty .v { width: 30px; text-align: center; font-weight: 800; font-size: .9rem; }
+        .item-row .tag { font-size: .62rem; padding: 1px 6px; border-radius: 999px; margin-left: 5px; }
+        .tag-fresh { background: rgba(248, 113, 113, .2); color: #fca5a5; }
+        .tag-keep { background: rgba(94, 234, 212, .16); color: #5eead4; }
+
+        /* 로그 */
+        .log { max-height: 250px; overflow-y: auto; }
+
+        .log-row {
+            display: flex;
+            gap: 9px;
+            padding: 8px 11px;
+            margin-bottom: 5px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .035);
+            font-size: .82rem;
+            line-height: 1.5;
+        }
+
+        .log-row .who { flex-shrink: 0; }
+        .log-row.good { border-left: 3px solid var(--ok); }
+        .log-row.bad { border-left: 3px solid var(--bad); }
+        .log-row.warn { border-left: 3px solid var(--warn); }
+
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .07);
+            font-size: .9rem;
+        }
+
+        .stat-line:last-child { border-bottom: none; }
+        .stat-line .v { font-weight: 800; }
+        .stat-line .v.plus { color: var(--ok); }
+        .stat-line .v.minus { color: var(--bad); }
+
+        .ending { text-align: center; padding: 24px 18px; }
+        .ending .grade { font-size: 2.1rem; font-weight: 900; color: var(--accent); margin: 8px 0; }
+
+        .boss-pick {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 15px;
+            margin-bottom: 9px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .boss-pick .bn { font-weight: 800; font-size: 1rem; margin-bottom: 3px; }
+        .boss-pick .bd { font-size: .78rem; color: var(--muted); line-height: 1.6; }
+        .boss-pick .bw { font-size: .71rem; color: var(--accent); margin-top: 7px; }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+
+    <div class="page">
+        <h1>🌙 <span class="grad">편의점 야간 알바</span></h1>
+        <p class="sub">밤 10시부터 아침 6시까지, 14일을 버텨보세요</p>
+
+        <div class="boss-bar" id="boss-bar" style="display:none"></div>
+
+        <div class="hud">
+            <div><span class="label">일차</span><span class="value" id="hud-day">1</span></div>
+            <div><span class="label">누적 급여</span><span class="value" id="hud-pay">0</span></div>
+            <div><span class="label">평가</span><span class="value" id="hud-score">0</span></div>
+            <div><span class="label">경고</span><span class="value" id="hud-strike">0/3</span></div>
+        </div>
+
+        <!-- 시작: 점장 배정 -->
+        <div class="screen active" id="screen-start">
+            <div class="card">
+                <h2>어느 점장 밑에서 일할까요?</h2>
+                <p class="hint">점장마다 중요하게 보는 게 다릅니다. 같은 일을 해도 평가가 달라지니, 그 사람 기준에 맞춰야 합니다.</p>
+                <div id="boss-list"></div>
+            </div>
+        </div>
+
+        <!-- 근무 -->
+        <div class="screen" id="screen-night">
+            <div class="clock">
+                <div class="time" id="clock-time">22:00</div>
+                <div class="slot" id="clock-slot">1 / 8</div>
+                <div class="bar"><i id="clock-bar" style="width:0%"></i></div>
+            </div>
+
+            <div class="gauges">
+                <div class="gauge" id="g-clean"><span class="gl">청결</span><span class="gv">100</span></div>
+                <div class="gauge" id="g-shelf"><span class="gl">진열</span><span class="gv">100</span></div>
+                <div class="gauge" id="g-tired"><span class="gl">피로</span><span class="gv">0</span></div>
+            </div>
+
+            <div class="card">
+                <h2 id="ev-title">한가한 시간</h2>
+                <p class="hint" id="ev-text"></p>
+                <div id="ev-choices"></div>
+            </div>
+
+            <div class="card">
+                <h2>이번 시간</h2>
+                <div class="log" id="slot-log"></div>
+            </div>
+        </div>
+
+        <!-- 마감 정산 -->
+        <div class="screen" id="screen-close">
+            <div class="card">
+                <h2 id="close-title">퇴근</h2>
+                <p class="hint" id="close-sub"></p>
+                <div class="log" id="close-log"></div>
+            </div>
+
+            <div class="card">
+                <div class="stat-line"><span>매출</span><span class="v plus" id="r-sales">0</span></div>
+                <div class="stat-line"><span>폐기 손실</span><span class="v minus" id="r-waste">0</span></div>
+                <div class="stat-line"><span>품절로 놓친 손님</span><span class="v" id="r-lost">0명</span></div>
+                <div class="stat-line"><span>오늘 일당</span><span class="v plus" id="r-pay">0</span></div>
+                <div class="stat-line"><span>점장 평가</span><span class="v" id="r-score">0</span></div>
+            </div>
+
+            <button class="btn" onclick="goOrder()">발주하러 가기</button>
+        </div>
+
+        <!-- 발주 -->
+        <div class="screen" id="screen-order">
+            <div class="card">
+                <h2>내일 들어올 물건</h2>
+                <p class="hint" id="order-hint"></p>
+                <div id="order-list"></div>
+            </div>
+            <div class="card">
+                <div class="stat-line"><span>발주 금액</span><span class="v" id="order-cost">0원</span></div>
+                <div class="stat-line"><span id="order-tip-label">참고</span><span class="v" id="order-tip">-</span></div>
+            </div>
+            <button class="btn" onclick="nextDay()">퇴근하고 내일 출근</button>
+        </div>
+
+        <!-- 종료 -->
+        <div class="screen" id="screen-end">
+            <div class="card ending">
+                <div style="font-size:2.4rem" id="end-emoji">🏅</div>
+                <div class="grade" id="end-grade"></div>
+                <p class="hint" id="end-desc" style="margin-bottom:14px"></p>
+                <div class="stat-line"><span>누적 급여</span><span class="v" id="end-pay">0</span></div>
+                <div class="stat-line"><span>점장 평가</span><span class="v" id="end-score">0</span></div>
+                <div class="stat-line"><span>총 폐기 손실</span><span class="v" id="end-waste">0</span></div>
+                <div class="stat-line"><span>최고 기록</span><span class="v" id="end-best">-</span></div>
+            </div>
+            <button class="btn" onclick="resetGame()">새로 시작</button>
+        </div>
+    </div>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "편의점 야간 알바",
+ "players": "1인",
+ "time": "약 15분",
+ "goal": "14일 동안 야간 근무를 버티며 점장에게 좋은 평가를 받으세요.",
+ "steps": [
+  "점장을 고릅니다. 점장마다 중요하게 보는 지표가 달라 정답도 달라집니다.",
+  "밤 10시부터 아침 6시까지 여덟 번의 시간대를 지나갑니다.",
+  "시간대마다 사건이 생기거나 한가합니다. 한가하면 무슨 일을 할지 고릅니다.",
+  "퇴근 후 내일 들어올 물건을 발주합니다. 오늘 시킨 것이 내일 도착합니다.",
+  "14일이 지나면 점장이 최종 평가를 내립니다."
+ ],
+ "tips": [
+  "도시락과 삼각김밥은 마진이 크지만 하루가 지나면 전량 폐기됩니다.",
+  "컵라면·음료·과자는 상하지 않습니다. 대신 남는 게 적습니다.",
+  "유통기한이 임박하면 떨이로 털 수 있습니다. 폐기보다는 낫습니다.",
+  "피로가 쌓이면 사건 대응에 실패하기 쉽습니다. 가끔 쉬어야 합니다.",
+  "할머니·수험생·경비 아저씨는 여러 밤에 걸쳐 다시 옵니다. 마음을 쓰면 관계가 쌓입니다.",
+  "경고 3번이면 잘립니다. 미성년자에게 술·담배를 파는 것이 가장 위험합니다.",
+  "진행 상황은 자동 저장되어 닫았다 열어도 이어집니다."
+ ]
+}
+</script>
+
+    <script>
+        // ── 데이터 ───────────────────────────────────────
+
+        // life: 유통기한(일). 1이면 다음 날 아침에 전량 폐기된다.
+        // 신선식품은 마진이 크지만 남으면 그대로 손실이라, 발주량이 진짜 판단거리가 된다.
+        const ITEMS = [
+            { id: 'lunchbox', icon: '🍱', name: '도시락',   cost: 2800, price: 4500, life: 1,  unit: 5 },
+            { id: 'gimbap',   icon: '🍙', name: '삼각김밥', cost: 700,  price: 1300, life: 1,  unit: 10 },
+            { id: 'sandwich', icon: '🥪', name: '샌드위치', cost: 1500, price: 2600, life: 2,  unit: 5 },
+            { id: 'milk',     icon: '🥛', name: '우유',     cost: 900,  price: 1600, life: 3,  unit: 10 },
+            { id: 'ramen',    icon: '🍜', name: '컵라면',   cost: 750,  price: 1400, life: 99, unit: 10 },
+            { id: 'drink',    icon: '🥤', name: '음료',     cost: 650,  price: 1500, life: 99, unit: 10 },
+            { id: 'snack',    icon: '🍫', name: '과자',     cost: 800,  price: 1700, life: 99, unit: 10 }
+        ];
+
+        // 시간대별 손님 수와 무엇을 찾는지. 밤이 깊을수록 한산하고, 새벽에는 출근길 손님이 돈다.
+        const HOURS = [
+            { h: 22, guests: 13, want: { lunchbox: 3, gimbap: 3, drink: 3, snack: 2, ramen: 2, sandwich: 1, milk: 1 } },
+            { h: 23, guests: 11, want: { lunchbox: 2, gimbap: 3, ramen: 3, drink: 3, snack: 2, sandwich: 1, milk: 1 } },
+            { h: 0,  guests: 8,  want: { ramen: 4, drink: 3, snack: 3, gimbap: 2, lunchbox: 1, sandwich: 1, milk: 1 } },
+            { h: 1,  guests: 6,  want: { ramen: 4, drink: 3, snack: 3, gimbap: 1, milk: 1, sandwich: 1, lunchbox: 1 } },
+            { h: 2,  guests: 5,  want: { ramen: 3, drink: 3, snack: 3, milk: 1, gimbap: 1, sandwich: 1, lunchbox: 1 } },
+            { h: 3,  guests: 5,  want: { drink: 3, ramen: 3, snack: 2, milk: 2, gimbap: 1, sandwich: 1, lunchbox: 1 } },
+            { h: 4,  guests: 7,  want: { gimbap: 3, milk: 3, sandwich: 3, drink: 2, ramen: 1, snack: 1, lunchbox: 1 } },
+            { h: 5,  guests: 10, want: { gimbap: 4, sandwich: 3, milk: 3, drink: 2, lunchbox: 2, snack: 1, ramen: 1 } }
+        ];
+
+        // 점장 성향. 카페의 '상권'처럼 판마다 정답을 돌리는 축이다.
+        // 다만 여기서는 내 기준이 아니라 남의 기준에 맞춰야 한다는 점이 다르다.
+        const BOSSES = [
+            {
+                id: 'sales', emoji: '💰', name: '매출형 점장',
+                desc: '"손님이 왔는데 물건이 없으면 그게 제일 손해야."',
+                weight: { sales: 1.0, waste: 0.13, care: 0.28 },
+                grades: [780, 640, 430],
+                note: '품절을 가장 싫어합니다. 폐기는 어느 정도 눈감아 줍니다.'
+            },
+            {
+                id: 'cost', emoji: '🧮', name: '원가형 점장',
+                desc: '"버리는 게 제일 아까워. 딱 팔릴 만큼만 시켜."',
+                weight: { sales: 0.4, waste: 1.0, care: 0.22 },
+                grades: [235, 190, 110],
+                note: '폐기를 가장 싫어합니다. 조금 품절나는 건 감수합니다.'
+            },
+            {
+                id: 'clean', emoji: '🧹', name: '청결형 점장',
+                desc: '"매장이 지저분하면 손님이 다시 안 와."',
+                weight: { sales: 0.5, waste: 0.35, care: 1.0 },
+                grades: [440, 370, 260],
+                note: '청소와 진열 상태를 가장 봅니다. 순찰도 자주 옵니다.'
+            }
+        ];
+
+        // 밤에 벌어지는 일들. 숫자만 있으면 스프레드시트가 되니 사건으로 리듬을 만든다.
+        const EVENTS = [
+            {
+                id: 'drunk', title: '취객', minHour: 0, maxHour: 4,
+                text: '술 취한 손님이 계산대 앞에서 같은 말을 반복하고 있습니다.',
+                choices: [
+                    { t: '차분히 달래서 보낸다', d: '시간이 걸리지만 조용히 끝납니다', time: 2, tired: 8, care: 0 },
+                    { t: '못 들은 척한다', d: '금방 끝나지만 소란이 남습니다', time: 0, tired: 3, care: -8 },
+                    { t: '경찰에 신고한다', d: '확실하지만 한참 걸립니다', time: 3, tired: 5, care: 3 }
+                ]
+            },
+            {
+                id: 'id_check', title: '신분증', minHour: 22, maxHour: 2,
+                text: '담배를 사려는 손님이 신분증이 없다고 합니다. 앳되어 보입니다.',
+                choices: [
+                    { t: '판매를 거절한다', d: '원칙대로. 손님은 투덜대며 나갑니다', time: 0, tired: 2, sales: 0 },
+                    { t: '그냥 판다', d: '매출은 오르지만 걸리면 큰일입니다', time: 0, tired: 0, sales: 4500, risk: 'id' }
+                ]
+            },
+            {
+                id: 'delivery', title: '새벽 배송 도착', minHour: 2, maxHour: 4, forced: true,
+                text: '발주한 물건이 도착했습니다. 검수하고 채워 넣어야 합니다.',
+                choices: [
+                    { t: '꼼꼼히 검수하고 진열한다', d: '오래 걸리지만 매대가 깔끔해집니다', time: 3, tired: 12, shelf: 25 },
+                    { t: '대충 쌓아두고 넘긴다', d: '빠르지만 진열이 엉망이 됩니다', time: 1, tired: 4, shelf: -10 }
+                ]
+            },
+            {
+                id: 'inspect', title: '점장 불시 점검', minHour: 23, maxHour: 5,
+                text: '점장이 예고 없이 매장에 들렀습니다.',
+                choices: [
+                    { t: '인사하고 상태를 보여준다', d: '지금 매장 상태 그대로 평가받습니다', time: 1, tired: 3, inspect: true }
+                ]
+            },
+            {
+                id: 'granny', title: '단골 할머니', minHour: 4, maxHour: 5,
+                text: '매일 새벽에 오시는 할머니가 말을 걸어옵니다.',
+                choices: [
+                    { t: '잠깐 이야기를 들어드린다', d: '시간은 쓰지만 기분 좋은 단골이 됩니다', time: 2, tired: 4, care: 6, sales: 3000, regular: 'granny' },
+                    { t: '바쁜 척 넘긴다', d: '시간은 아끼지만 발길이 뜸해집니다', time: 0, tired: 0, care: -4 }
+                ]
+            },
+            {
+                id: 'spill', title: '음료 쏟음', minHour: 22, maxHour: 5,
+                text: '손님이 음료를 바닥에 쏟고 그냥 가버렸습니다.',
+                choices: [
+                    { t: '바로 치운다', d: '지금 치우는 게 제일 빠릅니다', time: 2, tired: 7, clean: 12 },
+                    { t: '나중에 치운다', d: '끈적하게 말라붙습니다', time: 0, tired: 0, clean: -18 }
+                ]
+            },
+            {
+                id: 'rush', title: '갑자기 몰린 손님', minHour: 22, maxHour: 23,
+                text: '근처 술집이 문을 닫았는지 손님이 한꺼번에 들어왔습니다.',
+                choices: [
+                    { t: '빠르게 처리한다', d: '정신없지만 다 받습니다', time: 2, tired: 14, salesMul: 1.5 },
+                    { t: '내 속도대로 한다', d: '기다리다 나가는 손님이 생깁니다', time: 1, tired: 5, salesMul: 0.85, care: -5 }
+                ]
+            },
+            {
+                id: 'cat', title: '고양이', minHour: 1, maxHour: 4,
+                text: '문이 열린 틈에 길고양이가 들어와 라면 진열대 밑에 자리를 잡았습니다.',
+                choices: [
+                    { t: '참치캔을 따서 밖으로 유인한다', d: '내 돈 나가지만 조용히 끝납니다', time: 2, tired: 5, care: 5, sales: -2500 },
+                    { t: '빗자루로 몰아낸다', d: '빠르지만 진열대가 흐트러집니다', time: 1, tired: 6, shelf: -12 },
+                    { t: '그냥 둔다', d: '알아서 나가겠지', time: 0, tired: 0, clean: -10, care: -3 }
+                ]
+            },
+            {
+                id: 'toilet', title: '화장실 열쇠', minHour: 22, maxHour: 5,
+                text: '손님이 화장실 열쇠를 달라고 합니다. 저번에 빌려준 사람은 열쇠를 안 돌려줬습니다.',
+                choices: [
+                    { t: '빌려준다', d: '친절하지만 가끔 안 돌아옵니다', time: 1, tired: 3, care: 4, risk: 'key' },
+                    { t: '고장 났다고 한다', d: '편하지만 손님 표정이 굳습니다', time: 0, tired: 1, care: -5 }
+                ]
+            },
+            {
+                id: 'freezer', title: '냉동고 경고음', minHour: 0, maxHour: 5,
+                text: '아이스크림 냉동고에서 경고음이 납니다. 문이 살짝 열려 있었습니다.',
+                choices: [
+                    { t: '바로 닫고 온도를 확인한다', d: '늦기 전에 잡았습니다', time: 1, tired: 5, care: 6 },
+                    { t: '소리부터 끄고 나중에 본다', d: '조용해지긴 합니다', time: 0, tired: 1, care: -10, waste: 9000 }
+                ]
+            },
+            {
+                id: 'card', title: '카드 단말기 오류', minHour: 22, maxHour: 5,
+                text: '계산 도중 카드 단말기가 먹통이 됐습니다. 뒤에 손님이 줄을 섭니다.',
+                choices: [
+                    { t: '재부팅하고 기다려 달라고 한다', d: '시간이 걸리지만 제대로 처리됩니다', time: 2, tired: 9 },
+                    { t: '현금만 받는다고 안내한다', d: '몇 명은 그냥 나갑니다', time: 1, tired: 4, salesMul: 0.7, care: -4 }
+                ]
+            },
+            {
+                id: 'parcel', title: '택배 보관 요청', minHour: 22, maxHour: 2,
+                text: '이웃 주민이 택배를 잠깐 맡아 달라고 합니다. 규정에는 없는 일입니다.',
+                choices: [
+                    { t: '맡아준다', d: '동네 인심은 얻습니다', time: 1, tired: 3, care: 7 },
+                    { t: '정중히 거절한다', d: '원칙대로입니다', time: 0, tired: 1, care: -2 }
+                ]
+            },
+            {
+                id: 'smokers', title: '문 앞의 무리', minHour: 23, maxHour: 3,
+                text: '가게 앞에서 담배를 피우며 떠드는 무리가 한참째 안 갑니다. 손님이 들어오길 꺼립니다.',
+                choices: [
+                    { t: '나가서 정중히 부탁한다', d: '용기가 필요하지만 효과는 확실합니다', time: 2, tired: 11, care: 6 },
+                    { t: '음악 볼륨을 올린다', d: '간접적으로 신호를 줍니다', time: 1, tired: 2, salesMul: 0.9 },
+                    { t: '모른 척한다', d: '손님이 줄어듭니다', time: 0, tired: 0, salesMul: 0.75, care: -4 }
+                ]
+            },
+            {
+                id: 'complain', title: '진상 손님', minHour: 22, maxHour: 4,
+                text: '"어제 여기서 산 김밥이 상했는데요?" 영수증은 없다고 합니다.',
+                choices: [
+                    { t: '사과하고 교환해 준다', d: '손실은 나지만 조용히 끝납니다', time: 2, tired: 8, sales: -1300, care: 3 },
+                    { t: '영수증이 필요하다고 설명한다', d: '원칙대로지만 언성이 높아집니다', time: 3, tired: 13, care: -6 }
+                ]
+            },
+            {
+                id: 'police', title: '순찰차', minHour: 1, maxHour: 4,
+                text: '순찰 중인 경찰관이 들러 별일 없냐고 묻습니다.',
+                choices: [
+                    { t: '커피 한 잔 건네며 인사한다', d: '든든한 사이가 됩니다', time: 1, tired: 2, sales: -1500, care: 8, regular: 'guard' },
+                    { t: '괜찮다고 짧게 답한다', d: '무난합니다', time: 0, tired: 1 }
+                ]
+            },
+            {
+                id: 'student', title: '새벽 수험생', minHour: 0, maxHour: 3,
+                text: '매일 이 시간에 컵라면을 먹고 가는 수험생이 오늘따라 표정이 어둡습니다.',
+                choices: [
+                    { t: '따뜻한 물 온도를 맞춰주고 한마디 건넨다', d: '별거 아니지만 기억에 남습니다', time: 1, tired: 3, care: 7, regular: 'student' },
+                    { t: '평소처럼 계산만 한다', d: '빠르고 무난합니다', time: 0, tired: 1 }
+                ]
+            },
+            {
+                id: 'lost', title: '두고 간 물건', minHour: 22, maxHour: 5,
+                text: '계산대 옆에 지갑이 놓여 있습니다. 방금 나간 손님 것 같습니다.',
+                choices: [
+                    { t: '뛰어나가 돌려준다', d: '숨이 차지만 마음은 편합니다', time: 2, tired: 10, care: 10 },
+                    { t: '보관함에 넣어둔다', d: '규정대로입니다', time: 1, tired: 2, care: 3 }
+                ]
+            },
+            {
+                id: 'rain', title: '갑작스러운 비', minHour: 22, maxHour: 5,
+                text: '비가 쏟아집니다. 우산을 찾는 손님이 늘었지만 바닥이 금방 젖습니다.',
+                choices: [
+                    { t: '매트를 깔고 우산을 앞으로 뺀다', d: '손이 가지만 둘 다 잡습니다', time: 2, tired: 8, sales: 6000, clean: 5 },
+                    { t: '우산만 앞에 둔다', d: '팔리긴 하는데 바닥이 엉망입니다', time: 1, tired: 3, sales: 4500, clean: -14 }
+                ]
+            },
+            {
+                id: 'note', title: '전 타임이 남긴 쪽지', minHour: 22, maxHour: 22,
+                text: '"온장고 고구마 3개 남았어요. 그리고 2번 냉장고 소리 이상함" — 쪽지가 붙어 있습니다.',
+                choices: [
+                    { t: '지금 다 확인한다', d: '시간은 쓰지만 문제를 미리 잡습니다', time: 2, tired: 7, care: 6 },
+                    { t: '일단 일하면서 본다', d: '나중에 터질 수도 있습니다', time: 0, tired: 0, risk: 'fridge' }
+                ]
+            },
+            {
+                id: 'foreigner', title: '길 묻는 여행자', minHour: 23, maxHour: 3,
+                text: '캐리어를 끌고 온 외국인이 지도를 보여주며 길을 묻습니다.',
+                choices: [
+                    { t: '지도를 같이 보며 알려준다', d: '말은 잘 안 통해도 통합니다', time: 2, tired: 5, care: 8, sales: 3000 },
+                    { t: '손짓으로 대충 가리킨다', d: '빠릅니다', time: 0, tired: 1, care: -2 }
+                ]
+            },
+            {
+                id: 'oden', title: '온장고 냄새', minHour: 0, maxHour: 5,
+                text: '온장고에서 오래된 고구마 타는 냄새가 납니다.',
+                choices: [
+                    { t: '빼내고 안을 닦는다', d: '냄새가 가십니다', time: 2, tired: 7, clean: 10, care: 4 },
+                    { t: '환기만 시킨다', d: '냄새가 옅어지긴 합니다', time: 1, tired: 2, clean: -4 }
+                ]
+            },
+            {
+                id: 'quiet', title: '한가한 시간', minHour: 22, maxHour: 5, idle: true,
+                text: '손님이 뜸합니다. 무엇을 할까요?'
+            }
+        ];
+
+        // 한가할 때 할 수 있는 일. 시간이 모자라서 매일 다 할 수는 없다.
+        const TASKS = [
+            { id: 'shelf',    t: '매대 정리',     d: '진열을 다듬으면 물건이 더 잘 나갑니다', time: 1, tired: 6, shelf: 18 },
+            { id: 'clean',    t: '바닥 청소',     d: '청결도가 올라갑니다', time: 1, tired: 7, clean: 20 },
+            { id: 'markdown', t: '유통기한 떨이', d: '오늘까지인 상품을 할인해 팝니다', time: 1, tired: 4, markdown: true },
+            { id: 'rest',     t: '잠깐 쉰다',     d: '피로가 줄어 실수할 확률이 낮아집니다', time: 1, tired: -22 }
+        ];
+
+        // 여러 밤에 걸쳐 다시 만나는 사람들
+        const REGULAR_NAMES = { granny: '할머니', student: '수험생', guard: '경비 아저씨' };
+
+        // 작은 성취. 숫자만 오르면 심심하니 밤마다 한 번씩 짚어 준다.
+        const MILESTONES = [
+            { id: 'nowaste3', text: '3일 연속 폐기 없이 마감했습니다.', check: (st) => st.streakNoWaste >= 3 },
+            { id: 'big',      text: '하룻밤 매출 20만원을 넘겼습니다.',   check: (st) => st.night.sales >= 200000 },
+            { id: 'clean90',  text: '청결과 진열을 모두 90 이상으로 넘겼습니다.', check: (st) => st.clean >= 90 && st.shelf >= 90 },
+            { id: 'noloss',   text: '한 명도 빈손으로 돌려보내지 않았습니다.', check: (st) => st.night.lost === 0 },
+            { id: 'week',     text: '일주일을 버텼습니다. 절반 왔습니다.', check: (st) => st.day === 7 },
+            { id: 'bond',     text: '단골 세 사람과 모두 친해졌습니다.', check: (st) => Object.values(st.bond).filter(v => v >= 3).length >= 3 }
+        ];
+
+        const SAVE_KEY = 'night-shift-save';
+        const BEST_KEY = 'night-shift-best';
+        const TOTAL_DAYS = 14;
+        const SLOTS = 8;
+        const WAGE = 12000;          // 시급
+        const MAX_STRIKES = 3;
+
+        // ── 상태 ─────────────────────────────────────────
+        let state = null;
+
+        function freshState() {
+            return {
+                day: 1,
+                boss: null,
+                bond: {},              // 단골과의 관계
+                achieved: [],          // 달성한 마일스톤
+                streakNoWaste: 0,
+                pay: 0,
+                score: 0,
+                strikes: 0,
+                clean: 100,
+                shelf: 100,
+                tired: 0,
+                totalWaste: 0,
+                // 재고: {itemId: [{qty, expDay}]}
+                stock: initialStock(),
+                order: Object.fromEntries(ITEMS.map(i => [i.id, 0])),
+                slot: 0,
+                night: null,
+                finished: false,
+                fired: false
+            };
+        }
+
+        function initialStock() {
+            const s = {};
+            ITEMS.forEach(i => {
+                // 첫날은 전 타임이 남긴 재고로 시작한다
+                const qty = i.life === 1 ? i.unit : i.unit * 2;
+                s[i.id] = [{ qty, expDay: i.life === 99 ? 999 : 1 + i.life - 1 }];
+            });
+            return s;
+        }
+
+        function stockQty(st, id) {
+            return (st.stock[id] || []).reduce((a, b) => a + b.qty, 0);
+        }
+
+        // ── 저장 ─────────────────────────────────────────
+        function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { } }
+
+        function load() {
+            try {
+                const raw = localStorage.getItem(SAVE_KEY);
+                if (!raw) return null;
+                const s = JSON.parse(raw);
+                if (typeof s !== 'object' || typeof s.day !== 'number' || !s.stock) return null;
+                return { ...freshState(), ...s };
+            } catch { return null; }
+        }
+
+        // ── 판매 ─────────────────────────────────────────
+        // 한 시간대의 손님을 처리한다. 원하는 물건이 없으면 그냥 나간다(기회손실).
+        function serveHour(st, hourIdx, rand, mul = 1) {
+            const H = HOURS[hourIdx];
+            const guests = Math.round(H.guests * mul * (0.8 + rand() * 0.4));
+            // 진열이 엉망이면 눈에 안 띄어 덜 팔린다.
+            // 지저분한 가게도 손님이 덜 들어오지만, 영향은 진열보다 약하다.
+            const shelfFactor = (0.65 + (st.shelf / 100) * 0.35) * (0.93 + (st.clean / 100) * 0.07);
+
+            const ids = Object.keys(H.want);
+            const weights = ids.map(id => H.want[id]);
+            const total = weights.reduce((a, b) => a + b, 0);
+
+            let sales = 0, sold = 0, lost = 0;
+
+            for (let i = 0; i < guests; i++) {
+                if (rand() > shelfFactor) continue;   // 진열이 나쁘면 못 찾고 나간다
+
+                let r = rand() * total, pick = ids[ids.length - 1];
+                for (let k = 0; k < ids.length; k++) { r -= weights[k]; if (r <= 0) { pick = ids[k]; break; } }
+
+                if (takeOne(st, pick)) {
+                    const item = ITEMS.find(x => x.id === pick);
+                    sales += item.price;
+                    sold++;
+                } else {
+                    lost++;
+                }
+            }
+            return { sales, sold, lost };
+        }
+
+        // 유통기한이 가까운 것부터 판다(선입선출).
+        function takeOne(st, id) {
+            const lots = st.stock[id];
+            if (!lots || !lots.length) return false;
+            lots.sort((a, b) => a.expDay - b.expDay);
+            const lot = lots.find(l => l.qty > 0);
+            if (!lot) return false;
+            lot.qty--;
+            if (lot.qty === 0) st.stock[id] = lots.filter(l => l.qty > 0);
+            return true;
+        }
+
+        // 오늘까지인 재고를 할인해 턴다. 폐기보다는 낫다.
+        function doMarkdown(st, rand) {
+            let got = 0, cleared = 0;
+            ITEMS.forEach(item => {
+                const lots = st.stock[item.id] || [];
+                lots.forEach(lot => {
+                    if (lot.expDay > st.day) return;
+                    // 떨이는 반값. 전부 털리지는 않는다.
+                    const clear = Math.round(lot.qty * (0.68 + rand() * 0.27));
+                    got += clear * Math.round(item.price * 0.5);
+                    lot.qty -= clear;
+                    cleared += clear;
+                });
+                st.stock[item.id] = lots.filter(l => l.qty > 0);
+            });
+            return { got, cleared };
+        }
+
+        // 아침에 유통기한 지난 재고를 버린다.
+        function discardExpired(st) {
+            let loss = 0, count = 0;
+            ITEMS.forEach(item => {
+                const lots = st.stock[item.id] || [];
+                lots.forEach(lot => {
+                    if (lot.expDay <= st.day) { loss += lot.qty * item.cost; count += lot.qty; lot.qty = 0; }
+                });
+                st.stock[item.id] = lots.filter(l => l.qty > 0);
+            });
+            return { loss, count };
+        }
+
+        // ── 밤 진행 ──────────────────────────────────────
+        function pickEvent(st, hourIdx, rand) {
+            const h = HOURS[hourIdx].h;
+            const inRange = (e) => {
+                if (e.minHour <= e.maxHour) return h >= e.minHour && h <= e.maxHour;
+                return h >= e.minHour || h <= e.maxHour;   // 자정을 넘는 구간
+            };
+            const forced = EVENTS.filter(e => e.forced && inRange(e) && !st.night.fired.includes(e.id));
+            if (forced.length) return forced[0];
+
+            let pool = EVENTS.filter(e => !e.idle && !e.forced && inRange(e) && !st.night.fired.includes(e.id));
+
+            // 점검은 청결형 점장이 자주 온다. 다른 점장도 아주 가끔은 들른다.
+            const inspectChance = st.boss === 'clean' ? 1 : 0.22;
+            if (rand() > inspectChance) pool = pool.filter(e => e.id !== 'inspect');
+
+            const eventChance = st.boss === 'clean' ? 0.72 : 0.6;
+            if (pool.length && rand() < eventChance) {
+                return pool[Math.floor(rand() * pool.length)];
+            }
+            return EVENTS.find(e => e.idle);
+        }
+
+        function applyChoice(st, choice, rand) {
+            const log = [];
+            let sales = 0, lost = 0;
+
+            if (choice.clean) st.clean = Math.max(0, Math.min(100, st.clean + choice.clean));
+            if (choice.shelf) st.shelf = Math.max(0, Math.min(100, st.shelf + choice.shelf));
+            if (choice.tired) st.tired = Math.max(0, Math.min(100, st.tired + choice.tired));
+            if (choice.care) st.night.care += choice.care;
+
+            // 피로가 높으면 대응이 어설퍼진다
+            if (st.tired > 70 && choice.time > 0 && rand() < (st.tired - 70) / 90) {
+                st.clean = Math.max(0, st.clean - 6);
+                st.night.care -= 4;
+                log.push({ type: 'bad', who: '😵', text: '피로가 쌓여 손이 굼떴습니다. 마무리가 엉성합니다.' });
+            }
+
+            if (choice.sales) { sales += choice.sales; }
+
+            if (choice.markdown) {
+                const m = doMarkdown(st, rand);
+                sales += m.got;
+                st.night.markdownCleared += m.cleared;
+                log.push(m.cleared
+                    ? { type: 'good', who: '🏷️', text: `유통기한 임박 ${m.cleared}개를 반값에 털었습니다.` }
+                    : { type: '', who: '🏷️', text: '털어낼 임박 상품이 없습니다.' });
+            }
+
+            if (choice.waste) {
+                st.night.extraWaste = (st.night.extraWaste || 0) + choice.waste;
+                log.push({ type: 'bad', who: '🧊', text: `아이스크림 일부가 녹아 ${choice.waste.toLocaleString()}원어치를 버렸습니다.` });
+            }
+
+            // 반복해서 마주치는 손님들. 몇 번 마음을 쓰면 관계가 쌓인다.
+            if (choice.regular) {
+                st.bond[choice.regular] = (st.bond[choice.regular] || 0) + 1;
+                const n = st.bond[choice.regular];
+                const who = REGULAR_NAMES[choice.regular];
+                if (n === 3) {
+                    st.night.care += 14;
+                    log.push({ type: 'good', who: '💚', text: `${who}이(가) 이제 나를 알아보고 인사합니다.` });
+                } else if (n === 5) {
+                    st.night.care += 22;
+                    log.push({ type: 'good', who: '🎁', text: `${who}이(가) 고맙다며 음료수를 사 주고 갔습니다.` });
+                }
+            }
+
+            if (choice.risk === 'key') {
+                if (rand() < 0.3) {
+                    st.night.care -= 8;
+                    log.push({ type: 'warn', who: '🔑', text: '화장실 열쇠가 돌아오지 않았습니다.' });
+                }
+            }
+
+            if (choice.risk === 'fridge') {
+                if (rand() < 0.4) {
+                    st.night.extraWaste = (st.night.extraWaste || 0) + 12000;
+                    st.night.care -= 10;
+                    log.push({ type: 'bad', who: '🧯', text: '2번 냉장고가 결국 멈췄습니다. 우유를 버려야 했습니다.' });
+                }
+            }
+
+            if (choice.risk === 'id') {
+                // 미성년자 판매는 절대 유리한 선택이 되면 안 된다.
+                // 사건 종류가 늘면서 마주칠 기회가 줄자 '한 번 팔고 마는' 이득이 생겼다.
+                // 그래서 한 번만 걸려도 치명적이도록 경고를 두 번 준다.
+                if (rand() < 0.55) {
+                    st.strikes += 2;
+                    st.night.care -= 45;
+                    log.push({ type: 'bad', who: '🚨', text: '청소년보호법 위반으로 적발됐습니다. 경고 2회와 영업정지 경고를 받았습니다.' });
+                } else {
+                    log.push({ type: 'warn', who: '😬', text: '이번엔 넘어갔습니다. 다음에도 그러리란 보장은 없습니다.' });
+                }
+            }
+
+            if (choice.inspect) {
+                const level = (st.clean + st.shelf) / 2;
+                if (level >= 70) { st.night.care += 12; log.push({ type: 'good', who: '👔', text: '점장이 매장을 둘러보고 만족했습니다.' }); }
+                else if (level >= 45) { st.night.care -= 6; log.push({ type: 'warn', who: '👔', text: '점장이 매대를 한참 보다 갔습니다.' }); }
+                else if (st.boss === 'clean') {
+                    // 청결을 보는 점장에게만 경고까지 간다.
+                    st.strikes++; st.night.care -= 18;
+                    log.push({ type: 'bad', who: '👔', text: '매장 상태가 엉망이라 경고를 받았습니다.' });
+                } else {
+                    st.night.care -= 15;
+                    log.push({ type: 'bad', who: '👔', text: '매장 상태를 보고 점장 표정이 굳었습니다.' });
+                }
+            }
+
+            return { log, sales, lost, mul: choice.salesMul || 1 };
+        }
+
+        // ── 화면 ─────────────────────────────────────────
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        const won = (n) => `${Math.round(n).toLocaleString()}원`;
+        const bossOf = () => BOSSES.find(b => b.id === state.boss) || BOSSES[0];
+
+        function renderHud() {
+            document.getElementById('hud-day').textContent = `${state.day}/${TOTAL_DAYS}`;
+            document.getElementById('hud-pay').textContent = Math.round(state.pay).toLocaleString();
+            document.getElementById('hud-score').textContent = Math.round(state.score);
+            const sEl = document.getElementById('hud-strike');
+            sEl.textContent = `${state.strikes}/${MAX_STRIKES}`;
+            sEl.classList.toggle('hot', state.strikes > 0);
+
+            const bar = document.getElementById('boss-bar');
+            if (state.boss) {
+                const b = BOSSES.find(x => x.id === state.boss);
+                bar.style.display = '';
+                bar.innerHTML = '';
+                const l = document.createElement('span'); l.textContent = `${b.emoji} ${b.name}`;
+                const r = document.createElement('span'); r.textContent = b.note.split('.')[0];
+                bar.append(l, r);
+            } else bar.style.display = 'none';
+        }
+
+        function renderGauges() {
+            const set = (id, val) => {
+                const el = document.getElementById(id);
+                el.querySelector('.gv').textContent = Math.round(val);
+                el.classList.toggle('low', id === 'g-tired' ? val > 70 : val < 45);
+            };
+            set('g-clean', state.clean);
+            set('g-shelf', state.shelf);
+            set('g-tired', state.tired);
+        }
+
+        function renderBosses() {
+            const box = document.getElementById('boss-list');
+            box.innerHTML = '';
+            BOSSES.forEach(b => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'boss-pick';
+                const n = document.createElement('div'); n.className = 'bn'; n.textContent = `${b.emoji} ${b.name}`;
+                const d = document.createElement('div'); d.className = 'bd'; d.textContent = b.desc;
+                const w = document.createElement('div'); w.className = 'bw'; w.textContent = b.note;
+                btn.append(n, d, w);
+                btn.onclick = () => chooseBoss(b.id);
+                box.appendChild(btn);
+            });
+        }
+
+        function chooseBoss(id) {
+            state.boss = id;
+            startNight();
+        }
+
+        function startNight() {
+            state.slot = 0;
+            state.tired = Math.max(0, state.tired - 40);   // 낮에 좀 잤다
+
+            // 낮 타임이 어느 정도는 정리해 둔다. 그래서 매일 바닥에서 시작하지는 않는다.
+            // 다만 완전히 되돌려 주지는 않아서, 내가 잘해 두면 그만큼 높은 데서 출발한다.
+            state.clean = Math.min(100, state.clean + (72 - state.clean) * 0.5);
+            state.shelf = Math.min(100, state.shelf + (68 - state.shelf) * 0.5);
+            state.night = { sales: 0, lost: 0, sold: 0, care: 0, fired: [], markdownCleared: 0, log: [] };
+            save();
+            renderHud();
+            renderSlot();
+            showScreen('screen-night');
+        }
+
+        // 밤이 깊어지는 것이 화면에도 보이게 한다. 3시가 가장 어둡고 5시에 하늘이 튼다.
+        const NIGHT_TINT = ['#1b2a5e', '#182352', '#141c44', '#111838', '#0e142e', '#101530', '#1a1f45', '#2a2a5c'];
+
+        function renderSlot() {
+            const idx = state.slot;
+            const H = HOURS[idx];
+            document.body.style.background =
+                `radial-gradient(circle at 50% -10%, ${NIGHT_TINT[idx]} 0%, var(--bg) 60%)`;
+            document.getElementById('clock-time').textContent = `${String(H.h).padStart(2, '0')}:00`;
+            document.getElementById('clock-slot').textContent = `${idx + 1} / ${SLOTS}`;
+            document.getElementById('clock-bar').style.width = `${(idx / SLOTS) * 100}%`;
+            renderGauges();
+
+            const ev = pickEvent(state, idx, Math.random);
+            state.night.currentEvent = ev.id;
+            document.getElementById('ev-title').textContent = ev.title;
+            document.getElementById('ev-text').textContent = ev.text;
+
+            const box = document.getElementById('ev-choices');
+            box.innerHTML = '';
+            const list = ev.idle ? TASKS : ev.choices;
+            list.forEach(c => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'choice';
+                const t = document.createElement('div'); t.className = 'ct'; t.textContent = c.t;
+                const d = document.createElement('div'); d.className = 'cd'; d.textContent = c.d;
+                btn.append(t, d);
+                btn.onclick = () => takeSlot(ev, c);
+                box.appendChild(btn);
+            });
+
+            renderSlotLog();
+        }
+
+        function renderSlotLog() {
+            const box = document.getElementById('slot-log');
+            box.innerHTML = '';
+            const rows = state.night.log.slice(-6);
+            if (!rows.length) {
+                const r = document.createElement('div');
+                r.className = 'log-row';
+                const w = document.createElement('span'); w.className = 'who'; w.textContent = '🌙';
+                const t = document.createElement('span'); t.textContent = '근무를 시작했습니다.';
+                r.append(w, t); box.appendChild(r);
+                return;
+            }
+            rows.forEach(item => {
+                const r = document.createElement('div');
+                r.className = 'log-row ' + (item.type || '');
+                const w = document.createElement('span'); w.className = 'who'; w.textContent = item.who;
+                const t = document.createElement('span'); t.textContent = item.text;
+                r.append(w, t);
+                box.appendChild(r);
+            });
+        }
+
+        function takeSlot(ev, choice) {
+            const rand = Math.random;
+            if (!ev.idle) state.night.fired.push(ev.id);
+
+            const res = applyChoice(state, choice, rand);
+            res.log.forEach(l => state.night.log.push(l));
+
+            // 이 시간대의 판매를 처리한다
+            const sold = serveHour(state, state.slot, rand, res.mul);
+            state.night.sales += sold.sales + res.sales;
+            state.night.sold += sold.sold;
+            state.night.lost += sold.lost;
+
+            if (sold.lost > 0) {
+                state.night.log.push({ type: 'bad', who: '🚶', text: `찾는 물건이 없어 ${sold.lost}명이 그냥 나갔습니다.` });
+            }
+            if (sold.sold > 0) {
+                state.night.log.push({ type: 'good', who: '💳', text: `${sold.sold}건 판매 (${won(sold.sales)})` });
+            }
+
+            // 시간이 지나면 매장은 조금씩 어질러진다
+            state.clean = Math.max(0, state.clean - 3);
+            state.shelf = Math.max(0, state.shelf - 4);
+            state.tired = Math.min(100, state.tired + 4);
+
+            state.slot++;
+            save();
+
+            if (state.slot >= SLOTS) return closeNight();
+            renderHud();
+            renderSlot();
+        }
+
+        // ── 마감 ─────────────────────────────────────────
+        function closeNight() {
+            const n = state.night;
+
+            // 아침에 유통기한 지난 것을 버린다
+            const dumped = discardExpired(state);
+            dumped.loss += (n.extraWaste || 0);   // 사건으로 버린 것도 폐기다
+            state.totalWaste += dumped.loss;
+            state.streakNoWaste = dumped.loss === 0 ? state.streakNoWaste + 1 : 0;
+
+            const pay = WAGE * SLOTS;
+            state.pay += pay;
+
+            // 점장 평가 — 보는 지표가 사람마다 다르다
+            const b = BOSSES.find(x => x.id === state.boss);
+            const salesScore = Math.min(45, n.sales / 3600);
+            const wastePenalty = Math.min(30, dumped.loss / 2200);
+            const careScore = (state.clean + state.shelf) / 2 / 5 + n.care / 3;
+            const wSum = b.weight.sales + b.weight.waste + b.weight.care;
+            const todayScore =
+                (b.weight.sales * salesScore
+                    - b.weight.waste * wastePenalty
+                    + b.weight.care * careScore) / wSum * 2
+                - state.strikes * 4;
+            state.score += Math.round(todayScore * 10) / 10;
+
+            document.getElementById('close-title').textContent = `${state.day}일차 퇴근`;
+            document.getElementById('close-sub').textContent =
+                `${n.sold}건을 팔았고, ${n.lost}명은 그냥 돌아갔습니다.`;
+
+            const log = document.getElementById('close-log');
+            log.innerHTML = '';
+            const rows = [];
+            if (dumped.count > 0) rows.push({ type: 'bad', who: '🗑️', text: `유통기한이 지난 ${dumped.count}개를 폐기했습니다. (${won(dumped.loss)})` });
+            else rows.push({ type: 'good', who: '✨', text: '폐기 없이 마감했습니다.' });
+            if (n.markdownCleared > 0) rows.push({ type: 'good', who: '🏷️', text: `떨이로 ${n.markdownCleared}개를 살렸습니다.` });
+            if (state.clean < 45) rows.push({ type: 'warn', who: '🧹', text: '매장이 지저분한 채로 넘겼습니다.' });
+            if (state.shelf < 45) rows.push({ type: 'warn', who: '📦', text: '매대가 비어 보입니다. 다음 타임이 고생하겠네요.' });
+            if (state.strikes > 0) rows.push({ type: 'bad', who: '⚠️', text: `누적 경고 ${state.strikes}회. ${MAX_STRIKES}회면 잘립니다.` });
+
+            MILESTONES.forEach(m => {
+                if (state.achieved.includes(m.id)) return;
+                if (!m.check(state)) return;
+                state.achieved.push(m.id);
+                rows.push({ type: 'good', who: '🏅', text: m.text });
+            });
+
+            const bonded = Object.entries(state.bond).filter(([, v]) => v >= 3);
+            if (bonded.length) {
+                rows.push({
+                    type: 'good', who: '🤝',
+                    text: `단골: ${bonded.map(([k]) => REGULAR_NAMES[k]).join(', ')}`
+                });
+            }
+
+            rows.forEach(item => {
+                const r = document.createElement('div');
+                r.className = 'log-row ' + (item.type || '');
+                const w = document.createElement('span'); w.className = 'who'; w.textContent = item.who;
+                const t = document.createElement('span'); t.textContent = item.text;
+                r.append(w, t);
+                log.appendChild(r);
+            });
+
+            document.getElementById('r-sales').textContent = won(n.sales);
+            document.getElementById('r-waste').textContent = won(dumped.loss);
+            document.getElementById('r-lost').textContent = `${n.lost}명`;
+            document.getElementById('r-pay').textContent = won(pay);
+            const sc = document.getElementById('r-score');
+            sc.textContent = (todayScore >= 0 ? '+' : '') + (Math.round(todayScore * 10) / 10);
+            sc.className = 'v ' + (todayScore >= 0 ? 'plus' : 'minus');
+
+            save();
+            renderHud();
+
+            // 누가 점장이든, 매장을 망가뜨린 채 넘기면 그냥 넘어가지 않는다.
+            if (state.clean < 25 || state.shelf < 25) {
+                state.strikes++;
+                const r = document.createElement('div');
+                r.className = 'log-row bad';
+                const w = document.createElement('span'); w.className = 'who'; w.textContent = '📵';
+                const t = document.createElement('span');
+                t.textContent = '매장을 이 지경으로 두고 퇴근했습니다. 경고를 받았습니다.';
+                r.append(w, t); log.appendChild(r);
+                renderHud();
+            }
+            // 매출형 점장은 품절을 특히 못 견딘다.
+            if (state.boss === 'sales' && n.lost >= 14) {
+                state.strikes++;
+                const r = document.createElement('div');
+                r.className = 'log-row bad';
+                const w = document.createElement('span'); w.className = 'who'; w.textContent = '📞';
+                const t = document.createElement('span');
+                t.textContent = `손님 ${n.lost}명을 빈손으로 돌려보냈습니다. 점장에게 한 소리 들었습니다.`;
+                r.append(w, t); log.appendChild(r);
+                renderHud();
+            }
+
+            save();
+            if (state.strikes >= MAX_STRIKES) return endGame('fired');
+            showScreen('screen-close');
+        }
+
+        // ── 발주 ─────────────────────────────────────────
+        function goOrder() {
+            ITEMS.forEach(i => { state.order[i.id] = 0; });
+            renderOrder();
+            showScreen('screen-order');
+        }
+
+        function renderOrder() {
+            const box = document.getElementById('order-list');
+            box.innerHTML = '';
+            ITEMS.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'item-row';
+
+                const icon = document.createElement('div'); icon.className = 'icon'; icon.textContent = item.icon;
+
+                const name = document.createElement('div'); name.className = 'name';
+                name.textContent = item.name;
+                const tag = document.createElement('span');
+                tag.className = 'tag ' + (item.life <= 2 ? 'tag-fresh' : 'tag-keep');
+                tag.textContent = item.life === 99 ? '오래감' : `${item.life}일`;
+                name.appendChild(tag);
+
+                const meta = document.createElement('div'); meta.className = 'meta';
+                meta.textContent = `남은 재고 ${stockQty(state, item.id)}개 · 원가 ${item.cost.toLocaleString()} · 판매가 ${item.price.toLocaleString()}`;
+
+                const qty = document.createElement('div'); qty.className = 'qty';
+                const minus = document.createElement('button'); minus.textContent = '−';
+                minus.onclick = () => changeOrder(item.id, -item.unit);
+                const v = document.createElement('span'); v.className = 'v'; v.textContent = state.order[item.id];
+                const plus = document.createElement('button'); plus.textContent = '+';
+                plus.onclick = () => changeOrder(item.id, item.unit);
+                qty.append(minus, v, plus);
+
+                row.append(icon, name, qty, meta);
+                box.appendChild(row);
+            });
+
+            const cost = ITEMS.reduce((a, i) => a + state.order[i.id] * i.cost, 0);
+            document.getElementById('order-cost').textContent = won(cost);
+
+            const b = BOSSES.find(x => x.id === state.boss);
+            document.getElementById('order-tip-label').textContent = `${b.emoji} ${b.name}`;
+            document.getElementById('order-tip').textContent = b.note;
+            document.getElementById('order-hint').textContent =
+                '오늘 시킨 물건은 내일 새벽 배송으로 들어옵니다. 신선식품은 유통기한이 짧으니 남을 만큼 시키면 그대로 손실입니다.';
+        }
+
+        function changeOrder(id, delta) {
+            state.order[id] = Math.max(0, Math.min(120, state.order[id] + delta));
+            save();
+            renderOrder();
+        }
+
+        function nextDay() {
+            // 발주한 물건이 내일 도착한다
+            ITEMS.forEach(item => {
+                const q = state.order[item.id];
+                if (!q) return;
+                const expDay = item.life === 99 ? 999 : state.day + item.life;
+                state.stock[item.id] = state.stock[item.id] || [];
+                state.stock[item.id].push({ qty: q, expDay });
+            });
+
+            state.day++;
+            if (state.day > TOTAL_DAYS) return endGame('done');
+
+            startNight();
+        }
+
+        // ── 종료 ─────────────────────────────────────────
+        function endGame(reason) {
+            state.finished = true;
+            state.fired = reason === 'fired';
+            save();
+
+            const total = Math.round(state.score);
+            const best = saveBestRecord(BEST_KEY, total, false);
+
+            let grade, emoji, desc;
+            if (reason === 'fired') {
+                grade = '해고'; emoji = '📕';
+                desc = `경고 ${MAX_STRIKES}회가 쌓였습니다. ${state.day}일차에 잘렸습니다.`;
+            } else if (total >= bossOf().grades[0]) {
+                grade = '에이스 알바'; emoji = '🏆';
+                desc = '점장이 정직원 자리를 권했습니다.';
+            } else if (total >= bossOf().grades[1]) {
+                grade = '믿음직한 알바'; emoji = '🌟';
+                desc = '다음 달도 같이 일하자고 합니다.';
+            } else if (total >= bossOf().grades[2]) {
+                grade = '무난한 알바'; emoji = '🙂';
+                desc = '큰 사고 없이 2주를 마쳤습니다.';
+            } else {
+                grade = '버틴 2주'; emoji = '😮‍💨';
+                desc = '고생은 했는데 점장은 시큰둥합니다.';
+            }
+
+            document.getElementById('end-emoji').textContent = emoji;
+            document.getElementById('end-grade').textContent = grade;
+            document.getElementById('end-desc').textContent = desc + (best ? ' 🏅 최고 기록 경신!' : '');
+            document.getElementById('end-pay').textContent = won(state.pay);
+            document.getElementById('end-score').textContent = total;
+            document.getElementById('end-waste').textContent = won(state.totalWaste);
+            const bv = loadBestRecord(BEST_KEY);
+            document.getElementById('end-best').textContent = bv === null ? '-' : `${Math.round(bv)}점`;
+
+            renderHud();
+            showScreen('screen-end');
+        }
+
+        function resetGame() {
+            state = freshState();
+            save();
+            renderHud();
+            renderBosses();
+            showScreen('screen-start');
+        }
+
+        // ── 시작 ─────────────────────────────────────────
+        const saved = load();
+        if (saved && !saved.finished && saved.boss) {
+            state = saved;
+            renderHud();
+            if (!state.night) startNight();
+            else { renderSlot(); showScreen('screen-night'); }
+        } else {
+            resetGame();
+        }
+    </script>
+</body>
+
+</html>
