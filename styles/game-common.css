@@ -16,7 +16,9 @@
     --bg-primary: #0a0e27;
     --bg-secondary: #151932;
     --bg-card: rgba(30, 35, 60, 0.8);
-    --accent-primary: #6366f1;
+    /* #6366f1은 어두운 배경에서 3.86~4.25:1이라 작은 글자에 쓰면 본문 기준(4.5)을 못 넘겼다.
+       색조는 그대로 두고 밝기만 올려 가장 불리한 배경에서도 4.57:1이 되게 한다. */
+    --accent-primary: #7375f2;
     --accent-secondary: #8b5cf6;
     --accent-tertiary: #ec4899;
     --text-primary: #f8fafc;

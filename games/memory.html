@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>카드 뒤집기 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css?v=bed20c1e">
+    <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -23,8 +23,10 @@
             gap: 2rem;
             margin-bottom: 2rem;
             font-size: 1.2rem;
-            color: var(--text-secondary);
-            background: rgba(255, 255, 255, 0.5);
+            /* 0.5 불투명이면 어두운 페이지가 비쳐 중간 회색이 되고,
+               밝은 글자와 겹쳐 1.02:1까지 떨어졌다. 의도대로 밝은 패널로 만든다. */
+            color: #5b4a66;
+            background: rgba(255, 255, 255, 0.94);
             padding: 1rem;
             border-radius: 20px;
             backdrop-filter: blur(10px);
@@ -40,7 +42,7 @@
         .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--accent-primary);
+            color: #3730a3;   /* 밝은 패널 위에서 읽히는 진한 남보라 */
         }
 
         .memory-grid {
@@ -146,8 +148,10 @@
 
         .difficulty-btn {
             background: white;
+            /* --text-secondary(#cbd5e1)는 어두운 배경용이라 흰 버튼 위에서 1.48:1이었다.
+               거의 안 보이는 수준이라 보라 계열 진한 색으로 바꾼다. */
             border: 2px solid var(--cute-purple);
-            color: var(--text-secondary);
+            color: #5b4a66;
             padding: 0.5rem 1.5rem;
             border-radius: 20px;
             cursor: pointer;
@@ -156,7 +160,9 @@
         }
 
         .difficulty-btn.active {
-            background: var(--cute-purple);
+            /* 파스텔 보라(#e1bee7)에 흰 글자는 1.65:1이었다.
+               '선택됨 = 채워진 버튼'이라는 모양은 살리고 배경만 진하게 한다. */
+            background: #8e4fa3;
             color: white;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(225, 190, 231, 0.5);

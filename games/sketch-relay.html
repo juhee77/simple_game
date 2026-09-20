@@ -7,8 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FF6B6B;
-            --secondary: #4ECDC4;
+            --primary: #e14b4b;     /* 헤더 흰 글자 대비 확보 (기존 #FF6B6B는 2.78:1) */
+            --secondary: #2f8f88;   /* 흰 글자 대비 확보 (기존 #4ECDC4는 1.93:1) */
             --bg: #F7FFF7;
             --text: #2D3142;
         }
@@ -75,7 +75,7 @@
             </div>
             
             <button onclick="startGame()">게임 시작</button>
-            <button onclick="location.href='../index.html'" style="background:#ccc; margin-top:15px; font-size:1rem; padding:10px 20px;">로비로 돌아가기</button>
+            <button onclick="location.href='../index.html'" style="background:#6b7280; margin-top:15px; font-size:1rem; padding:10px 20px;">로비로 돌아가기</button>
         </div>
 
         <!-- Screen 1: Pass to Player 1 -->
@@ -126,7 +126,7 @@
             </div>
             <div style="display:flex; gap:10px;">
                 <button onclick="checkGuess()">정답 확인</button>
-                <button onclick="giveUp()" style="background:#FF6B6B;">포기</button>
+                <button onclick="giveUp()" style="background:var(--primary);">포기</button>
             </div>
         </div>
 
@@ -141,7 +141,7 @@
             </div>
 
             <button onclick="resetGame()">다시 하기</button>
-            <button onclick="location.href='../index.html'" style="background:#ccc; margin-top:15px; font-size:1rem; padding:10px 20px;">나가기</button>
+            <button onclick="location.href='../index.html'" style="background:#6b7280; margin-top:15px; font-size:1rem; padding:10px 20px;">나가기</button>
         </div>
     </div>
 
