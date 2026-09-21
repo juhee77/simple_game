@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>그룹 성향 레이더 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <style>
@@ -25,6 +27,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
       font-family: 'Outfit', 'Pretendard', sans-serif;
@@ -321,17 +324,28 @@
       </div>
     </div>
   </div>
-
-  <div class="help-btn" id="helpBtn">?</div>
-
-  <div class="modal" id="helpModal">
-    <div class="modal-content">
-      <h2>이용 방법</h2>
-      <p>각 참가자가 이름을 적고 5가지 질문의 슬라이더를 맞춘 뒤 '성향 등록'을 누르세요 (최소 2명).</p>
-      <p>'레이더 차트 분석'을 누르면 그룹 전체의 성향 레이더 차트와 궁합 꿀케미 조합을 시각화해 줍니다.</p>
-      <button class="close-modal" id="closeHelpBtn">닫기</button>
-    </div>
   </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "그룹 성향 레이더",
+ "players": "2~10인",
+ "time": "5분",
+ "goal": "우리 모임의 취향 분포를 그려 보고 잘 맞는 조합을 찾습니다.",
+ "steps": [
+  "참가자를 등록합니다.",
+  "각자 폰을 넘겨받아 취향 질문에 답합니다.",
+  "모두 끝나면 5가지 축의 레이더 차트가 그려집니다.",
+  "겹치는 취향과 갈리는 취향을 함께 봅니다.",
+  "추천된 꿀케미 조합으로 팀을 짜 보세요."
+ ],
+ "tips": [
+  "답할 때는 다른 사람이 화면을 보지 않게 하세요.",
+  "정답이 있는 질문이 아닙니다. 솔직하게 답할수록 결과가 재미있습니다.",
+  "여행이나 모임 계획을 세우기 전에 돌려 보면 취향 차이를 미리 알 수 있습니다."
+ ]
+}
+  </script>
 
   <script>
     const members = [];
@@ -501,12 +515,6 @@
       document.getElementById('harmonyVal').textContent = `${harmony}점`;
       document.getElementById('bestPairVal').textContent = bestPair || '-';
     }
-
-    const helpBtn = document.getElementById('helpBtn');
-    const helpModal = document.getElementById('helpModal');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
-    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
   </script>
 </body>
 </html>

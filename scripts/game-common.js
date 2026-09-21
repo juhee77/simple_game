@@ -232,8 +232,34 @@ function initRulesPanel() {
     document.body.appendChild(overlay);
 }
 
+
+// onclick만 달린 div/span은 마우스로는 눌리지만 키보드로는 갈 수도, 누를 수도 없다.
+// 게임마다 button으로 바꾸면 기존 스타일이 깨지므로, 여기서 한 번에 보완한다.
+// 이미 button/a이거나 tabindex를 직접 지정한 요소는 건드리지 않는다.
+function makeClickablesFocusable(root = document) {
+    const NATIVE = ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA', 'SUMMARY'];
+
+    root.querySelectorAll('[onclick]').forEach((el) => {
+        if (NATIVE.includes(el.tagName)) return;
+        if (el.hasAttribute('tabindex')) return;
+        if (el.dataset.kbReady) return;
+
+        el.dataset.kbReady = '1';
+        el.tabIndex = 0;
+        if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+
+        el.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            // 스페이스로 화면이 스크롤되지 않게 막는다
+            e.preventDefault();
+            el.click();
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initRulesPanel();
+    makeClickablesFocusable();
     // 1. Dynamic Back Button Logic
     const backBtn = document.querySelector('.back-button, .back-btn, .back');
     if (backBtn) {
@@ -249,6 +275,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Additional common game utilities can be added here
-    // (e.g., global volume control, high score saving, etc.)
+    // 게임이 진행 중에 그려 넣는 요소들도 키보드로 쓸 수 있게 이어서 보완한다
+    if (typeof MutationObserver === 'function') {
+        let pending = false;
+        new MutationObserver(() => {
+            if (pending) return;
+            pending = true;
+            // rAF는 탭이 화면에 없으면 실행되지 않아 늦게 그려진 요소를 놓친다
+            setTimeout(() => { pending = false; makeClickablesFocusable(); }, 0);
+        }).observe(document.body, { childList: true, subtree: true });
+    }
 });

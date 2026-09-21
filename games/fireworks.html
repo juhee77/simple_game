@@ -70,6 +70,7 @@
         }
 
         .panel-header {
+            min-height: 40px;   /* 접기 토글이라 눌리는 높이가 필요하다 */
             display: flex; justify-content: space-between; align-items: center;
             cursor: pointer;
         }
@@ -81,6 +82,7 @@
         }
         .color-selector { display: flex; gap: 8px; }
         .color-btn {
+            min-width: 36px; min-height: 36px;   /* 터치 영역 확보 (기존 25~28px) */
             width: 25px; height: 25px; border-radius: 50%; border: 2px solid transparent;
             cursor: pointer; transition: all 0.15s;
         }
@@ -110,7 +112,7 @@
 
     canvas{touch-action:manipulation}
 </style>
-    <script src="../scripts/game-common.js?v=b7c7301f"></script>
+    <script src="../scripts/game-common.js?v=841f759d"></script>
 </head>
 <body>
 

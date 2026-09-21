@@ -86,6 +86,12 @@
         }
 
         .item-tag button {
+            /* 11×19px이라 손가락으로 누르기 어려웠다. 알약 안에서 키울 수 있는 만큼 키운다. */
+            min-width: 30px;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: none;
             border: none;
             color: white;
@@ -169,7 +175,7 @@
         }
     canvas{touch-action:manipulation}
 </style>
-    <script src="../scripts/game-common.js?v=b7c7301f"></script>
+    <script src="../scripts/game-common.js?v=841f759d"></script>
 </head>
 
 <body>

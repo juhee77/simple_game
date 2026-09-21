@@ -41,7 +41,9 @@
         }
         .zone-title { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--accent); letter-spacing: 2px; }
         .header-actions { display: flex; gap: 10px; }
-        .icon-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; }
+        .icon-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;
+            min-width: 40px; min-height: 40px;   /* 터치 영역 확보 (기존 19×22) */
+            display: inline-flex; align-items: center; justify-content: center; }
 
         /* Game Scene */
         #scene-container {
@@ -132,7 +134,8 @@
             text-align: center;
             max-height: 80vh; overflow-y: auto;
         }
-        .close-overlay { position: absolute; top: 20px; right: 20px; font-size: 2rem; color: white; cursor: pointer; }
+        .close-overlay { position: absolute; top: 12px; right: 12px; font-size: 2rem; color: white; cursor: pointer;
+            min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
 
         /* Custom Puzzle Styles */
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
@@ -143,7 +146,7 @@
         .memory-log { font-size: 0.85rem; color: #94a3b8; font-style: italic; margin-top: 15px; text-align: left; border-top: 1px solid var(--border); padding-top: 10px; }
 
     </style>
-    <script src="../scripts/game-common.js?v=b7c7301f"></script>
+    <script src="../scripts/game-common.js?v=841f759d"></script>
 </head>
 <body>
 

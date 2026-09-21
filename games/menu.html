@@ -42,7 +42,13 @@
             align-items: center;
             gap: 0.5rem;
             cursor: pointer;
+            /* 체크박스만 20px이라 조준이 필요했다. 행 전체를 누를 수 있게 높이를 준다. */
+            min-height: 42px;
+            padding: 0 4px;
+            border-radius: 10px;
         }
+
+        .filter-option:hover { background: rgba(255, 255, 255, .05); }
 
         .filter-option input[type="checkbox"],
         .filter-option input[type="radio"] {
@@ -54,6 +60,7 @@
 
         .filter-option label {
             cursor: pointer;
+            padding: 11px 0;   /* 라벨을 눌러도 켜지므로 세로로 넓힌다 */
             color: var(--text-secondary);
             flex: 1;
         }
@@ -181,7 +188,7 @@
         }
 
     </style>
-    <script src="../scripts/game-common.js?v=b7c7301f"></script>
+    <script src="../scripts/game-common.js?v=841f759d"></script>
 </head>
 
 <body>

@@ -130,8 +130,16 @@
             font-size: 0.9rem;
             color: #ddd;
         }
+
+        /* 설정 라벨 높이가 18px이라 폰에서 체크하기 빡빡했다. */
+        label:has(input[type="checkbox"]) {
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
     </style>
-    <script src="../scripts/game-common.js?v=b7c7301f"></script>
+    <script src="../scripts/game-common.js?v=841f759d"></script>
 </head>
 
 <body>

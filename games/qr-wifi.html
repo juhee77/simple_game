@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wi-Fi & QR 생성기 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -26,6 +28,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
       font-family: 'Outfit', 'Pretendard', sans-serif;
@@ -267,17 +270,27 @@
       </div>
     </div>
   </div>
-
-  <div class="help-btn" id="helpBtn">?</div>
-
-  <div class="modal" id="helpModal">
-    <div class="modal-content">
-      <h2>이용 방법</h2>
-      <p>1. <strong>Wi-Fi QR</strong>: Wi-Fi 이름과 암호를 입력하면 스마트폰 카메라 스캔 한 번으로 비밀번호 입력 없이 즉시 연결할 수 있는 QR이 생성됩니다.</p>
-      <p>2. <strong>URL/텍스트 QR</strong>: 카카오톡 오픈채팅, 링크, 문구를 담은 QR코드를 바로 만듭니다.</p>
-      <button class="close-modal" id="closeHelpBtn">닫기</button>
-    </div>
   </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "Wi-Fi QR 생성기",
+ "players": "1인",
+ "time": "1분",
+ "goal": "손님이 비밀번호를 묻지 않아도 되도록 와이파이 QR을 만듭니다.",
+ "steps": [
+  "와이파이 이름(SSID)을 정확히 입력합니다. 대소문자를 구분합니다.",
+  "비밀번호와 보안 방식을 고릅니다.",
+  "만들어진 QR을 저장하거나 화면으로 보여줍니다.",
+  "손님이 카메라로 비추면 바로 연결됩니다."
+ ],
+ "tips": [
+  "QR은 이 기기 안에서만 만들어집니다. 비밀번호가 어디로도 전송되지 않습니다.",
+  "출력해서 가게나 집 한쪽에 붙여 두면 편합니다.",
+  "숨김 네트워크는 기기에 따라 자동 연결이 안 될 수 있습니다."
+ ]
+}
+  </script>
 
   <script>
     let mode = 'wifi';
@@ -355,12 +368,6 @@
       a.download = `qrcode_${Date.now()}.png`;
       a.click();
     }
-
-    const helpBtn = document.getElementById('helpBtn');
-    const helpModal = document.getElementById('helpModal');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
-    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
   </script>
 </body>
 </html>

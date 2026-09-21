@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>이벤트 사운드보드 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <style>
@@ -25,6 +27,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
       font-family: 'Outfit', 'Pretendard', sans-serif;
@@ -262,17 +265,26 @@
       <button class="stop-all-btn" onclick="stopAllSounds()">⏹️ 모든 소리 즉시 정지</button>
     </div>
   </div>
-
-  <div class="help-btn" id="helpBtn">?</div>
-
-  <div class="modal" id="helpModal">
-    <div class="modal-content">
-      <h2>이용 방법</h2>
-      <p>파티, 게임 진행, 회식, 레크리에이션 진행 시 상황에 맞는 효과음 버튼을 누르면 즉시 고품질 사운드가 재생됩니다.</p>
-      <p>별도의 음원 파일 다운로드 없이 브라우저 Web Audio API로 작동합니다.</p>
-      <button class="close-modal" id="closeHelpBtn">닫기</button>
-    </div>
   </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "이벤트 사운드보드",
+ "players": "1~30인",
+ "time": "제한 없음",
+ "goal": "모임 사회를 볼 때 필요한 효과음을 바로 틉니다.",
+ "steps": [
+  "필요한 순간에 맞는 버튼을 누릅니다.",
+  "드럼롤로 긴장을 만들고, 딩동댕이나 땡으로 정답을 가릅니다.",
+  "박수갈채로 마무리합니다."
+ ],
+ "tips": [
+  "폰 볼륨을 미리 올려 두세요. 사람이 많으면 잘 안 들립니다.",
+  "드럼롤을 깔고 결과를 발표하면 분위기가 삽니다.",
+  "퀴즈나 복불복 게임과 같이 쓰면 좋습니다."
+ ]
+}
+  </script>
 
   <script>
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -515,12 +527,6 @@
       osc.stop(now + 0.45);
       activeNodes.push(osc);
     }
-
-    const helpBtn = document.getElementById('helpBtn');
-    const helpModal = document.getElementById('helpModal');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    helpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
-    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
   </script>
 </body>
 </html>
