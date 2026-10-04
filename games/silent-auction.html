@@ -387,7 +387,7 @@
         <div class="game-header">
             <a href="../index.html" class="back-button">← 메인으로</a>
             <h1 class="game-title">🤫 침묵 경매</h1>
-            <p class="game-description">최소 단어 수를 몰래 입찰하고, 가장 낮게 부른 사람이 설명합니다.</p>
+            <p class="game-description">최소 글자(음절) 수를 몰래 입찰하고, 가장 짧게 부른 사람이 설명합니다.</p>
         </div>
 
         <div class="status-bar">
@@ -404,7 +404,7 @@
                 <div class="status-value" id="status-word">-</div>
             </div>
             <div class="status-item">
-                <span class="status-label">최저 입찰</span>
+                <span class="status-label">최저 글자 수</span>
                 <div class="status-value" id="status-bid">-</div>
             </div>
         </div>
@@ -415,9 +415,9 @@
                     <div class="hero-copy">
                         모든 플레이어가 같은 제시어를 보고
                         <br>
-                        “몇 단어 안에 설명할 수 있는지” 숫자로만 입찰합니다.
+                        “몇 글자(음절) 안에 설명할 수 있는지” 숫자로만 입찰합니다.
                         <br>
-                        가장 낮게 부른 사람이 실제로 설명에 도전합니다.
+                        가장 적은 글자 수를 부른 사람이 먼저 도전하고, 실패 시 -1점 감점 후 차순위자에게 기회가 이양됩니다.
                     </div>
                     <div class="setup-grid">
                         <div class="field">
@@ -474,9 +474,9 @@
 
             <section id="bid-screen" class="screen">
                 <div class="panel player-card">
-                    <div class="bid-copy" id="bid-copy">자신만 보고 선택하세요. 낮게 부를수록 직접 설명할 확률이 높습니다.</div>
+                    <div class="bid-copy" id="bid-copy">자신만 보고 선택하세요. 적게 부를수록 먼저 설명할 기회를 얻습니다.</div>
                     <div class="player-name" id="bid-player-label">플레이어 1</div>
-                    
+
                     <!-- Special Tactical Cards Selection -->
                     <div class="tactic-section" style="margin: 1.25rem 0; padding: 1.2rem; background: rgba(15, 23, 42, 0.85); border-radius: 20px; border: 1px dashed rgba(251, 191, 36, 0.25);">
                         <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.8rem;">🎭 이번 라운드 비밀 전술 카드 선택 (택 1)</div>
@@ -496,7 +496,7 @@
                         <span class="pill">입찰 공개</span>
                         <span class="pill" id="winner-pill">설명자 결정</span>
                     </div>
-                    <div class="auction-copy" id="auction-copy">가장 낮게 부른 플레이어가 설명합니다.</div>
+                    <div class="auction-copy" id="auction-copy">가장 적은 글자 수를 부른 플레이어가 먼저 설명합니다.</div>
                     <div class="auction-list" id="auction-list"></div>
                     <div class="controls">
                         <button class="button" type="button" onclick="startExplanation()">설명 도전 시작</button>
@@ -507,11 +507,11 @@
             <section id="play-screen" class="screen">
                 <div class="panel play-card">
                     <div class="subtitle-copy" id="play-player-copy">플레이어 1이 설명합니다.</div>
-                    <div class="play-word-limit" id="play-word-limit">3단어 제한</div>
-                    
+                    <div class="play-word-limit" id="play-word-limit">3글자 제한</div>
+
                     <!-- Tactical active card display -->
                     <div id="play-active-tactic" style="display:none; margin: 0.5rem auto; padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 800; font-size: 0.88rem; max-width: max-content;"></div>
-                    
+
                     <div class="target-word" id="play-target-word">오로라</div>
                     <div class="countdown-ring" id="countdown-ring" style="--progress:100;">
                         <div class="countdown-center">
@@ -522,16 +522,33 @@
                     <div class="subtitle-copy">
                         설명자는 제시어를 직접 말하면 안 됩니다.
                         <br>
-                        단어 수는 참가자들이 직접 세고, 성공 여부만 여기서 선택하세요.
+                        글자(음절) 수는 참가자들이 직접 카운트하고, 성공 여부를 누르세요.
                     </div>
                     <div class="play-checklist">
-                        <div class="play-check">1. 같은 단어를 반복해도 단어 수는 다시 셉니다.</div>
-                        <div class="play-check">2. 제시어 자체를 말하거나 철자를 힌트로 주면 바로 실패 처리하세요.</div>
-                        <div class="play-check">3. 제한 단어 안에 맞혔다고 모두 동의하면 성공을 누르세요.</div>
+                        <div class="play-check">1. 음절(글자) 단위로 카운트합니다. (예: "밤 하늘 빛" = 3글자)</div>
+                        <div class="play-check">2. 제시어 자체를 말하거나 철자/음절을 힌트로 주면 바로 실패 처리하세요.</div>
+                        <div class="play-check">3. 제한 글자 수 안에 맞혔다고 동의하면 성공을 누르세요.</div>
                     </div>
                     <div class="controls">
-                        <button class="button" type="button" onclick="finishRound(true)">성공</button>
-                        <button class="button button-secondary" type="button" onclick="finishRound(false)">실패</button>
+                        <button class="button" type="button" onclick="showSolverSelection()">성공</button>
+                        <button class="button button-secondary" type="button" onclick="handleExplanationFailure()">실패</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="solver-screen" class="screen">
+                <div class="panel result-card">
+                    <div class="status-strip">
+                        <span class="pill" style="background: rgba(34, 197, 94, 0.2); color: #86efac;">👏 설명 성공!</span>
+                        <span class="pill">최초 정답자 보상</span>
+                    </div>
+                    <div class="result-title" style="margin-top: 0.8rem;">🎉 최초 정답자 선택</div>
+                    <div class="subtitle-copy" style="margin-bottom: 1.2rem;">
+                        설명자의 힌트를 듣고 <strong>가장 먼저 제시어를 맞힌 플레이어</strong>를 선택하세요.<br>정답자에게도 <strong>+1점 보너스</strong>가 지급됩니다!
+                    </div>
+                    <div class="suspect-grid" id="solver-grid" style="margin-bottom: 1.2rem;"></div>
+                    <div class="controls">
+                        <button class="button button-secondary" type="button" onclick="confirmSuccess(null)">정답자 없음 / 선택 안 함</button>
                     </div>
                 </div>
             </section>
@@ -567,10 +584,11 @@
             bid: document.getElementById('bid-screen'),
             auctionResult: document.getElementById('auction-result-screen'),
             play: document.getElementById('play-screen'),
+            solver: document.getElementById('solver-screen'),
             roundResult: document.getElementById('round-result-screen')
         };
 
-        const bidOptions = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12];
+        const bidOptions = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15];
         const roundLabel = document.getElementById('round-label');
         const targetWordElement = document.getElementById('target-word');
         const statusRound = document.getElementById('status-round');
@@ -588,6 +606,7 @@
         const playTargetWord = document.getElementById('play-target-word');
         const countdownSeconds = document.getElementById('countdown-seconds');
         const countdownRing = document.getElementById('countdown-ring');
+        const solverGrid = document.getElementById('solver-grid');
         const resultTitle = document.getElementById('result-title');
         const resultDetail = document.getElementById('result-detail');
         const teamboard = document.getElementById('teamboard');
@@ -611,7 +630,9 @@
         let countdownTimer = null;
         let remainingSeconds = 30;
         let availableWords = [];
-        let playerTactics = []; // Tactical card selected by each player for this round
+        let playerTactics = [];
+        let rankedBidders = [];
+        let currentAttemptIndex = 0;
 
         function showScreen(name) {
             Object.values(screens).forEach((screen) => screen.classList.remove('active'));
@@ -671,7 +692,7 @@
             statusRound.textContent = `${currentRound} / ${totalRounds}`;
             statusMode.textContent = playMode === 'team' ? '팀전' : '개인전';
             statusWord.textContent = currentWord || '-';
-            statusBid.textContent = winningBid ? `${winningBid}단어` : '-';
+            statusBid.textContent = winningBid ? `${winningBid}글자` : '-';
         }
 
         function renderScoreboard() {
@@ -726,6 +747,8 @@
             winningBid = 0;
             activeBidders = Array.from({ length: playerCount }, (_, index) => index);
             tieBreakMode = false;
+            rankedBidders = [];
+            currentAttemptIndex = 0;
 
             roundLabel.textContent = `${currentRound} / ${totalRounds} 라운드`;
             targetWordElement.textContent = currentWord;
@@ -742,13 +765,13 @@
         function renderTacticOptions() {
             const grid = document.getElementById('tactic-grid');
             grid.innerHTML = '';
-            
+
             const list = [
                 { id: 'none', name: '🚫 전술 없음', emoji: '🚫', desc: '아무런 특수 카드를 사용하지 않고 일반 설명합니다.' },
                 { id: 'shield', name: '🛡️ 침묵의 방패', emoji: '🛡️', desc: '설명 실패 시 안전장치로 위로금 1점을 획득합니다.' },
                 { id: 'double', name: '⚡ 더블 타겟', emoji: '⚡', desc: '성공 시 점수 2배! 단, 실패하면 벌점 -1점을 받습니다.' },
                 { id: 'no_gesture', name: '🗣️ 몸짓 금지', emoji: '🗣️', desc: '말(단어)로만 설명하고 몸짓 금지. 성공 시 보너스 1점 추가!' },
-                { id: 'spy', name: '👁️ 스파이 입찰', emoji: '👁️', desc: '현재까지 제출된 다른 유저들의 최저 입찰 단어 수를 몰래 봅니다.' }
+                { id: 'spy', name: '👁️ 스파이 입찰', emoji: '👁️', desc: '현재까지 제출된 다른 유저들의 최저 입찰 글자 수를 몰래 봅니다.' }
             ];
 
             const playerIndex = activeBidders[currentPlayer];
@@ -762,19 +785,17 @@
                 btn.addEventListener('click', () => {
                     playerTactics[playerIndex] = item.id;
                     document.getElementById('tactic-desc').innerText = item.desc;
-                    
-                    // Spy mechanism
+
                     if (item.id === 'spy') {
                         const previousBids = bids.filter((b, idx) => b !== null && idx !== playerIndex);
                         if (previousBids.length > 0) {
                             const minPrev = Math.min(...previousBids);
-                            document.getElementById('tactic-desc').innerText = `👁️ 스파이 가동: 현재 다른 유저의 최저 입찰가는 [${minPrev}단어]입니다!`;
+                            document.getElementById('tactic-desc').innerText = `👁️ 스파이 가동: 현재 다른 유저의 최저 입찰가는 [${minPrev}글자]입니다!`;
                         } else {
                             document.getElementById('tactic-desc').innerText = `👁️ 스파이 가동: 당신이 첫 번째 입찰자라 스파이 정보가 없습니다!`;
                         }
                     }
-                    
-                    // Re-render to show active
+
                     renderTacticOptions();
                 });
                 grid.appendChild(btn);
@@ -793,7 +814,7 @@
                 button.type = 'button';
                 button.innerHTML = `
                     <span class="bid-label">입찰</span>
-                    <span class="bid-value">${bid}단어</span>
+                    <span class="bid-value">${bid}글자</span>
                 `;
                 button.addEventListener('click', () => submitBid(bid));
                 bidGrid.appendChild(button);
@@ -805,8 +826,8 @@
             bidPlayerLabel.textContent = getPlayerLabel(playerIndex);
             bidCopy.textContent = tieBreakMode
                 ? `동점자끼리 다시 부릅니다. 같은 가격이 또 나오면 추첨으로 설명자를 정합니다.`
-                : '자신만 보고 선택하세요. 낮게 부를수록 직접 설명할 확률이 높습니다.';
-                
+                : '자신만 보고 선택하세요. 적게 부를수록 먼저 설명할 기회를 얻습니다.';
+
             renderTacticOptions();
         }
 
@@ -834,33 +855,41 @@
             winningBid = Math.min(...activeBidders.map((playerIndex) => bids[playerIndex]));
             const tiedPlayers = activeBidders.filter((playerIndex) => bids[playerIndex] === winningBid);
 
-            if (tiedPlayers.length > 1 && !tieBreakMode && winningBid > 1) {
+            if (tiedPlayers.length > 1 && !tieBreakMode && winningBid > 2) {
                 tieBreakMode = true;
                 activeBidders = tiedPlayers;
                 currentPlayer = 0;
-                winnerPill.textContent = `동점 ${winningBid}단어`;
+                winnerPill.textContent = `동점 ${winningBid}글자`;
                 auctionCopy.textContent = '동점자들끼리 한 번 더 입찰합니다.';
                 startBidding();
                 return;
             }
 
-            explainerIndex = tiedPlayers[Math.floor(Math.random() * tiedPlayers.length)];
-            
+            // Create ranked bidders list sorted by lowest bid amount
+            rankedBidders = bids
+                .map((bid, playerIndex) => ({ playerIndex, bid }))
+                .filter((entry) => entry.bid !== null)
+                .sort((a, b) => a.bid - b.bid);
+
+            currentAttemptIndex = 0;
+            explainerIndex = rankedBidders[0].playerIndex;
+            winningBid = rankedBidders[0].bid;
+
             const tactic = playerTactics[explainerIndex];
             const tacticText = tactic && tactic !== 'none' ? ` [${getTacticLabel(tactic)}]` : '';
 
             winnerPill.textContent = tiedPlayers.length > 1
                 ? `동점 추첨: ${getPlayerLabel(explainerIndex)}${tacticText}`
-                : `설명자: ${getPlayerLabel(explainerIndex)}${tacticText}`;
+                : `1차 설명자: ${getPlayerLabel(explainerIndex)}${tacticText}`;
             auctionCopy.textContent = tiedPlayers.length > 1
-                ? `최저 입찰이 다시 같아 추첨으로 설명자를 정했습니다.`
-                : '가장 낮게 부른 플레이어가 설명합니다.';
+                ? `최저 입찰 동점으로 추첨하여 1차 설명자를 정했습니다.`
+                : '가장 적은 글자 수를 부른 플레이어가 먼저 설명합니다.';
 
             auctionList.innerHTML = '';
             bids.forEach((bid, index) => {
                 const row = document.createElement('div');
                 row.className = `auction-row ${index === explainerIndex ? 'winner' : ''}`;
-                
+
                 const pTactic = playerTactics[index];
                 const tacticTag = pTactic && pTactic !== 'none'
                     ? `<span style="font-size:0.78rem; font-weight:700; color:#fde68a; margin-left:0.5rem;">(${getTacticLabel(pTactic)})</span>`
@@ -872,7 +901,7 @@
                 row.innerHTML = `
                     <div class="auction-player">${getPlayerLabel(index)}${tacticTag}</div>
                     ${teamTag}
-                    <div class="auction-bid">${bid}단어</div>
+                    <div class="auction-bid">${bid}글자</div>
                 `;
                 auctionList.appendChild(row);
             });
@@ -883,11 +912,10 @@
 
         function startExplanation() {
             playPlayerCopy.textContent = `${getPlayerLabel(explainerIndex)}이 설명합니다.`;
-            playWordLimit.textContent = `${winningBid}단어 제한`;
+            playWordLimit.textContent = `${winningBid}글자 제한`;
             playTargetWord.textContent = currentWord;
             remainingSeconds = 30;
 
-            // Render active tactic badge
             const activeBadge = document.getElementById('play-active-tactic');
             const tactic = playerTactics[explainerIndex];
             if (tactic && tactic !== 'none') {
@@ -898,7 +926,7 @@
                 else if (tactic === 'double') { tacticName = '⚡ 더블 타겟 활성 (성공 2배 / 실패 -1점 감점)'; bg = 'rgba(239, 68, 68, 0.2)'; }
                 else if (tactic === 'no_gesture') { tacticName = '🗣️ 몸짓 금지 활성 (성공 시 +1점 보너스)'; bg = 'rgba(56, 189, 248, 0.2)'; }
                 else if (tactic === 'spy') { tacticName = '👁️ 스파이 입찰 사용됨'; bg = 'rgba(139, 92, 246, 0.2)'; }
-                
+
                 activeBadge.innerText = tacticName;
                 activeBadge.style.background = bg;
                 activeBadge.style.border = `1px solid ${bg.replace('0.2', '0.6')}`;
@@ -929,43 +957,97 @@
             countdownRing.style.setProperty('--progress', String((Math.max(remainingSeconds, 0) / 30) * 100));
         }
 
-        function finishRound(success) {
+        function showSolverSelection() {
             clearInterval(countdownTimer);
+            solverGrid.innerHTML = '';
 
-            const tactic = playerTactics[explainerIndex];
+            for (let i = 0; i < playerCount; i += 1) {
+                if (i === explainerIndex) continue;
 
-            if (success) {
-                const bonus = winningBid <= 2 ? 3 : winningBid <= 4 ? 2 : winningBid <= 6 ? 1 : 0;
-                let earned = 1 + bonus;
-                let descAdd = '';
-
-                if (tactic === 'no_gesture') {
-                    earned += 1;
-                    descAdd += '<br>🗣️ <strong>몸짓 금지</strong> 성공 보너스로 +1점 추가!';
-                }
-
-                if (tactic === 'double') {
-                    earned *= 2;
-                    descAdd += '<br>⚡ <strong>더블 타겟</strong> 적용으로 최종 점수가 <strong>2배</strong>로 증가합니다!';
-                }
-
-                scores[explainerIndex] += earned;
-                resultTitle.textContent = '👏 설명 성공';
-                resultDetail.innerHTML = `${getPlayerLabel(explainerIndex)}이 <strong>${winningBid}단어</strong> 안에 설명을 마쳤습니다.<br>기본 1점 + 저단어 보너스 ${bonus}점${descAdd}으로 총 <strong>${earned}점</strong>을 획득합니다.${playMode === 'team' ? '<br>팀전이므로 이 점수는 팀 합산에도 바로 반영됩니다.' : ''}`;
-            } else {
-                let descAdd = '';
-                if (tactic === 'double') {
-                    scores[explainerIndex] = Math.max(0, scores[explainerIndex] - 1);
-                    descAdd = '<br>⚡ <strong>더블 타겟</strong> 실패 패널티로 점수가 <strong>1점</strong> 감점됩니다!';
-                } else if (tactic === 'shield') {
-                    scores[explainerIndex] += 1;
-                    descAdd = '<br>🛡️ <strong>침묵의 방패</strong> 위로금 혜택으로 <strong>1점</strong>을 방어/획득했습니다!';
-                }
-
-                resultTitle.textContent = '💥 설명 실패';
-                resultDetail.innerHTML = `${getPlayerLabel(explainerIndex)}이 제한 안에 설명하지 못했습니다.${descAdd}<br>점수 획득 없이 종료됩니다.`;
+                const btn = document.createElement('button');
+                btn.className = 'suspect-btn';
+                btn.type = 'button';
+                btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                btn.textContent = getPlayerLabel(i);
+                btn.addEventListener('click', () => confirmSuccess(i));
+                solverGrid.appendChild(btn);
             }
 
+            showScreen('solver');
+        }
+
+        function confirmSuccess(solverIndex) {
+            const tactic = playerTactics[explainerIndex];
+            const bonus = winningBid <= 3 ? 3 : winningBid <= 5 ? 2 : winningBid <= 8 ? 1 : 0;
+            let earned = 1 + bonus;
+            let descAdd = '';
+
+            if (tactic === 'no_gesture') {
+                earned += 1;
+                descAdd += '<br>🗣️ <strong>몸짓 금지</strong> 성공 보너스로 +1점 추가!';
+            }
+
+            if (tactic === 'double') {
+                earned *= 2;
+                descAdd += '<br>⚡ <strong>더블 타겟</strong> 적용으로 최종 점수가 <strong>2배</strong>로 증가합니다!';
+            }
+
+            scores[explainerIndex] += earned;
+            let solverText = '';
+
+            if (solverIndex !== null) {
+                scores[solverIndex] += 1;
+                solverText = `<br>🎉 최초 정답자 <strong>${getPlayerLabel(solverIndex)}</strong>도 <strong>+1점 보너스</strong>를 획득합니다!`;
+            }
+
+            resultTitle.textContent = '👏 설명 성공!';
+            resultDetail.innerHTML = `${getPlayerLabel(explainerIndex)}이 <strong>${winningBid}글자</strong> 제한 안에 설명을 마쳤습니다.<br>기본 1점 + 저글자 보너스 ${bonus}점${descAdd}으로 총 <strong>${earned}점</strong>을 획득합니다.${solverText}${playMode === 'team' ? '<br>팀전이므로 팀 합산에 바로 반영됩니다.' : ''}`;
+
+            finalizeRoundResult();
+        }
+
+        function handleExplanationFailure() {
+            clearInterval(countdownTimer);
+
+            const prevExplainer = explainerIndex;
+            const tactic = playerTactics[prevExplainer];
+
+            // Apply failure penalty (-1 pt)
+            scores[prevExplainer] = Math.max(0, scores[prevExplainer] - 1);
+            let tacticNote = '';
+
+            if (tactic === 'double') {
+                scores[prevExplainer] = Math.max(0, scores[prevExplainer] - 1);
+                tacticNote = ' (더블 타겟 추가 패널티 -1점)';
+            } else if (tactic === 'shield') {
+                scores[prevExplainer] += 1;
+                tacticNote = ' (침묵의 방패 방어로 점수 보존)';
+            }
+
+            // Check if there is a 2nd chance bidder (차순위 입찰자)
+            currentAttemptIndex += 1;
+            if (currentAttemptIndex < rankedBidders.length) {
+                explainerIndex = rankedBidders[currentAttemptIndex].playerIndex;
+                winningBid = rankedBidders[currentAttemptIndex].bid;
+
+                resultTitle.textContent = '💥 설명 실패 (기회 이양!)';
+                resultDetail.innerHTML = `<strong>${getPlayerLabel(prevExplainer)}</strong> 설명 실패로 <strong>-1점 감점</strong> 되었습니다.${tacticNote}<br><br>👉 차순위 입찰자 <strong>${getPlayerLabel(explainerIndex)}</strong> (${winningBid}글자)에게 설명 기회가 이양됩니다!`;
+
+                renderScoreboard();
+                nextBtn.textContent = '차순위 설명 도전 시작';
+                nextBtn.onclick = () => {
+                    nextBtn.onclick = () => nextStep();
+                    startExplanation();
+                };
+                showScreen('roundResult');
+            } else {
+                resultTitle.textContent = '💥 모든 입찰자 실패';
+                resultDetail.innerHTML = `마지막 설명자 <strong>${getPlayerLabel(prevExplainer)}</strong>까지 실패했습니다. (-1점 감점)${tacticNote}<br>이번 라운드는 추가 점수 없이 종료됩니다.`;
+                finalizeRoundResult();
+            }
+        }
+
+        function finalizeRoundResult() {
             if (currentRound >= totalRounds) {
                 if (playMode === 'team') {
                     const totals = getTeamTotals();
@@ -991,6 +1073,7 @@
 
             renderScoreboard();
             nextBtn.textContent = currentRound >= totalRounds ? '처음부터 다시' : '다음 라운드';
+            nextBtn.onclick = () => nextStep();
             showScreen('roundResult');
         }
 
@@ -1007,16 +1090,16 @@
     <script type="application/json" id="game-rules">
 {
  "title": "침묵 경매",
- "goal": "가장 적은 단어로 제시어를 설명해 내세요.",
+ "goal": "가장 적은 글자(음절) 수로 제시어를 설명해 내세요.",
  "steps": [
-  "폰을 돌려가며 각자 '몇 단어 안에 설명할 수 있는지' 비밀 입찰합니다.",
-  "가장 적은 단어를 부른 사람이 설명에 도전합니다.",
-  "입찰한 단어 수를 넘기면 실패입니다.",
-  "성공하면 기본 점수에 저단어 보너스를 더해 받습니다.",
+  "폰을 돌려가며 각자 '몇 글자 이내로 설명할 수 있는지' 비밀 입찰합니다.",
+  "가장 짧은 글자 수를 부른 사람이 먼저 설명에 도전합니다.",
+  "설명 성공 시 설명자(보너스 점수)와 최초 정답자(+1점)가 함께 득점합니다.",
+  "설명 실패 시 -1점 감점되며, 차순위 입찰자에게 설명 기회가 이양됩니다!",
   "라운드를 반복하고 최고 점수를 낸 사람이 승리합니다."
  ],
  "tips": [
-  "무리하게 낮게 부르면 설명을 못 끝내고 0점이 됩니다."
+  "무리하게 낮은 글자 수를 불렀다가 실패하면 -1점 감점되니 주의하세요!"
  ],
  "players": "3~10인",
  "time": "약 15분"
