@@ -379,7 +379,7 @@
         <div class="game-header">
             <a href="../index.html" class="back-button">← 메인으로</a>
             <h1 class="game-title">🎭 가짜 취향 감별기</h1>
-            <p class="game-description">한 명만 가짜 미션을 받고, 나머지는 진짜 취향대로 답하세요.</p>
+            <p class="game-description">한 명만 비밀 미션을 수행합니다! 토론 후 다 함께 지목하세요.</p>
         </div>
 
         <div class="status-bar">
@@ -403,7 +403,7 @@
                     <div class="subtitle-box">
                         한 라운드마다 4개의 취향 질문이 나옵니다.
                         <br>
-                        한 명만 비밀 미션을 받고 답하기 때문에, 공개된 답변을 보고 누가 가짜였는지 맞히면 됩니다.
+                        한 명만 비밀 미션(청개구리, 눈치왕 등)을 받고 답합니다!
                     </div>
                     <div class="setup-grid">
                         <div class="field">
@@ -434,7 +434,7 @@
                         <button class="button" type="button" onclick="startGame()">게임 시작</button>
                     </div>
                     <div class="setup-tip" style="margin-top: 1rem;">
-                        답변 공개 뒤 토론하고, 전원이 비밀 투표합니다. 탐정 팀은 맞히면 1점, 가짜는 살아남으면 2점을 얻습니다.
+                        💡 답변 공개 뒤 토론하고 "하나, 둘, 셋!" 손가락 지목으로 투표하세요. 탐정 팀은 가짜를 맞히면 1점, 가짜는 속이고 살아남으면 2점을 얻습니다.
                     </div>
                 </div>
             </section>
@@ -448,22 +448,6 @@
                     <p class="subtitle-box">다음 플레이어만 화면을 확인하세요.</p>
                     <div class="pass-player" id="current-player-label">플레이어 1</div>
                     <button class="button" type="button" onclick="showRole()">역할 보기</button>
-                </div>
-            </section>
-
-            <section id="secret-screen" class="screen">
-                <div class="panel secret-card">
-                    <div class="round-banner">
-                        <span class="pill">비밀 전략</span>
-                        <span class="pill" id="secret-step-label">플레이어 1</span>
-                    </div>
-                    <div class="subtitle-box" id="secret-copy">
-                        다음 플레이어만 화면을 확인하세요.
-                    </div>
-                    <div class="pass-player" id="secret-player-label">플레이어 1</div>
-                    <div id="secret-action-area">
-                        <button class="button" type="button" onclick="openSecretAction()">확인</button>
-                    </div>
                 </div>
             </section>
 
@@ -501,44 +485,27 @@
             <section id="review-screen" class="screen">
                 <div class="panel">
                     <div class="round-banner">
-                        <span class="pill">답변 공개</span>
-                        <span class="pill">패턴을 보고 토론한 뒤 비밀 투표하세요</span>
+                        <span class="pill">답변 공개 & 자유 토론</span>
+                        <span class="pill" style="background: rgba(244, 63, 94, 0.2); color: #fda4af;">👉 다 함께 "하나, 둘, 셋!" 지목하세요</span>
+                    </div>
+                    <div class="subtitle-box" style="margin-bottom: 1rem; font-weight: 700;">
+                        모두의 답변표를 살펴보고 자유롭게 토론하세요.<br>토론이 끝나면 동시에 손가락으로 가짜라고 생각하는 사람을 지목합니다!
                     </div>
                     <div class="answer-board" id="answer-board"></div>
                     <div class="summary-board" id="summary-board"></div>
-                    <div class="controls">
-                        <button class="button" type="button" onclick="startVoting()">비밀 투표 시작</button>
-                    </div>
-                </div>
-            </section>
 
-            <section id="vote-pass-screen" class="screen">
-                <div class="panel pass-card">
-                    <div class="round-banner">
-                        <span class="pill">비밀 투표</span>
-                        <span class="pill" id="vote-step-label">1 / 4 표</span>
+                    <div id="vote-selection-area" style="margin-top: 1.5rem; padding: 1.2rem; background: rgba(15, 23, 42, 0.85); border-radius: 20px; border: 1px dashed rgba(244, 63, 94, 0.3); text-align: center;">
+                        <div style="font-weight: 800; font-size: 1.1rem; color: #f43f5e; margin-bottom: 0.4rem;">🎭 다수가 지목한 플레이어 클릭</div>
+                        <div style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.9rem;">손가락 지목으로 가장 많은 표를 받은 참가자를 선택하세요.</div>
+                        <div class="suspect-grid" id="suspect-select-grid"></div>
                     </div>
-                    <p class="subtitle-box">다음 플레이어만 화면을 확인하세요.</p>
-                    <div class="pass-player" id="vote-player-label">플레이어 1</div>
-                    <button class="button" type="button" onclick="openVoting()">투표하기</button>
-                </div>
-            </section>
-
-            <section id="vote-screen" class="screen">
-                <div class="panel secret-card">
-                    <div class="round-banner">
-                        <span class="pill">비밀 투표</span>
-                        <span class="pill" id="vote-secret-player-label">플레이어 1</span>
-                    </div>
-                    <div class="subtitle-box vote-copy" id="vote-copy">가짜라고 의심하는 사람을 고르세요. 본인에게는 투표할 수 없습니다.</div>
-                    <div class="suspect-grid" id="vote-grid"></div>
                 </div>
             </section>
 
             <section id="result-screen" class="screen">
                 <div class="panel result-card">
                     <div class="result-title" id="result-title"></div>
-                    <div class="score-grid">
+                    <div class="score-grid" style="grid-template-columns: repeat(2, 1fr);">
                         <div class="score-box">
                             <div class="score-label">이번 라운드 가짜</div>
                             <div class="score-value" id="round-fake-player">-</div>
@@ -546,10 +513,6 @@
                         <div class="score-box">
                             <div class="score-label">가짜 미션</div>
                             <div class="score-value" id="round-mission-label" style="font-size: 1rem; line-height: 1.5;">-</div>
-                        </div>
-                        <div class="score-box">
-                            <div class="score-label">역지목 대상</div>
-                            <div class="score-value" id="round-frame-player" style="font-size: 1rem; line-height: 1.5;">-</div>
                         </div>
                     </div>
                     <div class="result-detail" id="result-detail"></div>
@@ -594,16 +557,10 @@
         ];
 
         const MISSIONS = [
-            '무조건 더 돈 아낄 것 같은 쪽을 고르세요.',
-            '무조건 더 체력 덜 들 것 같은 쪽을 고르세요.',
-            '무조건 더 인싸처럼 보이는 쪽을 고르세요.',
-            '무조건 더 혼자 있기 좋은 쪽을 고르세요.',
-            '무조건 더 안전한 선택처럼 보이는 쪽을 고르세요.',
-            '무조건 오늘의 내가 되고 싶은 사람처럼 고르세요.',
-            '무조건 더 어른스러운 선택처럼 보이는 쪽을 고르세요.',
-            '무조건 더 귀찮아 보이는 선택은 피하고 고르세요.',
-            '무조건 SNS에 올리기 좋아 보이는 쪽을 고르세요.',
-            '무조건 더 감성적인 사람처럼 보이는 쪽을 고르세요.'
+            '🐸 청개구리 미션: 자신의 진짜 취향과 100% 반대로 선택하세요.',
+            '👁️ 눈치왕 미션: 다른 참가자들이 가장 많이 고를 것 같은 항목을 예측해서 선택하세요.',
+            '👑 극단 선택 미션: 두 보기 중 더 독특하고 극단적인 선택지 위주로 고르세요.',
+            '🛡️ 무난함 미션: 가장 무난하고 안전한 선택지만 골라 의심을 피하세요.'
         ];
 
         const THEME_LABELS = {
@@ -617,12 +574,9 @@
         const screens = {
             setup: document.getElementById('setup-screen'),
             pass: document.getElementById('pass-screen'),
-            secret: document.getElementById('secret-screen'),
             role: document.getElementById('role-screen'),
             question: document.getElementById('question-screen'),
             review: document.getElementById('review-screen'),
-            votePass: document.getElementById('vote-pass-screen'),
-            vote: document.getElementById('vote-screen'),
             result: document.getElementById('result-screen')
         };
 
@@ -632,10 +586,6 @@
         const roundLabel = document.getElementById('round-label');
         const questionSetLabel = document.getElementById('question-set-label');
         const currentPlayerLabel = document.getElementById('current-player-label');
-        const secretStepLabel = document.getElementById('secret-step-label');
-        const secretCopy = document.getElementById('secret-copy');
-        const secretPlayerLabel = document.getElementById('secret-player-label');
-        const secretActionArea = document.getElementById('secret-action-area');
         const roleBadge = document.getElementById('role-badge');
         const roleCopy = document.getElementById('role-copy');
         const missionCard = document.getElementById('mission-card');
@@ -646,15 +596,10 @@
         const optionRightValue = document.getElementById('option-right-value');
         const answerBoard = document.getElementById('answer-board');
         const summaryBoard = document.getElementById('summary-board');
-        const voteStepLabel = document.getElementById('vote-step-label');
-        const votePlayerLabel = document.getElementById('vote-player-label');
-        const voteSecretPlayerLabel = document.getElementById('vote-secret-player-label');
-        const voteCopy = document.getElementById('vote-copy');
-        const voteGrid = document.getElementById('vote-grid');
+        const suspectSelectGrid = document.getElementById('suspect-select-grid');
         const resultTitle = document.getElementById('result-title');
         const roundFakePlayer = document.getElementById('round-fake-player');
         const roundMissionLabel = document.getElementById('round-mission-label');
-        const roundFramePlayer = document.getElementById('round-frame-player');
         const resultDetail = document.getElementById('result-detail');
         const nextRoundBtn = document.getElementById('next-round-btn');
 
@@ -666,12 +611,10 @@
         let detectiveScore = 0;
         let fakeScore = 0;
         let fakerIndex = 0;
-        let frameTargetIndex = null;
         let selectedMission = '';
         let selectedTheme = 'all';
         let roundQuestions = [];
         let answers = [];
-        let votes = [];
         let availableQuestions = [];
         let availableMissions = [];
 
@@ -739,11 +682,9 @@
             currentPlayer = 0;
             currentQuestion = 0;
             fakerIndex = Math.floor(Math.random() * playerCount);
-            frameTargetIndex = null;
             selectedMission = pickMission();
             roundQuestions = pickQuestions();
             answers = Array.from({ length: playerCount }, () => []);
-            votes = Array.from({ length: playerCount }, () => null);
 
             roundLabel.textContent = `${currentRound} / ${totalRounds} 라운드`;
             questionSetLabel.textContent = `${THEME_LABELS[selectedTheme]} · ${roundQuestions.length}문항`;
@@ -761,8 +702,8 @@
             roleBadge.textContent = isFake ? '가짜 미션' : '진짜 취향';
             roleBadge.className = `role-badge ${isFake ? 'fake' : 'honest'}`;
             roleCopy.textContent = isFake
-                ? '정체를 숨기면서 4문항 모두 미션 기준으로 답하세요.'
-                : '평소 취향대로 자연스럽게 답하세요.';
+                ? '정체를 숨기면서 4문항 모두 비밀 미션 지침에 맞춰 답하세요.'
+                : '평소 취향대로 솔직하게 답하세요.';
             missionCard.style.display = isFake ? 'block' : 'none';
             missionText.textContent = selectedMission;
             showScreen('role');
@@ -794,61 +735,6 @@
             currentPlayer += 1;
             if (currentPlayer < playerCount) {
                 passToPlayer();
-                return;
-            }
-
-            startSecretPhase();
-        }
-
-        function startSecretPhase() {
-            currentPlayer = 0;
-            prepareSecretPass();
-        }
-
-        function prepareSecretPass() {
-            secretStepLabel.textContent = getPlayerLabel(currentPlayer);
-            secretPlayerLabel.textContent = getPlayerLabel(currentPlayer);
-            secretCopy.textContent = '다음 플레이어만 화면을 확인하세요.';
-            secretActionArea.innerHTML = '<button class="button" type="button" onclick="openSecretAction()">확인</button>';
-            showScreen('secret');
-        }
-
-        function openSecretAction() {
-            const isFake = currentPlayer === fakerIndex;
-            if (!isFake) {
-                secretCopy.textContent = '이번 단계에서는 할 일이 없습니다. 다음 사람에게 넘기세요.';
-                secretActionArea.innerHTML = '<button class="button" type="button" onclick="advanceSecretPhase()">다음 사람으로</button>';
-                return;
-            }
-
-            secretCopy.textContent = '탐정들이 잘못 찍게 만들고 싶은 대상을 한 명 고르세요.';
-            const grid = document.createElement('div');
-            grid.className = 'secret-grid';
-
-            for (let i = 0; i < playerCount; i += 1) {
-                if (i === fakerIndex) {
-                    continue;
-                }
-
-                const button = document.createElement('button');
-                button.className = 'secret-btn';
-                button.type = 'button';
-                button.textContent = getPlayerLabel(i);
-                button.addEventListener('click', () => {
-                    frameTargetIndex = i;
-                    advanceSecretPhase();
-                });
-                grid.appendChild(button);
-            }
-
-            secretActionArea.innerHTML = '';
-            secretActionArea.appendChild(grid);
-        }
-
-        function advanceSecretPhase() {
-            currentPlayer += 1;
-            if (currentPlayer < playerCount) {
-                prepareSecretPass();
                 return;
             }
 
@@ -904,88 +790,34 @@
                 summaryBoard.appendChild(summary);
             });
 
+            // Populate suspect selection grid for finger-pointing vote resolution
+            suspectSelectGrid.innerHTML = '';
+            for (let i = 0; i < playerCount; i += 1) {
+                const button = document.createElement('button');
+                button.className = 'suspect-btn';
+                button.type = 'button';
+                button.textContent = getPlayerLabel(i);
+                button.addEventListener('click', () => selectVotedPlayer(i));
+                suspectSelectGrid.appendChild(button);
+            }
+
             showScreen('review');
         }
 
-        function startVoting() {
-            currentPlayer = 0;
-            votes = Array.from({ length: playerCount }, () => null);
-            prepareVotePass();
-        }
-
-        function prepareVotePass() {
-            voteStepLabel.textContent = `${currentPlayer + 1} / ${playerCount} 표`;
-            votePlayerLabel.textContent = getPlayerLabel(currentPlayer);
-            showScreen('votePass');
-        }
-
-        function openVoting() {
-            voteSecretPlayerLabel.textContent = getPlayerLabel(currentPlayer);
-            voteCopy.textContent = '가짜라고 의심하는 사람을 고르세요. 본인에게는 투표할 수 없습니다.';
-            voteGrid.innerHTML = '';
-
-            for (let i = 0; i < playerCount; i += 1) {
-                if (i === currentPlayer) {
-                    continue;
-                }
-
-                const voteBtn = document.createElement('button');
-                voteBtn.className = 'suspect-btn';
-                voteBtn.type = 'button';
-                voteBtn.textContent = getPlayerLabel(i);
-                voteBtn.addEventListener('click', () => submitVote(i));
-                voteGrid.appendChild(voteBtn);
-            }
-
-            showScreen('vote');
-        }
-
-        function submitVote(suspectIndex) {
-            votes[currentPlayer] = suspectIndex;
-            currentPlayer += 1;
-
-            if (currentPlayer < playerCount) {
-                prepareVotePass();
-                return;
-            }
-
-            finalizeVotes();
-        }
-
-        function buildVoteSummary(voteCounts) {
-            return voteCounts
-                .map((count, index) => ({ count, index }))
-                .filter((entry) => entry.count > 0)
-                .sort((a, b) => b.count - a.count || a.index - b.index)
-                .map((entry) => `${getPlayerLabel(entry.index)} ${entry.count}표`)
-                .join(' · ');
-        }
-
-        function chooseSuspect(suspectIndex, voteCounts, leaders) {
+        function selectVotedPlayer(suspectIndex) {
             const caught = suspectIndex === fakerIndex;
             if (caught) {
                 detectiveScore += 1;
-                resultTitle.textContent = '🕵️ 탐정 팀 승리';
-                resultDetail.innerHTML = `최다 득표로 ${getPlayerLabel(suspectIndex)}이 공식 지목됐고, 실제 가짜와 일치했습니다.<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>탐정 팀이 1점을 획득합니다.`;
-            } else if (suspectIndex === null) {
-                const frameBonus = frameTargetIndex !== null && leaders.some((entry) => entry.index === frameTargetIndex) ? 1 : 0;
-                fakeScore += 2 + frameBonus;
-                resultTitle.textContent = '😈 가짜 생존 성공';
-                resultDetail.innerHTML = frameBonus
-                    ? `최다 득표가 동점으로 갈려 공식 지목이 무산됐습니다.<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>가짜의 역지목 대상이 상위권에 남아 <strong>총 3점</strong>을 획득합니다.`
-                    : `최다 득표가 동점으로 갈려 공식 지목이 무산됐습니다.<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>가짜가 2점을 획득합니다.`;
+                resultTitle.textContent = '🕵️ 탐정 팀 승리!';
+                resultDetail.innerHTML = `다수의 손가락 지목을 받은 <strong>${getPlayerLabel(suspectIndex)}</strong>이(가) 실제 가짜(라이어)였습니다!<br>탐정 팀이 <strong>1점</strong>을 획득합니다.`;
             } else {
-                const frameBonus = frameTargetIndex === suspectIndex ? 1 : 0;
-                fakeScore += 2 + frameBonus;
-                resultTitle.textContent = '😈 가짜 생존 성공';
-                resultDetail.innerHTML = frameBonus
-                    ? `탐정 팀이 속았습니다.<br>공식 지목: ${getPlayerLabel(suspectIndex)}<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>가짜의 역지목이 성공해 <strong>총 3점</strong>을 획득합니다.`
-                    : `탐정 팀이 속았습니다.<br>공식 지목: ${getPlayerLabel(suspectIndex)}<br>투표 결과: ${buildVoteSummary(voteCounts)}<br>가짜가 2점을 획득합니다.`;
+                fakeScore += 2;
+                resultTitle.textContent = '😈 가짜 생존 성공!';
+                resultDetail.innerHTML = `탐정 팀이 속았습니다!<br>지목된 <strong>${getPlayerLabel(suspectIndex)}</strong>은(는) 선량한 진짜 취향이었습니다.<br>가짜(<strong>${getPlayerLabel(fakerIndex)}</strong>)가 정체를 숨겨 <strong>2점</strong>을 획득합니다.`;
             }
 
             roundFakePlayer.textContent = getPlayerLabel(fakerIndex);
             roundMissionLabel.textContent = selectedMission;
-            roundFramePlayer.textContent = frameTargetIndex === null ? '-' : getPlayerLabel(frameTargetIndex);
             updateStatusBar();
 
             const finished = currentRound >= totalRounds;
@@ -1002,22 +834,6 @@
             showScreen('result');
         }
 
-        function finalizeVotes() {
-            const voteCounts = Array.from({ length: playerCount }, () => 0);
-            votes.forEach((voteIndex) => {
-                if (voteIndex !== null) {
-                    voteCounts[voteIndex] += 1;
-                }
-            });
-
-            const highestVote = Math.max(...voteCounts);
-            const leaders = voteCounts
-                .map((count, index) => ({ count, index }))
-                .filter((entry) => entry.count === highestVote);
-            const suspectIndex = leaders.length === 1 ? leaders[0].index : null;
-            chooseSuspect(suspectIndex, voteCounts, leaders);
-        }
-
         function nextStep() {
             if (currentRound >= totalRounds) {
                 showScreen('setup');
@@ -1029,19 +845,19 @@
     <script type="application/json" id="game-rules">
 {
  "title": "가짜 취향 감별기",
- "goal": "다른 질문을 받은 가짜 한 명을 찾아내세요.",
+ "goal": "가짜 미션을 수행하며 정체를 숨긴 가짜 한 명을 찾아내세요.",
  "steps": [
-  "폰을 돌려가며 각자 질문과 답변을 혼자 입력합니다.",
-  "한 명만 다른 질문을 받습니다. 본인은 그 사실을 압니다.",
-  "모두의 답변을 공개하고 어색한 답을 찾습니다.",
-  "누가 가짜인지 투표합니다.",
-  "가짜를 찾으면 탐정 팀, 못 찾으면 가짜가 이깁니다."
+  "폰을 돌려가며 4개의 취향 질문에 답합니다. (한 명만 비밀 미션 부여)",
+  "가짜는 '청개구리(반대로 고르기)', '눈치왕(다수 예측)' 등의 미션을 수행합니다.",
+  "모두의 답변표를 공개하고 함께 자유롭게 토론합니다.",
+  "'하나, 둘, 셋!' 하면 동시에 손가락으로 가짜를 지목합니다.",
+  "가짜를 맞히면 탐정 팀 승리, 속였으면 가짜 팀이 승리합니다."
  ],
  "tips": [
-  "가짜는 너무 튀지도, 너무 뻔하지도 않게 답하는 게 요령입니다."
+  "가짜는 티 나지 않게 미션을 수행하는 능청스러움이 필요합니다!"
  ],
  "players": "3~10인",
- "time": "약 15분"
+ "time": "약 10분"
 }
 </script>
 </body>
