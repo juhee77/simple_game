@@ -169,6 +169,11 @@
         <h2 id="writer-title">진실과 거짓 쓰기</h2>
         <p class="desc">자신에 대한 진실 2개와 거짓 1개를 작성하세요. 거짓 항목을 반드시 표시해야 합니다.</p>
 
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px 14px; border-radius: 12px; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">주변에 정답이 보이지 않게 감추기</span>
+            <button type="button" class="btn-primary" id="masking-toggle-btn" style="padding: 6px 12px; font-size: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);" onclick="toggleMasking()">🙈 비밀 마스킹 켜기</button>
+        </div>
+
         <div class="statement-field">
             <div class="statement-label">
                 <span>첫 번째 이야기</span>
@@ -261,6 +266,16 @@
         };
 
         const synth = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleMasking() {
+            const inputs = document.querySelectorAll('.statement-input');
+            const btn = document.getElementById('masking-toggle-btn');
+            const isMasked = inputs[0].type === 'password';
+            inputs.forEach(input => {
+                input.type = isMasked ? 'text' : 'password';
+            });
+            btn.innerText = isMasked ? '🙈 비밀 마스킹 켜기' : '👁️ 텍스트 보기';
+        }
 
         function playSound(type) {
             // iOS는 컨텍스트가 suspended로 시작하므로 재생 직전에 깨운다.
