@@ -328,6 +328,7 @@
                         <div class="history-list" id="history-list"></div>
                     </div>
                     <div class="controls">
+                        <button class="button button-secondary" type="button" onclick="copyFinalStory()">📋 최종 스토리 복사</button>
                         <button class="button" type="button" onclick="restartGame()">처음부터 다시</button>
                     </div>
                 </div>
@@ -510,6 +511,20 @@
             currentTurn = totalTurns;
             updateStatus();
             showScreen('result');
+        }
+
+        function copyFinalStory() {
+            const text = finalStory.textContent;
+            if (!text || text === '-') return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    gameAlert('최종 스토리가 클립보드에 복사되었습니다!');
+                }).catch(() => {
+                    gameAlert('복사에 실패했습니다.');
+                });
+            } else {
+                gameAlert('클립보드 기능을 지원하지 않는 브라우저입니다.');
+            }
         }
 
         function restartGame() {
