@@ -208,7 +208,7 @@
             <div style="font-size:2.4rem">📱</div>
             <div class="who" id="pass-who">플레이어 1</div>
             <p id="pass-desc">본인만 보고 다음 사람에게 넘겨주세요.</p>
-            <button class="btn" onclick="revealRole()">내 역할 확인</button>
+            <button class="btn" id="pass-btn" onclick="revealRole()">내 역할 확인</button>
         </div>
     </div>
 
@@ -332,6 +332,9 @@
         function goToPass() {
             document.getElementById('pass-who').textContent = `플레이어 ${current + 1}`;
             document.getElementById('pass-desc').textContent = '본인만 보고 다음 사람에게 넘겨주세요.';
+            const btn = document.getElementById('pass-btn');
+            btn.onclick = revealRole;
+            btn.textContent = '내 역할 확인';
             showScreen('screen-pass');
         }
 
@@ -496,6 +499,19 @@
         function startVoting() {
             clearInterval(talkTimer);
             current = 0;
+            goToVotePass();
+        }
+
+        function goToVotePass() {
+            document.getElementById('pass-who').textContent = `플레이어 ${current + 1}`;
+            document.getElementById('pass-desc').textContent = '본인만 비밀 투표를 진행해 주세요.';
+            const btn = document.getElementById('pass-btn');
+            btn.onclick = openVoteScreen;
+            btn.textContent = '투표하러 가기';
+            showScreen('screen-pass');
+        }
+
+        function openVoteScreen() {
             renderVote();
             showScreen('screen-vote');
         }
@@ -519,7 +535,7 @@
             voteCounts[target]++;
             current++;
             if (current >= playerCount) return showResult();
-            renderVote();
+            goToVotePass();
         }
 
         function showResult() {
