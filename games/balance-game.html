@@ -318,6 +318,7 @@
 
                 <div class="game-controls">
                     <button class="button" onclick="goHome()">돌아가기</button>
+                    <button class="button" onclick="shareQuestion()" style="background: var(--bg-secondary); border: 1px solid var(--border-color);">🔗 질문 공유하기</button>
                     <button class="button" onclick="nextQuestion()" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));">다음 질문 ➡️</button>
                 </div>
             </div>
@@ -432,6 +433,23 @@
         function nextQuestion() {
             currentIdx++;
             showQuestion();
+        }
+
+        function shareQuestion() {
+            const q = currentQuestions[currentIdx];
+            if (!q) return;
+            const mode = modeNames[currentMode] || '밸런스 게임';
+            const text = `⚖️ [밸런스 게임 - ${mode}]\nQ. ${q.q}\n\nA. ${q.a}\nVS\nB. ${q.b}`;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    gameAlert('질문이 클립보드에 복사되었습니다! 친구들에게 전달해 보세요.');
+                }).catch(() => {
+                    gameAlert('복사에 실패했습니다.');
+                });
+            } else {
+                gameAlert('클립보드 기능을 지원하지 않는 브라우저입니다.');
+            }
         }
 
         function goHome() {
