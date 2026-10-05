@@ -597,6 +597,22 @@
       }
     }
 
+    function drawImageCover(ctx, img, x, y, targetW, targetH) {
+      const imgRatio = img.width / img.height;
+      const targetRatio = targetW / targetH;
+      let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
+
+      if (imgRatio > targetRatio) {
+        sWidth = img.height * targetRatio;
+        sx = (img.width - sWidth) / 2;
+      } else {
+        sHeight = img.width / targetRatio;
+        sy = (img.height - sHeight) / 2;
+      }
+
+      ctx.drawImage(img, sx, sy, sWidth, sHeight, x, y, targetW, targetH);
+    }
+
     function render4CutFrame() {
       if (selectedIndices.length !== 4) return;
 
@@ -664,7 +680,7 @@
 
           ctx.save();
           applyFilterToContext(ctx);
-          ctx.drawImage(img, x, y, itemW, itemH);
+          drawImageCover(ctx, img, x, y, itemW, itemH);
           ctx.restore();
 
           loadedCount++;
