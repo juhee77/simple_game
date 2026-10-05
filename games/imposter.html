@@ -10,14 +10,14 @@
 .back{position:absolute;top:20px;left:20px;z-index:10}
 h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .setup{text-align:center;width:90%;max-width:400px}
-.setup input{width:80%;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1rem;font-family:inherit;margin:10px 0}
+.setup input, .setup select{width:80%;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1rem;font-family:inherit;margin:8px 0}
 .btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;padding:14px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
 .word-screen{display:none;text-align:center;width:90%;max-width:400px;margin-top:30px}
 .word-card{background:rgba(255,255,255,.05);padding:50px 30px;border-radius:30px;border:2px solid rgba(99,102,241,.3);margin:20px 0}
 .word-text{font-size:3rem;font-weight:900}
 .ghost-text{font-size:2rem;color:#ff4757}
 .player-label{font-size:1.5rem;font-weight:700;color:#a78bfa;margin-bottom:10px}
-.pass-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.98);z-index:50;flex-direction:column;align-items:center;justify-content:center}
+.pass-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.98);z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
 .vote-screen{display:none;text-align:center;width:90%;max-width:400px}
 .vote-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
 .vote-btn{padding:16px;border-radius:16px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .3s}
@@ -32,30 +32,42 @@ h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#6366f1,
 <h1>👻 네온 고스트</h1>
 <div class="setup" id="setup">
 <p style="color:#94a3b8;margin:15px 0">참가자 수를 입력하세요 (3~30명)</p>
-<input id="count" type="number" placeholder="참가자 수" min="3" max="30" value="4">
+<input id="count" type="number" placeholder="참가자 수" min="3" max="30" value="4" onchange="toggleGhostOption()">
+<div id="ghost-option-area" style="margin: 8px 0; display: none;">
+  <label style="color:#cbd5e1;font-size:0.9rem;margin-right:8px;">고스트 인원:</label>
+  <select id="ghost-count" style="width: auto; padding: 6px 12px; display: inline-block;">
+    <option value="1">1명</option>
+    <option value="2">2명</option>
+  </select>
+</div>
 <br><button class="btn" onclick="startGame()">시작!</button>
 </div>
+
 <div class="pass-overlay" id="pass-overlay">
 <p style="font-size:1.5rem;color:#94a3b8">📱 다음 사람에게 넘기세요</p>
 <p id="pass-label" style="font-size:2rem;font-weight:800;margin:15px 0"></p>
-<button class="btn" onclick="showWord()">확인하기 (혼자 보세요!)</button>
+<button class="btn" id="pass-confirm-btn" onclick="showWord()">확인하기 (혼자 보세요!)</button>
 </div>
+
 <div class="word-screen" id="word-screen">
 <div class="player-label" id="player-label"></div>
 <div class="word-card"><div class="word-text" id="word-text"></div></div>
 <p style="color:#94a3b8">기억했으면 다음으로 넘기세요!</p>
 <button class="btn" onclick="nextPlayer()">확인 완료</button>
 </div>
+
 <div class="vote-screen" id="vote-screen">
 <h2 id="vote-title" style="font-size:2rem;margin:20px 0">🗳️ 고스트는 누구?</h2>
-<p style="color:#94a3b8;margin-bottom:15px">토론이 끝나면 한 명씩 폰을 넘기며 투표하세요! (본인은 선택 불가)</p>
+<p style="color:#94a3b8;margin-bottom:15px">비밀 투표 단계입니다. 고스트라고 생각하는 사람을 선택하세요! (본인 불가)</p>
 <div class="vote-grid" id="vote-grid"></div>
 </div>
+
 <div class="result-screen" id="result-screen">
 <div class="big" id="result-text"></div>
 <p id="answer-text" style="color:#94a3b8;font-size:1.2rem"></p>
 <button class="btn" onclick="location.reload()">다시 하기</button>
 </div>
+
 <script>
 // 고스트는 제시어 대신 카테고리만 본다.
 const wordSets=[
@@ -70,28 +82,53 @@ const wordSets=[
 {cat:'장소',words:['바다','학교','도서관','박물관','미술관','영화관','노래방','PC방','카페','식당','은행','우체국','병원','약국','소방서','경찰서','공항','기차역','버스정류장','주유소','공원','동물원','식물원','놀이공원','워터파크','호텔','캠핑장','백화점','마트','시장','편의점']},
 {cat:'몸에 지니는 것',words:['우산','시계','운동화','선글라스','장갑','티셔츠','셔츠','니트','후드티','재킷','코트','패딩','청바지','치마','원피스','양말','모자','안경','목걸이','반지','귀걸이','벨트','넥타이','목도리','마스크']},
 ];
-// 카테고리 크기가 제각각이므로 단어를 균등하게 뽑고 그 단어의 카테고리를 쓴다.
+
 const wordPool=wordSets.flatMap(s=>s.words.map(w=>({w,cat:s.cat})));
-let total=4,ghostIdx=-1,currentPlayer=0,theWord='',theCategory='',votes=[],voteCounts=[];
+let total=4,ghostIndices=[],currentPlayer=0,theWord='',theCategory='',votes=[],voteCounts=[];
+
+function toggleGhostOption(){
+    const cnt = +document.getElementById('count').value || 4;
+    const area = document.getElementById('ghost-option-area');
+    if(cnt >= 6) {
+        area.style.display = 'block';
+    } else {
+        area.style.display = 'none';
+    }
+}
+
 function startGame(){
 total=Math.min(30,Math.max(3,+document.getElementById('count').value||4));
-ghostIdx=Math.floor(Math.random()*total);
+let numGhosts = 1;
+if(total >= 6 && document.getElementById('ghost-count')) {
+    numGhosts = Math.min(Math.floor(total / 3), +document.getElementById('ghost-count').value || 1);
+}
+
+ghostIndices = [];
+while(ghostIndices.length < numGhosts) {
+    const r = Math.floor(Math.random() * total);
+    if(!ghostIndices.includes(r)) ghostIndices.push(r);
+}
+
 const pick=wordPool[Math.floor(Math.random()*wordPool.length)];
 theWord=pick.w;theCategory=pick.cat;
 currentPlayer=0;votes=[];voteCounts=Array(total).fill(0);
 document.getElementById('setup').style.display='none';
 passToNext();
 }
+
 function passToNext(){
 document.getElementById('word-screen').style.display='none';
+document.getElementById('vote-screen').style.display='none';
 document.getElementById('pass-overlay').style.display='flex';
 document.getElementById('pass-label').textContent=`플레이어 ${currentPlayer+1}`;
+document.getElementById('pass-confirm-btn').onclick = showWord;
 }
+
 function showWord(){
 document.getElementById('pass-overlay').style.display='none';
 document.getElementById('word-screen').style.display='block';
 document.getElementById('player-label').textContent=`플레이어 ${currentPlayer+1}`;
-if(currentPlayer===ghostIdx){
+if(ghostIndices.includes(currentPlayer)){
 document.getElementById('word-text').innerHTML=`당신은 고스트!<br><span style="font-size:1.1rem;font-weight:600;opacity:.85">카테고리: ${theCategory}</span>`;
 document.getElementById('word-text').className='word-text ghost-text';
 }else{
@@ -99,19 +136,34 @@ document.getElementById('word-text').innerHTML=`${theWord}<br><span style="font-
 document.getElementById('word-text').className='word-text';
 }
 }
+
 function nextPlayer(){
 currentPlayer++;
 if(currentPlayer>=total){startVoting();return}
 passToNext();
 }
+
 function startVoting(){
 document.getElementById('word-screen').style.display='none';
+currentPlayer=0;
+passToVoteOverlay();
+}
+
+function passToVoteOverlay(){
+document.getElementById('vote-screen').style.display='none';
+document.getElementById('pass-overlay').style.display='flex';
+document.getElementById('pass-label').textContent=`🗳️ 플레이어 ${currentPlayer+1} (비밀 투표)`;
+document.getElementById('pass-confirm-btn').onclick = showVoteScreen;
+}
+
+function showVoteScreen(){
 document.getElementById('pass-overlay').style.display='none';
 document.getElementById('vote-screen').style.display='block';
-currentPlayer=0;renderVote();
+renderVote();
 }
+
 function renderVote(){
-document.getElementById('vote-title').textContent=`🗳️ 플레이어 ${currentPlayer+1}의 투표`;
+document.getElementById('vote-title').textContent=`🗳️ 플레이어 ${currentPlayer+1}의 비밀 투표`;
 const grid=document.getElementById('vote-grid');grid.innerHTML='';
 for(let i=0;i<total;i++){
 const btn=document.createElement('button');btn.className='vote-btn';
@@ -121,25 +173,34 @@ else btn.onclick=()=>castVote(i);
 grid.appendChild(btn);
 }
 }
+
 function castVote(target){
 votes.push(target);voteCounts[target]++;currentPlayer++;
 if(currentPlayer>=total){showResult();return}
-renderVote();
+passToVoteOverlay();
 }
+
 function showResult(){
 document.getElementById('vote-screen').style.display='none';
+document.getElementById('pass-overlay').style.display='none';
 document.getElementById('result-screen').style.display='block';
 const max=Math.max(...voteCounts);
 const top=voteCounts.map((c,i)=>[c,i]).filter(([c])=>c===max).map(([,i])=>i);
-if(top.length===1&&top[0]===ghostIdx){
+
+const caughtGhosts = top.filter(idx => ghostIndices.includes(idx));
+const isGhostVictory = caughtGhosts.length === 0;
+
+if(!isGhostVictory && top.length === 1 && ghostIndices.includes(top[0])){
 document.getElementById('result-text').innerHTML='<span style="color:#2ed573">🎉 고스트를 찾았습니다!</span>';
-}else if(top.length>1){
-document.getElementById('result-text').innerHTML='<span style="color:#ffa502">🤝 동표! 고스트가 살아남았습니다</span>';
+}else if(top.length > 1 && caughtGhosts.length > 0){
+document.getElementById('result-text').innerHTML='<span style="color:#ffa502">🤝 동표 발생! 고스트 생존</span>';
 }else{
 document.getElementById('result-text').innerHTML='<span style="color:#ff4757">😈 고스트가 생존했습니다!</span>';
 }
+
+const ghostLabel = ghostIndices.map(i => `플레이어 ${i+1}`).join(', ');
 document.getElementById('answer-text').innerHTML=
-`고스트: 플레이어 ${ghostIdx+1} · 제시어: ${theWord} (${theCategory})<br><span style="font-size:.95rem;opacity:.8">개표 — ${voteCounts.map((c,i)=>`P${i+1}:${c}표`).join(' · ')}</span>`;
+`고스트: ${ghostLabel} · 제시어: ${theWord} (${theCategory})<br><span style="font-size:.95rem;opacity:.8">개표 — ${voteCounts.map((c,i)=>`P${i+1}:${c}표`).join(' · ')}</span>`;
 }
 </script>
     <script type="application/json" id="game-rules">
@@ -147,17 +208,16 @@ document.getElementById('answer-text').innerHTML=
  "title": "네온 고스트",
  "players": "3~30인",
  "time": "약 10분",
- "goal": "제시어를 모르는 고스트 한 명을 찾아내세요.",
+ "goal": "제시어를 모르는 고스트를 찾아내세요.",
  "steps": [
-  "참가자 수를 정하고 폰을 돌려가며 각자 혼자 화면을 봅니다.",
-  "대부분은 제시어를, 고스트 한 명은 카테고리만 봅니다.",
+  "참가자 수를 정하고 폰을 돌려가며 제시어(또는 고스트 카테고리)를 확인합니다.",
   "돌아가며 제시어를 직접 말하지 않고 한 마디씩 설명합니다.",
-  "토론 후 한 명씩 폰을 넘기며 고스트라고 생각하는 사람에게 투표합니다.",
+  "토론 후 한 명씩 폰을 넘겨가며 비밀 투표를 진행합니다.",
   "최다 득표자가 고스트면 승리, 아니거나 동표면 고스트가 살아남습니다."
  ],
  "tips": [
   "고스트는 카테고리를 단서로 아는 척 섞여 들어가야 합니다.",
-  "너무 정확히 설명하면 자기가 고스트가 아님을 증명하다 제시어를 흘립니다."
+  "비밀 투표 시 폰을 넘겨 혼자 화면을 보고 투표하세요!"
  ]
 }
 </script>
