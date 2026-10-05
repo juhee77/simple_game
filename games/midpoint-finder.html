@@ -1359,8 +1359,8 @@
         }
       });
       
-      // 2. Draw participant points
-      participants.forEach(p => {
+      // 2. Draw participant points with staggered labels & background pill
+      participants.forEach((p, idx) => {
         const pos = getXY(p.station.lat, p.station.lng);
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, 7, 0, Math.PI * 2);
@@ -1369,18 +1369,28 @@
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
         ctx.stroke();
-        
-        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+
+        const labelY = pos.y + (idx % 2 === 0 ? -16 : 22);
+        const text = p.name;
         ctx.font = 'bold 12px Outfit, Pretendard, sans-serif';
+        const textWidth = ctx.measureText(text).width;
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(pos.x - textWidth / 2 - 4, labelY - 11, textWidth + 8, 16);
+        ctx.strokeStyle = 'rgba(255, 0, 110, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(pos.x - textWidth / 2 - 4, labelY - 11, textWidth + 8, 16);
+
+        ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
-        ctx.fillText(p.name, pos.x, pos.y - 12);
+        ctx.fillText(text, pos.x, labelY + 1);
       });
-      
-      // 3. Draw recommended spots
+
+      // 3. Draw recommended spots with staggered labels & background pill
       topSpots.forEach((st, i) => {
         const pos = getXY(st.lat, st.lng);
         const isSelected = i === selectedStationIndex;
-        
+
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, isSelected ? 10 : 6, 0, Math.PI * 2);
         ctx.fillStyle = isSelected ? '#ffd166' : i === 0 ? '#00d4ff' : '#7c3aed';
@@ -1388,11 +1398,21 @@
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = isSelected ? 3 : 1.5;
         ctx.stroke();
-        
-        ctx.fillStyle = isSelected ? '#ffd166' : i === 0 ? '#00d4ff' : 'rgba(255,255,255,0.8)';
-        ctx.font = isSelected ? 'bold 14px Outfit, sans-serif' : '11px Outfit, sans-serif';
+
+        const labelY = pos.y + (i % 2 === 0 ? 22 : -18);
+        const text = `${i+1}위 ${st.name}`;
+        ctx.font = isSelected ? 'bold 13px Outfit, sans-serif' : '11px Outfit, sans-serif';
+        const textWidth = ctx.measureText(text).width;
+
+        ctx.fillStyle = isSelected ? 'rgba(15, 23, 42, 0.9)' : 'rgba(15, 23, 42, 0.75)';
+        ctx.fillRect(pos.x - textWidth / 2 - 4, labelY - 11, textWidth + 8, 16);
+        ctx.strokeStyle = isSelected ? '#ffd166' : i === 0 ? '#00d4ff' : 'rgba(124, 58, 237, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(pos.x - textWidth / 2 - 4, labelY - 11, textWidth + 8, 16);
+
+        ctx.fillStyle = isSelected ? '#ffd166' : i === 0 ? '#00d4ff' : '#e2e8f0';
         ctx.textAlign = 'center';
-        ctx.fillText(`${i+1}위 ${st.name}`, pos.x, pos.y + (isSelected ? 22 : 18));
+        ctx.fillText(text, pos.x, labelY + 1);
       });
     }
 
