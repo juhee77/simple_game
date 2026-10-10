@@ -300,9 +300,82 @@
     }
 
     canvas {
-      max-width: 280px;
+      max-width: 100%;
+      height: auto;
+      max-height: 520px;
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .card.drag-over {
+      border-color: var(--cyan);
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
+    }
+
+    .ratio-options {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .ratio-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      padding: 8px 12px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .ratio-btn.active {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .btn-delete-photo {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #ff006e;
+      border: 1px solid rgba(255, 0, 110, 0.4);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      z-index: 2;
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    .btn-delete-photo:hover {
+      background: #ff006e;
+      color: white;
+      transform: scale(1.15);
+    }
+
+    .viewfinder-guide {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 2px dashed rgba(0, 212, 255, 0.7);
+      border-radius: 8px;
+      pointer-events: none;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.25);
+      transition: width 0.25s ease, height 0.25s ease;
     }
 
     .help-btn {
@@ -356,19 +429,33 @@
     </header>
 
     <div class="card">
-      <div class="video-container">
+      <div class="option-group" style="gap: 6px;">
+        <div class="option-sub-title">📐 사진 비율 지정</div>
+        <div class="ratio-options" id="shootRatioOptions">
+          <button class="ratio-btn active" data-ratio="4:3" onclick="setPhotoRatio('4:3', this)">↔️ 가로 (4:3)</button>
+          <button class="ratio-btn" data-ratio="3:4" onclick="setPhotoRatio('3:4', this)">↕️ 세로 (3:4)</button>
+          <button class="ratio-btn" data-ratio="16:9" onclick="setPhotoRatio('16:9', this)">🖥️ 와이드 (16:9)</button>
+          <button class="ratio-btn" data-ratio="9:16" onclick="setPhotoRatio('9:16', this)">📱 숏폼 (9:16)</button>
+          <button class="ratio-btn" data-ratio="1:1" onclick="setPhotoRatio('1:1', this)">⏹️ 정방형 (1:1)</button>
+        </div>
+      </div>
+
+      <div class="video-container" id="videoContainer">
         <video id="webcam" autoplay playsinline muted></video>
+        <div class="viewfinder-guide" id="viewfinderGuide"></div>
         <div class="countdown-overlay" id="countdownOverlay">3</div>
       </div>
 
       <div class="cam-controls">
         <button class="btn-secondary" onclick="toggleCamera()">🔄 전/후면 전환</button>
         <button onclick="startPhotoShoot()">📸 촬영 (3초 타이머)</button>
+        <button class="btn-secondary" onclick="document.getElementById('fileUploadInput').click()">📁 사진 불러오기</button>
+        <input type="file" id="fileUploadInput" accept="image/*" multiple style="display: none;" onchange="handleFileUpload(event)">
       </div>
 
       <div class="section-label">
-        <span>🖼️ 촬영한 사진 갤러리</span>
-        <span id="photoCount" style="color: var(--cyan);">0 / 10장</span>
+        <span>🖼️ 촬영 & 불러온 사진 갤러리</span>
+        <span id="photoCount" style="color: var(--cyan);">0 / 20장</span>
       </div>
 
       <div class="photo-grid" id="photoGrid"></div>
@@ -380,14 +467,27 @@
           <div class="option-sub-title">1. 프레임 레이아웃 배치</div>
           <div class="layout-options">
             <button class="layout-btn active" onclick="setLayout('v4', this)">📱 세로 4컷 (1x4)</button>
-            <button class="layout-btn" onclick="setLayout('grid2x2', this)">🖼️ 2x2 그리드</button>
+            <button class="layout-btn" onclick="setLayout('grid2x2', this)">🖼️ 2x2 그리드 (4:3)</button>
+            <button class="layout-btn" onclick="setLayout('grid2x2_16_9', this)">🎬 16:9 2x2 그리드</button>
+            <button class="layout-btn" onclick="setLayout('grid2x2_9_16', this)">📱 9:16 2x2 그리드</button>
             <button class="layout-btn" onclick="setLayout('film', this)">🎞️ 레트로 필름</button>
             <button class="layout-btn" onclick="setLayout('wide', this)">💌 와이드 가로 (4x1)</button>
           </div>
         </div>
 
         <div class="option-group">
-          <div class="option-sub-title">2. 프레임 컬러 앤 배경</div>
+          <div class="option-sub-title">2. 프레임 사진 비율 (가로 / 세로)</div>
+          <div class="ratio-options" id="frameRatioOptions">
+            <button class="ratio-btn active" data-ratio="4:3" onclick="setPhotoRatio('4:3', this)">↔️ 가로 (4:3)</button>
+            <button class="ratio-btn" data-ratio="3:4" onclick="setPhotoRatio('3:4', this)">↕️ 세로 (3:4)</button>
+            <button class="ratio-btn" data-ratio="16:9" onclick="setPhotoRatio('16:9', this)">🖥️ 와이드 (16:9)</button>
+            <button class="ratio-btn" data-ratio="9:16" onclick="setPhotoRatio('9:16', this)">📱 숏폼 (9:16)</button>
+            <button class="ratio-btn" data-ratio="1:1" onclick="setPhotoRatio('1:1', this)">⏹️ 정방형 (1:1)</button>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-sub-title">3. 프레임 컬러 앤 배경</div>
           <div class="color-options">
             <div class="color-dot active" style="background:#ff006e" onclick="setFrameColor('#ff006e', this)"></div>
             <div class="color-dot" style="background:#00d4ff" onclick="setFrameColor('#00d4ff', this)"></div>
@@ -399,7 +499,7 @@
         </div>
 
         <div class="option-group">
-          <div class="option-sub-title">3. 사진 필터 효과</div>
+          <div class="option-sub-title">4. 사진 필터 효과</div>
           <div class="filter-options">
             <button class="filter-btn active" onclick="setFilter('none', this)">원본</button>
             <button class="filter-btn" onclick="setFilter('bw', this)">클래식 흑백</button>
@@ -409,7 +509,7 @@
         </div>
 
         <div class="option-group">
-          <div class="option-sub-title">4. 기념 문구</div>
+          <div class="option-sub-title">5. 기념 문구</div>
           <input type="text" id="frameTitle" placeholder="프레임 문구 (예: 우정 영원히 2026)" value="NEON PHOTO 4-CUT">
         </div>
 
@@ -422,30 +522,37 @@
       </div>
     </div>
   </div>
-  </div>
 
   <script type="application/json" id="game-rules">
 {
  "title": "네온 4컷 사진관",
  "players": "1~10인",
  "time": "5분",
- "goal": "즉석에서 찍은 사진으로 기념 4컷 프레임을 만듭니다.",
+ "goal": "즉석에서 촬영하거나 불러온 사진으로 기념 4컷 프레임을 만듭니다.",
  "steps": [
-  "카메라를 켜고 앞뒤 중 원하는 쪽을 고릅니다.",
-  "여러 장을 찍습니다. 넉넉히 찍어 두면 고르기 좋습니다.",
-  "마음에 드는 네 장을 고릅니다.",
-  "레이아웃과 필터를 고릅니다.",
-  "완성된 프레임을 저장해 나눠 가지세요."
+  "카메라로 촬영하거나 파일 불러오기(드래그&드롭)로 사진을 준비합니다.",
+  "가로(4:3, 16:9), 세로(3:4, 9:16), 정방형 등 원하는 사진 비율을 고릅니다.",
+  "갤러리에서 마음에 드는 네 장의 사진을 선택합니다.",
+  "16:9 / 9:16 2x2 그리드, 세로 4컷 등 프레임 레이아웃과 필터를 고릅니다.",
+  "완성된 프레임을 확인하고 고화질 PNG로 다운로드합니다."
  ],
  "tips": [
-  "세로 4컷·2x2 그리드·레트로 필름·와이드 가로 중에서 고를 수 있습니다.",
-  "밝은 곳에서 찍어야 필터를 입혀도 얼굴이 잘 보입니다.",
-  "카메라 권한을 거부하면 촬영할 수 없습니다."
+  "16:9 2x2 그리드는 와이드 화면에, 9:16 2x2 그리드는 인스타 스토리나 숏폼에 최적화되어 있습니다.",
+  "카메라 없이도 PC나 스마트폰에 저장된 사진을 불러와 프레임을 제작할 수 있습니다.",
+  "사진 썸네일 좌측 상단의 ✕ 버튼으로 필요 없는 사진을 삭제할 수 있습니다."
  ]
 }
   </script>
 
   <script>
+    const RATIO_MAP = {
+      '4:3': { label: '가로 (4:3)', num: 4 / 3 },
+      '3:4': { label: '세로 (3:4)', num: 3 / 4 },
+      '16:9': { label: '가로 와이드 (16:9)', num: 16 / 9 },
+      '9:16': { label: '세로 숏폼 (9:16)', num: 9 / 16 },
+      '1:1': { label: '정방형 (1:1)', num: 1 }
+    };
+
     let currentStream = null;
     let facingMode = 'user';
     const capturedPhotos = [];
@@ -453,6 +560,7 @@
     let activeFrameColor = '#ff006e';
     let activeLayout = 'v4';
     let activeFilter = 'none';
+    let activePhotoRatio = '4:3';
 
     const video = document.getElementById('webcam');
     const countdownOverlay = document.getElementById('countdownOverlay');
@@ -469,6 +577,7 @@
           audio: false
         });
         video.srcObject = currentStream;
+        updateViewfinderGuide();
       } catch (e) {
         console.error("Camera access error:", e);
       }
@@ -480,9 +589,43 @@
       initCamera();
     }
 
+    function setPhotoRatio(ratio, el) {
+      if (!RATIO_MAP[ratio]) return;
+      activePhotoRatio = ratio;
+      document.querySelectorAll('#shootRatioOptions .ratio-btn, #frameRatioOptions .ratio-btn').forEach(btn => {
+        if (btn.dataset.ratio === ratio) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      updateViewfinderGuide();
+    }
+
+    function updateViewfinderGuide() {
+      const guide = document.getElementById('viewfinderGuide');
+      if (!guide) return;
+      const targetRatio = RATIO_MAP[activePhotoRatio].num;
+      const maxH = 250;
+      let w, h;
+      if (targetRatio >= 1) {
+        h = Math.min(maxH, Math.round(520 / targetRatio));
+        w = Math.round(h * targetRatio);
+        if (w > 540) {
+          w = 540;
+          h = Math.round(w / targetRatio);
+        }
+      } else {
+        h = maxH;
+        w = Math.round(h * targetRatio);
+      }
+      guide.style.width = w + 'px';
+      guide.style.height = h + 'px';
+    }
+
     function startPhotoShoot() {
-      if (capturedPhotos.length >= 10) {
-        alert('최대 10장까지 촬영할 수 있습니다.');
+      if (capturedPhotos.length >= 20) {
+        alert('최대 20장까지 보관할 수 있습니다.');
         return;
       }
 
@@ -503,9 +646,28 @@
     }
 
     function snapPhoto() {
+      const vW = video.videoWidth || 640;
+      const vH = video.videoHeight || 480;
+      const targetRatio = RATIO_MAP[activePhotoRatio] ? RATIO_MAP[activePhotoRatio].num : (4 / 3);
+      const vRatio = vW / vH;
+
+      let sW = vW, sH = vH, sx = 0, sy = 0;
+      if (vRatio > targetRatio) {
+        sW = vH * targetRatio;
+        sx = (vW - sW) / 2;
+      } else {
+        sH = vW / targetRatio;
+        sy = (vH - sH) / 2;
+      }
+
       const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = video.videoWidth || 640;
-      tempCanvas.height = video.videoHeight || 480;
+      if (targetRatio >= 1) {
+        tempCanvas.width = 1200;
+        tempCanvas.height = Math.round(1200 / targetRatio);
+      } else {
+        tempCanvas.height = 1200;
+        tempCanvas.width = Math.round(1200 * targetRatio);
+      }
       const ctx = tempCanvas.getContext('2d');
 
       if (facingMode === 'user') {
@@ -513,20 +675,70 @@
         ctx.scale(-1, 1);
       }
 
-      ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-      const dataUrl = tempCanvas.toDataURL('image/jpeg');
+      ctx.drawImage(video, sx, sy, sW, sH, 0, 0, tempCanvas.width, tempCanvas.height);
+      const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.92);
 
       capturedPhotos.push(dataUrl);
       updateGallery();
     }
 
+    function handleFileUpload(event) {
+      const files = Array.from(event.target.files || []);
+      addFilesToGallery(files);
+      event.target.value = '';
+    }
+
+    function addFilesToGallery(files) {
+      const imageFiles = files.filter(f => f.type.startsWith('image/'));
+      if (imageFiles.length === 0) {
+        if (files.length > 0) alert('이미지 파일(JPG, PNG 등)만 등록할 수 있습니다.');
+        return;
+      }
+
+      imageFiles.forEach(file => {
+        if (capturedPhotos.length >= 20) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (capturedPhotos.length < 20) {
+            capturedPhotos.push(e.target.result);
+            updateGallery();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function deletePhoto(idx, event) {
+      if (event) event.stopPropagation();
+      capturedPhotos.splice(idx, 1);
+
+      const selPos = selectedIndices.indexOf(idx);
+      if (selPos !== -1) {
+        selectedIndices.splice(selPos, 1);
+      }
+      for (let i = 0; i < selectedIndices.length; i++) {
+        if (selectedIndices[i] > idx) {
+          selectedIndices[i]--;
+        }
+      }
+      updateGallery();
+    }
+
     function updateGallery() {
       photoGrid.innerHTML = '';
-      photoCount.textContent = `${capturedPhotos.length} / 10장`;
+      photoCount.textContent = `${capturedPhotos.length} / 20장`;
 
       capturedPhotos.forEach((dataUrl, idx) => {
         const wrap = document.createElement('div');
         wrap.className = 'photo-thumb-wrap';
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-delete-photo';
+        delBtn.type = 'button';
+        delBtn.title = '사진 삭제';
+        delBtn.textContent = '✕';
+        delBtn.onclick = (e) => deletePhoto(idx, e);
+        wrap.appendChild(delBtn);
 
         const img = document.createElement('img');
         img.className = 'photo-thumb';
@@ -570,7 +782,13 @@
     function setLayout(layout, el) {
       activeLayout = layout;
       document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
-      el.classList.add('active');
+      if (el) el.classList.add('active');
+
+      if (layout === 'grid2x2_16_9') {
+        setPhotoRatio('16:9');
+      } else if (layout === 'grid2x2_9_16') {
+        setPhotoRatio('9:16');
+      }
     }
 
     function setFrameColor(color, el) {
@@ -589,7 +807,7 @@
       if (activeFilter === 'bw') {
         ctx.filter = 'grayscale(100%) contrast(110%)';
       } else if (activeFilter === 'sepia') {
-        ctx.filter = 'sepia(80%) warm(110%)';
+        ctx.filter = 'sepia(80%) contrast(105%)';
       } else if (activeFilter === 'glow') {
         ctx.filter = 'saturate(150%) brightness(110%) contrast(105%)';
       } else {
@@ -618,29 +836,112 @@
 
       const canvas = document.getElementById('fourCutCanvas');
       const ctx = canvas.getContext('2d');
+      const ratioNum = RATIO_MAP[activePhotoRatio] ? RATIO_MAP[activePhotoRatio].num : (4 / 3);
 
-      const itemW = 400;
-      const itemH = 300;
+      let itemW = 400;
+      let itemH = Math.round(400 / ratioNum);
       const padding = 24;
       const gap = 16;
       const footerH = 70;
 
+      const slots = [];
+
       if (activeLayout === 'v4') {
         // Vertical 1x4
+        if (ratioNum < 1) {
+          itemW = 340;
+          itemH = Math.round(340 / ratioNum);
+        } else {
+          itemW = 400;
+          itemH = Math.round(400 / ratioNum);
+        }
         canvas.width = itemW + padding * 2;
         canvas.height = padding + (itemH * 4) + (gap * 3) + footerH;
+        for (let i = 0; i < 4; i++) {
+          slots.push({ x: padding, y: padding + i * (itemH + gap), w: itemW, h: itemH });
+        }
       } else if (activeLayout === 'grid2x2') {
-        // 2x2 Grid
+        // 2x2 Grid (Ratio-adaptive)
+        if (activePhotoRatio === '4:3') {
+          itemW = 400; itemH = 300;
+        } else if (activePhotoRatio === '3:4') {
+          itemW = 320; itemH = 427;
+        } else if (activePhotoRatio === '16:9') {
+          itemW = 440; itemH = 248;
+        } else if (activePhotoRatio === '9:16') {
+          itemW = 280; itemH = 498;
+        } else {
+          itemW = 360; itemH = 360;
+        }
         canvas.width = padding * 2 + itemW * 2 + gap;
         canvas.height = padding + itemH * 2 + gap + footerH;
+        for (let i = 0; i < 4; i++) {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          slots.push({
+            x: padding + col * (itemW + gap),
+            y: padding + row * (itemH + gap),
+            w: itemW,
+            h: itemH
+          });
+        }
+      } else if (activeLayout === 'grid2x2_16_9') {
+        // 16:9 Aspect Ratio Frame (1280x720)
+        canvas.width = 1280;
+        canvas.height = 720;
+        const g2Gap = 20;
+        const g2TopPad = 35;
+        const g2ItemH = 290;
+        const g2ItemW = Math.round(g2ItemH * (16 / 9)); // 516
+        const g2PadX = Math.round((1280 - (g2ItemW * 2 + g2Gap)) / 2);
+        for (let i = 0; i < 4; i++) {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          slots.push({
+            x: g2PadX + col * (g2ItemW + g2Gap),
+            y: g2TopPad + row * (g2ItemH + g2Gap),
+            w: g2ItemW,
+            h: g2ItemH
+          });
+        }
+      } else if (activeLayout === 'grid2x2_9_16') {
+        // 9:16 Aspect Ratio Frame (720x1280)
+        canvas.width = 720;
+        canvas.height = 1280;
+        const g2Gap = 20;
+        const g2FooterH = 80;
+        const g2ItemW = 310;
+        const g2ItemH = Math.round(g2ItemW * (16 / 9)); // 551
+        const g2PadX = Math.round((720 - (g2ItemW * 2 + g2Gap)) / 2);
+        const g2PadY = Math.round((1280 - g2FooterH - (g2ItemH * 2 + g2Gap)) / 2);
+        for (let i = 0; i < 4; i++) {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          slots.push({
+            x: g2PadX + col * (g2ItemW + g2Gap),
+            y: g2PadY + row * (g2ItemH + g2Gap),
+            w: g2ItemW,
+            h: g2ItemH
+          });
+        }
       } else if (activeLayout === 'film') {
         // Retro Film Strip
+        itemW = 400;
+        itemH = Math.round(400 / ratioNum);
         canvas.width = itemW + padding * 3;
         canvas.height = padding + (itemH * 4) + (gap * 3) + footerH;
+        for (let i = 0; i < 4; i++) {
+          slots.push({ x: padding + 12, y: padding + i * (itemH + gap), w: itemW, h: itemH });
+        }
       } else if (activeLayout === 'wide') {
         // Wide 4x1
+        itemW = 300;
+        itemH = Math.round(300 / ratioNum);
         canvas.width = padding * 2 + itemW * 4 + gap * 3;
         canvas.height = padding + itemH + footerH;
+        for (let i = 0; i < 4; i++) {
+          slots.push({ x: padding + i * (itemW + gap), y: padding, w: itemW, h: itemH });
+        }
       }
 
       // Draw Frame BG
@@ -660,27 +961,10 @@
       selectedIndices.forEach((photoIdx, slot) => {
         const img = new Image();
         img.onload = () => {
-          let x = 0, y = 0;
-
-          if (activeLayout === 'v4') {
-            x = padding;
-            y = padding + slot * (itemH + gap);
-          } else if (activeLayout === 'grid2x2') {
-            const col = slot % 2;
-            const row = Math.floor(slot / 2);
-            x = padding + col * (itemW + gap);
-            y = padding + row * (itemH + gap);
-          } else if (activeLayout === 'film') {
-            x = padding + 12;
-            y = padding + slot * (itemH + gap);
-          } else if (activeLayout === 'wide') {
-            x = padding + slot * (itemW + gap);
-            y = padding;
-          }
-
+          const s = slots[slot];
           ctx.save();
           applyFilterToContext(ctx);
-          drawImageCover(ctx, img, x, y, itemW, itemH);
+          drawImageCover(ctx, img, s.x, s.y, s.w, s.h);
           ctx.restore();
 
           loadedCount++;
@@ -688,9 +972,11 @@
             // Draw Footer Text
             const title = document.getElementById('frameTitle').value.trim() || 'NEON PHOTO 4-CUT';
             ctx.fillStyle = (activeFrameColor === '#ffffff' && activeLayout !== 'film') ? '#111122' : '#ffffff';
-            ctx.font = 'bold 22px Outfit, Pretendard, sans-serif';
+            const fSize = (activeLayout === 'grid2x2_16_9' || activeLayout === 'grid2x2_9_16') ? 26 : 22;
+            ctx.font = `bold ${fSize}px Outfit, Pretendard, sans-serif`;
             ctx.textAlign = 'center';
-            ctx.fillText(title, canvas.width / 2, canvas.height - 25);
+            const textY = activeLayout === 'grid2x2_9_16' ? canvas.height - 32 : canvas.height - 24;
+            ctx.fillText(title, canvas.width / 2, textY);
 
             document.getElementById('previewContainer').style.display = 'flex';
             document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
@@ -706,6 +992,26 @@
       a.href = canvas.toDataURL('image/png');
       a.download = `neon_4cut_${Date.now()}.png`;
       a.click();
+    }
+
+    // Drag and Drop support on the card
+    const cardEl = document.querySelector('.card');
+    if (cardEl) {
+      cardEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        cardEl.classList.add('drag-over');
+      });
+      cardEl.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        cardEl.classList.remove('drag-over');
+      });
+      cardEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        cardEl.classList.remove('drag-over');
+        if (e.dataTransfer && e.dataTransfer.files) {
+          addFilesToGallery(Array.from(e.dataTransfer.files));
+        }
+      });
     }
   </script>
 </body>
