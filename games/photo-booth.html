@@ -219,10 +219,46 @@
       font-weight: 600;
     }
 
-    .layout-options {
+    .layout-options,
+    .ratio-options {
       display: flex;
       gap: 8px;
       overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 212, 255, 0.4) rgba(255, 255, 255, 0.04);
+      -webkit-overflow-scrolling: touch;
+      user-select: none;
+      cursor: grab;
+    }
+
+    .layout-options:active,
+    .ratio-options:active {
+      cursor: grabbing;
+    }
+
+    .layout-options::-webkit-scrollbar,
+    .ratio-options::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .layout-options::-webkit-scrollbar-track,
+    .ratio-options::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 999px;
+    }
+
+    .layout-options::-webkit-scrollbar-thumb,
+    .ratio-options::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.35);
+      border-radius: 999px;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .layout-options::-webkit-scrollbar-thumb:hover,
+    .ratio-options::-webkit-scrollbar-thumb:hover {
+      background: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.7);
     }
 
     .layout-btn {
@@ -312,12 +348,6 @@
       box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
     }
 
-    .ratio-options {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 2px;
-    }
 
     .ratio-btn {
       background: rgba(255,255,255,0.05);
@@ -510,6 +540,10 @@
 
         <div class="option-group">
           <div class="option-sub-title">5. 기념 문구</div>
+          <div class="ratio-options" style="margin-bottom: 6px;">
+            <button type="button" class="ratio-btn active" id="textToggleOn" onclick="setTextEnabled(true, this)">💬 문구 있음</button>
+            <button type="button" class="ratio-btn" id="textToggleOff" onclick="setTextEnabled(false, this)">🚫 문구 없음</button>
+          </div>
           <input type="text" id="frameTitle" placeholder="프레임 문구 (예: 우정 영원히 2026)" value="NEON PHOTO 4-CUT">
         </div>
 
@@ -539,6 +573,7 @@
  "tips": [
   "16:9 2x2 그리드는 와이드 화면에, 9:16 2x2 그리드는 인스타 스토리나 숏폼에 최적화되어 있습니다.",
   "카메라 없이도 PC나 스마트폰에 저장된 사진을 불러와 프레임을 제작할 수 있습니다.",
+  "하단 기념 문구는 '문구 있음/없음' 토글로 깔끔하게 켜고 끌 수 있습니다.",
   "사진 썸네일 좌측 상단의 ✕ 버튼으로 필요 없는 사진을 삭제할 수 있습니다."
  ]
 }
@@ -561,6 +596,21 @@
     let activeLayout = 'v4';
     let activeFilter = 'none';
     let activePhotoRatio = '4:3';
+    let isTextEnabled = true;
+
+    function setTextEnabled(enabled, el) {
+      isTextEnabled = enabled;
+      const onBtn = document.getElementById('textToggleOn');
+      const offBtn = document.getElementById('textToggleOff');
+      if (onBtn && offBtn) {
+        onBtn.classList.toggle('active', enabled);
+        offBtn.classList.toggle('active', !enabled);
+      }
+      const titleInput = document.getElementById('frameTitle');
+      if (titleInput) {
+        titleInput.style.display = enabled ? 'block' : 'none';
+      }
+    }
 
     const video = document.getElementById('webcam');
     const countdownOverlay = document.getElementById('countdownOverlay');
@@ -842,7 +892,7 @@
       let itemH = Math.round(400 / ratioNum);
       const padding = 24;
       const gap = 16;
-      const footerH = 70;
+      const footerH = isTextEnabled ? 70 : padding;
 
       const slots = [];
 
@@ -890,10 +940,10 @@
         canvas.width = 1280;
         canvas.height = 720;
         const g2Gap = 20;
-        const g2TopPad = 35;
         const g2ItemH = 290;
         const g2ItemW = Math.round(g2ItemH * (16 / 9)); // 516
         const g2PadX = Math.round((1280 - (g2ItemW * 2 + g2Gap)) / 2);
+        const g2TopPad = isTextEnabled ? 35 : Math.round((720 - (g2ItemH * 2 + g2Gap)) / 2);
         for (let i = 0; i < 4; i++) {
           const col = i % 2;
           const row = Math.floor(i / 2);
@@ -909,11 +959,12 @@
         canvas.width = 720;
         canvas.height = 1280;
         const g2Gap = 20;
-        const g2FooterH = 80;
         const g2ItemW = 310;
         const g2ItemH = Math.round(g2ItemW * (16 / 9)); // 551
         const g2PadX = Math.round((720 - (g2ItemW * 2 + g2Gap)) / 2);
-        const g2PadY = Math.round((1280 - g2FooterH - (g2ItemH * 2 + g2Gap)) / 2);
+        const g2PadY = isTextEnabled
+          ? Math.round((1280 - 80 - (g2ItemH * 2 + g2Gap)) / 2)
+          : Math.round((1280 - (g2ItemH * 2 + g2Gap)) / 2);
         for (let i = 0; i < 4; i++) {
           const col = i % 2;
           const row = Math.floor(i / 2);
@@ -969,14 +1020,16 @@
 
           loadedCount++;
           if (loadedCount === 4) {
-            // Draw Footer Text
-            const title = document.getElementById('frameTitle').value.trim() || 'NEON PHOTO 4-CUT';
-            ctx.fillStyle = (activeFrameColor === '#ffffff' && activeLayout !== 'film') ? '#111122' : '#ffffff';
-            const fSize = (activeLayout === 'grid2x2_16_9' || activeLayout === 'grid2x2_9_16') ? 26 : 22;
-            ctx.font = `bold ${fSize}px Outfit, Pretendard, sans-serif`;
-            ctx.textAlign = 'center';
-            const textY = activeLayout === 'grid2x2_9_16' ? canvas.height - 32 : canvas.height - 24;
-            ctx.fillText(title, canvas.width / 2, textY);
+            // Draw Footer Text if enabled
+            if (isTextEnabled) {
+              const title = document.getElementById('frameTitle').value.trim() || 'NEON PHOTO 4-CUT';
+              ctx.fillStyle = (activeFrameColor === '#ffffff' && activeLayout !== 'film') ? '#111122' : '#ffffff';
+              const fSize = (activeLayout === 'grid2x2_16_9' || activeLayout === 'grid2x2_9_16') ? 26 : 22;
+              ctx.font = `bold ${fSize}px Outfit, Pretendard, sans-serif`;
+              ctx.textAlign = 'center';
+              const textY = activeLayout === 'grid2x2_9_16' ? canvas.height - 32 : canvas.height - 24;
+              ctx.fillText(title, canvas.width / 2, textY);
+            }
 
             document.getElementById('previewContainer').style.display = 'flex';
             document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
@@ -1013,6 +1066,51 @@
         }
       });
     }
+
+    // Mouse drag-to-scroll support for horizontal option lists
+    function enableDragScroll(el) {
+      if (!el) return;
+      let isDown = false;
+      let startX;
+      let scrollLeft;
+      let hasDragged = false;
+
+      el.addEventListener('mousedown', (e) => {
+        isDown = true;
+        hasDragged = false;
+        startX = e.pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+      });
+
+      el.addEventListener('mouseleave', () => {
+        isDown = false;
+      });
+
+      el.addEventListener('mouseup', () => {
+        isDown = false;
+      });
+
+      el.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        const x = e.pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        if (Math.abs(walk) > 5) {
+          hasDragged = true;
+          e.preventDefault();
+        }
+        el.scrollLeft = scrollLeft - walk;
+      });
+
+      el.addEventListener('click', (e) => {
+        if (hasDragged) {
+          e.preventDefault();
+          e.stopPropagation();
+          hasDragged = false;
+        }
+      }, true);
+    }
+
+    document.querySelectorAll('.layout-options, .ratio-options').forEach(enableDragScroll);
   </script>
 </body>
 </html>
