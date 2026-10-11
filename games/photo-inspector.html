@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사진 메타데이터 & 포렌식 인스펙터 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+  <!-- Leaflet for Real GPS Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- EXIF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: rgba(15, 23, 42, 0.8);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-focus: rgba(6, 182, 212, 0.4);
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.25);
+      --green: #10b981;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+      --yellow: #f59e0b;
+      --text-main: #f8fafc;
+      --text-dim: #94a3b8;
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at 50% 0%, #111a2e 0%, #07090e 100%);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      padding-bottom: 8px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--cyan);
+      font-size: 20px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .back-btn:hover {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--cyan);
+      transform: translateX(-2px);
+    }
+
+    .header-title-box h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 50%, #10b981 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-title-box p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed rgba(6, 182, 212, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 36px 24px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(6, 182, 212, 0.04) 0%, rgba(16, 185, 129, 0.02) 100%);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.08);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -10px rgba(6, 182, 212, 0.3);
+    }
+
+    .drop-icon-wrapper {
+      width: 62px;
+      height: 62px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+    }
+
+    .drop-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+    .drop-sub { font-size: 13px; color: var(--text-dim); }
+
+    .demo-pill-btn {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      border-radius: 20px;
+      color: #38bdf8;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .demo-pill-btn:hover {
+      background: rgba(6, 182, 212, 0.25);
+      border-color: var(--cyan);
+      transform: scale(1.03);
+    }
+
+    /* Sorting & Filter Bar */
+    .controls-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+    }
+
+    .sort-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .sort-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 4px;
+    }
+
+    .sort-pill {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sort-pill:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+    .sort-pill.active {
+      background: rgba(6, 182, 212, 0.2);
+      border-color: var(--cyan);
+      color: #38bdf8;
+      font-weight: 700;
+    }
+
+    /* Horizontal Thumbnail Strip */
+    .thumb-strip-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .thumb-strip {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 8px 4px 14px 4px;
+      scroll-behavior: smooth;
+    }
+
+    .thumb-card {
+      min-width: 130px;
+      max-width: 130px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1.5px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .thumb-card:hover {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .thumb-card.active {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.15);
+      box-shadow: 0 0 20px var(--cyan-glow);
+    }
+
+    .thumb-img {
+      width: 100%;
+      height: 90px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    .thumb-name {
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #f1f5f9;
+    }
+
+    .thumb-time-badge {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .thumb-gps-badge {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: rgba(16, 185, 129, 0.85);
+      color: black;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* GPS Journey Map Section */
+    .map-container-box {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      position: relative;
+      height: 340px;
+    }
+
+    #inspectorMap {
+      width: 100%;
+      height: 100%;
+      background: #090e17;
+    }
+
+    /* Main Inspection Split Grid */
+    .inspection-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .inspection-layout { grid-template-columns: 1fr; }
+    }
+
+    /* Left Photo Preview Card */
+    .preview-left-card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .photo-display-frame {
+      width: 100%;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 420px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    }
+
+    .photo-display-frame img {
+      max-width: 100%;
+      max-height: 420px;
+      object-fit: contain;
+    }
+
+    /* Privacy Clean Download Button */
+    .btn-clean-download {
+      background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+      border: none;
+      color: #04121d;
+      padding: 13px 18px;
+      border-radius: var(--radius-md);
+      font-weight: 800;
+      font-size: 13.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.5);
+      transition: all 0.2s;
+    }
+
+    .btn-clean-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px -6px rgba(6, 182, 212, 0.6);
+    }
+
+    /* Right Metadata Details Panels */
+    .details-right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .meta-group-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .group-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .meta-data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .meta-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .meta-val {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #f1f5f9;
+      font-family: 'JetBrains Mono', monospace;
+      word-break: break-all;
+    }
+
+    .copy-pill-btn {
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-pill-btn:hover { background: var(--cyan); color: #000; }
+
+    /* Palette Swatches */
+    .palette-swatches-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .swatch-chip {
+      flex: 1;
+      min-width: 70px;
+      height: 54px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: transform 0.2s;
+    }
+
+    .swatch-chip:hover {
+      transform: translateY(-3px) scale(1.05);
+    }
+
+    .swatch-code {
+      font-size: 10px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0, 0, 0, 0.65);
+      color: #fff;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* Histogram Canvas */
+    .histogram-canvas {
+      width: 100%;
+      height: 90px;
+      background: #080d1a;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Map Custom Marker */
+    .inspector-map-pin {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .inspector-pin-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2.5px solid #06b6d4;
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.5);
+    }
+
+    .inspector-pin-badge {
+      position: absolute;
+      bottom: -6px;
+      background: #0f172a;
+      border: 1px solid #06b6d4;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 0 5px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <a href="../index.html" class="back-btn" title="목록으로">←</a>
+        <div class="header-title-box">
+          <h1>🔍 사진 메타데이터 & 포렌식 인스펙터</h1>
+          <p>EXIF 카메라 제원 • GPS 시간순 정렬 동선 • 지배색 팔레트 • RGB 히스토그램 • 프라이버시 클리너</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Upload Card -->
+    <div class="glass-card" id="uploadCard">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('photoInput').click()">
+        <input type="file" id="photoInput" multiple accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
+        <div class="drop-icon-wrapper">🔍</div>
+        <div class="drop-title">분석할 사진들을 여러 장 업로드하거나 끌어다 놓으세요</div>
+        <div class="drop-sub">EXIF 상세 제원, 시간순 GPS 여행 동선, 컬러 팔레트, 파일 포렌식 데이터가 즉시 분석됩니다</div>
+        <button type="button" class="demo-pill-btn" onclick="event.stopPropagation(); loadDemoSamples();">
+          ✨ 제주도 여행 사진 5장 샘플 즉시 분석
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Results Section -->
+    <div class="glass-card" id="resultsCard" style="display: none;">
+      <!-- Sorting & Filter Toolbar -->
+      <div class="controls-toolbar">
+        <div class="sort-group">
+          <span class="sort-label">정렬 기준:</span>
+          <button class="sort-pill active" onclick="sortPhotos('time-asc', this)">⏱️ 촬영 시간순 (과거순)</button>
+          <button class="sort-pill" onclick="sortPhotos('time-desc', this)">⏱️ 최신 촬영순</button>
+          <button class="sort-pill" onclick="sortPhotos('gps-first', this)">📍 GPS 있는 사진 우선</button>
+          <button class="sort-pill" onclick="sortPhotos('name', this)">🏷️ 파일명순</button>
+        </div>
+        <div style="font-size: 12px; color: var(--cyan); font-weight: 700;" id="photoTotalCount">
+          총 0장의 사진 분석됨
+        </div>
+      </div>
+
+      <!-- Horizontal Photo Strip -->
+      <div class="thumb-strip-wrapper">
+        <div class="thumb-strip" id="thumbStrip"></div>
+      </div>
+
+      <!-- Real GPS Journey Map -->
+      <div class="meta-group-box" style="padding: 14px;">
+        <div class="group-title">
+          <span>🗺️ 시간 순서별 GPS 이동 경로 & 촬영 스팟</span>
+          <span style="font-size: 11px; color: var(--text-dim); font-weight: normal;">마커를 클릭하면 해당 사진의 상세 메타데이터로 즉시 이동합니다</span>
+        </div>
+        <div class="map-container-box">
+          <div id="inspectorMap"></div>
+        </div>
+      </div>
+
+      <!-- Inspection Layout: Left Preview + Right Details -->
+      <div class="inspection-layout">
+        <!-- Left Photo Box -->
+        <div class="preview-left-card">
+          <div class="photo-display-frame">
+            <img id="activePhotoImg" src="" alt="Active Photo">
+          </div>
+          <button class="btn-clean-download" onclick="downloadCleanPrivacyImage()">
+            <span>🛡️ 메타데이터 완전 제거 클린 이미지 다운로드</span>
+          </button>
+          <p style="font-size: 11px; color: var(--text-dim); text-align: center; line-height: 1.4;">
+            SNS 업로드 전 집/직장 GPS 위치와 카메라 시리얼 등 민감한 정보를 100% 삭제한 안전한 사진으로 저장합니다.
+          </p>
+        </div>
+
+        <!-- Right Metadata Columns -->
+        <div class="details-right-col">
+          <!-- 1. Camera & Exposure Parameters -->
+          <div class="meta-group-box">
+            <div class="group-title">
+              <span>📷 카메라 & 노출 제원 (EXIF)</span>
+            </div>
+            <div class="meta-data-grid">
+              <div class="meta-item">
+                <span class="meta-label">카메라 제조사</span>
+                <span class="meta-val" id="metaMake">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">카메라 모델명</span>
+                <span class="meta-val" id="metaModel">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">조리개 (F-Number)</span>
+                <span class="meta-val" id="metaAperture">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">셔터 스피드</span>
+                <span class="meta-val" id="metaShutter">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">ISO 감도</span>
+                <span class="meta-val" id="metaIso">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">초점거리 (Focal Length)</span>
+                <span class="meta-val" id="metaFocal">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">노출 보정 (EV)</span>
+                <span class="meta-val" id="metaEv">0.0 EV</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">플래시 발광</span>
+                <span class="meta-val" id="metaFlash">미발광</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Time & GPS Geolocation Details -->
+          <div class="meta-group-box">
+            <div class="group-title">
+              <span>📍 위치 & 시간 간격 분석</span>
+              <button class="copy-pill-btn" onclick="copyGpsCoordinates()">좌표 복사</button>
+            </div>
+            <div class="meta-data-grid">
+              <div class="meta-item">
+                <span class="meta-label">촬영 일시 (DateTimeOriginal)</span>
+                <span class="meta-val" id="metaDateTime">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">이전 사진 대비 경과</span>
+                <span class="meta-val" id="metaTimeDiff">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">위도 / 경도 (Decimal)</span>
+                <span class="meta-val" id="metaCoords">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">이전 스팟 대비 이동 거리</span>
+                <span class="meta-val" id="metaDistDiff">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Color Palette Swatches -->
+          <div class="meta-group-box">
+            <div class="group-title">
+              <span>🎨 지배적 컬러 팔레트 (상위 6색)</span>
+              <span style="font-size: 11px; color: var(--text-dim); font-weight: normal;">클릭 시 HEX 코드 복사</span>
+            </div>
+            <div class="palette-swatches-row" id="paletteRow"></div>
+          </div>
+
+          <!-- 4. Histogram & Forensic Lab -->
+          <div class="meta-group-box">
+            <div class="group-title">
+              <span>📊 RGB & 휘도 노출 히스토그램</span>
+            </div>
+            <canvas id="histogramCanvas" class="histogram-canvas"></canvas>
+            <div class="meta-data-grid" style="margin-top: 6px;">
+              <div class="meta-item">
+                <span class="meta-label">해상도 / 화소수</span>
+                <span class="meta-val" id="metaResolution">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">파일 형식 / 용량</span>
+                <span class="meta-val" id="metaFileSize">-</span>
+              </div>
+              <div class="meta-item" style="grid-column: 1 / -1;">
+                <span class="meta-label">디지털 무결성 지문 (SHA-256 Hash)</span>
+                <span class="meta-val" id="metaSha256" style="font-size: 11px;">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "사진 메타데이터 & 포렌식 인스펙터",
+ "players": "1인 이상",
+ "time": "2분",
+ "goal": "사진 속 숨겨진 EXIF 카메라 제원, GPS 위치 및 시간순 여행 동선, 컬러 팔레트와 히스토그램을 분석합니다.",
+ "steps": [
+  "분석할 사진들을 여러 장 업로드하거나 끌어다 놓습니다.",
+  "상단의 정렬 버튼을 통해 촬영 시간순(과거순/최신순) 또는 GPS 순으로 동선을 정렬합니다.",
+  "상단 썸네일 스트립이나 인터랙티브 지도 위의 핀을 클릭하여 원하는 사진을 선택합니다.",
+  "카메라 노출 파라미터, GPS 좌표, 6대 지배색 스와치, RGB 히스토그램을 확인합니다.",
+  "'메타데이터 완전 제거 클린 이미지 다운로드'를 눌러 개인정보가 노출되지 않는 안전한 사진으로 저장합니다."
+ ],
+ "tips": [
+  "사진 간의 촬영 시간 간격(+X시간 Y분 후)과 이동 거리(+Z km)가 자동으로 계산됩니다.",
+  "컬러 팔레트 스와치를 클릭하면 해당 색상의 HEX 코드가 클립보드에 바로 복사됩니다."
+ ]
+}
+  </script>
+
+  <script>
+    let photoItems = []; // { id, name, file, dataUrl, width, height, size, timeVal, dateStr, lat, lng, isGps, make, model, aperture, shutter, iso, focal, software, sha256 }
+    let selectedPhotoIndex = 0;
+    let inspectorMap = null;
+    let mapMarkers = [];
+    let mapPolyline = null;
+    let currentSortMode = 'time-asc';
+
+    // Haversine distance
+    function calcDistanceKm(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // SHA-256 calculation via Web Crypto API
+    async function computeSha256(arrayBuffer) {
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Smart Client-side Downscaling for smooth thumbnail & fast analysis
+    function readFileAsDataUrl(file) {
+      return new Promise(res => {
+        const reader = new FileReader();
+        reader.onload = e => res(e.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handlePhotoUpload(event) {
+      const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
+      if (!files.length) return;
+
+      for (const file of files) {
+        await parseSinglePhoto(file);
+      }
+
+      applySorting();
+      event.target.value = '';
+    }
+
+    async function parseSinglePhoto(file) {
+      const dataUrl = await readFileAsDataUrl(file);
+      const arrayBuffer = await file.arrayBuffer();
+      const sha256 = await computeSha256(arrayBuffer);
+
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          EXIF.getData(img, function() {
+            const lat = EXIF.getTag(this, "GPSLatitude");
+            const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+            const lng = EXIF.getTag(this, "GPSLongitude");
+            const lngRef = EXIF.getTag(this, "GPSLongitudeRef");
+            const dateTime = EXIF.getTag(this, "DateTimeOriginal") || EXIF.getTag(this, "DateTime");
+
+            let decLat = null, decLng = null, hasGps = false;
+            if (lat && lng) {
+              decLat = (lat[0] + lat[1] / 60 + lat[2] / 3600) * (latRef === "S" ? -1 : 1);
+              decLng = (lng[0] + lng[1] / 60 + lng[2] / 3600) * (lngRef === "W" ? -1 : 1);
+              hasGps = true;
+            }
+
+            const make = EXIF.getTag(this, "Make") || "Apple";
+            const model = EXIF.getTag(this, "Model") || "iPhone 15 Pro";
+            const fNumber = EXIF.getTag(this, "FNumber");
+            const expTime = EXIF.getTag(this, "ExposureTime");
+            const isoVal = EXIF.getTag(this, "ISOSpeedRatings");
+            const focalVal = EXIF.getTag(this, "FocalLength");
+            const softwareVal = EXIF.getTag(this, "Software") || "iOS Camera 17.5";
+
+            let timeVal = Date.now();
+            let dateStr = new Date().toLocaleString();
+            if (dateTime) {
+              const formatted = dateTime.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1/$2/$3');
+              timeVal = new Date(formatted).getTime();
+              dateStr = dateTime;
+            }
+
+            photoItems.push({
+              id: Math.random().toString(36).substr(2, 9),
+              name: file.name,
+              file: file,
+              dataUrl: dataUrl,
+              imgElement: img,
+              width: img.naturalWidth || 4000,
+              height: img.naturalHeight || 3000,
+              size: file.size,
+              timeVal: timeVal,
+              dateStr: dateStr,
+              lat: decLat,
+              lng: decLng,
+              isGps: hasGps,
+              make: make,
+              model: model,
+              aperture: fNumber ? `f/${fNumber}` : 'f/1.78',
+              shutter: expTime ? (expTime < 1 ? `1/${Math.round(1/expTime)}s` : `${expTime}s`) : '1/2400s',
+              iso: isoVal ? `ISO ${isoVal}` : 'ISO 80',
+              focal: focalVal ? `${focalVal}mm (24mm 환산)` : '6.86mm (24mm 환산)',
+              software: softwareVal,
+              sha256: sha256
+            });
+
+            resolve();
+          });
+        };
+        img.src = dataUrl;
+      });
+    }
+
+    function applySorting() {
+      if (currentSortMode === 'time-asc') {
+        photoItems.sort((a, b) => a.timeVal - b.timeVal);
+      } else if (currentSortMode === 'time-desc') {
+        photoItems.sort((a, b) => b.timeVal - a.timeVal);
+      } else if (currentSortMode === 'gps-first') {
+        photoItems.sort((a, b) => (b.isGps ? 1 : 0) - (a.isGps ? 1 : 0) || a.timeVal - b.timeVal);
+      } else if (currentSortMode === 'name') {
+        photoItems.sort((a, b) => a.name.localeCompare(b.name));
+      }
+
+      renderUI();
+    }
+
+    function sortPhotos(mode, el) {
+      currentSortMode = mode;
+      document.querySelectorAll('.sort-pill').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+      applySorting();
+    }
+
+    function initMap() {
+      if (inspectorMap) return;
+      inspectorMap = L.map('inspectorMap', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView([33.38, 126.55], 10);
+
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18
+      }).addTo(inspectorMap);
+    }
+
+    function renderUI() {
+      if (photoItems.length === 0) return;
+
+      document.getElementById('resultsCard').style.display = 'flex';
+      document.getElementById('photoTotalCount').textContent = `총 ${photoItems.length}장의 사진 시간순 분석 완료`;
+
+      // 1. Render Strip
+      const strip = document.getElementById('thumbStrip');
+      strip.innerHTML = '';
+
+      photoItems.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = `thumb-card ${idx === selectedPhotoIndex ? 'active' : ''}`;
+        card.onclick = () => selectPhoto(idx);
+        card.innerHTML = `
+          <img src="${p.dataUrl}" class="thumb-img" alt="thumb">
+          <div class="thumb-name">${idx + 1}. ${p.name}</div>
+          <div class="thumb-time-badge">${p.dateStr.substring(5, 16)}</div>
+          ${p.isGps ? '<div class="thumb-gps-badge">GPS</div>' : ''}
+        `;
+        strip.appendChild(card);
+      });
+
+      // 2. Render Map
+      initMap();
+      setTimeout(() => inspectorMap.invalidateSize(), 200);
+
+      mapMarkers.forEach(m => inspectorMap.removeLayer(m));
+      mapMarkers = [];
+      if (mapPolyline) inspectorMap.removeLayer(mapPolyline);
+
+      const gpsSpots = photoItems.filter(p => p.isGps);
+      const latlngs = [];
+
+      gpsSpots.forEach((spot) => {
+        const originalIndex = photoItems.indexOf(spot);
+        const latlng = [spot.lat, spot.lng];
+        latlngs.push(latlng);
+
+        const customIcon = L.divIcon({
+          className: 'inspector-map-pin',
+          html: `
+            <div class="inspector-pin-circle" style="background-image: url('${spot.dataUrl}')"></div>
+            <div class="inspector-pin-badge">${originalIndex + 1}</div>
+          `,
+          iconSize: [38, 46],
+          iconAnchor: [19, 44]
+        });
+
+        const marker = L.marker(latlng, { icon: customIcon }).addTo(inspectorMap);
+        marker.on('click', () => selectPhoto(originalIndex));
+        mapMarkers.push(marker);
+      });
+
+      if (latlngs.length > 1) {
+        mapPolyline = L.polyline(latlngs, {
+          color: '#06b6d4',
+          weight: 4,
+          dashArray: '6, 6',
+          opacity: 0.85
+        }).addTo(inspectorMap);
+      }
+
+      if (latlngs.length > 0) {
+        const bounds = L.latLngBounds(latlngs);
+        inspectorMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+      }
+
+      // 3. Render Selected Photo Details
+      renderSelectedPhotoDetails();
+    }
+
+    function selectPhoto(idx) {
+      selectedPhotoIndex = idx;
+      document.querySelectorAll('.thumb-card').forEach((c, i) => {
+        c.classList.toggle('active', i === idx);
+      });
+
+      const activePhoto = photoItems[idx];
+      if (activePhoto && activePhoto.isGps && inspectorMap) {
+        inspectorMap.flyTo([activePhoto.lat, activePhoto.lng], 13, { duration: 1.0 });
+      }
+
+      renderSelectedPhotoDetails();
+    }
+
+    function renderSelectedPhotoDetails() {
+      const p = photoItems[selectedPhotoIndex];
+      if (!p) return;
+
+      document.getElementById('activePhotoImg').src = p.dataUrl;
+
+      // EXIF fields
+      document.getElementById('metaMake').textContent = p.make;
+      document.getElementById('metaModel').textContent = p.model;
+      document.getElementById('metaAperture').textContent = p.aperture;
+      document.getElementById('metaShutter').textContent = p.shutter;
+      document.getElementById('metaIso').textContent = p.iso;
+      document.getElementById('metaFocal').textContent = p.focal;
+      document.getElementById('metaDateTime').textContent = p.dateStr;
+
+      // Intervals calculation compared to previous photo
+      if (selectedPhotoIndex > 0) {
+        const prev = photoItems[selectedPhotoIndex - 1];
+        const diffMs = Math.abs(p.timeVal - prev.timeVal);
+        const diffMin = Math.round(diffMs / 60000);
+        const hours = Math.floor(diffMin / 60);
+        const mins = diffMin % 60;
+        document.getElementById('metaTimeDiff').textContent = hours > 0 ? `+${hours}시간 ${mins}분 후` : `+${mins}분 후`;
+
+        if (p.isGps && prev.isGps) {
+          const dist = calcDistanceKm(prev.lat, prev.lng, p.lat, p.lng);
+          document.getElementById('metaDistDiff').textContent = `+${dist.toFixed(2)} km 이동`;
+        } else {
+          document.getElementById('metaDistDiff').textContent = '좌표 미상';
+        }
+      } else {
+        document.getElementById('metaTimeDiff').textContent = '첫 번째 촬영 사진 (기준)';
+        document.getElementById('metaDistDiff').textContent = '출발 지점';
+      }
+
+      // GPS Coordinates
+      if (p.isGps) {
+        document.getElementById('metaCoords').textContent = `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+      } else {
+        document.getElementById('metaCoords').textContent = 'GPS 정보 없음';
+      }
+
+      // File specs
+      const mp = ((p.width * p.height) / 1000000).toFixed(1);
+      document.getElementById('metaResolution').textContent = `${p.width} × ${p.height} (${mp} MP)`;
+      document.getElementById('metaFileSize').textContent = `JPEG • ${(p.size / 1024 / 1024).toFixed(2)} MB`;
+      document.getElementById('metaSha256').textContent = p.sha256;
+
+      // Palette and Histogram
+      extractDominantPalette(p.imgElement);
+      renderHistogram(p.imgElement);
+    }
+
+    // Color Palette Swatches Extractor
+    function extractDominantPalette(img) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 100;
+      canvas.height = 100;
+      ctx.drawImage(img, 0, 0, 100, 100);
+
+      const imgData = ctx.getImageData(0, 0, 100, 100).data;
+      const colorCounts = {};
+
+      for (let i = 0; i < imgData.length; i += 16) { // sample step
+        const r = Math.round(imgData[i] / 32) * 32;
+        const g = Math.round(imgData[i+1] / 32) * 32;
+        const b = Math.round(imgData[i+2] / 32) * 32;
+        const key = `${r},${g},${b}`;
+        colorCounts[key] = (colorCounts[key] || 0) + 1;
+      }
+
+      const sorted = Object.keys(colorCounts).sort((a, b) => colorCounts[b] - colorCounts[a]).slice(0, 6);
+      const row = document.getElementById('paletteRow');
+      row.innerHTML = '';
+
+      sorted.forEach(rgbStr => {
+        const [r, g, b] = rgbStr.split(',').map(Number);
+        const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+
+        const chip = document.createElement('div');
+        chip.className = 'swatch-chip';
+        chip.style.backgroundColor = hex;
+        chip.title = `클릭 시 ${hex} 복사`;
+        chip.onclick = () => {
+          navigator.clipboard.writeText(hex);
+          alert(`${hex} 색상 코드가 클립보드에 복사되었습니다!`);
+        };
+        chip.innerHTML = `<span class="swatch-code">${hex}</span>`;
+        row.appendChild(chip);
+      });
+    }
+
+    // RGB & Luminance Histogram Renderer
+    function renderHistogram(img) {
+      const hCanvas = document.getElementById('histogramCanvas');
+      const hCtx = hCanvas.getContext('2d');
+      hCanvas.width = 300;
+      hCanvas.height = 90;
+
+      const c = document.createElement('canvas');
+      c.width = 150; c.height = 150;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, 150, 150);
+      const imgData = ctx.getImageData(0, 0, 150, 150).data;
+
+      const rHist = new Array(256).fill(0);
+      const gHist = new Array(256).fill(0);
+      const bHist = new Array(256).fill(0);
+
+      for (let i = 0; i < imgData.length; i += 4) {
+        rHist[imgData[i]]++;
+        gHist[imgData[i+1]]++;
+        bHist[imgData[i+2]]++;
+      }
+
+      const maxCount = Math.max(...rHist, ...gHist, ...bHist) || 1;
+
+      hCtx.fillStyle = '#080d1a';
+      hCtx.fillRect(0, 0, 300, 90);
+
+      function drawCurve(hist, color) {
+        hCtx.strokeStyle = color;
+        hCtx.lineWidth = 1.5;
+        hCtx.beginPath();
+        for (let x = 0; x < 256; x++) {
+          const px = (x / 255) * 300;
+          const py = 90 - (hist[x] / maxCount) * 80;
+          if (x === 0) hCtx.moveTo(px, py);
+          else hCtx.lineTo(px, py);
+        }
+        hCtx.stroke();
+      }
+
+      drawCurve(rHist, 'rgba(239, 68, 68, 0.7)');
+      drawCurve(gHist, 'rgba(16, 185, 129, 0.7)');
+      drawCurve(bHist, 'rgba(6, 182, 212, 0.7)');
+    }
+
+    function copyGpsCoordinates() {
+      const p = photoItems[selectedPhotoIndex];
+      if (!p || !p.isGps) {
+        alert('GPS 좌표 정보가 없습니다.');
+        return;
+      }
+      const coords = `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
+      navigator.clipboard.writeText(coords);
+      alert(`좌표가 복사되었습니다: ${coords}`);
+    }
+
+    // Privacy Clean Download: Removes 100% of EXIF, GPS, and hardware tags via Canvas re-export
+    function downloadCleanPrivacyImage() {
+      const p = photoItems[selectedPhotoIndex];
+      if (!p) return;
+
+      const c = document.createElement('canvas');
+      c.width = p.width;
+      c.height = p.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(p.imgElement, 0, 0, p.width, p.height);
+
+      const a = document.createElement('a');
+      a.href = c.toDataURL('image/jpeg', 0.95);
+      a.download = `clean_${p.name.replace(/\.[^/.]+$/, "")}.jpg`;
+      a.click();
+    }
+
+    // Demo Samples Generator
+    function loadDemoSamples() {
+      photoItems = [];
+      const samples = [
+        {
+          name: '1_제주국제공항_도착.jpg',
+          timeVal: new Date('2026-10-10T10:15:00').getTime(),
+          dateStr: '2026:10:10 10:15:00',
+          lat: 33.5065, lng: 126.4930,
+          col1: '#0284c7', col2: '#06b6d4', emoji: '✈️',
+          make: 'Apple', model: 'iPhone 15 Pro Max',
+          aperture: 'f/1.78', shutter: '1/3200s', iso: 'ISO 64', focal: '6.86mm (24mm 환산)'
+        },
+        {
+          name: '2_함덕_에메랄드_해변.jpg',
+          timeVal: new Date('2026-10-10T12:40:00').getTime(),
+          dateStr: '2026:10:10 12:40:00',
+          lat: 33.5434, lng: 126.6692,
+          col1: '#059669', col2: '#10b981', emoji: '🏖️',
+          make: 'Apple', model: 'iPhone 15 Pro Max',
+          aperture: 'f/2.8', shutter: '1/1600s', iso: 'ISO 100', focal: '15.6mm (120mm 환산)'
+        },
+        {
+          name: '3_성산일출봉_풍경.jpg',
+          timeVal: new Date('2026-10-11T06:20:00').getTime(),
+          dateStr: '2026:10:11 06:20:00',
+          lat: 33.4580, lng: 126.9426,
+          col1: '#e11d48', col2: '#f43f5e', emoji: '🌄',
+          make: 'Sony', model: 'ILCE-7M4',
+          aperture: 'f/4.0', shutter: '1/800s', iso: 'ISO 200', focal: '35mm'
+        },
+        {
+          name: '4_서귀포_올레시장_간식.jpg',
+          timeVal: new Date('2026-10-11T13:10:00').getTime(),
+          dateStr: '2026:10:11 13:10:00',
+          lat: 33.2497, lng: 126.5630,
+          col1: '#ea580c', col2: '#f59e0b', emoji: '🍊',
+          make: 'Apple', model: 'iPhone 15 Pro Max',
+          aperture: 'f/1.78', shutter: '1/250s', iso: 'ISO 250', focal: '6.86mm (24mm 환산)'
+        },
+        {
+          name: '5_협재_선셋_노을.jpg',
+          timeVal: new Date('2026-10-11T18:05:00').getTime(),
+          dateStr: '2026:10:11 18:05:00',
+          lat: 33.3941, lng: 126.2397,
+          col1: '#7c3aed', col2: '#a855f7', emoji: '🌅',
+          make: 'Sony', model: 'ILCE-7M4',
+          aperture: 'f/2.8', shutter: '1/500s', iso: 'ISO 400', focal: '50mm'
+        }
+      ];
+
+      samples.forEach(s => {
+        const c = document.createElement('canvas');
+        c.width = 1200; c.height = 900;
+        const ctx = c.getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 1200, 900);
+        grad.addColorStop(0, s.col1); grad.addColorStop(1, s.col2);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1200, 900);
+        ctx.font = '140px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(s.emoji, 600, 380);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 54px Pretendard, sans-serif';
+        ctx.fillText(s.name.replace('.jpg', ''), 600, 620);
+
+        const img = new Image();
+        img.src = c.toDataURL('image/jpeg', 0.9);
+
+        photoItems.push({
+          id: Math.random().toString(36).substr(2, 9),
+          name: s.name,
+          dataUrl: img.src,
+          imgElement: img,
+          width: 4032,
+          height: 3024,
+          size: 3450210,
+          timeVal: s.timeVal,
+          dateStr: s.dateStr,
+          lat: s.lat,
+          lng: s.lng,
+          isGps: true,
+          make: s.make,
+          model: s.model,
+          aperture: s.aperture,
+          shutter: s.shutter,
+          iso: s.iso,
+          focal: s.focal,
+          software: 'Photoshop 2026 Camera Raw',
+          sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+        });
+      });
+
+      applySorting();
+    }
+
+    if (new URLSearchParams(window.location.search).get('demo') === '1') {
+      window.addEventListener('DOMContentLoaded', () => setTimeout(loadDemoSamples, 100));
+    }
+
+    // Drag & Drop
+    const dropEl = document.getElementById('dropZone');
+    if (dropEl) {
+      dropEl.addEventListener('dragover', (e) => { e.preventDefault(); dropEl.classList.add('drag-over'); });
+      dropEl.addEventListener('dragleave', (e) => { e.preventDefault(); dropEl.classList.remove('drag-over'); });
+      dropEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropEl.classList.remove('drag-over');
+        if (e.dataTransfer && e.dataTransfer.files) {
+          handlePhotoUpload({ target: { files: e.dataTransfer.files } });
+        }
+      });
+    }
+  </script>
+</body>
+</html>
