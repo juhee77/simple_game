@@ -3,34 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>켄 번스 모션 슬라이드쇼 & GIF | 미니게임 천국</title>
+  <title>켄 번스 무빙 슬라이드쇼 & 루핑 GIF | 미니게임 천국</title>
   <script src="../scripts/game-common.js?v=841f759d"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  
+  <!-- gifshot for Looping GIF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+
   <style>
     :root {
-      --bg: #0b0b1a;
-      --card-bg: rgba(22, 22, 45, 0.7);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --cyan: #00d4ff;
-      --purple: #7c3aed;
-      --pink: #ff006e;
-      --yellow: #ffd166;
-      --text-main: #ffffff;
+      --bg: #07090e;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --yellow: #f59e0b;
+      --pink: #f43f5e;
+      --cyan: #06b6d4;
+      --purple: #8b5cf6;
+      --text-main: #f8fafc;
       --text-dim: #94a3b8;
-      --radius-card: 16px;
-      --radius-btn: 12px;
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      padding: 0;
-      background-color: var(--bg);
+      background: radial-gradient(circle at 50% 0%, #201a14 0%, #07090e 100%);
       color: var(--text-main);
-      font-family: 'Outfit', 'Pretendard', sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -38,9 +41,9 @@
     }
 
     .container {
-      max-width: 680px;
+      max-width: 960px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 24px 20px;
       width: 100%;
       flex: 1;
       display: flex;
@@ -51,311 +54,424 @@
     header {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       position: relative;
-      padding: 10px 0;
+      padding-bottom: 8px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
     .back-btn {
-      position: absolute;
-      left: 0;
-      background: none;
-      border: none;
-      color: var(--cyan);
-      font-size: 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--yellow);
+      font-size: 20px;
       cursor: pointer;
       text-decoration: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      transition: background 0.2s;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+    .back-btn:hover {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: var(--yellow);
+      transform: translateX(-2px);
+    }
 
-    h1 {
+    .header-title-box h1 {
       font-size: 22px;
       font-weight: 800;
-      background: linear-gradient(90deg, var(--yellow), var(--pink));
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #f59e0b 0%, #f43f5e 50%, #ec4899 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      backdrop-filter: blur(10px);
-      border-radius: var(--radius-card);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    .header-title-box p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
     }
 
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Drop Zone */
     .drop-zone {
-      border: 2px dashed rgba(255, 209, 102, 0.4);
-      border-radius: var(--radius-card);
-      padding: 28px 20px;
+      border: 2px dashed rgba(245, 158, 11, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 34px 24px;
       text-align: center;
-      background: rgba(255, 209, 102, 0.03);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.03) 0%, rgba(244, 63, 94, 0.02) 100%);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
     }
 
-    .drop-zone:hover {
+    .drop-zone:hover, .drop-zone.drag-over {
       border-color: var(--yellow);
-      background: rgba(255, 209, 102, 0.08);
+      background: rgba(245, 158, 11, 0.08);
       transform: translateY(-2px);
     }
 
-    .drop-icon { font-size: 38px; }
-    .drop-title { font-weight: 700; font-size: 16px; color: var(--yellow); }
+    .drop-icon-wrapper {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(244, 63, 94, 0.2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .drop-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
     .drop-sub { font-size: 13px; color: var(--text-dim); }
 
+    .demo-btn-pill {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      color: #fbbf24;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .demo-btn-pill:hover {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: #fbbf24;
+    }
+
+    /* Photo Grid Tray */
+    .tray-section {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .section-label {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      color: var(--yellow);
+      color: #e2e8f0;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .photo-grid {
+    .photo-grid-tray {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      max-height: 160px;
+      grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+      gap: 10px;
+      max-height: 180px;
       overflow-y: auto;
+      padding-right: 4px;
     }
 
-    .photo-thumb-box {
+    .tray-thumb {
       position: relative;
       aspect-ratio: 1;
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
-      border: 1px solid var(--card-border);
+      border: 1.5px solid var(--card-border);
+      background: #0f172a;
     }
 
-    .photo-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+    .tray-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    .btn-del {
+    .tray-del-btn {
       position: absolute;
-      top: 3px; right: 3px;
+      top: 4px; right: 4px;
       background: rgba(0, 0, 0, 0.75);
-      color: #ff006e;
-      border: 1px solid rgba(255, 0, 110, 0.4);
-      width: 18px; height: 18px;
+      color: #f43f5e;
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      width: 20px; height: 20px;
       border-radius: 50%;
-      font-size: 10px;
-      font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    .option-group {
+    /* Controls */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .field-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
-    .option-sub-title {
-      font-size: 13px;
-      color: var(--text-dim);
+    .field-label {
+      font-size: 12px;
       font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .ratio-options {
+    .ratio-btn-group {
       display: flex;
       gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: thin;
-      user-select: none;
-      cursor: grab;
+      flex-wrap: wrap;
     }
 
     .ratio-btn {
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 600;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--card-border);
       color: var(--text-dim);
-      padding: 8px 12px;
-      border-radius: var(--radius-btn);
-      font-size: 13px;
-      font-weight: 600;
       cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
 
     .ratio-btn.active {
-      background: rgba(255, 209, 102, 0.15);
+      background: rgba(245, 158, 11, 0.2);
       border-color: var(--yellow);
-      color: var(--yellow);
+      color: #fde68a;
     }
 
-    button.primary-btn {
-      background: linear-gradient(135deg, var(--yellow), var(--pink));
+    /* Action Buttons */
+    .btn-gradient-cinema {
+      background: linear-gradient(135deg, #f59e0b 0%, #f43f5e 50%, #ec4899 100%);
       border: none;
-      color: #0b0b1a;
-      padding: 13px;
-      border-radius: var(--radius-btn);
-      font-family: inherit;
+      color: white;
+      padding: 15px 24px;
+      border-radius: var(--radius-md);
       font-weight: 800;
       font-size: 15px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
+      box-shadow: 0 10px 25px -6px rgba(245, 158, 11, 0.5);
+      transition: all 0.2s;
     }
 
-    .viewer-area {
+    .btn-gradient-cinema:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -6px rgba(244, 63, 94, 0.6);
+    }
+
+    /* Motion Canvas Cinema Viewer */
+    .viewer-box {
       display: none;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
       margin-top: 10px;
     }
 
-    .canvas-wrap {
+    .cinema-frame {
       position: relative;
-      border-radius: 12px;
+      box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-      border: 2px solid rgba(255, 209, 102, 0.3);
-      max-width: 100%;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     canvas {
       display: block;
-      max-width: 100%;
-      height: auto;
-      max-height: 480px;
+      background: #000;
     }
 
-    .player-controls {
+    /* Player HUD Control Bar */
+    .player-hud-bar {
       display: flex;
-      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
       width: 100%;
+      max-width: 600px;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
     }
 
-    .player-btn {
-      flex: 1;
-      padding: 10px;
+    .hud-btn {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid var(--card-border);
-      color: white;
-      border-radius: var(--radius-btn);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
       font-weight: 700;
-      font-size: 14px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
     }
 
+    .hud-btn:hover { background: rgba(245, 158, 11, 0.2); border-color: var(--yellow); }
+
     .gif-status {
-      display: none;
-      font-size: 13px;
       color: var(--yellow);
+      font-size: 13px;
       text-align: center;
+      display: none;
     }
 
     .gif-download-area {
       display: none;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       width: 100%;
+      max-width: 600px;
     }
 
     .gif-download-area img {
-      max-width: 280px;
-      border-radius: 10px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <a href="../index.html" class="back-btn">←</a>
-      <h1>🎬 켄 번스 무빙 슬라이드쇼</h1>
+      <div class="header-left">
+        <a href="../index.html" class="back-btn" title="목록으로">←</a>
+        <div class="header-title-box">
+          <h1>📹 켄 번스 무빙 슬라이드쇼</h1>
+          <p>영화적 카메라 줌/팬 모션 연출 & 레트로 필름 OSD 루핑 GIF 스튜디오</p>
+        </div>
+      </div>
     </header>
 
-    <div class="card" id="inputCard">
-      <div class="drop-zone" onclick="document.getElementById('slideFiles').click()">
-        <div class="drop-icon">🎞️</div>
-        <div class="drop-title">슬라이드쇼에 넣을 사진들을 올려주세요</div>
+    <!-- Upload Card -->
+    <div class="glass-card" id="inputCard">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('slideFiles').click()">
+        <input type="file" id="slideFiles" multiple accept="image/*" style="display: none;" onchange="handleSlideUpload(event)">
+        <div class="drop-icon-wrapper">🎞️</div>
+        <div class="drop-title">슬라이드쇼에 넣을 사진들을 여러 장 업로드하거나 끌어다 놓으세요</div>
         <div class="drop-sub">클릭 또는 드래그 앤 드롭 (3~15장 추천)</div>
-        <input type="file" id="slideFiles" accept="image/*" multiple style="display: none;" onchange="handleSlideUpload(event)">
-      </div>
-
-      <div class="section-label">
-        <span>📸 등록된 사진들</span>
-        <span id="slideCount" style="color: var(--yellow);">0장</span>
-      </div>
-
-      <div class="photo-grid" id="photoGrid"></div>
-
-      <div id="controlsGroup" style="display: none; flex-direction: column; gap: 12px;">
-        <div class="option-group">
-          <div class="option-sub-title">1. 화면 비율</div>
-          <div class="ratio-options" id="ratioOptions">
-            <button class="ratio-btn active" data-ratio="1:1" onclick="setRatio('1:1', this)">⏹️ 1:1 정방형 (피드용)</button>
-            <button class="ratio-btn" data-ratio="9:16" onclick="setRatio('9:16', this)">📱 9:16 세로 (스토리/릴스)</button>
-            <button class="ratio-btn" data-ratio="16:9" onclick="setRatio('16:9', this)">🖥️ 16:9 가로 (와이드)</button>
-          </div>
-        </div>
-
-        <div class="option-group">
-          <div class="option-sub-title">2. 전환 속도</div>
-          <div class="ratio-options" id="speedOptions">
-            <button class="ratio-btn" data-speed="2000" onclick="setSpeed(2000, this)">⚡ 빠름 (2초)</button>
-            <button class="ratio-btn active" data-speed="3500" onclick="setSpeed(3500, this)">⏱️ 보통 (3.5초)</button>
-            <button class="ratio-btn" data-speed="5000" onclick="setSpeed(5000, this)">☕ 여유롭게 (5초)</button>
-          </div>
-        </div>
-
-        <div class="option-group">
-          <div class="option-sub-title">3. 아날로그 레트로 필름 날짜 스탬프</div>
-          <div class="ratio-options" id="stampOptions">
-            <button class="ratio-btn active" data-stamp="true" onclick="setStamp(true, this)">🟠 '26 10 11 오렌지 날짜 표시</button>
-            <button class="ratio-btn" data-stamp="false" onclick="setStamp(false, this)">🚫 날짜 스탬프 없음</button>
-          </div>
-        </div>
-
-        <button class="primary-btn" onclick="startSlideshow()">
-          ▶️ 켄 번스 무빙 슬라이드쇼 시작
+        <button type="button" class="demo-btn-pill" onclick="event.stopPropagation(); loadDemoSamples();">
+          ✨ 시네마틱 노을 & 자연 샘플 4장 즉시 로드
         </button>
       </div>
 
-      <div class="viewer-area" id="viewerArea">
-        <div class="canvas-wrap">
+      <!-- Controls -->
+      <div class="tray-section" id="controlsGroup">
+        <div class="section-label">
+          <span>📸 등록된 사진 목록 (<span id="slideCount">0</span>장)</span>
+          <span style="font-size: 12px; color: var(--text-dim); font-weight: normal;">순서대로 영화처럼 부드럽게 전환됩니다</span>
+        </div>
+        <div class="photo-grid-tray" id="photoGrid"></div>
+
+        <div class="controls-grid">
+          <div class="field-group">
+            <label class="field-label">1. 화면 비율</label>
+            <div class="ratio-btn-group" id="ratioOptions">
+              <button class="ratio-btn active" onclick="setRatio('1:1', this)">🔲 1:1 정방형 (피드)</button>
+              <button class="ratio-btn" onclick="setRatio('9:16', this)">📱 9:16 세로 (릴스/스토리)</button>
+              <button class="ratio-btn" onclick="setRatio('16:9', this)">🖥️ 16:9 와이드 (영화/유튜브)</button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">2. 전환 속도</label>
+            <div class="ratio-btn-group" id="speedOptions">
+              <button class="ratio-btn" onclick="setSpeed(2000, this)">⚡ 빠름 (2초)</button>
+              <button class="ratio-btn active" onclick="setSpeed(3500, this)">⏱️ 보통 (3.5초)</button>
+              <button class="ratio-btn" onclick="setSpeed(5000, this)">☕ 여유롭게 (5초)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-grid">
+          <div class="field-group">
+            <label class="field-label">3. 레트로 오버레이 스타일</label>
+            <div class="ratio-btn-group" id="stampOptions">
+              <button class="ratio-btn active" onclick="setOverlayStyle('vhs', this)">📹 90s 캠코더 REC & 날짜</button>
+              <button class="ratio-btn" onclick="setOverlayStyle('stamp', this)">🟠 오렌지 필름 날짜만</button>
+              <button class="ratio-btn" onclick="setOverlayStyle('none', this)">🚫 오버레이 없음 (클린)</button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">4. 감성 앰비언트 BGM 사운드</label>
+            <div class="ratio-btn-group">
+              <button class="ratio-btn active" id="bgmToggleBtn" onclick="toggleAmbientMusic()">🎵 잔잔한 앰비언트 패드 켜기</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-gradient-cinema" onclick="startSlideshow()">
+          <span>▶ 켄 번스 시네마틱 슬라이드쇼 시작</span>
+        </button>
+      </div>
+
+      <!-- Viewer Box -->
+      <div class="viewer-box" id="viewerArea">
+        <div class="section-label" style="width: 100%; max-width: 600px;">
+          <span style="font-size: 15px; font-weight: 800; color: #f1f5f9;">🎬 실시간 켄 번스 모션 시네마</span>
+          <span style="font-size: 12px; color: var(--yellow); font-weight: 700;">KEN BURNS ENGINE</span>
+        </div>
+
+        <div class="cinema-frame" id="cinemaFrame">
           <canvas id="motionCanvas"></canvas>
         </div>
 
-        <div class="player-controls">
-          <button class="player-btn" onclick="togglePlay()" id="playPauseBtn">⏸️ 일시 정지</button>
-          <button class="player-btn" style="background: linear-gradient(135deg, var(--pink), var(--purple));" onclick="createMotionGIF()">
-            🎞️ 루핑 GIF 만들기
-          </button>
+        <!-- HUD Controls -->
+        <div class="player-hud-bar">
+          <button class="hud-btn" id="playPauseBtn" onclick="togglePlayPause()">⏸️ 일시 정지</button>
+          <span id="currentSlideIdxText" style="font-size: 12px; color: var(--text-dim); font-weight: 600;">1 / 4</span>
+          <button class="hud-btn" onclick="generateSlideGIF()">🎁 루핑 GIF 만들기</button>
         </div>
 
-        <div class="gif-status" id="gifStatus">⏳ 고화질 GIF 생성 중입니다 (잠시만 기다려주세요)...</div>
+        <div class="gif-status" id="gifStatus">⏳ 고화질 루핑 GIF 생성 중입니다. 잠시만 기다려주세요...</div>
 
         <div class="gif-download-area" id="gifArea">
-          <div class="section-label"><span>🎉 완성된 루핑 GIF</span></div>
+          <div class="section-label" style="width: 100%;"><span>🎉 완성된 감성 루핑 GIF</span></div>
           <img id="gifOutput" src="" alt="GIF Output">
-          <a id="gifDownload" class="primary-btn" style="text-decoration: none; width: 100%; text-align: center;" download="slideshow.gif">
-            📥 완성된 GIF 다운로드
+          <a id="gifDownload" class="btn-gradient-cinema" style="text-decoration: none; width: 100%; text-align: center;" download="slideshow_loop.gif">
+            📥 완성된 GIF 파일 다운로드
           </a>
         </div>
       </div>
@@ -371,12 +487,13 @@
  "steps": [
   "슬라이드쇼로 감상할 사진들을 여러 장 업로드합니다.",
   "1:1 피드용, 9:16 인스타 스토리용, 16:9 와이드 중 원하는 화면 비율을 고릅니다.",
-  "전환 속도와 레트로 필름 날짜 스탬프 표시 여부를 선택합니다.",
+  "전환 속도와 90s 캠코더 REC 오버레이 또는 아날로그 날짜 스탬프를 선택합니다.",
   "'슬라이드쇼 시작'을 눌러 영화처럼 부드럽게 움직이는 모션 영상을 감상합니다.",
   "'루핑 GIF 만들기'를 눌러 인스타그램이나 메신저로 공유할 수 있는 반복 재생 GIF를 다운로드합니다."
  ],
  "tips": [
-  "켄 번스(Ken Burns) 효과란 사진을 고정시키지 않고 카메라가 부드럽게 줌/팬하여 생동감을 주는 영화적 기법입니다."
+  "켄 번스(Ken Burns) 효과란 사진을 고정시키지 않고 카메라가 부드럽게 줌/팬하여 생동감을 주는 영화적 기법입니다.",
+  "상단의 앰비언트 BGM 버튼을 켜면 브라우저 내장 신디사이저가 잔잔한 감성 패드 음악을 연주합니다."
  ]
 }
   </script>
@@ -385,13 +502,63 @@
     let slideImages = [];
     let currentRatio = '1:1';
     let slideDuration = 3500;
-    let showStamp = true;
+    let overlayStyle = 'vhs';
     let isPlaying = false;
     let animationFrameId = null;
 
     let currentIndex = 0;
     let nextIndex = 1;
     let slideStartTime = 0;
+    let loadedImgObjects = [];
+
+    // Native Web Audio Synthesizer for Soothing Ambient Music Pad
+    let audioCtx = null;
+    let ambientGain = null;
+    let isBgmPlaying = false;
+
+    function toggleAmbientMusic() {
+      const btn = document.getElementById('bgmToggleBtn');
+      if (isBgmPlaying) {
+        if (ambientGain) ambientGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        isBgmPlaying = false;
+        btn.textContent = '🎵 앰비언트 BGM 꺼짐 (클릭하여 켜기)';
+        btn.classList.remove('active');
+      } else {
+        startAmbientSynth();
+        isBgmPlaying = true;
+        btn.textContent = '🎶 앰비언트 BGM 연주 중 (클릭하여 끄기)';
+        btn.classList.add('active');
+      }
+    }
+
+    function startAmbientSynth() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        if (!audioCtx) audioCtx = new AudioContext();
+
+        ambientGain = audioCtx.createGain();
+        ambientGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+        ambientGain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 1.5);
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 600;
+
+        // Dreamy chord (F major 9: F3, A3, C4, E4)
+        const freqs = [174.61, 220.00, 261.63, 329.63];
+        freqs.forEach(f => {
+          const osc = audioCtx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.value = f;
+          osc.connect(filter);
+          osc.start();
+        });
+
+        filter.connect(ambientGain);
+        ambientGain.connect(audioCtx.destination);
+      } catch (e) {}
+    }
 
     function handleSlideUpload(event) {
       const files = Array.from(event.target.files || []);
@@ -420,22 +587,15 @@
       const controls = document.getElementById('controlsGroup');
 
       grid.innerHTML = '';
-      count.textContent = `${slideImages.length}장`;
+      count.textContent = slideImages.length;
 
       slideImages.forEach((src, idx) => {
         const box = document.createElement('div');
-        box.className = 'photo-thumb-box';
-
-        const del = document.createElement('button');
-        del.className = 'btn-del';
-        del.textContent = '✕';
-        del.onclick = (e) => { e.stopPropagation(); removeSlide(idx); };
-        box.appendChild(del);
-
-        const img = document.createElement('img');
-        img.src = src;
-        box.appendChild(img);
-
+        box.className = 'tray-thumb';
+        box.innerHTML = `
+          <img src="${src}" alt="slide">
+          <button class="tray-del-btn" onclick="removeSlide(${idx})">✕</button>
+        `;
         grid.appendChild(box);
       });
 
@@ -448,19 +608,17 @@
       if (el) el.classList.add('active');
     }
 
-    function setSpeed(spd, el) {
-      slideDuration = spd;
+    function setSpeed(dur, el) {
+      slideDuration = dur;
       document.querySelectorAll('#speedOptions .ratio-btn').forEach(b => b.classList.remove('active'));
       if (el) el.classList.add('active');
     }
 
-    function setStamp(stamp, el) {
-      showStamp = stamp;
+    function setOverlayStyle(style, el) {
+      overlayStyle = style;
       document.querySelectorAll('#stampOptions .ratio-btn').forEach(b => b.classList.remove('active'));
       if (el) el.classList.add('active');
     }
-
-    let loadedImgObjects = [];
 
     async function startSlideshow() {
       if (slideImages.length < 2) {
@@ -498,6 +656,15 @@
       animateMotion(performance.now());
     }
 
+    function togglePlayPause() {
+      isPlaying = !isPlaying;
+      document.getElementById('playPauseBtn').textContent = isPlaying ? '⏸️ 일시 정지' : '▶ 계속 재생';
+      if (isPlaying) {
+        slideStartTime = performance.now();
+        animateMotion(performance.now());
+      }
+    }
+
     function animateMotion(time) {
       if (!isPlaying) return;
 
@@ -511,40 +678,34 @@
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, w, h);
 
-      // Current Image with Ken Burns zoom (1.0 -> 1.15)
+      // Current Image with Ken Burns zoom (1.0 -> 1.15) and subtle horizontal pan
       const curImg = loadedImgObjects[currentIndex];
       const scale = 1.0 + 0.15 * progress;
-      const panOffset = (progress - 0.5) * 20;
+      const panOffset = (progress - 0.5) * 24;
 
       ctx.save();
       drawKenBurns(ctx, curImg, w, h, scale, panOffset, 1.0);
       ctx.restore();
 
-      // Crossfade into next image during the last 25% of slideDuration
-      const fadeStart = 0.75;
-      if (progress > fadeStart) {
-        const fadeProg = (progress - fadeStart) / (1 - fadeStart);
+      // Crossfade to Next Image on last 35% of duration
+      if (progress > 0.65) {
+        const fadeProg = (progress - 0.65) / 0.35;
         const nextImg = loadedImgObjects[nextIndex];
-        const nextScale = 1.15 - 0.05 * fadeProg;
+        const nextScale = 1.15 - 0.15 * fadeProg;
+
         ctx.save();
         drawKenBurns(ctx, nextImg, w, h, nextScale, 0, fadeProg);
         ctx.restore();
       }
 
-      // Vintage Film Date Stamp
-      if (showStamp) {
-        ctx.fillStyle = '#ff7700';
-        ctx.font = 'bold 24px "VT323", monospace';
-        ctx.shadowColor = 'rgba(255, 119, 0, 0.7)';
-        ctx.shadowBlur = 6;
-        const now = new Date();
-        const stampText = `'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
-        ctx.fillText(stampText, w - 140, h - 30);
-        ctx.shadowColor = 'transparent';
-      }
+      // Draw Retro Overlays
+      drawRetroOverlays(ctx, w, h);
+
+      // Update HUD Index
+      document.getElementById('currentSlideIdxText').textContent = `${currentIndex + 1} / ${loadedImgObjects.length}`;
 
       if (progress >= 1) {
-        currentIndex = (currentIndex + 1) % loadedImgObjects.length;
+        currentIndex = nextIndex;
         nextIndex = (currentIndex + 1) % loadedImgObjects.length;
         slideStartTime = performance.now();
       }
@@ -552,51 +713,90 @@
       animationFrameId = requestAnimationFrame(animateMotion);
     }
 
-    function drawKenBurns(ctx, img, w, h, scale, panOffset, alpha) {
-      ctx.globalAlpha = alpha;
+    function drawKenBurns(ctx, img, w, h, scale, panX, opacity) {
+      if (!img) return;
+      ctx.globalAlpha = opacity;
       const imgRatio = img.width / img.height;
-      const canvasRatio = w / h;
-      let drawW, drawH;
+      const targetRatio = w / h;
 
-      if (imgRatio > canvasRatio) {
-        drawH = h * scale;
-        drawW = drawH * imgRatio;
+      let baseW, baseH;
+      if (imgRatio > targetRatio) {
+        baseH = h;
+        baseW = h * imgRatio;
       } else {
-        drawW = w * scale;
-        drawH = drawW / imgRatio;
+        baseW = w;
+        baseH = w / imgRatio;
       }
 
-      const x = (w - drawW) / 2 + panOffset;
-      const y = (h - drawH) / 2;
-      ctx.drawImage(img, x, y, drawW, drawH);
+      const drawW = baseW * scale;
+      const drawH = baseH * scale;
+      const dx = (w - drawW) / 2 + panX;
+      const dy = (h - drawH) / 2;
+
+      ctx.drawImage(img, dx, dy, drawW, drawH);
     }
 
-    function togglePlay() {
-      isPlaying = !isPlaying;
-      const btn = document.getElementById('playPauseBtn');
-      if (isPlaying) {
-        btn.textContent = '⏸️ 일시 정지';
-        slideStartTime = performance.now();
-        animateMotion(performance.now());
-      } else {
-        btn.textContent = '▶️ 계속 재생';
-        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    function drawRetroOverlays(ctx, w, h) {
+      if (overlayStyle === 'none') return;
+
+      const dateStr = "'26 10 11";
+
+      if (overlayStyle === 'vhs') {
+        // Blinking Red REC
+        const blink = Math.floor(Date.now() / 600) % 2 === 0;
+        ctx.fillStyle = blink ? '#ef4444' : 'rgba(239, 68, 68, 0.3)';
+        ctx.beginPath();
+        ctx.arc(32, 32, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 15px "Share Tech Mono", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('REC', 46, 37);
+
+        // Battery indicator
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(w - 60, 24, 28, 14);
+        ctx.fillRect(w - 32, 28, 3, 6);
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(w - 58, 26, 20, 10);
+
+        // Date & Time Stamp at bottom right
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = 'bold 20px "Share Tech Mono", monospace';
+        ctx.textAlign = 'right';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(`${dateStr}  PM 08:30`, w - 24, h - 24);
+        ctx.shadowColor = 'transparent';
+      } else if (overlayStyle === 'stamp') {
+        ctx.fillStyle = '#ea580c';
+        ctx.font = 'bold 22px "Share Tech Mono", monospace';
+        ctx.textAlign = 'right';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(dateStr, w - 24, h - 24);
+        ctx.shadowColor = 'transparent';
       }
     }
 
-    async function createMotionGIF() {
+    // High quality looping GIF generation via gifshot
+    async function generateSlideGIF() {
       if (loadedImgObjects.length < 2) return;
 
       const statusEl = document.getElementById('gifStatus');
       statusEl.style.display = 'block';
 
-      const w = 360, h = (currentRatio === '9:16') ? 480 : (currentRatio === '16:9' ? 202 : 360);
+      const w = 400;
+      const h = currentRatio === '1:1' ? 400 : (currentRatio === '9:16' ? 710 : 225);
+
       const tempC = document.createElement('canvas');
       tempC.width = w; tempC.height = h;
       const tCtx = tempC.getContext('2d');
 
       const frames = [];
-      const numPhotos = Math.min(4, loadedImgObjects.length);
+      const numPhotos = loadedImgObjects.length;
       const framesPerPhoto = 6;
 
       for (let i = 0; i < numPhotos; i++) {
@@ -613,16 +813,16 @@
 
           if (prog > 0.6) {
             const fade = (prog - 0.6) / 0.4;
-            drawKenBurns(tCtx, nextImg, w, h, 1.1, 0, fade);
+            drawKenBurns(tCtx, nextImg, w, h, 1.12, 0, fade);
           }
 
-          if (showStamp) {
-            tCtx.fillStyle = '#ff7700';
-            tCtx.font = 'bold 18px monospace';
-            tCtx.fillText("'26 10 11", w - 90, h - 18);
+          if (overlayStyle !== 'none') {
+            tCtx.fillStyle = '#ea580c';
+            tCtx.font = 'bold 16px monospace';
+            tCtx.fillText("'26 10 11", w - 80, h - 14);
           }
 
-          frames.push(tempC.toDataURL('image/jpeg', 0.8));
+          frames.push(tempC.toDataURL('image/jpeg', 0.85));
         }
       }
 
@@ -643,6 +843,48 @@
           alert('GIF 생성 실패: ' + obj.error);
         }
       });
+    }
+
+    // Demo Samples Generator
+    function getSampleSlides() {
+      const samples = [
+        { title: 'SUNSET HORIZON', col1: '#f43f5e', col2: '#ec4899', emoji: '🌅' },
+        { title: 'EMERALD FOREST', col1: '#059669', col2: '#10b981', emoji: '🌲' },
+        { title: 'NEON CYBER CITY', col1: '#7c3aed', col2: '#06b6d4', emoji: '🏙️' },
+        { title: 'MIDNIGHT OCEAN', col1: '#0284c7', col2: '#38bdf8', emoji: '🌊' }
+      ];
+
+      return samples.map(s => {
+        const c = document.createElement('canvas');
+        c.width = 600; c.height = 600;
+        const ctx = c.getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 600, 600);
+        grad.addColorStop(0, s.col1); grad.addColorStop(1, s.col2);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 600, 600);
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath(); ctx.arc(300, 240, 90, 0, Math.PI * 2); ctx.fill();
+        ctx.font = '70px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(s.emoji, 300, 240);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 30px "Outfit", sans-serif';
+        ctx.fillText(s.title, 300, 390);
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.font = '18px monospace';
+        ctx.fillText('CINEMATIC KEN BURNS MOTION', 300, 435);
+        return c.toDataURL('image/jpeg', 0.9);
+      });
+    }
+
+    function loadDemoSamples() {
+      slideImages = getSampleSlides();
+      updateSlideGallery();
+      startSlideshow();
+    }
+
+    if (new URLSearchParams(window.location.search).get('demo') === '1') {
+      window.addEventListener('DOMContentLoaded', () => setTimeout(loadDemoSamples, 100));
     }
 
     // Drag and Drop

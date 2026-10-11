@@ -6,33 +6,41 @@
   <title>여행 사진 동선 맵 & 애니메이션 GIF | 미니게임 천국</title>
   <script src="../scripts/game-common.js?v=841f759d"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  
+  <!-- Leaflet CSS & JS for Real Interactive Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- EXIF & GIFshot -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+
   <style>
     :root {
-      --bg: #0b0b1a;
-      --card-bg: rgba(22, 22, 45, 0.7);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --cyan: #00d4ff;
-      --purple: #7c3aed;
-      --pink: #ff006e;
-      --yellow: #ffd166;
-      --green: #06d6a0;
-      --text-main: #ffffff;
+      --bg: #07090e;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-focus: rgba(6, 214, 160, 0.35);
+      --cyan: #06b6d4;
+      --indigo: #6366f1;
+      --pink: #ec4899;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --text-main: #f8fafc;
       --text-dim: #94a3b8;
-      --radius-card: 16px;
-      --radius-btn: 12px;
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      padding: 0;
-      background-color: var(--bg);
+      background: radial-gradient(circle at 50% 0%, #111827 0%, #07090e 100%);
       color: var(--text-main);
-      font-family: 'Outfit', 'Pretendard', sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -40,9 +48,9 @@
     }
 
     .container {
-      max-width: 720px;
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 24px 20px;
       width: 100%;
       flex: 1;
       display: flex;
@@ -53,252 +61,632 @@
     header {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       position: relative;
-      padding: 10px 0;
+      padding-bottom: 8px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
     .back-btn {
-      position: absolute;
-      left: 0;
-      background: none;
-      border: none;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
       color: var(--cyan);
-      font-size: 24px;
+      font-size: 20px;
       cursor: pointer;
       text-decoration: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      transition: background 0.2s;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+    .back-btn:hover {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--cyan);
+      transform: translateX(-2px);
+    }
 
-    h1 {
+    .header-title-box h1 {
       font-size: 22px;
       font-weight: 800;
-      background: linear-gradient(90deg, var(--green), var(--cyan));
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #6366f1 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .card {
+    .header-title-box p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .glass-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      backdrop-filter: blur(10px);
-      border-radius: var(--radius-card);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      transition: border-color 0.25s ease;
     }
 
+    /* Drag & Drop Upload Zone */
     .drop-zone {
-      border: 2px dashed rgba(6, 214, 160, 0.4);
-      border-radius: var(--radius-card);
-      padding: 30px 20px;
+      border: 2px dashed rgba(6, 182, 212, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 36px 24px;
       text-align: center;
-      background: rgba(6, 214, 160, 0.03);
+      background: linear-gradient(180deg, rgba(6, 182, 212, 0.03) 0%, rgba(16, 185, 129, 0.02) 100%);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .drop-zone:hover {
-      border-color: var(--green);
-      background: rgba(6, 214, 160, 0.08);
-      transform: translateY(-2px);
-    }
-
-    .drop-icon { font-size: 40px; }
-    .drop-title { font-weight: 700; font-size: 16px; color: var(--green); }
-    .drop-sub { font-size: 13px; color: var(--text-dim); }
-
-    .section-label {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--green);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .route-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 240px;
-      overflow-y: auto;
-    }
-
-    .route-item {
-      display: flex;
       align-items: center;
       gap: 12px;
-      background: rgba(255, 255, 255, 0.04);
-      padding: 8px 12px;
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.08);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -10px rgba(6, 182, 212, 0.25);
+    }
+
+    .drop-icon-wrapper {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .drop-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .drop-sub {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .demo-btn-pill {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .demo-btn-pill:hover {
+      background: rgba(6, 182, 212, 0.2);
+      border-color: var(--cyan);
+    }
+
+    /* Trip Stats HUD Bar */
+    .trip-stats-bar {
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 14px 18px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .stat-val {
+      font-size: 17px;
+      font-weight: 800;
+      color: #38bdf8;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .stat-unit {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+    }
+
+    /* Map Section */
+    .map-section {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .map-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .map-style-pills {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 3px;
       border-radius: 10px;
       border: 1px solid var(--card-border);
     }
 
-    .route-thumb {
+    .map-pill {
+      padding: 5px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .map-pill.active {
+      background: var(--cyan);
+      color: #04121d;
+    }
+
+    .map-frame {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
+    }
+
+    #realMap {
+      width: 100%;
+      height: 100%;
+      background: #0b0f19;
+      z-index: 1;
+    }
+
+    /* Custom Map Markers & Popups */
+    .custom-leaflet-marker {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .marker-card-thumb {
       width: 44px;
       height: 44px;
+      border-radius: 50%;
+      border: 3px solid #10b981;
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5), 0 0 0 3px rgba(0,0,0,0.4);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .custom-leaflet-marker:hover .marker-card-thumb {
+      transform: scale(1.2);
+      border-color: #06b6d4;
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.7);
+    }
+
+    .marker-number-tag {
+      position: absolute;
+      bottom: -6px;
+      background: #0f172a;
+      border: 1.5px solid #10b981;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: rgba(15, 23, 42, 0.95) !important;
+      color: #fff !important;
+      border-radius: 14px !important;
+      border: 1px solid rgba(6, 182, 212, 0.3) !important;
+      backdrop-filter: blur(12px) !important;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6) !important;
+      padding: 6px !important;
+    }
+
+    .leaflet-popup-tip {
+      background: rgba(15, 23, 42, 0.95) !important;
+    }
+
+    .popup-content-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 170px;
+      padding: 4px;
+    }
+
+    .popup-img {
+      width: 100%;
+      height: 100px;
       border-radius: 8px;
       object-fit: cover;
     }
 
-    .route-info {
-      flex: 1;
+    .popup-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .popup-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* Action Control Row */
+    .action-button-row {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
-    .route-name { font-size: 14px; font-weight: 700; color: white; }
-    .route-meta { font-size: 12px; color: var(--text-dim); display: flex; gap: 8px; }
-
-    .badge-gps {
-      background: rgba(6, 214, 160, 0.2);
-      color: var(--green);
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid rgba(6, 214, 160, 0.4);
-    }
-
-    .badge-manual {
-      background: rgba(255, 209, 102, 0.2);
-      color: var(--yellow);
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 209, 102, 0.4);
-    }
-
-    .item-del-btn {
-      background: none;
+    .btn-gradient-primary {
+      flex: 1;
+      min-width: 220px;
+      background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
       border: none;
-      color: #ff006e;
-      cursor: pointer;
-      font-size: 16px;
-      padding: 4px;
-    }
-
-    button.primary-btn {
-      background: linear-gradient(135deg, var(--green), var(--cyan));
-      border: none;
-      color: #0b0b1a;
-      padding: 14px;
-      border-radius: var(--radius-btn);
-      font-family: inherit;
+      color: #04121d;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
       font-weight: 800;
       font-size: 15px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
+      box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.5);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .canvas-container {
+    .btn-gradient-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -6px rgba(6, 182, 212, 0.6);
+    }
+
+    .btn-gradient-secondary {
+      flex: 1;
+      min-width: 220px;
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      border: none;
+      color: #ffffff;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px -6px rgba(236, 72, 153, 0.4);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-gradient-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -6px rgba(139, 92, 246, 0.5);
+    }
+
+    /* Timeline Spots List */
+    .timeline-card {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .timeline-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .timeline-list {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 14px;
-      margin-top: 10px;
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
     }
 
-    canvas {
-      width: 100%;
-      max-width: 580px;
-      border-radius: 12px;
-      background: #0d1322;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    .timeline-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      transition: all 0.2s;
+    }
+
+    .timeline-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(6, 182, 212, 0.3);
+      transform: translateX(3px);
+    }
+
+    .item-idx {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--cyan);
+      min-width: 22px;
+    }
+
+    .item-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
       border: 1px solid var(--card-border);
     }
 
-    .anim-controls {
+    .item-info {
+      flex: 1;
       display: flex;
-      gap: 10px;
-      width: 100%;
+      flex-direction: column;
+      gap: 3px;
     }
 
+    .item-name-input {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      outline: none;
+      border-bottom: 1px dashed transparent;
+      padding-bottom: 2px;
+    }
+
+    .item-name-input:focus {
+      border-bottom-color: var(--cyan);
+    }
+
+    .item-meta {
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .badge-gps {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-virtual {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .item-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-focus {
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-focus:hover {
+      background: var(--cyan);
+      color: #04121d;
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      color: #ef4444;
+      font-size: 15px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .btn-del:hover { background: rgba(239, 68, 68, 0.15); }
+
+    /* GIF & Poster Result Section */
     .status-alert {
       color: var(--yellow);
       font-size: 13px;
       text-align: center;
       display: none;
+      padding: 10px;
+      background: rgba(245, 158, 11, 0.1);
+      border-radius: 8px;
     }
 
     .gif-result-box {
       display: none;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
     }
 
-    .gif-result-box img {
-      max-width: 320px;
+    .gif-preview-img {
+      max-width: 100%;
       border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <a href="../index.html" class="back-btn">←</a>
-      <h1>📍 여행 동선 지도 & 순서형 GIF</h1>
+      <div class="header-left">
+        <a href="../index.html" class="back-btn" title="목록으로">←</a>
+        <div class="header-title-box">
+          <h1>📍 여행 동선 지도 & 순서형 GIF</h1>
+          <p>사진 메타데이터(GPS & 시간) 기반 리얼 인터랙티브 맵 & 타임랩스 GIF 스튜디오</p>
+        </div>
+      </div>
     </header>
 
-    <div class="card">
-      <div class="drop-zone" onclick="document.getElementById('travelPhotos').click()">
-        <div class="drop-icon">🧭</div>
-        <div class="drop-title">여행 사진들을 한 번에 올려주세요</div>
-        <div class="drop-sub">사진 파일 속 GPS 위치 및 촬영 날짜/시간 정보를 자동 추출합니다</div>
-        <input type="file" id="travelPhotos" accept="image/*" multiple style="display: none;" onchange="handleTravelUpload(event)">
-      </div>
-
-      <div class="section-label">
-        <span>🚩 추출된 여행 일정 및 스팟</span>
-        <span id="spotCount" style="color: var(--green);">0개 스팟</span>
-      </div>
-
-      <div class="route-list" id="routeList"></div>
-
-      <div id="actionArea" style="display: none; flex-direction: column; gap: 12px;">
-        <button class="primary-btn" onclick="startRouteAnimation()">
-          ▶️ 여행 경로 애니메이션 재생
-        </button>
-        <button class="primary-btn" style="background: linear-gradient(135deg, var(--pink), var(--purple)); color: white;" onclick="generateTravelGIF()">
-          🎞️ 움직이는 여행 타임랩스 GIF 다운로드
+    <!-- Upload Card -->
+    <div class="glass-card" id="uploadCard">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('travelFiles').click()">
+        <input type="file" id="travelFiles" multiple accept="image/*" style="display: none;" onchange="handleTravelUpload(event)">
+        <div class="drop-icon-wrapper">🧭</div>
+        <div class="drop-title">여행 사진들을 여러 장 업로드하거나 끌어다 놓으세요</div>
+        <div class="drop-sub">사진 속 EXIF GPS 좌표와 촬영 일시를 자동 추출하여 실제 지도 위에 경로를 그립니다</div>
+        <button type="button" class="demo-btn-pill" onclick="event.stopPropagation(); loadDemoSamples();">
+          ✨ 제주도 여행 샘플 사진 즉시 로드
         </button>
       </div>
+    </div>
 
-      <div class="status-alert" id="statusAlert">⏳ GIF 인코딩 중입니다 (약 5~10초 소요)...</div>
+    <!-- Trip Summary Stats HUD -->
+    <div class="trip-stats-bar" id="tripStatsBar">
+      <div class="stat-item">
+        <span class="stat-label">총 이동 거리</span>
+        <div class="stat-val" id="totalDistVal">0 <span class="stat-unit">km</span></div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">방문 여행 스팟</span>
+        <div class="stat-val" id="totalSpotsVal">0 <span class="stat-unit">개소</span></div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">여행 기간</span>
+        <div class="stat-val" id="tripPeriodVal">- <span class="stat-unit"></span></div>
+      </div>
+    </div>
 
-      <div class="canvas-container" id="canvasContainer" style="display: none;">
-        <canvas id="routeCanvas" width="800" height="600"></canvas>
+    <!-- Real Interactive Map Section -->
+    <div class="glass-card map-section" id="mapSection">
+      <div class="map-top-bar">
+        <div style="font-weight: 700; font-size: 15px; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+          <span>🗺️ 실시간 인터랙티브 여행 지도</span>
+        </div>
+        <div class="map-style-pills">
+          <button class="map-pill active" onclick="changeMapStyle('satellite', this)">🛰️ 고해상도 위성</button>
+          <button class="map-pill" onclick="changeMapStyle('osm', this)">🗺️ 오픈스트리트맵</button>
+          <button class="map-pill" onclick="changeMapStyle('topo', this)">🏔️ 지형 고도맵</button>
+        </div>
       </div>
 
+      <div class="map-frame">
+        <div id="realMap"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-button-row">
+        <button class="btn-gradient-primary" onclick="startMapTourAnimation()">
+          <span>▶ 여행 동선 비행 투어 재생</span>
+        </button>
+        <button class="btn-gradient-secondary" onclick="generateTravelGIF()">
+          <span>🎬 타임랩스 GIF 다운로드</span>
+        </button>
+      </div>
+
+      <div class="status-alert" id="statusAlert">⏳ 지도 타일과 사진을 결합하여 고화질 GIF를 생성하는 중입니다...</div>
+
+      <!-- Result Box -->
       <div class="gif-result-box" id="gifResultBox">
-        <div class="section-label"><span>🎉 완성된 여행 GIF 미리보기</span></div>
-        <img id="gifPreview" src="" alt="Travel GIF Preview">
-        <a id="gifDownloadLink" class="primary-btn" style="text-decoration: none; width: 100%; text-align: center;" download="travel_story.gif">
-          📥 GIF 파일 저장하기
+        <div style="font-weight: 700; color: #f43f5e; font-size: 15px;">🎉 완성된 움직이는 여행 타임랩스 GIF</div>
+        <img id="gifPreview" class="gif-preview-img" alt="Travel GIF Preview">
+        <a id="gifDownloadLink" class="btn-gradient-secondary" style="text-decoration: none; width: 100%; text-align: center;" download="travel_route.gif">
+          📥 고화질 GIF 파일 저장
         </a>
       </div>
+    </div>
+
+    <!-- Timeline Spots List -->
+    <div class="glass-card timeline-card" id="timelineCard">
+      <div class="timeline-header">
+        <div class="timeline-title">
+          <span>🚩 추출된 여행 타임라인 순서</span>
+          <span style="font-size: 12px; color: var(--text-dim); font-weight: normal;">(스팟명을 직접 클릭하여 수정할 수 있습니다)</span>
+        </div>
+        <button class="btn-focus" onclick="fitAllMarkers()">📍 전체 경로 맞춤</button>
+      </div>
+      <div class="timeline-list" id="routeList"></div>
     </div>
   </div>
 
@@ -311,20 +699,60 @@
  "steps": [
   "스마트폰이나 카메라로 찍은 여행 사진들을 여러 장 업로드합니다.",
   "사진 속 EXIF 메타데이터에서 촬영 시간과 GPS 좌표가 자동 분석됩니다.",
-  "시간 순서대로 정렬된 여행 스팟들을 확인합니다.",
-  "'여행 경로 애니메이션 재생'을 눌러 동선 맵 애니메이션을 감상합니다.",
-  "'움직이는 여행 타임랩스 GIF 다운로드'를 눌러 SNS 공유용 GIF를 저장합니다."
+  "실시간 인터랙티브 지도(Leaflet) 위에 생성된 실제 여행 경로와 핀을 확인합니다.",
+  "'여행 동선 비행 투어 재생'을 눌러 실제 지도를 따라 이동하는 부드러운 애니메이션을 감상합니다.",
+  "'움직이는 여행 타임랩스 GIF 다운로드'를 눌러 SNS 공유용 루핑 GIF를 저장합니다."
  ],
  "tips": [
   "스마트폰 카메라 설정에서 '위치 태그'가 켜진 상태로 찍은 사진은 자동으로 위치가 감지됩니다.",
-  "위치 태그가 없는 사진도 촬영 시간 순서에 따라 가상 좌표로 자연스럽게 동선이 생성됩니다."
+  "위치 태그가 없는 사진도 촬영 시간 순서에 따라 가상 좌표로 자연스럽게 동선이 생성됩니다.",
+  "지도 상단의 테마 버튼을 통해 다크 모드, 라이트 모드, 아틀라스 모드를 자유롭게 전환할 수 있습니다."
  ]
 }
   </script>
 
   <script>
-    let travelSpots = []; // { dataUrl, lat, lng, date, name, isGps }
-    let animId = null;
+    let travelSpots = []; // { dataUrl, lat, lng, date, name, isGps, timeVal }
+    let leafletMap = null;
+    let mapMarkers = [];
+    let routePolyline = null;
+    let tourVehicleMarker = null;
+    let isTourRunning = false;
+    let currentMapTileLayer = null;
+
+    const MAP_STYLES = {
+      satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      osm: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      topo: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+    };
+
+    function initMapIfNeeded() {
+      if (leafletMap) return;
+
+      leafletMap = L.map('realMap', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView([33.38, 126.55], 10);
+
+      currentMapTileLayer = L.tileLayer(MAP_STYLES.satellite, {
+        maxZoom: 18
+      }).addTo(leafletMap);
+    }
+
+    function changeMapStyle(styleKey, el) {
+      document.querySelectorAll('.map-pill').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      if (!leafletMap || !MAP_STYLES[styleKey]) return;
+
+      if (currentMapTileLayer) {
+        leafletMap.removeLayer(currentMapTileLayer);
+      }
+      currentMapTileLayer = L.tileLayer(MAP_STYLES[styleKey], {
+        maxZoom: 19,
+        subdomains: 'abcd'
+      }).addTo(leafletMap);
+    }
 
     function handleTravelUpload(event) {
       const files = Array.from(event.target.files || []);
@@ -361,9 +789,9 @@
             decLng = (lng[0] + lng[1] / 60 + lng[2] / 3600) * (lngRef === "W" ? -1 : 1);
             hasGps = true;
           } else {
-            // Simulated offset based on current count
-            const baseLat = 37.5665 + (travelSpots.length * 0.05);
-            const baseLng = 126.9780 + (travelSpots.length * 0.08);
+            // Default offset around Seoul / Jeju
+            const baseLat = 37.55 + (travelSpots.length * 0.04);
+            const baseLng = 126.97 + (travelSpots.length * 0.05);
             decLat = baseLat;
             decLng = baseLng;
           }
@@ -371,262 +799,192 @@
           travelSpots.push({
             dataUrl: dataUrl,
             name: file.name.replace(/\.[^/.]+$/, "") || `스팟 #${travelSpots.length + 1}`,
-            date: dateTime ? dateTime.substring(0, 10).replace(/:/g, '-') : '날짜 미상',
+            date: dateTime ? dateTime.substring(0, 10).replace(/:/g, '-') : new Date().toISOString().slice(0, 10),
             lat: decLat,
             lng: decLng,
             isGps: hasGps,
-            timeVal: dateTime ? new Date(dateTime.replace(/:/g, '/')).getTime() : Date.now() + travelSpots.length
+            timeVal: dateTime ? new Date(dateTime.replace(/:/g, '/')).getTime() : Date.now() + travelSpots.length * 1000
           });
 
-          // Sort chronologically
           travelSpots.sort((a, b) => a.timeVal - b.timeVal);
-          updateSpotList();
+          refreshTripUI();
         });
       };
       img.src = dataUrl;
     }
 
-    function updateSpotList() {
-      const list = document.getElementById('routeList');
-      const count = document.getElementById('spotCount');
-      const actions = document.getElementById('actionArea');
+    // Haversine distance formula
+    function calcDistanceKm(lat1, lon1, lat2, lon2) {
+      const R = 6371; // km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
 
+    function refreshTripUI() {
+      if (travelSpots.length === 0) return;
+
+      document.getElementById('tripStatsBar').style.display = 'grid';
+      document.getElementById('mapSection').style.display = 'flex';
+      document.getElementById('timelineCard').style.display = 'flex';
+
+      // Initialize map
+      initMapIfNeeded();
+      setTimeout(() => { leafletMap.invalidateSize(); }, 200);
+
+      // Calculate Stats
+      let totalDist = 0;
+      for (let i = 0; i < travelSpots.length - 1; i++) {
+        totalDist += calcDistanceKm(travelSpots[i].lat, travelSpots[i].lng, travelSpots[i+1].lat, travelSpots[i+1].lng);
+      }
+      document.getElementById('totalDistVal').innerHTML = `${totalDist.toFixed(1)} <span class="stat-unit">km</span>`;
+      document.getElementById('totalSpotsVal').innerHTML = `${travelSpots.length} <span class="stat-unit">개소</span>`;
+
+      const dates = travelSpots.map(s => s.date).sort();
+      const periodStr = dates[0] === dates[dates.length - 1] ? dates[0] : `${dates[0]} ~ ${dates[dates.length - 1]}`;
+      document.getElementById('tripPeriodVal').textContent = periodStr;
+
+      // Update Map Markers & Polyline
+      renderMapElements();
+
+      // Update Timeline List
+      renderTimelineList();
+    }
+
+    function renderMapElements() {
+      if (!leafletMap) return;
+
+      // Clear existing markers
+      mapMarkers.forEach(m => leafletMap.removeLayer(m));
+      mapMarkers = [];
+      if (routePolyline) leafletMap.removeLayer(routePolyline);
+      if (tourVehicleMarker) leafletMap.removeLayer(tourVehicleMarker);
+
+      const latlngs = [];
+
+      travelSpots.forEach((spot, idx) => {
+        const latlng = [spot.lat, spot.lng];
+        latlngs.push(latlng);
+
+        const customIcon = L.divIcon({
+          className: 'custom-leaflet-marker',
+          html: `
+            <div class="marker-card-thumb" style="background-image: url('${spot.dataUrl}')"></div>
+            <div class="marker-number-tag">${idx + 1}</div>
+          `,
+          iconSize: [44, 52],
+          iconAnchor: [22, 50],
+          popupAnchor: [0, -45]
+        });
+
+        const marker = L.marker(latlng, { icon: customIcon }).addTo(leafletMap);
+        marker.bindPopup(`
+          <div class="popup-content-box">
+            <img src="${spot.dataUrl}" class="popup-img">
+            <div class="popup-title">${idx + 1}. ${spot.name}</div>
+            <div class="popup-meta">📅 ${spot.date} • ${spot.isGps ? '📍 GPS' : '⏱️ 시간정렬'}</div>
+          </div>
+        `);
+
+        mapMarkers.push(marker);
+      });
+
+      // Draw Glowing Polyline
+      routePolyline = L.polyline(latlngs, {
+        color: '#10b981',
+        weight: 5,
+        opacity: 0.85,
+        dashArray: '8, 8',
+        lineCap: 'round'
+      }).addTo(leafletMap);
+
+      fitAllMarkers();
+    }
+
+    function fitAllMarkers() {
+      if (!leafletMap || travelSpots.length === 0) return;
+      const bounds = L.latLngBounds(travelSpots.map(s => [s.lat, s.lng]));
+      leafletMap.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+    }
+
+    function focusSpot(idx) {
+      if (!leafletMap || !travelSpots[idx]) return;
+      const spot = travelSpots[idx];
+      leafletMap.flyTo([spot.lat, spot.lng], 14, { duration: 1.2 });
+      if (mapMarkers[idx]) {
+        setTimeout(() => mapMarkers[idx].openPopup(), 1200);
+      }
+    }
+
+    function renderTimelineList() {
+      const list = document.getElementById('routeList');
       list.innerHTML = '';
-      count.textContent = `${travelSpots.length}개 스팟`;
 
       travelSpots.forEach((spot, idx) => {
         const item = document.createElement('div');
-        item.className = 'route-item';
+        item.className = 'timeline-item';
         item.innerHTML = `
-          <img src="${spot.dataUrl}" class="route-thumb">
-          <div class="route-info">
-            <div class="route-name">${idx + 1}. ${spot.name}</div>
-            <div class="route-meta">
+          <div class="item-idx">${idx + 1}</div>
+          <img src="${spot.dataUrl}" class="item-thumb" alt="spot">
+          <div class="item-info">
+            <input type="text" class="item-name-input" value="${spot.name}" onchange="updateSpotName(${idx}, this.value)">
+            <div class="item-meta">
               <span>📅 ${spot.date}</span>
-              ${spot.isGps ? '<span class="badge-gps">📍 GPS 인식</span>' : '<span class="badge-manual">⏱️ 시간순 배치</span>'}
+              ${spot.isGps ? '<span class="badge-gps">📍 GPS 인식</span>' : '<span class="badge-virtual">⏱️ 시간순 정렬</span>'}
             </div>
           </div>
-          <button class="item-del-btn" onclick="removeSpot(${idx})">✕</button>
+          <div class="item-actions">
+            <button class="btn-focus" onclick="focusSpot(${idx})">포커스</button>
+            <button class="btn-del" onclick="removeSpot(${idx})">✕</button>
+          </div>
         `;
         list.appendChild(item);
       });
+    }
 
-      actions.style.display = travelSpots.length > 0 ? 'flex' : 'none';
-      if (travelSpots.length > 0) {
-        document.getElementById('canvasContainer').style.display = 'flex';
-        drawStaticMap();
+    function updateSpotName(idx, newName) {
+      if (travelSpots[idx]) {
+        travelSpots[idx].name = newName;
+        renderMapElements();
       }
     }
 
     function removeSpot(idx) {
       travelSpots.splice(idx, 1);
-      updateSpotList();
+      refreshTripUI();
     }
 
-    // Convert GPS coords to Canvas Coordinates
-    function getCanvasCoords(spots, width, height, pad = 80) {
-      if (spots.length === 0) return [];
-      let minLat = Infinity, maxLat = -Infinity;
-      let minLng = Infinity, maxLng = -Infinity;
+    // Smooth Tour Animation along real map
+    async function startMapTourAnimation() {
+      if (isTourRunning || travelSpots.length < 2) return;
+      isTourRunning = true;
 
-      spots.forEach(s => {
-        if (s.lat < minLat) minLat = s.lat;
-        if (s.lat > maxLat) maxLat = s.lat;
-        if (s.lng < minLng) minLng = s.lng;
-        if (s.lng > maxLng) maxLng = s.lng;
-      });
-
-      const dLat = (maxLat - minLat) || 0.01;
-      const dLng = (maxLng - minLng) || 0.01;
-
-      return spots.map(s => {
-        const normX = (s.lng - minLng) / dLng;
-        const normY = 1 - ((s.lat - minLat) / dLat);
-        return {
-          x: pad + normX * (width - pad * 2),
-          y: pad + normY * (height - pad * 2),
-          spot: s
-        };
-      });
-    }
-
-    function drawStaticMap() {
-      const canvas = document.getElementById('routeCanvas');
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width, h = canvas.height;
-
-      // Dark Tech Map Background
-      ctx.fillStyle = '#0d1322';
-      ctx.fillRect(0, 0, w, h);
-
-      // Grid lines
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.lineWidth = 1;
-      for (let x = 0; x < w; x += 50) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
-      for (let y = 0; y < h; y += 50) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-
-      const points = getCanvasCoords(travelSpots, w, h);
-      if (points.length < 1) return;
-
-      // Draw path line
-      if (points.length > 1) {
-        ctx.strokeStyle = '#06d6a0';
-        ctx.lineWidth = 4;
-        ctx.setLineDash([8, 6]);
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-          ctx.lineTo(points[i].x, points[i].y);
-        }
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
-      // Draw pins
-      points.forEach((p, idx) => {
-        // Glow
-        ctx.fillStyle = 'rgba(6, 214, 160, 0.3)';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 16, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Pin body
-        ctx.fillStyle = '#06d6a0';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Number
-        ctx.fillStyle = '#000000';
-        ctx.font = 'bold 11px Outfit, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(idx + 1, p.x, p.y);
-
-        // Name
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '600 13px Pretendard, sans-serif';
-        ctx.fillText(p.spot.name, p.x, p.y + 24);
-      });
-    }
-
-    async function startRouteAnimation() {
-      if (travelSpots.length < 2) {
-        alert('동선을 연결하려면 최소 2장 이상의 사진이 필요합니다.');
-        return;
-      }
-      if (animId) cancelAnimationFrame(animId);
-
-      const canvas = document.getElementById('routeCanvas');
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width, h = canvas.height;
-      const points = getCanvasCoords(travelSpots, w, h);
-
-      // Load all images for popups
-      const loadedImgs = await Promise.all(travelSpots.map(s => {
-        return new Promise(res => {
-          const img = new Image();
-          img.onload = () => res(img);
-          img.src = s.dataUrl;
+      if (!tourVehicleMarker) {
+        const vehicleIcon = L.divIcon({
+          className: 'tour-vehicle',
+          html: '<div style="font-size: 28px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); transform: translate(-14px, -14px);">✈️</div>',
+          iconSize: [28, 28]
         });
-      }));
-
-      let currentStep = 0;
-      let progress = 0;
-
-      function renderFrame() {
-        // Base Map
-        ctx.fillStyle = '#0d1322';
-        ctx.fillRect(0, 0, w, h);
-
-        // Grid
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-        ctx.lineWidth = 1;
-        for (let x = 0; x < w; x += 50) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
-        for (let y = 0; y < h; y += 50) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-
-        // Draw visited lines
-        ctx.strokeStyle = '#06d6a0';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i <= currentStep; i++) {
-          ctx.lineTo(points[i].x, points[i].y);
-        }
-
-        // Interpolate moving point
-        if (currentStep < points.length - 1) {
-          const p1 = points[currentStep];
-          const p2 = points[currentStep + 1];
-          const curX = p1.x + (p2.x - p1.x) * progress;
-          const curY = p1.y + (p2.y - p1.y) * progress;
-          ctx.lineTo(curX, curY);
-          ctx.stroke();
-
-          // Traveling vehicle icon/dot
-          ctx.fillStyle = '#ff006e';
-          ctx.beginPath();
-          ctx.arc(curX, curY, 8, 0, Math.PI * 2);
-          ctx.fill();
-        } else {
-          ctx.stroke();
-        }
-
-        // Draw pins up to current step
-        for (let i = 0; i <= currentStep; i++) {
-          const p = points[i];
-          ctx.fillStyle = '#06d6a0';
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#000000';
-          ctx.font = 'bold 11px Outfit, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(i + 1, p.x, p.y);
-        }
-
-        // Popup active photo card
-        const activeIdx = currentStep;
-        const curPt = points[activeIdx];
-        const activeImg = loadedImgs[activeIdx];
-
-        if (activeImg) {
-          const cardW = 140, cardH = 120;
-          let popX = curPt.x - cardW / 2;
-          let popY = curPt.y - cardH - 20;
-          if (popY < 20) popY = curPt.y + 25;
-          if (popX < 20) popX = 20;
-          if (popX + cardW > w - 20) popX = w - cardW - 20;
-
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowColor = 'rgba(0,0,0,0.5)';
-          ctx.shadowBlur = 15;
-          ctx.fillRect(popX, popY, cardW, cardH);
-          ctx.shadowColor = 'transparent';
-
-          ctx.drawImage(activeImg, popX + 6, popY + 6, cardW - 12, cardH - 32);
-
-          ctx.fillStyle = '#111122';
-          ctx.font = 'bold 11px Pretendard, sans-serif';
-          ctx.fillText(travelSpots[activeIdx].name, popX + cardW / 2, popY + cardH - 10);
-        }
-
-        progress += 0.03;
-        if (progress >= 1) {
-          progress = 0;
-          currentStep++;
-        }
-
-        if (currentStep < points.length - 1) {
-          animId = requestAnimationFrame(renderFrame);
-        }
+        tourVehicleMarker = L.marker([travelSpots[0].lat, travelSpots[0].lng], { icon: vehicleIcon }).addTo(leafletMap);
       }
 
-      renderFrame();
+      for (let i = 0; i < travelSpots.length; i++) {
+        const spot = travelSpots[i];
+        leafletMap.flyTo([spot.lat, spot.lng], 13, { duration: 1.5 });
+        tourVehicleMarker.setLatLng([spot.lat, spot.lng]);
+        if (mapMarkers[i]) mapMarkers[i].openPopup();
+        await new Promise(r => setTimeout(r, 2200));
+      }
+
+      isTourRunning = false;
+      fitAllMarkers();
     }
 
+    // GIF Generation with Canvas Map Renderer
     async function generateTravelGIF() {
       if (travelSpots.length < 2) {
         alert('GIF를 생성하려면 최소 2장 이상의 사진이 필요합니다.');
@@ -636,14 +994,12 @@
       const alertEl = document.getElementById('statusAlert');
       alertEl.style.display = 'block';
 
-      const canvas = document.getElementById('routeCanvas');
-      const ctx = canvas.getContext('2d');
-      const w = 480, h = 360; // compact size for efficient GIF generation
+      const w = 540, h = 420;
       const tempC = document.createElement('canvas');
       tempC.width = w; tempC.height = h;
       const tCtx = tempC.getContext('2d');
 
-      const points = getCanvasCoords(travelSpots, w, h, 50);
+      // Preload photos
       const loadedImgs = await Promise.all(travelSpots.map(s => {
         return new Promise(res => {
           const img = new Image();
@@ -652,64 +1008,110 @@
         });
       }));
 
+      // Bounding box mapping to canvas coords
+      let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+      travelSpots.forEach(s => {
+        if (s.lat < minLat) minLat = s.lat;
+        if (s.lat > maxLat) maxLat = s.lat;
+        if (s.lng < minLng) minLng = s.lng;
+        if (s.lng > maxLng) maxLng = s.lng;
+      });
+
+      const dLat = (maxLat - minLat) || 0.01;
+      const dLng = (maxLng - minLng) || 0.01;
+      const pad = 60;
+
+      const points = travelSpots.map(s => ({
+        x: pad + ((s.lng - minLng) / dLng) * (w - pad * 2),
+        y: pad + (1 - (s.lat - minLat) / dLat) * (h - pad * 2),
+        name: s.name,
+        date: s.date
+      }));
+
       const frames = [];
-      const totalSteps = points.length - 1;
+      const stepsBetween = 8;
 
-      for (let s = 0; s < totalSteps; s++) {
-        for (let prog = 0; prog <= 1; prog += 0.25) {
-          tCtx.fillStyle = '#0d1322';
-          tCtx.fillRect(0, 0, w, h);
+      for (let s = 0; s < points.length - 1; s++) {
+        const p1 = points[s];
+        const p2 = points[s + 1];
 
-          // Lines
-          tCtx.strokeStyle = '#06d6a0';
-          tCtx.lineWidth = 3;
-          tCtx.beginPath();
-          tCtx.moveTo(points[0].x, points[0].y);
-          for (let i = 1; i <= s; i++) {
-            tCtx.lineTo(points[i].x, points[i].y);
-          }
-
-          const p1 = points[s], p2 = points[s + 1];
+        for (let st = 0; st <= stepsBetween; st++) {
+          const prog = st / stepsBetween;
           const curX = p1.x + (p2.x - p1.x) * prog;
           const curY = p1.y + (p2.y - p1.y) * prog;
+
+          // Background
+          tCtx.fillStyle = '#080d1a';
+          tCtx.fillRect(0, 0, w, h);
+
+          // Grid Lines
+          tCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+          tCtx.lineWidth = 1;
+          for (let x = 0; x < w; x += 40) { tCtx.beginPath(); tCtx.moveTo(x, 0); tCtx.lineTo(x, h); tCtx.stroke(); }
+          for (let y = 0; y < h; y += 40) { tCtx.beginPath(); tCtx.moveTo(0, y); tCtx.lineTo(w, y); tCtx.stroke(); }
+
+          // Header Badge
+          tCtx.fillStyle = 'rgba(6, 182, 212, 0.15)';
+          tCtx.fillRect(16, 14, 210, 28);
+          tCtx.strokeStyle = '#06b6d4';
+          tCtx.strokeRect(16, 14, 210, 28);
+          tCtx.fillStyle = '#06b6d4';
+          tCtx.font = 'bold 12px Pretendard, sans-serif';
+          tCtx.textAlign = 'left';
+          tCtx.fillText(`📍 TRAVEL TIMELAPSE • ${s + 1}/${points.length}`, 26, 32);
+
+          // Traveled path
+          tCtx.strokeStyle = '#10b981';
+          tCtx.lineWidth = 4;
+          tCtx.beginPath();
+          tCtx.moveTo(points[0].x, points[0].y);
+          for (let k = 1; k <= s; k++) tCtx.lineTo(points[k].x, points[k].y);
           tCtx.lineTo(curX, curY);
           tCtx.stroke();
 
-          // Vehicle dot
-          tCtx.fillStyle = '#ff006e';
+          // Pins
+          for (let k = 0; k <= s; k++) {
+            tCtx.fillStyle = '#10b981';
+            tCtx.beginPath();
+            tCtx.arc(points[k].x, points[k].y, 9, 0, Math.PI * 2);
+            tCtx.fill();
+            tCtx.fillStyle = '#000';
+            tCtx.font = 'bold 10px sans-serif';
+            tCtx.textAlign = 'center';
+            tCtx.fillText(k + 1, points[k].x, points[k].y + 3);
+          }
+
+          // Moving dot / vehicle
+          tCtx.fillStyle = '#ec4899';
           tCtx.beginPath();
-          tCtx.arc(curX, curY, 6, 0, Math.PI * 2);
+          tCtx.arc(curX, curY, 7, 0, Math.PI * 2);
           tCtx.fill();
 
-          // Pins
-          for (let i = 0; i <= s; i++) {
-            tCtx.fillStyle = '#06d6a0';
-            tCtx.beginPath();
-            tCtx.arc(points[i].x, points[i].y, 8, 0, Math.PI * 2);
-            tCtx.fill();
-            tCtx.fillStyle = '#000000';
-            tCtx.font = 'bold 9px sans-serif';
-            tCtx.textAlign = 'center';
-            tCtx.textBaseline = 'middle';
-            tCtx.fillText(i + 1, points[i].x, points[i].y);
-          }
-
-          // Active popup
+          // Photo Card Popup
           const activeImg = loadedImgs[s];
           if (activeImg) {
-            const cardW = 100, cardH = 80;
+            const cardW = 120, cardH = 96;
             let popX = curX - cardW / 2;
-            let popY = curY - cardH - 15;
-            if (popY < 10) popY = curY + 15;
-            tCtx.fillStyle = '#ffffff';
+            let popY = curY - cardH - 18;
+            if (popY < 20) popY = curY + 20;
+            if (popX < 20) popX = 20;
+            if (popX + cardW > w - 20) popX = w - cardW - 20;
+
+            tCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+            tCtx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+            tCtx.lineWidth = 1.5;
             tCtx.fillRect(popX, popY, cardW, cardH);
-            tCtx.drawImage(activeImg, popX + 4, popY + 4, cardW - 8, cardH - 24);
-            tCtx.fillStyle = '#111';
-            tCtx.font = 'bold 9px sans-serif';
-            tCtx.fillText(travelSpots[s].name, popX + cardW / 2, popY + cardH - 8);
+            tCtx.strokeRect(popX, popY, cardW, cardH);
+
+            tCtx.drawImage(activeImg, popX + 5, popY + 5, cardW - 10, cardH - 32);
+
+            tCtx.fillStyle = '#f8fafc';
+            tCtx.font = 'bold 10px Pretendard, sans-serif';
+            tCtx.textAlign = 'center';
+            tCtx.fillText(points[s].name, popX + cardW / 2, popY + cardH - 10);
           }
 
-          frames.push(tempC.toDataURL('image/jpeg', 0.8));
+          frames.push(tempC.toDataURL('image/jpeg', 0.85));
         }
       }
 
@@ -730,6 +1132,66 @@
           document.getElementById('gifResultBox').scrollIntoView({ behavior: 'smooth' });
         } else {
           alert('GIF 생성 실패: ' + obj.error);
+        }
+      });
+    }
+
+    // Demo Samples Generator
+    function getSampleSpots() {
+      const spotsData = [
+        { name: '제주국제공항 ✈️', lat: 33.5065, lng: 126.4930, date: '2026-10-10', col1: '#0284c7', col2: '#06b6d4', emoji: '✈️' },
+        { name: '함덕 에메랄드 해수욕장 🏖️', lat: 33.5434, lng: 126.6692, date: '2026-10-10', col1: '#059669', col2: '#10b981', emoji: '🏖️' },
+        { name: '성산일출봉 일출 🌄', lat: 33.4580, lng: 126.9426, date: '2026-10-11', col1: '#e11d48', col2: '#f43f5e', emoji: '🌄' },
+        { name: '서귀포 매일올레시장 🍊', lat: 33.2497, lng: 126.5630, date: '2026-10-11', col1: '#ea580c', col2: '#f59e0b', emoji: '🍊' },
+        { name: '협재 노을 바다 🌅', lat: 33.3941, lng: 126.2397, date: '2026-10-11', col1: '#7c3aed', col2: '#a855f7', emoji: '🌅' }
+      ];
+
+      return spotsData.map((s, idx) => {
+        const c = document.createElement('canvas');
+        c.width = 400; c.height = 300;
+        const ctx = c.getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 400, 300);
+        grad.addColorStop(0, s.col1); grad.addColorStop(1, s.col2);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 400, 300);
+        ctx.font = '60px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(s.emoji, 200, 120);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 22px "Pretendard", sans-serif';
+        ctx.fillText(s.name, 200, 220);
+
+        return {
+          dataUrl: c.toDataURL('image/jpeg', 0.85),
+          name: s.name,
+          date: s.date,
+          lat: s.lat,
+          lng: s.lng,
+          isGps: true,
+          timeVal: Date.now() + idx * 10000000
+        };
+      });
+    }
+
+    function loadDemoSamples() {
+      travelSpots = getSampleSpots();
+      refreshTripUI();
+    }
+
+    if (new URLSearchParams(window.location.search).get('demo') === '1') {
+      window.addEventListener('DOMContentLoaded', () => setTimeout(loadDemoSamples, 100));
+    }
+
+    // Drag and Drop
+    const dropEl = document.getElementById('dropZone');
+    if (dropEl) {
+      dropEl.addEventListener('dragover', (e) => { e.preventDefault(); dropEl.classList.add('drag-over'); });
+      dropEl.addEventListener('dragleave', (e) => { e.preventDefault(); dropEl.classList.remove('drag-over'); });
+      dropEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropEl.classList.remove('drag-over');
+        if (e.dataTransfer && e.dataTransfer.files) {
+          handleTravelUpload({ target: { files: e.dataTransfer.files } });
         }
       });
     }

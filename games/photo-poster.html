@@ -3,33 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>대형 매거진 포스터 & 포토 콜라주 | 미니게임 천국</title>
+  <title>대형 매거진 포스터 & 콜라주 | 미니게임 천국</title>
   <script src="../scripts/game-common.js?v=841f759d"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;0,900;1,600&family=Cinzel:wght@700;800;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
   <style>
     :root {
-      --bg: #0b0b1a;
-      --card-bg: rgba(22, 22, 45, 0.7);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --cyan: #00d4ff;
-      --purple: #7c3aed;
-      --pink: #ff006e;
-      --yellow: #ffd166;
-      --text-main: #ffffff;
+      --bg: #07090e;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --pink: #f43f5e;
+      --cyan: #06b6d4;
+      --purple: #8b5cf6;
+      --gold: #d4af37;
+      --text-main: #f8fafc;
       --text-dim: #94a3b8;
-      --radius-card: 16px;
-      --radius-btn: 12px;
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      padding: 0;
-      background-color: var(--bg);
+      background: radial-gradient(circle at 50% 0%, #1a162b 0%, #07090e 100%);
       color: var(--text-main);
-      font-family: 'Outfit', 'Pretendard', sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -37,9 +38,9 @@
     }
 
     .container {
-      max-width: 720px;
+      max-width: 960px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 24px 20px;
       width: 100%;
       flex: 1;
       display: flex;
@@ -50,278 +51,386 @@
     header {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       position: relative;
-      padding: 10px 0;
+      padding-bottom: 8px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
     .back-btn {
-      position: absolute;
-      left: 0;
-      background: none;
-      border: none;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
       color: var(--cyan);
-      font-size: 24px;
+      font-size: 20px;
       cursor: pointer;
       text-decoration: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      transition: background 0.2s;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+    .back-btn:hover {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--cyan);
+      transform: translateX(-2px);
+    }
 
-    h1 {
+    .header-title-box h1 {
       font-size: 22px;
       font-weight: 800;
-      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #38bdf8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .card {
+    .header-title-box p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .glass-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      backdrop-filter: blur(10px);
-      border-radius: var(--radius-card);
-      padding: 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      gap: 18px;
     }
 
-    .card.drag-over {
-      border-color: var(--cyan);
-      box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
-    }
-
+    /* Drop Zone */
     .drop-zone {
-      border: 2px dashed rgba(255, 0, 110, 0.4);
-      border-radius: var(--radius-card);
-      padding: 30px 20px;
+      border: 2px dashed rgba(244, 63, 94, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 34px 24px;
       text-align: center;
-      background: rgba(255, 0, 110, 0.03);
+      background: linear-gradient(180deg, rgba(244, 63, 94, 0.03) 0%, rgba(139, 92, 246, 0.02) 100%);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
     }
 
-    .drop-zone:hover {
+    .drop-zone:hover, .drop-zone.drag-over {
       border-color: var(--pink);
-      background: rgba(255, 0, 110, 0.08);
+      background: rgba(244, 63, 94, 0.08);
       transform: translateY(-2px);
     }
 
-    .drop-icon { font-size: 40px; }
-    .drop-title { font-weight: 700; font-size: 16px; color: var(--pink); }
+    .drop-icon-wrapper {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(139, 92, 246, 0.2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .drop-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
     .drop-sub { font-size: 13px; color: var(--text-dim); }
 
+    .demo-btn-pill {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      color: #fb7185;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .demo-btn-pill:hover {
+      background: rgba(244, 63, 94, 0.2);
+      border-color: #fb7185;
+    }
+
+    /* Thumbnails Tray */
+    .tray-section {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .section-label {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      color: var(--cyan);
+      color: #e2e8f0;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .photo-grid-preview {
+    .photo-grid-tray {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+      gap: 10px;
       max-height: 180px;
       overflow-y: auto;
+      padding-right: 4px;
     }
 
-    .thumb-wrap {
+    .tray-thumb {
       position: relative;
       aspect-ratio: 1;
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
-      border: 1px solid var(--card-border);
+      border: 1.5px solid var(--card-border);
+      background: #0f172a;
     }
 
-    .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .tray-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    .thumb-del {
+    .tray-del-btn {
       position: absolute;
-      top: 3px; right: 3px;
+      top: 4px; right: 4px;
       background: rgba(0, 0, 0, 0.75);
-      color: #ff006e;
-      border: 1px solid rgba(255, 0, 110, 0.4);
-      width: 18px; height: 18px;
+      color: #f43f5e;
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      width: 20px; height: 20px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: bold;
       cursor: pointer;
     }
 
-    .options-group {
+    /* Options Form */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .field-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 6px;
     }
 
-    .option-sub-title {
-      font-size: 13px;
-      color: var(--text-dim);
+    .field-label {
+      font-size: 12px;
       font-weight: 600;
-    }
-
-    .ratio-options {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 6px;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(0, 212, 255, 0.4) rgba(255, 255, 255, 0.04);
-      user-select: none;
-      cursor: grab;
-    }
-
-    .ratio-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--card-border);
       color: var(--text-dim);
-      padding: 8px 12px;
-      border-radius: var(--radius-btn);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .ratio-btn.active {
-      background: rgba(255, 0, 110, 0.15);
-      border-color: var(--pink);
-      color: var(--pink);
-    }
-
-    .color-options {
-      display: flex;
-      gap: 10px;
-    }
-
-    .color-dot {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: transform 0.15s;
-    }
-
-    .color-dot.active { border-color: white; transform: scale(1.1); }
-
-    input[type="text"] {
-      background: rgba(0, 0, 0, 0.3);
+    .text-input {
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--card-border);
       color: white;
       padding: 11px 14px;
-      border-radius: var(--radius-btn);
+      border-radius: var(--radius-md);
       font-family: inherit;
       font-size: 14px;
       outline: none;
+      transition: border-color 0.2s;
     }
 
-    button.primary-btn {
-      background: linear-gradient(135deg, var(--cyan), var(--pink));
+    .text-input:focus { border-color: var(--pink); }
+
+    .ratio-btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ratio-btn {
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .ratio-btn.active {
+      background: rgba(244, 63, 94, 0.2);
+      border-color: var(--pink);
+      color: #fecdd3;
+    }
+
+    .color-dots-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .color-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s;
+    }
+
+    .color-dot:hover { transform: scale(1.15); }
+    .color-dot.active {
+      border-color: var(--cyan);
+      transform: scale(1.15);
+      box-shadow: 0 0 14px var(--cyan);
+    }
+
+    /* Action Buttons */
+    .btn-gradient-poster {
+      background: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #8b5cf6 100%);
       border: none;
       color: white;
-      padding: 14px;
-      border-radius: var(--radius-btn);
-      font-family: inherit;
-      font-weight: 700;
+      padding: 15px 24px;
+      border-radius: var(--radius-md);
+      font-weight: 800;
       font-size: 15px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
+      box-shadow: 0 10px 25px -6px rgba(244, 63, 94, 0.5);
+      transition: all 0.2s;
     }
 
+    .btn-gradient-poster:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -6px rgba(244, 63, 94, 0.7);
+    }
+
+    /* Preview Canvas Area */
     .preview-box {
       display: none;
       flex-direction: column;
       align-items: center;
       gap: 16px;
+      margin-top: 10px;
     }
 
     canvas {
-      max-width: 100%;
-      height: auto;
-      max-height: 540px;
-      border-radius: 12px;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      width: 100%;
+      max-width: 580px;
+      border-radius: 14px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      background: #0d1117;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <a href="../index.html" class="back-btn">←</a>
-      <h1>🖼️ 대형 매거진 포스터 & 콜라주</h1>
+      <div class="header-left">
+        <a href="../index.html" class="back-btn" title="목록으로">←</a>
+        <div class="header-title-box">
+          <h1>🖼️ 대형 매거진 포스터 & 콜라주</h1>
+          <p>고해상도 패션 매거진 커버 & 스위스 건축 스타일 대형 아트 포스터 스튜디오</p>
+        </div>
+      </div>
     </header>
 
-    <div class="card" id="mainCard">
-      <div class="drop-zone" onclick="document.getElementById('posterFiles').click()">
-        <div class="drop-icon">✨</div>
-        <div class="drop-title">여러 장의 사진을 모아서 올려주세요</div>
-        <div class="drop-sub">클릭 또는 드래그 앤 드롭 (3~24장 추천)</div>
-        <input type="file" id="posterFiles" accept="image/*" multiple style="display: none;" onchange="handlePosterUpload(event)">
+    <!-- Upload Card -->
+    <div class="glass-card" id="mainCard">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('posterFiles').click()">
+        <input type="file" id="posterFiles" multiple accept="image/*" style="display: none;" onchange="handlePosterUpload(event)">
+        <div class="drop-icon-wrapper">✨</div>
+        <div class="drop-title">포스터로 제작할 사진들을 여러 장 업로드하거나 끌어다 놓으세요</div>
+        <div class="drop-sub">3장부터 24장까지 추천 (잡지 표지, 3x3 무드보드, 스위스 그리드 등)</div>
+        <button type="button" class="demo-btn-pill" onclick="event.stopPropagation(); loadDemoSamples();">
+          ✨ 도쿄 여행 감성 샘플 4장 즉시 로드
+        </button>
       </div>
 
-      <div class="section-label">
-        <span>📸 콜라주에 담길 사진</span>
-        <span id="photoCount" style="color: var(--pink);">0장</span>
-      </div>
-
-      <div class="photo-grid-preview" id="photoPreview"></div>
-
-      <div class="options-group" id="customizerGroup" style="display: none;">
-        <div class="option-sub-title">1. 포스터 레이아웃 스타일</div>
-        <div class="ratio-options" id="layoutOptions">
-          <button class="ratio-btn active" data-layout="hero" onclick="setLayout('hero', this)">🌟 히어로 매거진 (1대형 + N서브)</button>
-          <button class="ratio-btn" data-layout="grid3x3" onclick="setLayout('grid3x3', this)">🔲 3x3 무드보드 그리드</button>
-          <button class="ratio-btn" data-layout="grid2x3" onclick="setLayout('grid2x3', this)">📱 2x3 세로형 갤러리</button>
-          <button class="ratio-btn" data-layout="polaroid" onclick="setLayout('polaroid', this)">🎞️ 폴라로이드 스크랩북</button>
-          <button class="ratio-btn" data-layout="strip" onclick="setLayout('strip', this)">💌 롱 타임라인 롤</button>
-        </div>
-
-        <div class="option-sub-title">2. 포스터 배경 테마</div>
-        <div class="color-options">
-          <div class="color-dot active" style="background:#0f0f17;" onclick="setBg('#0f0f17', this)" title="네온 다크"></div>
-          <div class="color-dot" style="background:#ffffff;" onclick="setBg('#ffffff', this)" title="클린 화이트"></div>
-          <div class="color-dot" style="background:#f4efe6;" onclick="setBg('#f4efe6', this)" title="빈티지 크래프트"></div>
-          <div class="color-dot" style="background:#1b1226;" onclick="setBg('#1b1226', this)" title="미드나잇 퍼플"></div>
-          <div class="color-dot" style="background:#fff0f3;" onclick="setBg:#fff0f3', this)" title="파스텔 로즈"></div>
-        </div>
-
-        <div class="option-sub-title">3. 포스터 메인 타이틀 & 기념 문구</div>
-        <input type="text" id="posterTitle" placeholder="메인 타이틀 (예: MEMORIES OF 2026)" value="COLLECTED MOMENTS">
-        <input type="text" id="posterSubtitle" placeholder="보조 문구 (예: With beloved friends / Autumn trip)" value="SPECIAL MEMORIES & STORIES">
-
-        <button class="primary-btn" onclick="renderPoster()">✨ 대형 매거진 포스터 생성하기</button>
-      </div>
-
-      <div class="preview-box" id="previewBox">
+      <!-- Tray & Customizer -->
+      <div class="tray-section" id="customizerGroup">
         <div class="section-label">
-          <span>🖼️ 완성된 포스터 미리보기</span>
+          <span>📸 콜라주에 담길 사진 목록 (<span id="photoCount">0</span>장)</span>
+          <span style="font-size: 12px; color: var(--text-dim); font-weight: normal;">순서대로 메인 및 서브 슬롯에 배치됩니다</span>
+        </div>
+        <div class="photo-grid-tray" id="photoPreview"></div>
+
+        <!-- Options -->
+        <div class="field-group">
+          <label class="field-label">1. 포스터 레이아웃 스타일</label>
+          <div class="ratio-btn-group" id="layoutOptions">
+            <button class="ratio-btn active" onclick="setLayout('editorial', this)">🌟 보그 매거진 에디토리얼 (Vogue)</button>
+            <button class="ratio-btn" onclick="setLayout('swiss', this)">📐 스위스 바우하우스 그리드 (Swiss)</button>
+            <button class="ratio-btn" onclick="setLayout('gallery', this)">🏛️ 현대 미술관 포스터 (Gallery)</button>
+            <button class="ratio-btn" onclick="setLayout('polaroid', this)">📷 폴라로이드 스크랩 (Polaroid)</button>
+            <button class="ratio-btn" onclick="setLayout('grid3x3', this)">🔲 3x3 무드보드 갤러리 (3x3)</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">2. 포스터 배경 테마 & 용지 톤</label>
+          <div class="color-dots-group">
+            <div class="color-dot active" style="background: #0b0c10;" onclick="setBg('#0b0c10', this)" title="미드나잇 다크"></div>
+            <div class="color-dot" style="background: #fbfbfa;" onclick="setBg('#fbfbfa', this)" title="클린 아트 페이퍼"></div>
+            <div class="color-dot" style="background: #ece5d8;" onclick="setBg('#ece5d8', this)" title="킨포크 웜 샌드"></div>
+            <div class="color-dot" style="background: #1e1b2e;" onclick="setBg('#1e1b2e', this)" title="딥 바이올렛"></div>
+            <div class="color-dot" style="background: #0d1e17;" onclick="setBg('#0d1e17', this)" title="에메랄드 숲"></div>
+          </div>
+        </div>
+
+        <div class="options-grid">
+          <div class="field-group">
+            <label class="field-label">포스터 메인 타이틀</label>
+            <input type="text" id="posterTitle" class="text-input" value="COLLECTED MOMENTS" placeholder="예: TOKYO CHRONICLES">
+          </div>
+          <div class="field-group">
+            <label class="field-label">기념 서브 문구 & 에디션</label>
+            <input type="text" id="posterSubtitle" class="text-input" value="VOL. 26 • SPECIAL ARCHIVE EDITION" placeholder="예: 2026. 10. 11 • AUTUMN MEMORIES">
+          </div>
+        </div>
+
+        <div class="field-group" style="flex-direction: row; align-items: center; gap: 10px;">
+          <input type="checkbox" id="filmGrainCheck" checked style="width: 18px; height: 18px; accent-color: var(--pink); cursor: pointer;">
+          <label for="filmGrainCheck" style="font-size: 13px; color: #e2e8f0; font-weight: 600; cursor: pointer;">
+            🎞️ 아날로그 필름 입자 (Film Grain Texture) 질감 효과 적용
+          </label>
+        </div>
+
+        <button class="btn-gradient-poster" onclick="renderPoster()">
+          <span>✨ 초고해상도 대형 포스터 생성하기</span>
+        </button>
+      </div>
+
+      <!-- Preview Canvas -->
+      <div class="preview-box" id="previewBox">
+        <div class="section-label" style="width: 100%; max-width: 580px;">
+          <span style="font-size: 15px; font-weight: 800; color: #f1f5f9;">🖼️ 완성된 포스터 렌더링 미리보기</span>
+          <span style="font-size: 12px; color: var(--cyan); font-weight: 700;">1800 x 2400 UHD</span>
         </div>
         <canvas id="posterCanvas"></canvas>
-        <button class="primary-btn" style="width: 100%;" onclick="downloadPoster()">
-          📥 고화질 포스터 이미지 다운로드 (PNG)
+        <button class="btn-gradient-poster" style="width: 100%; max-width: 580px;" onclick="downloadPoster()">
+          <span>📥 초고화질 포스터 이미지 다운로드 (PNG)</span>
         </button>
       </div>
     </div>
@@ -329,28 +438,28 @@
 
   <script type="application/json" id="game-rules">
 {
- "title": "대형 매거진 포스터 & 포토 콜라주",
+ "title": "대형 매거진 포스터 & 콜라주",
  "players": "1인 이상",
  "time": "2분",
- "goal": "수십 장의 사진을 감성적인 대형 매거진 포스터 한 장으로 완성합니다.",
+ "goal": "선택한 여러 장의 사진들을 조합하여 고해상도 매거진 커버 포스터를 만듭니다.",
  "steps": [
-  "콜라주에 넣고 싶은 사진들을 한 번에 업로드합니다.",
-  "히어로 매거진, 3x3 무드보드, 폴라로이드 등 마음에 드는 포스터 구도를 고릅니다.",
-  "포스터 배경색과 타이틀 문구를 설정합니다.",
-  "'대형 매거진 포스터 생성하기'를 눌러 완성된 결과물을 확인합니다.",
-  "초고화질 PNG 이미지로 다운로드하여 배경화면으로 쓰거나 인쇄하세요."
+  "포스터에 넣을 사진들을 여러 장 업로드하거나 끌어다 놓습니다.",
+  "원하는 레이아웃(보그 에디토리얼, 스위스 그리드, 갤러리, 폴라로이드 등)을 선택합니다.",
+  "배경 테마 색상과 포스터 제목 및 기념 서브 문구를 입력합니다.",
+  "'초고해상도 대형 포스터 생성하기'를 누르면 1800x2400 픽셀 포스터가 렌더링됩니다.",
+  "'초고화질 포스터 다운로드'를 눌러 무손실 대형 PNG 파일로 저장합니다."
  ],
  "tips": [
-  "사진을 많이 넣을수록 더욱 풍성하고 감각적인 콜라주 포스터가 완성됩니다.",
-  "배경색을 '클린 화이트'나 '크래프트'로 바꾸면 잡지 표지 같은 느낌을 낼 수 있습니다."
+  "배경색을 '클린 아트 페이퍼'나 '킨포크 웜 샌드'로 바꾸면 실제 잡지 표지 같은 따뜻한 느낌을 낼 수 있습니다.",
+  "아날로그 필름 입자 옵션을 켜면 인쇄물 특유의 고급스러운 사진 질감이 더해집니다."
  ]
 }
   </script>
 
   <script>
     let posterPhotos = [];
-    let currentLayout = 'hero';
-    let currentBg = '#0f0f17';
+    let currentLayout = 'editorial';
+    let currentBg = '#0b0c10';
 
     function handlePosterUpload(event) {
       const files = Array.from(event.target.files || []);
@@ -379,22 +488,15 @@
       const settings = document.getElementById('customizerGroup');
 
       grid.innerHTML = '';
-      countEl.textContent = `${posterPhotos.length}장`;
+      countEl.textContent = posterPhotos.length;
 
       posterPhotos.forEach((src, idx) => {
         const wrap = document.createElement('div');
-        wrap.className = 'thumb-wrap';
-
-        const del = document.createElement('button');
-        del.className = 'thumb-del';
-        del.textContent = '✕';
-        del.onclick = (e) => { e.stopPropagation(); removePhoto(idx); };
-        wrap.appendChild(del);
-
-        const img = document.createElement('img');
-        img.src = src;
-        wrap.appendChild(img);
-
+        wrap.className = 'tray-thumb';
+        wrap.innerHTML = `
+          <img src="${src}" alt="thumb">
+          <button class="tray-del-btn" onclick="removePhoto(${idx})">✕</button>
+        `;
         grid.appendChild(wrap);
       });
 
@@ -427,6 +529,34 @@
       ctx.drawImage(img, sx, sy, sW, sH, x, y, w, h);
     }
 
+    // Barcode Drawer on Canvas
+    function drawBarcode(ctx, x, y, w, h, color) {
+      ctx.fillStyle = color;
+      let curX = x;
+      while (curX < x + w) {
+        const barW = Math.random() > 0.5 ? 4 : 2;
+        const gap = Math.random() * 4 + 2;
+        ctx.fillRect(curX, y, barW, h);
+        curX += barW + gap;
+      }
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('9 780201 37962', x + w / 2, y + h + 14);
+    }
+
+    // Subtle Film Grain Generator
+    function applyFilmGrain(ctx, width, height, opacity = 0.04) {
+      const imgData = ctx.getImageData(0, 0, width, height);
+      const data = imgData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 50;
+        data[i] += noise;
+        data[i+1] += noise;
+        data[i+2] += noise;
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
     async function renderPoster() {
       if (posterPhotos.length === 0) return;
 
@@ -441,30 +571,14 @@
       ctx.fillStyle = currentBg;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const isLightBg = (currentBg === '#ffffff' || currentBg === '#f4efe6' || currentBg === '#fff0f3');
-      const textColor = isLightBg ? '#111122' : '#ffffff';
-      const subColor = isLightBg ? '#666677' : '#94a3b8';
+      const isLightBg = (currentBg === '#fbfbfa' || currentBg === '#ece5d8');
+      const textColor = isLightBg ? '#111827' : '#f8fafc';
+      const subColor = isLightBg ? '#64748b' : '#94a3b8';
+      const accentRuleColor = isLightBg ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)';
 
-      // Header Area
-      const pad = 60;
+      const pad = 80;
       const title = document.getElementById('posterTitle').value.trim() || 'COLLECTED MOMENTS';
-      const subtitle = document.getElementById('posterSubtitle').value.trim() || 'SPECIAL MEMORIES & STORIES';
-
-      ctx.fillStyle = textColor;
-      ctx.font = 'bold 64px "Playfair Display", "Pretendard", serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(title, canvas.width / 2, 120);
-
-      ctx.fillStyle = subColor;
-      ctx.font = '500 28px Outfit, Pretendard, sans-serif';
-      ctx.letterSpacing = '2px';
-      ctx.fillText(subtitle, canvas.width / 2, 170);
-
-      // Photos Area
-      const contentTop = 220;
-      const contentH = canvas.height - contentTop - 120;
-      const contentW = canvas.width - pad * 2;
-      const gap = 24;
+      const subtitle = document.getElementById('posterSubtitle').value.trim() || 'VOL. 26 • SPECIAL ARCHIVE EDITION';
 
       // Load all images
       const loadedImgs = await Promise.all(posterPhotos.map(src => {
@@ -475,28 +589,126 @@
         });
       }));
 
-      if (currentLayout === 'hero') {
-        // 1 Hero photo on left (or top), and up to 4 smaller photos on right
-        const heroW = Math.round(contentW * 0.58);
+      // Top Editorial Header
+      ctx.fillStyle = textColor;
+      ctx.font = 'bold 84px "Playfair Display", "Cinzel", serif';
+      ctx.textAlign = 'center';
+      ctx.letterSpacing = '6px';
+      ctx.fillText(title, canvas.width / 2, 140);
+
+      // Fine rule lines under title
+      ctx.strokeStyle = accentRuleColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pad, 175);
+      ctx.lineTo(canvas.width - pad, 175);
+      ctx.stroke();
+
+      ctx.fillStyle = subColor;
+      ctx.font = '600 24px "Plus Jakarta Sans", "Pretendard", sans-serif';
+      ctx.letterSpacing = '3px';
+      ctx.fillText(subtitle, canvas.width / 2, 220);
+
+      const contentTop = 270;
+      const contentH = canvas.height - contentTop - 180;
+      const contentW = canvas.width - pad * 2;
+      const gap = 24;
+
+      if (currentLayout === 'editorial') {
+        // Vogue style: 1 huge main photo (left/top) + 3 editorial side frames
+        const heroW = Math.round(contentW * 0.62);
         const subW = contentW - heroW - gap;
-        const heroH = contentH;
 
         // Hero image
         if (loadedImgs[0]) {
-          drawCover(ctx, loadedImgs[0], pad, contentTop, heroW, heroH);
+          drawCover(ctx, loadedImgs[0], pad, contentTop, heroW, contentH);
         }
 
-        // Sub images (up to 4 vertically stacked)
-        const subCount = Math.min(4, Math.max(1, loadedImgs.length - 1));
-        const subSlotH = (contentH - gap * (subCount - 1)) / subCount;
+        const subCount = Math.min(3, Math.max(1, loadedImgs.length - 1));
+        const subH = (contentH - gap * (subCount - 1)) / subCount;
 
         for (let i = 0; i < subCount; i++) {
           const img = loadedImgs[i + 1] || loadedImgs[0];
-          const y = contentTop + i * (subSlotH + gap);
-          drawCover(ctx, img, pad + heroW + gap, y, subW, subSlotH);
+          const y = contentTop + i * (subH + gap);
+          drawCover(ctx, img, pad + heroW + gap, y, subW, subH);
+
+          // Number tag on sub photos
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(pad + heroW + gap + 15, y + 15, 45, 26);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 14px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`0${i + 2}`, pad + heroW + gap + 37, y + 33);
+        }
+      } else if (currentLayout === 'swiss') {
+        // Swiss Bauhaus 2x3 Grid with crisp margins and architectural coordinates
+        const cols = 2, rows = 3;
+        const cellW = (contentW - gap * (cols - 1)) / cols;
+        const cellH = (contentH - gap * (rows - 1)) / rows;
+
+        for (let i = 0; i < 6; i++) {
+          const img = loadedImgs[i % loadedImgs.length];
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const x = pad + col * (cellW + gap);
+          const y = contentTop + row * (cellH + gap);
+          drawCover(ctx, img, x, y, cellW, cellH);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 16px "Plus Jakarta Sans", monospace';
+          ctx.textAlign = 'left';
+          ctx.fillText(`FIG. 0${i + 1}`, x + 16, y + 30);
+        }
+      } else if (currentLayout === 'gallery') {
+        // Contemporary Art Museum Exhibition (Wide mat border with single hero + 3 lower panels)
+        const topH = contentH * 0.65;
+        const bottomH = contentH - topH - gap;
+        drawCover(ctx, loadedImgs[0], pad, contentTop, contentW, topH);
+
+        const subCount = 3;
+        const subW = (contentW - gap * (subCount - 1)) / subCount;
+        for (let i = 0; i < subCount; i++) {
+          const img = loadedImgs[(i + 1) % loadedImgs.length];
+          const x = pad + i * (subW + gap);
+          drawCover(ctx, img, x, contentTop + topH + gap, subW, bottomH);
+        }
+      } else if (currentLayout === 'polaroid') {
+        // Polaroid scattered collage with drop shadows
+        const count = Math.min(6, loadedImgs.length);
+        const cardW = 500, cardH = 610;
+
+        for (let i = 0; i < count; i++) {
+          const img = loadedImgs[i];
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          const centerX = pad + 180 + col * 740;
+          const centerY = contentTop + 140 + row * 580;
+          const angle = ((i % 3) - 1) * 0.06;
+
+          ctx.save();
+          ctx.translate(centerX + cardW / 2, centerY + cardH / 2);
+          ctx.rotate(angle);
+
+          // White polaroid frame
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = 'rgba(0,0,0,0.35)';
+          ctx.shadowBlur = 25;
+          ctx.shadowOffsetY = 15;
+          ctx.fillRect(-cardW / 2, -cardH / 2, cardW, cardH);
+          ctx.shadowColor = 'transparent';
+
+          // Photo
+          const pPad = 26;
+          drawCover(ctx, img, -cardW / 2 + pPad, -cardH / 2 + pPad, cardW - pPad * 2, cardH - 120);
+
+          // Washi tape on top
+          ctx.fillStyle = 'rgba(255, 235, 170, 0.7)';
+          ctx.fillRect(-60, -cardH / 2 - 12, 120, 24);
+
+          ctx.restore();
         }
       } else if (currentLayout === 'grid3x3') {
-        // 3 cols x 3 rows = 9 slots
+        // 3x3 Minimal Moodboard
         const cols = 3, rows = 3;
         const cellW = (contentW - gap * (cols - 1)) / cols;
         const cellH = (contentH - gap * (rows - 1)) / rows;
@@ -509,70 +721,24 @@
           const y = contentTop + row * (cellH + gap);
           drawCover(ctx, img, x, y, cellW, cellH);
         }
-      } else if (currentLayout === 'grid2x3') {
-        // 2 cols x 3 rows = 6 slots
-        const cols = 2, rows = 3;
-        const cellW = (contentW - gap * (cols - 1)) / cols;
-        const cellH = (contentH - gap * (rows - 1)) / rows;
-
-        for (let i = 0; i < 6; i++) {
-          const img = loadedImgs[i % loadedImgs.length];
-          const col = i % cols;
-          const row = Math.floor(i / cols);
-          const x = pad + col * (cellW + gap);
-          const y = contentTop + row * (cellH + gap);
-          drawCover(ctx, img, x, y, cellW, cellH);
-        }
-      } else if (currentLayout === 'polaroid') {
-        // Polaroid style scattered cards
-        const count = Math.min(6, loadedImgs.length);
-        const cardW = 460;
-        const cardH = 560;
-
-        for (let i = 0; i < count; i++) {
-          const img = loadedImgs[i];
-          const col = i % 2;
-          const row = Math.floor(i / 2);
-          const centerX = pad + 150 + col * 750;
-          const centerY = contentTop + 100 + row * 600;
-          const angle = ((i % 3) - 1) * 0.05; // slight tilt
-
-          ctx.save();
-          ctx.translate(centerX + cardW / 2, centerY + cardH / 2);
-          ctx.rotate(angle);
-
-          // White polaroid frame
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowColor = 'rgba(0,0,0,0.35)';
-          ctx.shadowBlur = 20;
-          ctx.fillRect(-cardW / 2, -cardH / 2, cardW, cardH);
-          ctx.shadowColor = 'transparent';
-
-          // Photo inside polaroid
-          const pPad = 25;
-          const pW = cardW - pPad * 2;
-          const pH = cardH - 120;
-          drawCover(ctx, img, -cardW / 2 + pPad, -cardH / 2 + pPad, pW, pH);
-
-          ctx.restore();
-        }
-      } else if (currentLayout === 'strip') {
-        // Timeline vertical strip
-        const count = Math.min(4, loadedImgs.length);
-        const cellH = (contentH - gap * (count - 1)) / count;
-
-        for (let i = 0; i < count; i++) {
-          const img = loadedImgs[i];
-          const y = contentTop + i * (cellH + gap);
-          drawCover(ctx, img, pad, y, contentW, cellH);
-        }
       }
 
-      // Footer signature
+      // Bottom Signature & Barcode
+      const footerY = canvas.height - 70;
       ctx.fillStyle = subColor;
-      ctx.font = '600 22px Outfit, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`DESIGNED WITH MINI GAME PHOTO STUDIO • ${posterPhotos.length} MOMENTS ARCHIVED`, canvas.width / 2, canvas.height - 40);
+      ctx.font = '600 20px "Plus Jakarta Sans", sans-serif';
+      ctx.letterSpacing = '2px';
+      ctx.textAlign = 'left';
+      ctx.fillText(`DESIGNED & CURATED WITH STUDIO • ${posterPhotos.length} MOMENTS ARCHIVED`, pad, footerY);
+
+      // Barcode at bottom right
+      drawBarcode(ctx, canvas.width - pad - 180, footerY - 30, 180, 36, textColor);
+
+      // Optional Film Grain
+      const applyGrain = document.getElementById('filmGrainCheck')?.checked;
+      if (applyGrain) {
+        applyFilmGrain(ctx, canvas.width, canvas.height);
+      }
 
       document.getElementById('previewBox').style.display = 'flex';
       document.getElementById('previewBox').scrollIntoView({ behavior: 'smooth' });
@@ -582,8 +748,46 @@
       const canvas = document.getElementById('posterCanvas');
       const a = document.createElement('a');
       a.href = canvas.toDataURL('image/png');
-      a.download = `poster_${Date.now()}.png`;
+      a.download = `magazine_poster_${Date.now()}.png`;
       a.click();
+    }
+
+    // Demo Samples Generator
+    function getSampleImages() {
+      const samples = [
+        { title: 'TOKYO STREETS', col1: '#f43f5e', col2: '#7c3aed', emoji: '🗼' },
+        { title: 'SHIBUYA NIGHT', col1: '#0284c7', col2: '#06b6d4', emoji: '🌃' },
+        { title: 'CHERRY BLOSSOM', col1: '#fb7185', col2: '#f43f5e', emoji: '🌸' },
+        { title: 'SUNSET TOWER', col1: '#ea580c', col2: '#f59e0b', emoji: '🌆' }
+      ];
+      return samples.map(s => {
+        const c = document.createElement('canvas');
+        c.width = 800; c.height = 600;
+        const ctx = c.getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 800, 600);
+        grad.addColorStop(0, s.col1); grad.addColorStop(1, s.col2);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 800, 600);
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath(); ctx.arc(400, 240, 100, 0, Math.PI * 2); ctx.fill();
+        ctx.font = '80px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(s.emoji, 400, 240);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px "Outfit", sans-serif';
+        ctx.fillText(s.title, 400, 420);
+        return c.toDataURL('image/jpeg', 0.9);
+      });
+    }
+
+    function loadDemoSamples() {
+      posterPhotos = getSampleImages();
+      updatePreview();
+      renderPoster();
+    }
+
+    if (new URLSearchParams(window.location.search).get('demo') === '1') {
+      window.addEventListener('DOMContentLoaded', () => setTimeout(loadDemoSamples, 100));
     }
 
     // Drag and Drop
