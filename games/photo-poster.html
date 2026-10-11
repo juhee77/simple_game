@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대형 매거진 포스터 & 포토 콜라주 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #0b0b1a;
+      --card-bg: rgba(22, 22, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --yellow: #ffd166;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .card.drag-over {
+      border-color: var(--cyan);
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
+    }
+
+    .drop-zone {
+      border: 2px dashed rgba(255, 0, 110, 0.4);
+      border-radius: var(--radius-card);
+      padding: 30px 20px;
+      text-align: center;
+      background: rgba(255, 0, 110, 0.03);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drop-zone:hover {
+      border-color: var(--pink);
+      background: rgba(255, 0, 110, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .drop-icon { font-size: 40px; }
+    .drop-title { font-weight: 700; font-size: 16px; color: var(--pink); }
+    .drop-sub { font-size: 13px; color: var(--text-dim); }
+
+    .section-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--cyan);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .photo-grid-preview {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .thumb-wrap {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+
+    .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+    .thumb-del {
+      position: absolute;
+      top: 3px; right: 3px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #ff006e;
+      border: 1px solid rgba(255, 0, 110, 0.4);
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .options-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-sub-title {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .ratio-options {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 212, 255, 0.4) rgba(255, 255, 255, 0.04);
+      user-select: none;
+      cursor: grab;
+    }
+
+    .ratio-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      padding: 8px 12px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .ratio-btn.active {
+      background: rgba(255, 0, 110, 0.15);
+      border-color: var(--pink);
+      color: var(--pink);
+    }
+
+    .color-options {
+      display: flex;
+      gap: 10px;
+    }
+
+    .color-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s;
+    }
+
+    .color-dot.active { border-color: white; transform: scale(1.1); }
+
+    input[type="text"] {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      color: white;
+      padding: 11px 14px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    button.primary-btn {
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      border: none;
+      color: white;
+      padding: 14px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .preview-box {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      max-height: 540px;
+      border-radius: 12px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>🖼️ 대형 매거진 포스터 & 콜라주</h1>
+    </header>
+
+    <div class="card" id="mainCard">
+      <div class="drop-zone" onclick="document.getElementById('posterFiles').click()">
+        <div class="drop-icon">✨</div>
+        <div class="drop-title">여러 장의 사진을 모아서 올려주세요</div>
+        <div class="drop-sub">클릭 또는 드래그 앤 드롭 (3~24장 추천)</div>
+        <input type="file" id="posterFiles" accept="image/*" multiple style="display: none;" onchange="handlePosterUpload(event)">
+      </div>
+
+      <div class="section-label">
+        <span>📸 콜라주에 담길 사진</span>
+        <span id="photoCount" style="color: var(--pink);">0장</span>
+      </div>
+
+      <div class="photo-grid-preview" id="photoPreview"></div>
+
+      <div class="options-group" id="customizerGroup" style="display: none;">
+        <div class="option-sub-title">1. 포스터 레이아웃 스타일</div>
+        <div class="ratio-options" id="layoutOptions">
+          <button class="ratio-btn active" data-layout="hero" onclick="setLayout('hero', this)">🌟 히어로 매거진 (1대형 + N서브)</button>
+          <button class="ratio-btn" data-layout="grid3x3" onclick="setLayout('grid3x3', this)">🔲 3x3 무드보드 그리드</button>
+          <button class="ratio-btn" data-layout="grid2x3" onclick="setLayout('grid2x3', this)">📱 2x3 세로형 갤러리</button>
+          <button class="ratio-btn" data-layout="polaroid" onclick="setLayout('polaroid', this)">🎞️ 폴라로이드 스크랩북</button>
+          <button class="ratio-btn" data-layout="strip" onclick="setLayout('strip', this)">💌 롱 타임라인 롤</button>
+        </div>
+
+        <div class="option-sub-title">2. 포스터 배경 테마</div>
+        <div class="color-options">
+          <div class="color-dot active" style="background:#0f0f17;" onclick="setBg('#0f0f17', this)" title="네온 다크"></div>
+          <div class="color-dot" style="background:#ffffff;" onclick="setBg('#ffffff', this)" title="클린 화이트"></div>
+          <div class="color-dot" style="background:#f4efe6;" onclick="setBg('#f4efe6', this)" title="빈티지 크래프트"></div>
+          <div class="color-dot" style="background:#1b1226;" onclick="setBg('#1b1226', this)" title="미드나잇 퍼플"></div>
+          <div class="color-dot" style="background:#fff0f3;" onclick="setBg:#fff0f3', this)" title="파스텔 로즈"></div>
+        </div>
+
+        <div class="option-sub-title">3. 포스터 메인 타이틀 & 기념 문구</div>
+        <input type="text" id="posterTitle" placeholder="메인 타이틀 (예: MEMORIES OF 2026)" value="COLLECTED MOMENTS">
+        <input type="text" id="posterSubtitle" placeholder="보조 문구 (예: With beloved friends / Autumn trip)" value="SPECIAL MEMORIES & STORIES">
+
+        <button class="primary-btn" onclick="renderPoster()">✨ 대형 매거진 포스터 생성하기</button>
+      </div>
+
+      <div class="preview-box" id="previewBox">
+        <div class="section-label">
+          <span>🖼️ 완성된 포스터 미리보기</span>
+        </div>
+        <canvas id="posterCanvas"></canvas>
+        <button class="primary-btn" style="width: 100%;" onclick="downloadPoster()">
+          📥 고화질 포스터 이미지 다운로드 (PNG)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "대형 매거진 포스터 & 포토 콜라주",
+ "players": "1인 이상",
+ "time": "2분",
+ "goal": "수십 장의 사진을 감성적인 대형 매거진 포스터 한 장으로 완성합니다.",
+ "steps": [
+  "콜라주에 넣고 싶은 사진들을 한 번에 업로드합니다.",
+  "히어로 매거진, 3x3 무드보드, 폴라로이드 등 마음에 드는 포스터 구도를 고릅니다.",
+  "포스터 배경색과 타이틀 문구를 설정합니다.",
+  "'대형 매거진 포스터 생성하기'를 눌러 완성된 결과물을 확인합니다.",
+  "초고화질 PNG 이미지로 다운로드하여 배경화면으로 쓰거나 인쇄하세요."
+ ],
+ "tips": [
+  "사진을 많이 넣을수록 더욱 풍성하고 감각적인 콜라주 포스터가 완성됩니다.",
+  "배경색을 '클린 화이트'나 '크래프트'로 바꾸면 잡지 표지 같은 느낌을 낼 수 있습니다."
+ ]
+}
+  </script>
+
+  <script>
+    let posterPhotos = [];
+    let currentLayout = 'hero';
+    let currentBg = '#0f0f17';
+
+    function handlePosterUpload(event) {
+      const files = Array.from(event.target.files || []);
+      const images = files.filter(f => f.type.startsWith('image/'));
+      if (!images.length) return;
+
+      images.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          posterPhotos.push(e.target.result);
+          updatePreview();
+        };
+        reader.readAsDataURL(file);
+      });
+      event.target.value = '';
+    }
+
+    function removePhoto(idx) {
+      posterPhotos.splice(idx, 1);
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const grid = document.getElementById('photoPreview');
+      const countEl = document.getElementById('photoCount');
+      const settings = document.getElementById('customizerGroup');
+
+      grid.innerHTML = '';
+      countEl.textContent = `${posterPhotos.length}장`;
+
+      posterPhotos.forEach((src, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'thumb-wrap';
+
+        const del = document.createElement('button');
+        del.className = 'thumb-del';
+        del.textContent = '✕';
+        del.onclick = (e) => { e.stopPropagation(); removePhoto(idx); };
+        wrap.appendChild(del);
+
+        const img = document.createElement('img');
+        img.src = src;
+        wrap.appendChild(img);
+
+        grid.appendChild(wrap);
+      });
+
+      settings.style.display = posterPhotos.length > 0 ? 'flex' : 'none';
+    }
+
+    function setLayout(layout, el) {
+      currentLayout = layout;
+      document.querySelectorAll('#layoutOptions .ratio-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function setBg(bg, el) {
+      currentBg = bg;
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function drawCover(ctx, img, x, y, w, h) {
+      const imgRatio = img.width / img.height;
+      const targetRatio = w / h;
+      let sx = 0, sy = 0, sW = img.width, sH = img.height;
+      if (imgRatio > targetRatio) {
+        sW = img.height * targetRatio;
+        sx = (img.width - sW) / 2;
+      } else {
+        sH = img.width / targetRatio;
+        sy = (img.height - sH) / 2;
+      }
+      ctx.drawImage(img, sx, sy, sW, sH, x, y, w, h);
+    }
+
+    async function renderPoster() {
+      if (posterPhotos.length === 0) return;
+
+      const canvas = document.getElementById('posterCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Standard Large Canvas: 1800 x 2400 (3:4 Poster aspect ratio)
+      canvas.width = 1800;
+      canvas.height = 2400;
+
+      // Draw Background
+      ctx.fillStyle = currentBg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const isLightBg = (currentBg === '#ffffff' || currentBg === '#f4efe6' || currentBg === '#fff0f3');
+      const textColor = isLightBg ? '#111122' : '#ffffff';
+      const subColor = isLightBg ? '#666677' : '#94a3b8';
+
+      // Header Area
+      const pad = 60;
+      const title = document.getElementById('posterTitle').value.trim() || 'COLLECTED MOMENTS';
+      const subtitle = document.getElementById('posterSubtitle').value.trim() || 'SPECIAL MEMORIES & STORIES';
+
+      ctx.fillStyle = textColor;
+      ctx.font = 'bold 64px "Playfair Display", "Pretendard", serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, canvas.width / 2, 120);
+
+      ctx.fillStyle = subColor;
+      ctx.font = '500 28px Outfit, Pretendard, sans-serif';
+      ctx.letterSpacing = '2px';
+      ctx.fillText(subtitle, canvas.width / 2, 170);
+
+      // Photos Area
+      const contentTop = 220;
+      const contentH = canvas.height - contentTop - 120;
+      const contentW = canvas.width - pad * 2;
+      const gap = 24;
+
+      // Load all images
+      const loadedImgs = await Promise.all(posterPhotos.map(src => {
+        return new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.src = src;
+        });
+      }));
+
+      if (currentLayout === 'hero') {
+        // 1 Hero photo on left (or top), and up to 4 smaller photos on right
+        const heroW = Math.round(contentW * 0.58);
+        const subW = contentW - heroW - gap;
+        const heroH = contentH;
+
+        // Hero image
+        if (loadedImgs[0]) {
+          drawCover(ctx, loadedImgs[0], pad, contentTop, heroW, heroH);
+        }
+
+        // Sub images (up to 4 vertically stacked)
+        const subCount = Math.min(4, Math.max(1, loadedImgs.length - 1));
+        const subSlotH = (contentH - gap * (subCount - 1)) / subCount;
+
+        for (let i = 0; i < subCount; i++) {
+          const img = loadedImgs[i + 1] || loadedImgs[0];
+          const y = contentTop + i * (subSlotH + gap);
+          drawCover(ctx, img, pad + heroW + gap, y, subW, subSlotH);
+        }
+      } else if (currentLayout === 'grid3x3') {
+        // 3 cols x 3 rows = 9 slots
+        const cols = 3, rows = 3;
+        const cellW = (contentW - gap * (cols - 1)) / cols;
+        const cellH = (contentH - gap * (rows - 1)) / rows;
+
+        for (let i = 0; i < 9; i++) {
+          const img = loadedImgs[i % loadedImgs.length];
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const x = pad + col * (cellW + gap);
+          const y = contentTop + row * (cellH + gap);
+          drawCover(ctx, img, x, y, cellW, cellH);
+        }
+      } else if (currentLayout === 'grid2x3') {
+        // 2 cols x 3 rows = 6 slots
+        const cols = 2, rows = 3;
+        const cellW = (contentW - gap * (cols - 1)) / cols;
+        const cellH = (contentH - gap * (rows - 1)) / rows;
+
+        for (let i = 0; i < 6; i++) {
+          const img = loadedImgs[i % loadedImgs.length];
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const x = pad + col * (cellW + gap);
+          const y = contentTop + row * (cellH + gap);
+          drawCover(ctx, img, x, y, cellW, cellH);
+        }
+      } else if (currentLayout === 'polaroid') {
+        // Polaroid style scattered cards
+        const count = Math.min(6, loadedImgs.length);
+        const cardW = 460;
+        const cardH = 560;
+
+        for (let i = 0; i < count; i++) {
+          const img = loadedImgs[i];
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          const centerX = pad + 150 + col * 750;
+          const centerY = contentTop + 100 + row * 600;
+          const angle = ((i % 3) - 1) * 0.05; // slight tilt
+
+          ctx.save();
+          ctx.translate(centerX + cardW / 2, centerY + cardH / 2);
+          ctx.rotate(angle);
+
+          // White polaroid frame
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = 'rgba(0,0,0,0.35)';
+          ctx.shadowBlur = 20;
+          ctx.fillRect(-cardW / 2, -cardH / 2, cardW, cardH);
+          ctx.shadowColor = 'transparent';
+
+          // Photo inside polaroid
+          const pPad = 25;
+          const pW = cardW - pPad * 2;
+          const pH = cardH - 120;
+          drawCover(ctx, img, -cardW / 2 + pPad, -cardH / 2 + pPad, pW, pH);
+
+          ctx.restore();
+        }
+      } else if (currentLayout === 'strip') {
+        // Timeline vertical strip
+        const count = Math.min(4, loadedImgs.length);
+        const cellH = (contentH - gap * (count - 1)) / count;
+
+        for (let i = 0; i < count; i++) {
+          const img = loadedImgs[i];
+          const y = contentTop + i * (cellH + gap);
+          drawCover(ctx, img, pad, y, contentW, cellH);
+        }
+      }
+
+      // Footer signature
+      ctx.fillStyle = subColor;
+      ctx.font = '600 22px Outfit, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`DESIGNED WITH MINI GAME PHOTO STUDIO • ${posterPhotos.length} MOMENTS ARCHIVED`, canvas.width / 2, canvas.height - 40);
+
+      document.getElementById('previewBox').style.display = 'flex';
+      document.getElementById('previewBox').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function downloadPoster() {
+      const canvas = document.getElementById('posterCanvas');
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `poster_${Date.now()}.png`;
+      a.click();
+    }
+
+    // Drag and Drop
+    const cardEl = document.getElementById('mainCard');
+    if (cardEl) {
+      cardEl.addEventListener('dragover', (e) => { e.preventDefault(); cardEl.classList.add('drag-over'); });
+      cardEl.addEventListener('dragleave', (e) => { e.preventDefault(); cardEl.classList.remove('drag-over'); });
+      cardEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        cardEl.classList.remove('drag-over');
+        if (e.dataTransfer && e.dataTransfer.files) {
+          handlePosterUpload({ target: { files: e.dataTransfer.files } });
+        }
+      });
+    }
+  </script>
+</body>
+</html>

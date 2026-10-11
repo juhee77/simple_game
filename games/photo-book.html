@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>디지털 포토북 & 플립북 | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0b1a;
+      --card-bg: rgba(22, 22, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .card.drag-over {
+      border-color: var(--cyan);
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
+    }
+
+    .drop-zone {
+      border: 2px dashed rgba(0, 212, 255, 0.4);
+      border-radius: var(--radius-card);
+      padding: 32px 20px;
+      text-align: center;
+      background: rgba(0, 212, 255, 0.03);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drop-zone:hover {
+      border-color: var(--cyan);
+      background: rgba(0, 212, 255, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .drop-icon { font-size: 40px; }
+    .drop-title { font-weight: 700; font-size: 16px; color: var(--cyan); }
+    .drop-sub { font-size: 13px; color: var(--text-dim); }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      flex: 1;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border: none;
+      color: white;
+      padding: 13px 16px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: white;
+    }
+
+    .section-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--cyan);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .photo-tray {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .photo-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid var(--card-border);
+      background: #111;
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-delete-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #ff006e;
+      border: 1px solid rgba(255, 0, 110, 0.5);
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .photo-order-badge {
+      position: absolute;
+      bottom: 4px; left: 4px;
+      background: rgba(0, 212, 255, 0.85);
+      color: black;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 6px;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .option-sub-title {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .ratio-options {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 212, 255, 0.4) rgba(255, 255, 255, 0.04);
+      user-select: none;
+      cursor: grab;
+    }
+
+    .ratio-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      padding: 8px 12px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .ratio-btn.active {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    input[type="text"] {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      color: white;
+      padding: 10px 14px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    /* Flipbook Viewer */
+    .book-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      perspective: 1200px;
+      margin: 10px 0;
+    }
+
+    .book-container {
+      width: 100%;
+      max-width: 440px;
+      aspect-ratio: 3 / 4;
+      position: relative;
+      transform-style: preserve-3d;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #1e1e2f;
+      transition: transform 0.4s ease;
+    }
+
+    .book-page {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #ffffff;
+      color: #111;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      backface-visibility: hidden;
+      transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1), opacity 0.3s ease;
+    }
+
+    /* Themes */
+    .theme-minimal { background: #fafafa; color: #111; }
+    .theme-retro {
+      background: #f7f3e8;
+      color: #3e2723;
+      font-family: 'Nanum Myeongjo', serif;
+    }
+    .theme-dark { background: #161622; color: #f0f0f0; }
+    .theme-pastel { background: #fff5f7; color: #4a3036; }
+
+    .page-photo-wrap {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    .page-photo-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    .page-caption {
+      margin-top: 10px;
+      font-size: 14px;
+      text-align: center;
+      font-weight: 500;
+      width: 100%;
+      outline: none;
+      padding: 4px;
+      border-bottom: 1px dashed transparent;
+      cursor: text;
+    }
+
+    .page-caption:hover, .page-caption:focus {
+      border-bottom-color: var(--cyan);
+    }
+
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 11px;
+      color: #888;
+      padding-top: 8px;
+    }
+
+    .book-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .nav-circle-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--card-border);
+      color: white;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .nav-circle-btn:hover {
+      background: rgba(0, 212, 255, 0.2);
+      border-color: var(--cyan);
+      transform: scale(1.05);
+    }
+
+    .page-indicator {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    /* Cover Page */
+    .cover-page {
+      background: linear-gradient(135deg, #1f1b2e, #110e1b);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 16px;
+      padding: 30px;
+      border: 4px double rgba(0, 212, 255, 0.3);
+    }
+
+    .cover-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-subtitle { font-size: 14px; color: var(--text-dim); }
+    .cover-thumb {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--cyan);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    }
+
+    .status-msg {
+      font-size: 13px;
+      color: var(--yellow);
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>📖 디지털 플립북 & 포토북</h1>
+    </header>
+
+    <!-- Upload Card -->
+    <div class="card" id="uploadCard">
+      <div class="drop-zone" onclick="document.getElementById('albumFileInput').click()">
+        <div class="drop-icon">📚</div>
+        <div class="drop-title">사진들을 모아서 끌어다 놓으세요</div>
+        <div class="drop-sub">클릭하여 파일 선택 (JPG, PNG, WebP) / 여러 장 동시 선택 가능</div>
+        <input type="file" id="albumFileInput" accept="image/*" multiple style="display: none;" onchange="handleAlbumUpload(event)">
+      </div>
+
+      <div class="section-label">
+        <span>🖼️ 등록된 사진 목록</span>
+        <span id="albumPhotoCount" style="color: var(--cyan);">0장</span>
+      </div>
+
+      <div class="photo-tray" id="photoTray"></div>
+
+      <div class="options-grid" id="albumSettings" style="display: none;">
+        <div class="option-group">
+          <div class="option-sub-title">1. 포토북 제목 및 부제</div>
+          <input type="text" id="albumTitle" placeholder="앨범 제목 (예: 2026 제주 여행 추억)" value="MY MEMORY BOOK">
+          <input type="text" id="albumSubtitle" placeholder="부제 또는 날짜 (예: 2026. 10. 11)" value="2026 MEMORIES">
+        </div>
+
+        <div class="option-group">
+          <div class="option-sub-title">2. 포토북 디자인 테마</div>
+          <div class="ratio-options" id="themeOptions">
+            <button class="ratio-btn active" data-theme="minimal" onclick="setTheme('minimal', this)">🤍 미니멀 모던</button>
+            <button class="ratio-btn" data-theme="retro" onclick="setTheme('retro', this)">📜 감성 레트로</button>
+            <button class="ratio-btn" data-theme="dark" onclick="setTheme('dark', this)">🖤 딥 다크</button>
+            <button class="ratio-btn" data-theme="pastel" onclick="setTheme('pastel', this)">🌸 파스텔 감성</button>
+          </div>
+        </div>
+
+        <button onclick="buildFlipbook()" style="background: linear-gradient(135deg, var(--cyan), var(--purple));">
+          📖 디지털 플립북 앨범 열기
+        </button>
+      </div>
+    </div>
+
+    <!-- Flipbook View Card -->
+    <div class="card" id="bookViewCard" style="display: none;">
+      <div class="section-label">
+        <span id="viewingAlbumTitle">📖 나의 포토북</span>
+        <button class="btn-secondary" onclick="returnToEditor()" style="flex: 0 0 auto; padding: 6px 12px; font-size: 12px;">✏️ 사진/설정 수정</button>
+      </div>
+
+      <div class="book-stage">
+        <div class="book-container" id="bookContainer">
+          <!-- Pages dynamically injected here -->
+        </div>
+
+        <div class="book-nav">
+          <button class="nav-circle-btn" onclick="prevPage()" title="이전 페이지">◀</button>
+          <span class="page-indicator" id="pageIndicator">1 / 1</span>
+          <button class="nav-circle-btn" onclick="nextPage()" title="다음 페이지">▶</button>
+        </div>
+      </div>
+
+      <div class="status-msg" id="pdfStatus">⏳ PDF 생성 중입니다. 잠시만 기다려주세요...</div>
+
+      <div class="btn-row">
+        <button onclick="exportToPDF()" style="background: linear-gradient(135deg, var(--pink), var(--purple));">
+          📄 소장용 PDF 포토북 다운로드
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "디지털 플립북 & 포토북",
+ "players": "1인 이상",
+ "time": "3분",
+ "goal": "소중한 사진들을 모아 감성적인 디지털 플립북과 PDF 포토북으로 제작합니다.",
+ "steps": [
+  "앨범에 넣을 사진들을 여러 장 업로드하거나 끌어다 놓습니다.",
+  "앨범의 제목과 부제(날짜), 감성 테마(미니멀/레트로/다크/파스텔)를 선택합니다.",
+  "'플립북 앨범 열기'를 눌러 실제 책처럼 앞뒤로 넘겨보며 감상합니다.",
+  "페이지 하단의 캡션을 클릭하여 사진별 코멘트를 자유롭게 입력합니다.",
+  "'소장용 PDF 다운로드'를 눌러 다중 페이지 전자책 PDF 파일로 저장합니다."
+ ],
+ "tips": [
+  "키보드 좌우 방향키(←, →)로도 부드럽게 책장을 넘길 수 있습니다.",
+  "캡션은 인쇄 및 PDF 내보내기 시에도 함께 기록됩니다.",
+  "사진은 최소 1장부터 50장 이상까지 자유롭게 등록할 수 있습니다."
+ ]
+}
+  </script>
+
+  <script>
+    let albumPhotos = []; // { dataUrl, caption }
+    let currentTheme = 'minimal';
+    let currentPageIndex = 0; // 0 is cover, 1..N are photo pages
+
+    // File Upload Handler
+    function handleAlbumUpload(event) {
+      const files = Array.from(event.target.files || []);
+      addPhotosToAlbum(files);
+      event.target.value = '';
+    }
+
+    function addPhotosToAlbum(files) {
+      const imageFiles = files.filter(f => f.type.startsWith('image/'));
+      if (imageFiles.length === 0) return;
+
+      imageFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          albumPhotos.push({
+            dataUrl: e.target.result,
+            caption: file.name.replace(/\.[^/.]+$/, "") || '행복한 순간'
+          });
+          renderPhotoTray();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removePhoto(idx) {
+      albumPhotos.splice(idx, 1);
+      renderPhotoTray();
+    }
+
+    function renderPhotoTray() {
+      const tray = document.getElementById('photoTray');
+      const countEl = document.getElementById('albumPhotoCount');
+      const settingsEl = document.getElementById('albumSettings');
+
+      tray.innerHTML = '';
+      countEl.textContent = `${albumPhotos.length}장`;
+
+      albumPhotos.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'photo-item';
+
+        const del = document.createElement('button');
+        del.className = 'photo-delete-btn';
+        del.textContent = '✕';
+        del.onclick = (e) => { e.stopPropagation(); removePhoto(idx); };
+        div.appendChild(del);
+
+        const img = document.createElement('img');
+        img.src = item.dataUrl;
+        div.appendChild(img);
+
+        const badge = document.createElement('div');
+        badge.className = 'photo-order-badge';
+        badge.textContent = `#${idx + 1}`;
+        div.appendChild(badge);
+
+        tray.appendChild(div);
+      });
+
+      settingsEl.style.display = albumPhotos.length > 0 ? 'flex' : 'none';
+    }
+
+    function setTheme(theme, el) {
+      currentTheme = theme;
+      document.querySelectorAll('#themeOptions .ratio-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function buildFlipbook() {
+      if (albumPhotos.length === 0) {
+        alert('먼저 1장 이상의 사진을 등록해주세요.');
+        return;
+      }
+
+      document.getElementById('uploadCard').style.display = 'none';
+      document.getElementById('bookViewCard').style.display = 'flex';
+
+      const title = document.getElementById('albumTitle').value.trim() || 'MY MEMORY BOOK';
+      document.getElementById('viewingAlbumTitle').textContent = `📖 ${title}`;
+
+      renderPages();
+      showPage(0);
+    }
+
+    function returnToEditor() {
+      document.getElementById('uploadCard').style.display = 'flex';
+      document.getElementById('bookViewCard').style.display = 'none';
+    }
+
+    function renderPages() {
+      const container = document.getElementById('bookContainer');
+      container.innerHTML = '';
+
+      const title = document.getElementById('albumTitle').value.trim() || 'MY MEMORY BOOK';
+      const subtitle = document.getElementById('albumSubtitle').value.trim() || 'MEMORIES';
+
+      // 1. Cover Page (Page 0)
+      const cover = document.createElement('div');
+      cover.className = `book-page cover-page theme-${currentTheme}`;
+      cover.id = 'page-0';
+      cover.innerHTML = `
+        <div style="font-size: 11px; letter-spacing: 2px; color: var(--cyan); text-transform: uppercase;">PHOTO MEMORY ALBUM</div>
+        ${albumPhotos.length > 0 ? `<img src="${albumPhotos[0].dataUrl}" class="cover-thumb">` : ''}
+        <div class="cover-title">${title}</div>
+        <div class="cover-subtitle">${subtitle}</div>
+        <div style="margin-top: auto; font-size: 11px; opacity: 0.7;">총 ${albumPhotos.length}장의 추억 페이지</div>
+      `;
+      container.appendChild(cover);
+
+      // 2. Photo Pages (Page 1..N)
+      albumPhotos.forEach((item, idx) => {
+        const page = document.createElement('div');
+        page.className = `book-page theme-${currentTheme}`;
+        page.id = `page-${idx + 1}`;
+        page.style.display = 'none';
+
+        const photoWrap = document.createElement('div');
+        photoWrap.className = 'page-photo-wrap';
+        const img = document.createElement('img');
+        img.src = item.dataUrl;
+        photoWrap.appendChild(img);
+
+        const caption = document.createElement('div');
+        caption.className = 'page-caption';
+        caption.contentEditable = 'true';
+        caption.textContent = item.caption;
+        caption.title = '클릭하여 캡션을 수정할 수 있습니다';
+        caption.onblur = () => { item.caption = caption.textContent; };
+
+        const footer = document.createElement('div');
+        footer.className = 'page-footer';
+        footer.innerHTML = `<span>${title}</span><span>${idx + 1} / ${albumPhotos.length}</span>`;
+
+        page.appendChild(photoWrap);
+        page.appendChild(caption);
+        page.appendChild(footer);
+
+        container.appendChild(page);
+      });
+    }
+
+    function showPage(index) {
+      const totalPages = albumPhotos.length + 1; // cover + photos
+      if (index < 0 || index >= totalPages) return;
+
+      currentPageIndex = index;
+
+      for (let i = 0; i < totalPages; i++) {
+        const p = document.getElementById(`page-${i}`);
+        if (!p) continue;
+        if (i === currentPageIndex) {
+          p.style.display = 'flex';
+          p.style.opacity = '1';
+        } else {
+          p.style.display = 'none';
+          p.style.opacity = '0';
+        }
+      }
+
+      const indicator = document.getElementById('pageIndicator');
+      if (currentPageIndex === 0) {
+        indicator.textContent = '표지 (Cover)';
+      } else {
+        indicator.textContent = `${currentPageIndex} / ${albumPhotos.length}`;
+      }
+    }
+
+    function prevPage() {
+      if (currentPageIndex > 0) {
+        showPage(currentPageIndex - 1);
+      }
+    }
+
+    function nextPage() {
+      if (currentPageIndex < albumPhotos.length) {
+        showPage(currentPageIndex + 1);
+      }
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (document.getElementById('bookViewCard').style.display === 'flex') {
+        if (e.key === 'ArrowLeft') prevPage();
+        if (e.key === 'ArrowRight') nextPage();
+      }
+    });
+
+    // Drag and Drop on card
+    const cardEl = document.getElementById('uploadCard');
+    if (cardEl) {
+      cardEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        cardEl.classList.add('drag-over');
+      });
+      cardEl.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        cardEl.classList.remove('drag-over');
+      });
+      cardEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        cardEl.classList.remove('drag-over');
+        if (e.dataTransfer && e.dataTransfer.files) {
+          addPhotosToAlbum(Array.from(e.dataTransfer.files));
+        }
+      });
+    }
+
+    // PDF Export
+    async function exportToPDF() {
+      if (albumPhotos.length === 0) return;
+      const status = document.getElementById('pdfStatus');
+      status.style.display = 'block';
+
+      try {
+        const { jsPDF } = window.jspdf;
+        // A4 Portrait: 210 x 297 mm
+        const doc = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const title = document.getElementById('albumTitle').value.trim() || 'MY MEMORY BOOK';
+        const subtitle = document.getElementById('albumSubtitle').value.trim() || 'MEMORIES';
+
+        // 1. Cover Page
+        doc.setFillColor(25, 23, 36);
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+        doc.setTextColor(0, 212, 255);
+        doc.setFontSize(26);
+        doc.text(title, pageWidth / 2, 120, { align: 'center' });
+
+        doc.setTextColor(180, 180, 190);
+        doc.setFontSize(14);
+        doc.text(subtitle, pageWidth / 2, 135, { align: 'center' });
+
+        doc.setFontSize(10);
+        doc.setTextColor(120, 120, 130);
+        doc.text(`DIGITAL PHOTO ALBUM (${albumPhotos.length} PHOTOS)`, pageWidth / 2, 260, { align: 'center' });
+
+        // 2. Photos Pages
+        for (let i = 0; i < albumPhotos.length; i++) {
+          doc.addPage();
+
+          // Background according to theme
+          if (currentTheme === 'dark') {
+            doc.setFillColor(22, 22, 34);
+            doc.rect(0, 0, pageWidth, pageHeight, 'F');
+            doc.setTextColor(240, 240, 240);
+          } else if (currentTheme === 'retro') {
+            doc.setFillColor(247, 243, 232);
+            doc.rect(0, 0, pageWidth, pageHeight, 'F');
+            doc.setTextColor(62, 39, 35);
+          } else if (currentTheme === 'pastel') {
+            doc.setFillColor(255, 245, 247);
+            doc.rect(0, 0, pageWidth, pageHeight, 'F');
+            doc.setTextColor(74, 48, 54);
+          } else {
+            doc.setFillColor(250, 250, 250);
+            doc.rect(0, 0, pageWidth, pageHeight, 'F');
+            doc.setTextColor(30, 30, 30);
+          }
+
+          const photo = albumPhotos[i];
+
+          // Draw Image
+          const margin = 20;
+          const maxImgW = pageWidth - margin * 2;
+          const maxImgH = 200;
+
+          // Load image to calculate aspect ratio
+          const imgObj = await loadImage(photo.dataUrl);
+          const imgRatio = imgObj.width / imgObj.height;
+
+          let targetW = maxImgW;
+          let targetH = targetW / imgRatio;
+          if (targetH > maxImgH) {
+            targetH = maxImgH;
+            targetW = targetH * imgRatio;
+          }
+          const posX = (pageWidth - targetW) / 2;
+          const posY = 35 + (maxImgH - targetH) / 2;
+
+          doc.addImage(photo.dataUrl, 'JPEG', posX, posY, targetW, targetH);
+
+          // Caption
+          doc.setFontSize(13);
+          doc.text(photo.caption || '', pageWidth / 2, 255, { align: 'center' });
+
+          // Footer
+          doc.setFontSize(9);
+          doc.setTextColor(150, 150, 150);
+          doc.text(title, margin, pageHeight - 12);
+          doc.text(`${i + 1} / ${albumPhotos.length}`, pageWidth - margin, pageHeight - 12, { align: 'right' });
+        }
+
+        doc.save(`${title.replace(/[^a-zA-Z0-9가-힣_-]/g, '_')}_photobook.pdf`);
+      } catch (err) {
+        console.error("PDF export error:", err);
+        alert('PDF 생성 중 오류가 발생했습니다: ' + err.message);
+      } finally {
+        status.style.display = 'none';
+      }
+    }
+
+    function loadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+  </script>
+</body>
+</html>

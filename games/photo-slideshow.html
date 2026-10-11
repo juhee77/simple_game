@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>켄 번스 모션 슬라이드쇼 & GIF | 미니게임 천국</title>
+  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0b1a;
+      --card-bg: rgba(22, 22, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --cyan: #00d4ff;
+      --purple: #7c3aed;
+      --pink: #ff006e;
+      --yellow: #ffd166;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 0;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--yellow), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .drop-zone {
+      border: 2px dashed rgba(255, 209, 102, 0.4);
+      border-radius: var(--radius-card);
+      padding: 28px 20px;
+      text-align: center;
+      background: rgba(255, 209, 102, 0.03);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drop-zone:hover {
+      border-color: var(--yellow);
+      background: rgba(255, 209, 102, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .drop-icon { font-size: 38px; }
+    .drop-title { font-weight: 700; font-size: 16px; color: var(--yellow); }
+    .drop-sub { font-size: 13px; color: var(--text-dim); }
+
+    .section-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--yellow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .photo-thumb-box {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+
+    .photo-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    .btn-del {
+      position: absolute;
+      top: 3px; right: 3px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #ff006e;
+      border: 1px solid rgba(255, 0, 110, 0.4);
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .option-sub-title {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .ratio-options {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
+      user-select: none;
+      cursor: grab;
+    }
+
+    .ratio-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      padding: 8px 12px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .ratio-btn.active {
+      background: rgba(255, 209, 102, 0.15);
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
+
+    button.primary-btn {
+      background: linear-gradient(135deg, var(--yellow), var(--pink));
+      border: none;
+      color: #0b0b1a;
+      padding: 13px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .viewer-area {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      border: 2px solid rgba(255, 209, 102, 0.3);
+      max-width: 100%;
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      max-height: 480px;
+    }
+
+    .player-controls {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .player-btn {
+      flex: 1;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: white;
+      border-radius: var(--radius-btn);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .gif-status {
+      display: none;
+      font-size: 13px;
+      color: var(--yellow);
+      text-align: center;
+    }
+
+    .gif-download-area {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .gif-download-area img {
+      max-width: 280px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-btn">←</a>
+      <h1>🎬 켄 번스 무빙 슬라이드쇼</h1>
+    </header>
+
+    <div class="card" id="inputCard">
+      <div class="drop-zone" onclick="document.getElementById('slideFiles').click()">
+        <div class="drop-icon">🎞️</div>
+        <div class="drop-title">슬라이드쇼에 넣을 사진들을 올려주세요</div>
+        <div class="drop-sub">클릭 또는 드래그 앤 드롭 (3~15장 추천)</div>
+        <input type="file" id="slideFiles" accept="image/*" multiple style="display: none;" onchange="handleSlideUpload(event)">
+      </div>
+
+      <div class="section-label">
+        <span>📸 등록된 사진들</span>
+        <span id="slideCount" style="color: var(--yellow);">0장</span>
+      </div>
+
+      <div class="photo-grid" id="photoGrid"></div>
+
+      <div id="controlsGroup" style="display: none; flex-direction: column; gap: 12px;">
+        <div class="option-group">
+          <div class="option-sub-title">1. 화면 비율</div>
+          <div class="ratio-options" id="ratioOptions">
+            <button class="ratio-btn active" data-ratio="1:1" onclick="setRatio('1:1', this)">⏹️ 1:1 정방형 (피드용)</button>
+            <button class="ratio-btn" data-ratio="9:16" onclick="setRatio('9:16', this)">📱 9:16 세로 (스토리/릴스)</button>
+            <button class="ratio-btn" data-ratio="16:9" onclick="setRatio('16:9', this)">🖥️ 16:9 가로 (와이드)</button>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-sub-title">2. 전환 속도</div>
+          <div class="ratio-options" id="speedOptions">
+            <button class="ratio-btn" data-speed="2000" onclick="setSpeed(2000, this)">⚡ 빠름 (2초)</button>
+            <button class="ratio-btn active" data-speed="3500" onclick="setSpeed(3500, this)">⏱️ 보통 (3.5초)</button>
+            <button class="ratio-btn" data-speed="5000" onclick="setSpeed(5000, this)">☕ 여유롭게 (5초)</button>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-sub-title">3. 아날로그 레트로 필름 날짜 스탬프</div>
+          <div class="ratio-options" id="stampOptions">
+            <button class="ratio-btn active" data-stamp="true" onclick="setStamp(true, this)">🟠 '26 10 11 오렌지 날짜 표시</button>
+            <button class="ratio-btn" data-stamp="false" onclick="setStamp(false, this)">🚫 날짜 스탬프 없음</button>
+          </div>
+        </div>
+
+        <button class="primary-btn" onclick="startSlideshow()">
+          ▶️ 켄 번스 무빙 슬라이드쇼 시작
+        </button>
+      </div>
+
+      <div class="viewer-area" id="viewerArea">
+        <div class="canvas-wrap">
+          <canvas id="motionCanvas"></canvas>
+        </div>
+
+        <div class="player-controls">
+          <button class="player-btn" onclick="togglePlay()" id="playPauseBtn">⏸️ 일시 정지</button>
+          <button class="player-btn" style="background: linear-gradient(135deg, var(--pink), var(--purple));" onclick="createMotionGIF()">
+            🎞️ 루핑 GIF 만들기
+          </button>
+        </div>
+
+        <div class="gif-status" id="gifStatus">⏳ 고화질 GIF 생성 중입니다 (잠시만 기다려주세요)...</div>
+
+        <div class="gif-download-area" id="gifArea">
+          <div class="section-label"><span>🎉 완성된 루핑 GIF</span></div>
+          <img id="gifOutput" src="" alt="GIF Output">
+          <a id="gifDownload" class="primary-btn" style="text-decoration: none; width: 100%; text-align: center;" download="slideshow.gif">
+            📥 완성된 GIF 다운로드
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="game-rules">
+{
+ "title": "켄 번스 무빙 슬라이드쇼",
+ "players": "1인 이상",
+ "time": "2분",
+ "goal": "사진 모음에 줌인/줌아웃(Ken Burns effect)과 크로스페이드를 입혀 감성 슬라이드쇼 및 GIF를 제작합니다.",
+ "steps": [
+  "슬라이드쇼로 감상할 사진들을 여러 장 업로드합니다.",
+  "1:1 피드용, 9:16 인스타 스토리용, 16:9 와이드 중 원하는 화면 비율을 고릅니다.",
+  "전환 속도와 레트로 필름 날짜 스탬프 표시 여부를 선택합니다.",
+  "'슬라이드쇼 시작'을 눌러 영화처럼 부드럽게 움직이는 모션 영상을 감상합니다.",
+  "'루핑 GIF 만들기'를 눌러 인스타그램이나 메신저로 공유할 수 있는 반복 재생 GIF를 다운로드합니다."
+ ],
+ "tips": [
+  "켄 번스(Ken Burns) 효과란 사진을 고정시키지 않고 카메라가 부드럽게 줌/팬하여 생동감을 주는 영화적 기법입니다."
+ ]
+}
+  </script>
+
+  <script>
+    let slideImages = [];
+    let currentRatio = '1:1';
+    let slideDuration = 3500;
+    let showStamp = true;
+    let isPlaying = false;
+    let animationFrameId = null;
+
+    let currentIndex = 0;
+    let nextIndex = 1;
+    let slideStartTime = 0;
+
+    function handleSlideUpload(event) {
+      const files = Array.from(event.target.files || []);
+      const images = files.filter(f => f.type.startsWith('image/'));
+      if (!images.length) return;
+
+      images.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          slideImages.push(e.target.result);
+          updateSlideGallery();
+        };
+        reader.readAsDataURL(file);
+      });
+      event.target.value = '';
+    }
+
+    function removeSlide(idx) {
+      slideImages.splice(idx, 1);
+      updateSlideGallery();
+    }
+
+    function updateSlideGallery() {
+      const grid = document.getElementById('photoGrid');
+      const count = document.getElementById('slideCount');
+      const controls = document.getElementById('controlsGroup');
+
+      grid.innerHTML = '';
+      count.textContent = `${slideImages.length}장`;
+
+      slideImages.forEach((src, idx) => {
+        const box = document.createElement('div');
+        box.className = 'photo-thumb-box';
+
+        const del = document.createElement('button');
+        del.className = 'btn-del';
+        del.textContent = '✕';
+        del.onclick = (e) => { e.stopPropagation(); removeSlide(idx); };
+        box.appendChild(del);
+
+        const img = document.createElement('img');
+        img.src = src;
+        box.appendChild(img);
+
+        grid.appendChild(box);
+      });
+
+      controls.style.display = slideImages.length > 0 ? 'flex' : 'none';
+    }
+
+    function setRatio(ratio, el) {
+      currentRatio = ratio;
+      document.querySelectorAll('#ratioOptions .ratio-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function setSpeed(spd, el) {
+      slideDuration = spd;
+      document.querySelectorAll('#speedOptions .ratio-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function setStamp(stamp, el) {
+      showStamp = stamp;
+      document.querySelectorAll('#stampOptions .ratio-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    let loadedImgObjects = [];
+
+    async function startSlideshow() {
+      if (slideImages.length < 2) {
+        alert('슬라이드쇼를 위해 최소 2장 이상의 사진을 올려주세요.');
+        return;
+      }
+
+      document.getElementById('viewerArea').style.display = 'flex';
+      document.getElementById('viewerArea').scrollIntoView({ behavior: 'smooth' });
+
+      const canvas = document.getElementById('motionCanvas');
+      if (currentRatio === '1:1') {
+        canvas.width = 600; canvas.height = 600;
+      } else if (currentRatio === '9:16') {
+        canvas.width = 450; canvas.height = 800;
+      } else {
+        canvas.width = 800; canvas.height = 450;
+      }
+
+      loadedImgObjects = await Promise.all(slideImages.map(src => {
+        return new Promise(res => {
+          const img = new Image();
+          img.onload = () => res(img);
+          img.src = src;
+        });
+      }));
+
+      currentIndex = 0;
+      nextIndex = 1;
+      slideStartTime = performance.now();
+      isPlaying = true;
+      document.getElementById('playPauseBtn').textContent = '⏸️ 일시 정지';
+
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animateMotion(performance.now());
+    }
+
+    function animateMotion(time) {
+      if (!isPlaying) return;
+
+      const elapsed = time - slideStartTime;
+      const progress = Math.min(1, elapsed / slideDuration);
+
+      const canvas = document.getElementById('motionCanvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, w, h);
+
+      // Current Image with Ken Burns zoom (1.0 -> 1.15)
+      const curImg = loadedImgObjects[currentIndex];
+      const scale = 1.0 + 0.15 * progress;
+      const panOffset = (progress - 0.5) * 20;
+
+      ctx.save();
+      drawKenBurns(ctx, curImg, w, h, scale, panOffset, 1.0);
+      ctx.restore();
+
+      // Crossfade into next image during the last 25% of slideDuration
+      const fadeStart = 0.75;
+      if (progress > fadeStart) {
+        const fadeProg = (progress - fadeStart) / (1 - fadeStart);
+        const nextImg = loadedImgObjects[nextIndex];
+        const nextScale = 1.15 - 0.05 * fadeProg;
+        ctx.save();
+        drawKenBurns(ctx, nextImg, w, h, nextScale, 0, fadeProg);
+        ctx.restore();
+      }
+
+      // Vintage Film Date Stamp
+      if (showStamp) {
+        ctx.fillStyle = '#ff7700';
+        ctx.font = 'bold 24px "VT323", monospace';
+        ctx.shadowColor = 'rgba(255, 119, 0, 0.7)';
+        ctx.shadowBlur = 6;
+        const now = new Date();
+        const stampText = `'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
+        ctx.fillText(stampText, w - 140, h - 30);
+        ctx.shadowColor = 'transparent';
+      }
+
+      if (progress >= 1) {
+        currentIndex = (currentIndex + 1) % loadedImgObjects.length;
+        nextIndex = (currentIndex + 1) % loadedImgObjects.length;
+        slideStartTime = performance.now();
+      }
+
+      animationFrameId = requestAnimationFrame(animateMotion);
+    }
+
+    function drawKenBurns(ctx, img, w, h, scale, panOffset, alpha) {
+      ctx.globalAlpha = alpha;
+      const imgRatio = img.width / img.height;
+      const canvasRatio = w / h;
+      let drawW, drawH;
+
+      if (imgRatio > canvasRatio) {
+        drawH = h * scale;
+        drawW = drawH * imgRatio;
+      } else {
+        drawW = w * scale;
+        drawH = drawW / imgRatio;
+      }
+
+      const x = (w - drawW) / 2 + panOffset;
+      const y = (h - drawH) / 2;
+      ctx.drawImage(img, x, y, drawW, drawH);
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      const btn = document.getElementById('playPauseBtn');
+      if (isPlaying) {
+        btn.textContent = '⏸️ 일시 정지';
+        slideStartTime = performance.now();
+        animateMotion(performance.now());
+      } else {
+        btn.textContent = '▶️ 계속 재생';
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      }
+    }
+
+    async function createMotionGIF() {
+      if (loadedImgObjects.length < 2) return;
+
+      const statusEl = document.getElementById('gifStatus');
+      statusEl.style.display = 'block';
+
+      const w = 360, h = (currentRatio === '9:16') ? 480 : (currentRatio === '16:9' ? 202 : 360);
+      const tempC = document.createElement('canvas');
+      tempC.width = w; tempC.height = h;
+      const tCtx = tempC.getContext('2d');
+
+      const frames = [];
+      const numPhotos = Math.min(4, loadedImgObjects.length);
+      const framesPerPhoto = 6;
+
+      for (let i = 0; i < numPhotos; i++) {
+        const curImg = loadedImgObjects[i];
+        const nextImg = loadedImgObjects[(i + 1) % numPhotos];
+
+        for (let f = 0; f < framesPerPhoto; f++) {
+          const prog = f / framesPerPhoto;
+          tCtx.fillStyle = '#000';
+          tCtx.fillRect(0, 0, w, h);
+
+          const scale = 1.0 + 0.12 * prog;
+          drawKenBurns(tCtx, curImg, w, h, scale, 0, 1.0);
+
+          if (prog > 0.6) {
+            const fade = (prog - 0.6) / 0.4;
+            drawKenBurns(tCtx, nextImg, w, h, 1.1, 0, fade);
+          }
+
+          if (showStamp) {
+            tCtx.fillStyle = '#ff7700';
+            tCtx.font = 'bold 18px monospace';
+            tCtx.fillText("'26 10 11", w - 90, h - 18);
+          }
+
+          frames.push(tempC.toDataURL('image/jpeg', 0.8));
+        }
+      }
+
+      gifshot.createGIF({
+        images: frames,
+        gifWidth: w,
+        gifHeight: h,
+        interval: 0.15,
+        numWorkers: 2
+      }, function(obj) {
+        statusEl.style.display = 'none';
+        if (!obj.error) {
+          document.getElementById('gifOutput').src = obj.image;
+          document.getElementById('gifDownload').href = obj.image;
+          document.getElementById('gifArea').style.display = 'flex';
+          document.getElementById('gifArea').scrollIntoView({ behavior: 'smooth' });
+        } else {
+          alert('GIF 생성 실패: ' + obj.error);
+        }
+      });
+    }
+
+    // Drag and Drop
+    const cardEl = document.getElementById('inputCard');
+    if (cardEl) {
+      cardEl.addEventListener('dragover', (e) => { e.preventDefault(); cardEl.classList.add('drag-over'); });
+      cardEl.addEventListener('dragleave', (e) => { e.preventDefault(); cardEl.classList.remove('drag-over'); });
+      cardEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        cardEl.classList.remove('drag-over');
+        if (e.dataTransfer && e.dataTransfer.files) {
+          handleSlideUpload({ target: { files: e.dataTransfer.files } });
+        }
+      });
+    }
+  </script>
+</body>
+</html>
