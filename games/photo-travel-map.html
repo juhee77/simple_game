@@ -20,9 +20,9 @@
   <style>
     :root {
       --bg: #07090e;
-      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-bg: rgba(15, 23, 42, 0.78);
       --card-border: rgba(255, 255, 255, 0.08);
-      --card-border-focus: rgba(6, 214, 160, 0.35);
+      --card-border-focus: rgba(6, 214, 160, 0.4);
       --cyan: #06b6d4;
       --indigo: #6366f1;
       --pink: #ec4899;
@@ -48,7 +48,7 @@
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 1040px;
       margin: 0 auto;
       padding: 24px 20px;
       width: 100%;
@@ -63,7 +63,7 @@
       align-items: center;
       justify-content: space-between;
       position: relative;
-      padding-bottom: 8px;
+      padding-bottom: 4px;
     }
 
     .header-left {
@@ -124,7 +124,7 @@
     .drop-zone {
       border: 2px dashed rgba(6, 182, 212, 0.3);
       border-radius: var(--radius-lg);
-      padding: 36px 24px;
+      padding: 34px 24px;
       text-align: center;
       background: linear-gradient(180deg, rgba(6, 182, 212, 0.03) 0%, rgba(16, 185, 129, 0.02) 100%);
       cursor: pointer;
@@ -143,14 +143,14 @@
     }
 
     .drop-icon-wrapper {
-      width: 64px;
-      height: 64px;
-      border-radius: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
       background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 32px;
+      font-size: 30px;
       border: 1px solid rgba(6, 182, 212, 0.3);
     }
 
@@ -166,17 +166,17 @@
     }
 
     .demo-btn-pill {
-      margin-top: 6px;
+      margin-top: 4px;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 14px;
+      padding: 7px 16px;
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 20px;
       color: var(--cyan);
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -184,12 +184,13 @@
     .demo-btn-pill:hover {
       background: rgba(6, 182, 212, 0.2);
       border-color: var(--cyan);
+      transform: translateY(-1px);
     }
 
     /* Trip Stats HUD Bar */
     .trip-stats-bar {
       display: none;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
       padding: 14px 18px;
       background: rgba(15, 23, 42, 0.6);
@@ -224,6 +225,91 @@
       font-size: 12px;
       font-weight: 500;
       color: var(--text-dim);
+    }
+
+    /* Sorting & Optimization Toolbar */
+    .sort-card {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 20px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .sort-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .sort-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sort-current-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .sort-pills-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sort-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sort-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: #fff;
+      border-color: rgba(6, 182, 212, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .sort-btn.active {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(16, 185, 129, 0.25));
+      border-color: var(--cyan);
+      color: #38bdf8;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+    }
+
+    .sort-btn-highlight {
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+    }
+
+    .sort-btn-highlight:hover {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: #f59e0b;
     }
 
     /* Map Section */
@@ -283,7 +369,64 @@
       z-index: 1;
     }
 
-    /* Custom Map Markers & Popups */
+    /* Tour Control Dock */
+    .tour-control-dock {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .dock-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dock-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    .transport-pill-group, .speed-pill-group {
+      display: flex;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .dock-pill-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .dock-pill-btn:hover {
+      color: #fff;
+    }
+
+    .dock-pill-btn.active {
+      background: var(--cyan);
+      color: #04121d;
+      box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
+    }
+
+    /* Custom Map Markers & Vehicle */
     .custom-leaflet-marker {
       position: relative;
       display: flex;
@@ -320,6 +463,39 @@
       padding: 1px 6px;
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    /* Traveling Vehicle Marker */
+    .vehicle-marker-wrapper {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .vehicle-pulse-ring {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(6, 182, 212, 0.25);
+      border: 1.5px solid var(--cyan);
+      animation: vehiclePulse 1.4s infinite ease-out;
+    }
+
+    @keyframes vehiclePulse {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+
+    .vehicle-icon-sprite {
+      font-size: 26px;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.8));
+      transition: transform 0.1s linear;
+      display: inline-block;
     }
 
     .leaflet-popup-content-wrapper {
@@ -417,6 +593,27 @@
       box-shadow: 0 12px 28px -6px rgba(139, 92, 246, 0.5);
     }
 
+    .btn-gradient-stop {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-gradient-stop:hover {
+      background: rgba(239, 68, 68, 0.35);
+      border-color: #ef4444;
+      color: #fff;
+    }
+
     /* Timeline Spots List */
     .timeline-card {
       display: none;
@@ -428,6 +625,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .timeline-title {
@@ -443,7 +642,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 280px;
+      max-height: 400px;
       overflow-y: auto;
       padding-right: 4px;
     }
@@ -451,7 +650,7 @@
     .timeline-item {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       padding: 10px 14px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--card-border);
@@ -465,11 +664,44 @@
       transform: translateX(3px);
     }
 
+    .item-reorder-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .btn-reorder {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      font-size: 10px;
+      width: 22px;
+      height: 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .btn-reorder:hover:not(:disabled) {
+      background: var(--cyan);
+      color: #04121d;
+      border-color: var(--cyan);
+    }
+
+    .btn-reorder:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+
     .item-idx {
       font-size: 13px;
       font-weight: 800;
       color: var(--cyan);
       min-width: 22px;
+      text-align: center;
     }
 
     .item-thumb {
@@ -484,7 +716,8 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
+      min-width: 0;
     }
 
     .item-name-input {
@@ -492,11 +725,12 @@
       border: none;
       color: #ffffff;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       font-family: inherit;
       outline: none;
       border-bottom: 1px dashed transparent;
       padding-bottom: 2px;
+      width: 100%;
     }
 
     .item-name-input:focus {
@@ -504,11 +738,12 @@
     }
 
     .item-meta {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-dim);
       display: flex;
       gap: 8px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .badge-gps {
@@ -531,6 +766,16 @@
       border: 1px solid rgba(245, 158, 11, 0.3);
     }
 
+    .badge-interval {
+      background: rgba(6, 182, 212, 0.1);
+      color: #38bdf8;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+
     .item-actions {
       display: flex;
       align-items: center;
@@ -543,7 +788,7 @@
       color: var(--cyan);
       font-size: 11px;
       font-weight: 700;
-      padding: 4px 10px;
+      padding: 5px 10px;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
@@ -558,7 +803,7 @@
       background: none;
       border: none;
       color: #ef4444;
-      font-size: 15px;
+      font-size: 16px;
       cursor: pointer;
       padding: 4px;
       border-radius: 4px;
@@ -567,14 +812,15 @@
 
     .btn-del:hover { background: rgba(239, 68, 68, 0.15); }
 
-    /* GIF & Poster Result Section */
+    /* GIF Result Section */
     .status-alert {
-      color: var(--yellow);
+      color: #38bdf8;
       font-size: 13px;
       text-align: center;
       display: none;
-      padding: 10px;
-      background: rgba(245, 158, 11, 0.1);
+      padding: 12px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
       border-radius: 8px;
     }
 
@@ -583,8 +829,8 @@
       flex-direction: column;
       align-items: center;
       gap: 16px;
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.4);
+      padding: 22px;
+      background: rgba(0, 0, 0, 0.5);
       border-radius: var(--radius-lg);
       border: 1px solid var(--card-border);
     }
@@ -592,8 +838,15 @@
     .gif-preview-img {
       max-width: 100%;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+    }
+
+    @media (max-width: 680px) {
+      .trip-stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .map-frame { height: 360px; }
+      .tour-control-dock { flex-direction: column; align-items: stretch; }
+      .dock-group { justify-content: space-between; }
     }
   </style>
 </head>
@@ -604,7 +857,7 @@
         <a href="../index.html" class="back-btn" title="목록으로">←</a>
         <div class="header-title-box">
           <h1>📍 여행 동선 지도 & 순서형 GIF</h1>
-          <p>사진 메타데이터(GPS & 시간) 기반 리얼 인터랙티브 맵 & 타임랩스 GIF 스튜디오</p>
+          <p>사진 메타데이터(GPS & 시간) 기반 리얼 위성 인터랙티브 맵 & 부드러운 여정 트래블러</p>
         </div>
       </div>
     </header>
@@ -636,13 +889,35 @@
         <span class="stat-label">여행 기간</span>
         <div class="stat-val" id="tripPeriodVal">- <span class="stat-unit"></span></div>
       </div>
+      <div class="stat-item">
+        <span class="stat-label">현재 정렬 모드</span>
+        <div class="stat-val" style="font-size: 14px; color: #34d399;" id="currentSortLabel">⏱️ 촬영 과거순</div>
+      </div>
+    </div>
+
+    <!-- Sorting & Route Optimization Card -->
+    <div class="sort-card" id="sortToolbar">
+      <div class="sort-header">
+        <div class="sort-title">
+          <span>🧭 동선 순서 & 스마트 정렬 툴바</span>
+          <span style="font-size: 12px; color: var(--text-dim); font-weight: normal;">(시간/거리/스팟을 원하는 방식으로 정렬하세요)</span>
+        </div>
+        <span class="sort-current-badge" id="sortModeBadge">⏱️ 촬영 시간순 (과거순)</span>
+      </div>
+      <div class="sort-pills-row">
+        <button class="sort-btn active" id="btnSortTimeAsc" onclick="applySortMode('time-asc')">⏱️ 촬영 과거순</button>
+        <button class="sort-btn" id="btnSortTimeDesc" onclick="applySortMode('time-desc')">⏱️ 최신 촬영순</button>
+        <button class="sort-btn sort-btn-highlight" id="btnSortTsp" onclick="applySortMode('tsp')">⚡ 최적 이동 동선 (최단거리)</button>
+        <button class="sort-btn" id="btnSortName" onclick="applySortMode('name')">🏷️ 스팟 이름순</button>
+        <button class="sort-btn" onclick="reverseSpots()">🔄 순서 뒤집기</button>
+      </div>
     </div>
 
     <!-- Real Interactive Map Section -->
     <div class="glass-card map-section" id="mapSection">
       <div class="map-top-bar">
         <div style="font-weight: 700; font-size: 15px; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
-          <span>🗺️ 실시간 인터랙티브 여행 지도</span>
+          <span>🗺️ 실시간 인터랙티브 위성 지도</span>
         </div>
         <div class="map-style-pills">
           <button class="map-pill active" onclick="changeMapStyle('satellite', this)">🛰️ 고해상도 위성</button>
@@ -655,24 +930,49 @@
         <div id="realMap"></div>
       </div>
 
+      <!-- Tour Control Dock -->
+      <div class="tour-control-dock">
+        <div class="dock-group">
+          <span class="dock-label">이동 수단</span>
+          <div class="transport-pill-group">
+            <button class="dock-pill-btn active" onclick="setTransportMode('✈️', this)">✈️ 비행기</button>
+            <button class="dock-pill-btn" onclick="setTransportMode('🚗', this)">🚗 자동차</button>
+            <button class="dock-pill-btn" onclick="setTransportMode('🥾', this)">🥾 트레킹</button>
+          </div>
+        </div>
+
+        <div class="dock-group">
+          <span class="dock-label">재생 속도</span>
+          <div class="speed-pill-group">
+            <button class="dock-pill-btn active" onclick="setTourSpeed(1, this)">1x</button>
+            <button class="dock-pill-btn" onclick="setTourSpeed(2, this)">2x</button>
+            <button class="dock-pill-btn" onclick="setTourSpeed(4, this)">4x</button>
+          </div>
+        </div>
+
+        <div class="dock-group" style="gap: 6px;">
+          <button class="btn-gradient-stop" onclick="stopTourAnimation()">⏹ 정지/리셋</button>
+        </div>
+      </div>
+
       <!-- Action Buttons -->
       <div class="action-button-row">
-        <button class="btn-gradient-primary" onclick="startMapTourAnimation()">
-          <span>▶ 여행 동선 비행 투어 재생</span>
+        <button class="btn-gradient-primary" id="btnTourToggle" onclick="toggleMapTourAnimation()">
+          <span id="btnTourText">▶ 여행 동선 비행 투어 재생</span>
         </button>
         <button class="btn-gradient-secondary" onclick="generateTravelGIF()">
-          <span>🎬 타임랩스 GIF 다운로드</span>
+          <span>🎬 실제 위성 타임랩스 GIF 다운로드</span>
         </button>
       </div>
 
-      <div class="status-alert" id="statusAlert">⏳ 지도 타일과 사진을 결합하여 고화질 GIF를 생성하는 중입니다...</div>
+      <div class="status-alert" id="statusAlert">⏳ 실제 위성 지도 타일과 사진을 결합하여 고화질 타임랩스 GIF를 렌더링 중입니다...</div>
 
       <!-- Result Box -->
       <div class="gif-result-box" id="gifResultBox">
-        <div style="font-weight: 700; color: #f43f5e; font-size: 15px;">🎉 완성된 움직이는 여행 타임랩스 GIF</div>
+        <div style="font-weight: 700; color: #38bdf8; font-size: 15px;">🎉 완성된 위성 기반 여행 타임랩스 GIF</div>
         <img id="gifPreview" class="gif-preview-img" alt="Travel GIF Preview">
-        <a id="gifDownloadLink" class="btn-gradient-secondary" style="text-decoration: none; width: 100%; text-align: center;" download="travel_route.gif">
-          📥 고화질 GIF 파일 저장
+        <a id="gifDownloadLink" class="btn-gradient-secondary" style="text-decoration: none; width: 100%; text-align: center;" download="travel_satellite_route.gif">
+          📥 고화질 위성 GIF 파일 저장
         </a>
       </div>
     </div>
@@ -682,7 +982,7 @@
       <div class="timeline-header">
         <div class="timeline-title">
           <span>🚩 추출된 여행 타임라인 순서</span>
-          <span style="font-size: 12px; color: var(--text-dim); font-weight: normal;">(스팟명을 직접 클릭하여 수정할 수 있습니다)</span>
+          <span style="font-size: 12px; color: var(--text-dim); font-weight: normal;">(▲/▼ 버튼으로 순서를 변경하거나 스팟명을 수정하세요)</span>
         </div>
         <button class="btn-focus" onclick="fitAllMarkers()">📍 전체 경로 맞춤</button>
       </div>
@@ -699,14 +999,14 @@
  "steps": [
   "스마트폰이나 카메라로 찍은 여행 사진들을 여러 장 업로드합니다.",
   "사진 속 EXIF 메타데이터에서 촬영 시간과 GPS 좌표가 자동 분석됩니다.",
-  "실시간 인터랙티브 지도(Leaflet) 위에 생성된 실제 여행 경로와 핀을 확인합니다.",
+  "정렬 툴바를 통해 과거순, 최신순, 또는 최단 거리 최적 동선으로 순서를 맞춥니다.",
   "'여행 동선 비행 투어 재생'을 눌러 실제 지도를 따라 이동하는 부드러운 애니메이션을 감상합니다.",
-  "'움직이는 여행 타임랩스 GIF 다운로드'를 눌러 SNS 공유용 루핑 GIF를 저장합니다."
+  "'실제 위성 타임랩스 GIF 다운로드'를 눌러 SNS 공유용 루핑 GIF를 저장합니다."
  ],
  "tips": [
-  "스마트폰 카메라 설정에서 '위치 태그'가 켜진 상태로 찍은 사진은 자동으로 위치가 감지됩니다.",
-  "위치 태그가 없는 사진도 촬영 시간 순서에 따라 가상 좌표로 자연스럽게 동선이 생성됩니다.",
-  "지도 상단의 테마 버튼을 통해 다크 모드, 라이트 모드, 아틀라스 모드를 자유롭게 전환할 수 있습니다."
+  "▲/▼ 버튼으로 특정 스팟의 여행 순서를 언제든지 자유롭게 수동으로 재배치할 수 있습니다.",
+  "이동 수단을 비행기(✈️), 자동차(🚗), 트레킹(🥾)으로 변경하여 여행 테마에 맞출 수 있습니다.",
+  "실제 위성 지도를 바탕으로 GIF가 생성되어 허공에 찍히지 않고 실제 지형 위를 이동합니다."
  ]
 }
   </script>
@@ -716,9 +1016,22 @@
     let leafletMap = null;
     let mapMarkers = [];
     let routePolyline = null;
+    let tourProgressLine = null;
     let tourVehicleMarker = null;
-    let isTourRunning = false;
     let currentMapTileLayer = null;
+    let currentSortMode = 'time-asc'; // 'time-asc', 'time-desc', 'tsp', 'name', 'custom'
+
+    // Tour State Engine
+    let tourState = {
+      isRunning: false,
+      isPaused: false,
+      currentSegment: 0,
+      segmentProgress: 0, // 0.0 to 1.0
+      vehicleIcon: '✈️',
+      speed: 1, // 1, 2, 4
+      animFrameId: null,
+      lastTickTime: null
+    };
 
     const MAP_STYLES = {
       satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -759,18 +1072,24 @@
       const images = files.filter(f => f.type.startsWith('image/'));
       if (!images.length) return;
 
+      let processedCount = 0;
       images.forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const dataUrl = e.target.result;
-          parseExifAndAdd(file, dataUrl);
+          parseExifAndAdd(file, dataUrl, () => {
+            processedCount++;
+            if (processedCount === images.length) {
+              applySortMode(currentSortMode);
+            }
+          });
         };
         reader.readAsDataURL(file);
       });
       event.target.value = '';
     }
 
-    function parseExifAndAdd(file, dataUrl) {
+    function parseExifAndAdd(file, dataUrl, callback) {
       const img = new Image();
       img.onload = () => {
         EXIF.getData(img, function() {
@@ -806,8 +1125,7 @@
             timeVal: dateTime ? new Date(dateTime.replace(/:/g, '/')).getTime() : Date.now() + travelSpots.length * 1000
           });
 
-          travelSpots.sort((a, b) => a.timeVal - b.timeVal);
-          refreshTripUI();
+          if (callback) callback();
         });
       };
       img.src = dataUrl;
@@ -825,14 +1143,126 @@
       return R * c;
     }
 
+    // Time difference format helper
+    function formatTimeDiff(ms) {
+      if (!ms || isNaN(ms) || ms <= 0) return null;
+      const totalMins = Math.round(ms / (1000 * 60));
+      const hours = Math.floor(totalMins / 60);
+      const mins = totalMins % 60;
+      if (hours > 24) {
+        const days = Math.floor(hours / 24);
+        const remHours = hours % 24;
+        return `${days}일 ${remHours}시간 후`;
+      }
+      if (hours > 0) return `${hours}시간 ${mins}분 후`;
+      return `${mins}분 후`;
+    }
+
+    // ==========================================
+    // Sorting & Route Optimization Handlers
+    // ==========================================
+    function applySortMode(mode) {
+      currentSortMode = mode;
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+
+      if (mode === 'time-asc') {
+        const btn = document.getElementById('btnSortTimeAsc');
+        if (btn) btn.classList.add('active');
+        travelSpots.sort((a, b) => a.timeVal - b.timeVal);
+        updateSortBadges('⏱️ 촬영 과거순');
+      } else if (mode === 'time-desc') {
+        const btn = document.getElementById('btnSortTimeDesc');
+        if (btn) btn.classList.add('active');
+        travelSpots.sort((a, b) => b.timeVal - a.timeVal);
+        updateSortBadges('⏱️ 최신 촬영순');
+      } else if (mode === 'tsp') {
+        const btn = document.getElementById('btnSortTsp');
+        if (btn) btn.classList.add('active');
+        sortSpotsByTsp();
+        updateSortBadges('⚡ 최적 이동 동선');
+      } else if (mode === 'name') {
+        const btn = document.getElementById('btnSortName');
+        if (btn) btn.classList.add('active');
+        travelSpots.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+        updateSortBadges('🏷️ 스팟 이름순');
+      }
+
+      stopTourAnimation();
+      refreshTripUI();
+    }
+
+    function sortSpotsByTsp() {
+      if (travelSpots.length <= 2) return;
+      // Greedy Nearest Neighbor TSP from spot 0
+      const remaining = travelSpots.slice();
+      const sorted = [remaining.shift()];
+      while (remaining.length > 0) {
+        const last = sorted[sorted.length - 1];
+        let nearestIdx = 0;
+        let minDist = Infinity;
+        for (let i = 0; i < remaining.length; i++) {
+          const d = calcDistanceKm(last.lat, last.lng, remaining[i].lat, remaining[i].lng);
+          if (d < minDist) {
+            minDist = d;
+            nearestIdx = i;
+          }
+        }
+        sorted.push(remaining.splice(nearestIdx, 1)[0]);
+      }
+      travelSpots = sorted;
+    }
+
+    function reverseSpots() {
+      travelSpots.reverse();
+      currentSortMode = 'custom';
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      updateSortBadges('🔄 역순 반전됨');
+      stopTourAnimation();
+      refreshTripUI();
+    }
+
+    function updateSortBadges(label) {
+      const badge1 = document.getElementById('sortModeBadge');
+      const badge2 = document.getElementById('currentSortLabel');
+      if (badge1) badge1.textContent = label;
+      if (badge2) badge2.textContent = label;
+    }
+
+    function moveSpotUp(idx) {
+      if (idx <= 0) return;
+      const tmp = travelSpots[idx];
+      travelSpots[idx] = travelSpots[idx - 1];
+      travelSpots[idx - 1] = tmp;
+      currentSortMode = 'custom';
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      updateSortBadges('↕️ 사용자 지정 순서');
+      stopTourAnimation();
+      refreshTripUI();
+    }
+
+    function moveSpotDown(idx) {
+      if (idx >= travelSpots.length - 1) return;
+      const tmp = travelSpots[idx];
+      travelSpots[idx] = travelSpots[idx + 1];
+      travelSpots[idx + 1] = tmp;
+      currentSortMode = 'custom';
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      updateSortBadges('↕️ 사용자 지정 순서');
+      stopTourAnimation();
+      refreshTripUI();
+    }
+
+    // ==========================================
+    // UI Refresh & Map Rendering
+    // ==========================================
     function refreshTripUI() {
       if (travelSpots.length === 0) return;
 
       document.getElementById('tripStatsBar').style.display = 'grid';
+      document.getElementById('sortToolbar').style.display = 'flex';
       document.getElementById('mapSection').style.display = 'flex';
       document.getElementById('timelineCard').style.display = 'flex';
 
-      // Initialize map
       initMapIfNeeded();
       setTimeout(() => { leafletMap.invalidateSize(); }, 200);
 
@@ -848,20 +1278,18 @@
       const periodStr = dates[0] === dates[dates.length - 1] ? dates[0] : `${dates[0]} ~ ${dates[dates.length - 1]}`;
       document.getElementById('tripPeriodVal').textContent = periodStr;
 
-      // Update Map Markers & Polyline
       renderMapElements();
-
-      // Update Timeline List
       renderTimelineList();
     }
 
     function renderMapElements() {
       if (!leafletMap) return;
 
-      // Clear existing markers
+      // Clear existing markers & lines
       mapMarkers.forEach(m => leafletMap.removeLayer(m));
       mapMarkers = [];
       if (routePolyline) leafletMap.removeLayer(routePolyline);
+      if (tourProgressLine) leafletMap.removeLayer(tourProgressLine);
       if (tourVehicleMarker) leafletMap.removeLayer(tourVehicleMarker);
 
       const latlngs = [];
@@ -893,12 +1321,20 @@
         mapMarkers.push(marker);
       });
 
-      // Draw Glowing Polyline
+      // Background Static Polyline (Subtle track)
       routePolyline = L.polyline(latlngs, {
         color: '#10b981',
-        weight: 5,
-        opacity: 0.85,
+        weight: 4,
+        opacity: 0.6,
         dashArray: '8, 8',
+        lineCap: 'round'
+      }).addTo(leafletMap);
+
+      // Active Progressive Polyline (for tour)
+      tourProgressLine = L.polyline([], {
+        color: '#06b6d4',
+        weight: 6,
+        opacity: 0.95,
         lineCap: 'round'
       }).addTo(leafletMap);
 
@@ -927,14 +1363,30 @@
       travelSpots.forEach((spot, idx) => {
         const item = document.createElement('div');
         item.className = 'timeline-item';
+
+        // Calculate delta with previous spot
+        let intervalHtml = '';
+        if (idx > 0) {
+          const prev = travelSpots[idx - 1];
+          const distKm = calcDistanceKm(prev.lat, prev.lng, spot.lat, spot.lng);
+          const timeDiff = formatTimeDiff(spot.timeVal - prev.timeVal);
+          intervalHtml = `<span class="badge-interval">+${distKm.toFixed(1)} km</span>`;
+          if (timeDiff) intervalHtml += `<span class="badge-interval">⏱️ ${timeDiff}</span>`;
+        }
+
         item.innerHTML = `
+          <div class="item-reorder-box">
+            <button class="btn-reorder" onclick="moveSpotUp(${idx})" ${idx === 0 ? 'disabled' : ''} title="위로">▲</button>
+            <button class="btn-reorder" onclick="moveSpotDown(${idx})" ${idx === travelSpots.length - 1 ? 'disabled' : ''} title="아래로">▼</button>
+          </div>
           <div class="item-idx">${idx + 1}</div>
           <img src="${spot.dataUrl}" class="item-thumb" alt="spot">
           <div class="item-info">
             <input type="text" class="item-name-input" value="${spot.name}" onchange="updateSpotName(${idx}, this.value)">
             <div class="item-meta">
               <span>📅 ${spot.date}</span>
-              ${spot.isGps ? '<span class="badge-gps">📍 GPS 인식</span>' : '<span class="badge-virtual">⏱️ 시간순 정렬</span>'}
+              ${spot.isGps ? '<span class="badge-gps">📍 GPS</span>' : '<span class="badge-virtual">⏱️ 추정</span>'}
+              ${intervalHtml}
             </div>
           </div>
           <div class="item-actions">
@@ -955,36 +1407,227 @@
 
     function removeSpot(idx) {
       travelSpots.splice(idx, 1);
+      stopTourAnimation();
       refreshTripUI();
     }
 
-    // Smooth Tour Animation along real map
-    async function startMapTourAnimation() {
-      if (isTourRunning || travelSpots.length < 2) return;
-      isTourRunning = true;
+    // ==========================================
+    // Real Map Smooth Journey Tracking Tour
+    // ==========================================
+    function setTransportMode(mode, el) {
+      tourState.vehicleIcon = mode;
+      document.querySelectorAll('.transport-pill-group .dock-pill-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
 
-      if (!tourVehicleMarker) {
-        const vehicleIcon = L.divIcon({
-          className: 'tour-vehicle',
-          html: '<div style="font-size: 28px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); transform: translate(-14px, -14px);">✈️</div>',
-          iconSize: [28, 28]
-        });
-        tourVehicleMarker = L.marker([travelSpots[0].lat, travelSpots[0].lng], { icon: vehicleIcon }).addTo(leafletMap);
+      if (tourVehicleMarker) {
+        const sprite = tourVehicleMarker.getElement()?.querySelector('.vehicle-icon-sprite');
+        if (sprite) sprite.textContent = mode;
+      }
+    }
+
+    function setTourSpeed(speed, el) {
+      tourState.speed = speed;
+      document.querySelectorAll('.speed-pill-group .dock-pill-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function createVehicleMarker(lat, lng) {
+      if (tourVehicleMarker) {
+        leafletMap.removeLayer(tourVehicleMarker);
+      }
+      const vehicleHtml = `
+        <div class="vehicle-marker-wrapper">
+          <div class="vehicle-pulse-ring"></div>
+          <div class="vehicle-icon-sprite">${tourState.vehicleIcon}</div>
+        </div>
+      `;
+      const icon = L.divIcon({
+        className: 'vehicle-div-icon',
+        html: vehicleHtml,
+        iconSize: [44, 44],
+        iconAnchor: [22, 22]
+      });
+      tourVehicleMarker = L.marker([lat, lng], { icon: icon, zIndexOffset: 2000 }).addTo(leafletMap);
+    }
+
+    function toggleMapTourAnimation() {
+      if (travelSpots.length < 2) {
+        alert('동선 투어를 시작하려면 최소 2개 이상의 여행 스팟이 필요합니다.');
+        return;
       }
 
-      for (let i = 0; i < travelSpots.length; i++) {
-        const spot = travelSpots[i];
-        leafletMap.flyTo([spot.lat, spot.lng], 13, { duration: 1.5 });
-        tourVehicleMarker.setLatLng([spot.lat, spot.lng]);
-        if (mapMarkers[i]) mapMarkers[i].openPopup();
-        await new Promise(r => setTimeout(r, 2200));
-      }
+      if (!tourState.isRunning) {
+        // Start fresh
+        tourState.isRunning = true;
+        tourState.isPaused = false;
+        tourState.currentSegment = 0;
+        tourState.segmentProgress = 0;
+        document.getElementById('btnTourText').textContent = '⏸ 일시정지';
 
-      isTourRunning = false;
+        createVehicleMarker(travelSpots[0].lat, travelSpots[0].lng);
+        tourProgressLine.setLatLngs([[travelSpots[0].lat, travelSpots[0].lng]]);
+        leafletMap.setView([travelSpots[0].lat, travelSpots[0].lng], 13);
+        if (mapMarkers[0]) mapMarkers[0].openPopup();
+
+        setTimeout(() => {
+          if (tourState.isRunning && !tourState.isPaused) {
+            tourState.lastTickTime = performance.now();
+            tourState.animFrameId = requestAnimationFrame(tourAnimationLoop);
+          }
+        }, 1200 / tourState.speed);
+      } else if (tourState.isPaused) {
+        // Resume
+        tourState.isPaused = false;
+        document.getElementById('btnTourText').textContent = '⏸ 일시정지';
+        tourState.lastTickTime = performance.now();
+        tourState.animFrameId = requestAnimationFrame(tourAnimationLoop);
+      } else {
+        // Pause
+        tourState.isPaused = true;
+        document.getElementById('btnTourText').textContent = '▶ 계속 재생';
+        if (tourState.animFrameId) cancelAnimationFrame(tourState.animFrameId);
+      }
+    }
+
+    function stopTourAnimation() {
+      tourState.isRunning = false;
+      tourState.isPaused = false;
+      tourState.currentSegment = 0;
+      tourState.segmentProgress = 0;
+      if (tourState.animFrameId) cancelAnimationFrame(tourState.animFrameId);
+      document.getElementById('btnTourText').textContent = '▶ 여행 동선 비행 투어 재생';
+
+      if (tourVehicleMarker) {
+        leafletMap.removeLayer(tourVehicleMarker);
+        tourVehicleMarker = null;
+      }
+      if (tourProgressLine) {
+        tourProgressLine.setLatLngs([]);
+      }
       fitAllMarkers();
     }
 
-    // GIF Generation with Canvas Map Renderer
+    function tourAnimationLoop(now) {
+      if (!tourState.isRunning || tourState.isPaused) return;
+
+      const deltaMs = Math.min(now - (tourState.lastTickTime || now), 100);
+      tourState.lastTickTime = now;
+
+      const segIdx = tourState.currentSegment;
+      if (segIdx >= travelSpots.length - 1) {
+        // Completed
+        tourState.isRunning = false;
+        document.getElementById('btnTourText').textContent = '▶ 여행 투어 다시 재생';
+        if (mapMarkers[travelSpots.length - 1]) mapMarkers[travelSpots.length - 1].openPopup();
+        setTimeout(fitAllMarkers, 2000);
+        return;
+      }
+
+      const p1 = travelSpots[segIdx];
+      const p2 = travelSpots[segIdx + 1];
+
+      // Segment duration scaled by distance (approx 1.8s base, scaled by speed)
+      const dist = calcDistanceKm(p1.lat, p1.lng, p2.lat, p2.lng);
+      const segmentBaseDuration = Math.min(Math.max(dist * 60, 1800), 4000); // ms
+      const effectiveDuration = segmentBaseDuration / tourState.speed;
+
+      tourState.segmentProgress += deltaMs / effectiveDuration;
+
+      if (tourState.segmentProgress >= 1.0) {
+        // Reached waypoint p2!
+        tourState.segmentProgress = 0;
+        tourState.currentSegment++;
+
+        // Snap vehicle to p2
+        tourVehicleMarker.setLatLng([p2.lat, p2.lng]);
+        updateProgressLine(tourState.currentSegment, p2.lat, p2.lng);
+
+        if (mapMarkers[tourState.currentSegment]) {
+          mapMarkers[tourState.currentSegment].openPopup();
+        }
+
+        // Waypoint scenic pause
+        setTimeout(() => {
+          if (tourState.isRunning && !tourState.isPaused) {
+            tourState.lastTickTime = performance.now();
+            tourState.animFrameId = requestAnimationFrame(tourAnimationLoop);
+          }
+        }, 1100 / tourState.speed);
+        return;
+      }
+
+      // Smooth interpolation between p1 and p2
+      const t = tourState.segmentProgress;
+      // Gentle ease-in-out
+      const easeT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+      const curLat = p1.lat + (p2.lat - p1.lat) * easeT;
+      const curLng = p1.lng + (p2.lng - p1.lng) * easeT;
+
+      // Calculate bearing angle for vehicle rotation
+      const dLng = p2.lng - p1.lng;
+      const dLat = p2.lat - p1.lat;
+      const bearingDeg = (Math.atan2(dLng, dLat) * 180 / Math.PI);
+
+      if (tourVehicleMarker) {
+        tourVehicleMarker.setLatLng([curLat, curLng]);
+        const sprite = tourVehicleMarker.getElement()?.querySelector('.vehicle-icon-sprite');
+        if (sprite) {
+          // Flight icon orientation offset
+          const rotOffset = tourState.vehicleIcon === '✈️' ? -45 : 0;
+          sprite.style.transform = `rotate(${bearingDeg + rotOffset}deg)`;
+        }
+      }
+
+      // Update progressive track line
+      updateProgressLine(tourState.currentSegment, curLat, curLng);
+
+      // Smooth pan map along vehicle
+      leafletMap.panTo([curLat, curLng], { animate: false });
+
+      tourState.animFrameId = requestAnimationFrame(tourAnimationLoop);
+    }
+
+    function updateProgressLine(completedSegments, curLat, curLng) {
+      if (!tourProgressLine) return;
+      const pts = [];
+      for (let i = 0; i <= completedSegments; i++) {
+        pts.push([travelSpots[i].lat, travelSpots[i].lng]);
+      }
+      pts.push([curLat, curLng]);
+      tourProgressLine.setLatLngs(pts);
+    }
+
+    // ==========================================
+    // Real Satellite Map Tiles & GIF Generation
+    // ==========================================
+    // Mercator tile math
+    function lon2tile(lon, zoom) {
+      return Math.floor((lon + 180) / 360 * Math.pow(2, zoom));
+    }
+    function lat2tile(lat, zoom) {
+      const rad = lat * Math.PI / 180;
+      return Math.floor((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2 * Math.pow(2, zoom));
+    }
+    function projectMercator(lat, lng, zoom) {
+      const sin = Math.min(Math.max(Math.sin(lat * Math.PI / 180), -0.9999), 0.9999);
+      const x = 256 * (0.5 + lng / 360) * Math.pow(2, zoom);
+      const y = 256 * (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * Math.pow(2, zoom);
+      return { x, y };
+    }
+
+    async function loadTileImage(url) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        // 2s timeout
+        setTimeout(() => resolve(null), 2000);
+        img.src = url;
+      });
+    }
+
     async function generateTravelGIF() {
       if (travelSpots.length < 2) {
         alert('GIF를 생성하려면 최소 2장 이상의 사진이 필요합니다.');
@@ -994,21 +1637,22 @@
       const alertEl = document.getElementById('statusAlert');
       alertEl.style.display = 'block';
 
-      const w = 540, h = 420;
+      const w = 560, h = 420;
       const tempC = document.createElement('canvas');
       tempC.width = w; tempC.height = h;
       const tCtx = tempC.getContext('2d');
 
-      // Preload photos
+      // Preload user photos
       const loadedImgs = await Promise.all(travelSpots.map(s => {
         return new Promise(res => {
           const img = new Image();
           img.onload = () => res(img);
+          img.onerror = () => res(null);
           img.src = s.dataUrl;
         });
       }));
 
-      // Bounding box mapping to canvas coords
+      // Calculate bounding box in lat/lng
       let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
       travelSpots.forEach(s => {
         if (s.lat < minLat) minLat = s.lat;
@@ -1017,88 +1661,183 @@
         if (s.lng > maxLng) maxLng = s.lng;
       });
 
-      const dLat = (maxLat - minLat) || 0.01;
-      const dLng = (maxLng - minLng) || 0.01;
-      const pad = 60;
+      // Find optimal zoom level for bounding box
+      let bestZoom = 11;
+      for (let z = 14; z >= 4; z--) {
+        const pMin = projectMercator(maxLat, minLng, z);
+        const pMax = projectMercator(minLat, maxLng, z);
+        const spanX = Math.abs(pMax.x - pMin.x);
+        const spanY = Math.abs(pMax.y - pMin.y);
+        if (spanX <= w * 0.72 && spanY <= h * 0.72) {
+          bestZoom = z;
+          break;
+        }
+      }
 
-      const points = travelSpots.map(s => ({
-        x: pad + ((s.lng - minLng) / dLng) * (w - pad * 2),
-        y: pad + (1 - (s.lat - minLat) / dLat) * (h - pad * 2),
-        name: s.name,
-        date: s.date
-      }));
+      const pCenter = projectMercator((minLat + maxLat) / 2, (minLng + maxLng) / 2, bestZoom);
+      const minTileX = lon2tile(minLng, bestZoom) - 1;
+      const maxTileX = lon2tile(maxLng, bestZoom) + 1;
+      const minTileY = lat2tile(maxLat, bestZoom) - 1;
+      const maxTileY = lat2tile(minLat, bestZoom) + 1;
+
+      // Base Canvas for Pre-rendering Satellite Basemap
+      const basemapC = document.createElement('canvas');
+      basemapC.width = w; basemapC.height = h;
+      const bCtx = basemapC.getContext('2d');
+
+      // Default dark ocean
+      bCtx.fillStyle = '#08111e';
+      bCtx.fillRect(0, 0, w, h);
+
+      // Coordinate mapping to screen
+      const centerScreenX = w / 2;
+      const centerScreenY = h / 2;
+
+      function toScreen(lat, lng) {
+        const p = projectMercator(lat, lng, bestZoom);
+        return {
+          x: centerScreenX + (p.x - pCenter.x),
+          y: centerScreenY + (p.y - pCenter.y)
+        };
+      }
+
+      // Fetch and composite real satellite tiles
+      const tilePromises = [];
+      for (let tx = minTileX; tx <= maxTileX; tx++) {
+        for (let ty = minTileY; ty <= maxTileY; ty++) {
+          const tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${bestZoom}/${ty}/${tx}`;
+          tilePromises.push((async () => {
+            const img = await loadTileImage(tileUrl);
+            return { img, tx, ty };
+          })());
+        }
+      }
+
+      const loadedTiles = await Promise.all(tilePromises);
+      let successTileCount = 0;
+
+      loadedTiles.forEach(({ img, tx, ty }) => {
+        if (!img) return;
+        successTileCount++;
+        const tileWorldX = tx * 256;
+        const tileWorldY = ty * 256;
+        const dx = Math.round(centerScreenX + (tileWorldX - pCenter.x));
+        const dy = Math.round(centerScreenY + (tileWorldY - pCenter.y));
+        bCtx.drawImage(img, dx, dy, 257, 257);
+      });
+
+      // If tiles failed (offline/error), draw stylish dark radar topographic terrain
+      if (successTileCount === 0) {
+        bCtx.fillStyle = '#0b1329';
+        bCtx.fillRect(0, 0, w, h);
+        bCtx.strokeStyle = 'rgba(6, 182, 212, 0.12)';
+        bCtx.lineWidth = 1;
+        for (let x = 0; x < w; x += 35) { bCtx.beginPath(); bCtx.moveTo(x, 0); bCtx.lineTo(x, h); bCtx.stroke(); }
+        for (let y = 0; y < h; y += 35) { bCtx.beginPath(); bCtx.moveTo(0, y); bCtx.lineTo(w, y); bCtx.stroke(); }
+      }
+
+      // Subtle dark vignette overlay for luxury cinematic feel
+      const vigGrad = bCtx.createRadialGradient(w/2, h/2, h/3, w/2, h/2, w * 0.7);
+      vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      vigGrad.addColorStop(1, 'rgba(5, 10, 20, 0.65)');
+      bCtx.fillStyle = vigGrad;
+      bCtx.fillRect(0, 0, w, h);
+
+      // Map points on screen
+      const screenPoints = travelSpots.map(s => {
+        const sc = toScreen(s.lat, s.lng);
+        return {
+          x: sc.x,
+          y: sc.y,
+          name: s.name,
+          date: s.date
+        };
+      });
 
       const frames = [];
-      const stepsBetween = 8;
+      const stepsBetween = 7;
 
-      for (let s = 0; s < points.length - 1; s++) {
-        const p1 = points[s];
-        const p2 = points[s + 1];
+      for (let s = 0; s < screenPoints.length - 1; s++) {
+        const p1 = screenPoints[s];
+        const p2 = screenPoints[s + 1];
+
+        // Heading angle for vehicle
+        const angleRad = Math.atan2(p2.x - p1.x, -(p2.y - p1.y));
 
         for (let st = 0; st <= stepsBetween; st++) {
           const prog = st / stepsBetween;
           const curX = p1.x + (p2.x - p1.x) * prog;
           const curY = p1.y + (p2.y - p1.y) * prog;
 
-          // Background
-          tCtx.fillStyle = '#080d1a';
-          tCtx.fillRect(0, 0, w, h);
+          // 1. Draw Satellite Basemap
+          tCtx.drawImage(basemapC, 0, 0);
 
-          // Grid Lines
-          tCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+          // 2. Broadcast Voyage HUD Header
+          tCtx.fillStyle = 'rgba(10, 16, 30, 0.85)';
+          tCtx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
           tCtx.lineWidth = 1;
-          for (let x = 0; x < w; x += 40) { tCtx.beginPath(); tCtx.moveTo(x, 0); tCtx.lineTo(x, h); tCtx.stroke(); }
-          for (let y = 0; y < h; y += 40) { tCtx.beginPath(); tCtx.moveTo(0, y); tCtx.lineTo(w, y); tCtx.stroke(); }
+          tCtx.fillRect(16, 14, 260, 36);
+          tCtx.strokeRect(16, 14, 260, 36);
 
-          // Header Badge
-          tCtx.fillStyle = 'rgba(6, 182, 212, 0.15)';
-          tCtx.fillRect(16, 14, 210, 28);
-          tCtx.strokeStyle = '#06b6d4';
-          tCtx.strokeRect(16, 14, 210, 28);
-          tCtx.fillStyle = '#06b6d4';
+          tCtx.fillStyle = '#38bdf8';
           tCtx.font = 'bold 12px Pretendard, sans-serif';
           tCtx.textAlign = 'left';
-          tCtx.fillText(`📍 TRAVEL TIMELAPSE • ${s + 1}/${points.length}`, 26, 32);
+          tCtx.fillText(`🛰️ REAL VOYAGE • SPOT ${s + 1}/${screenPoints.length}`, 28, 30);
+          tCtx.fillStyle = '#94a3b8';
+          tCtx.font = '10px Pretendard, sans-serif';
+          tCtx.fillText(`${p1.date} → ${p2.date}`, 28, 44);
 
-          // Traveled path
+          // 3. Traveled Static Line
           tCtx.strokeStyle = '#10b981';
           tCtx.lineWidth = 4;
+          tCtx.lineCap = 'round';
           tCtx.beginPath();
-          tCtx.moveTo(points[0].x, points[0].y);
-          for (let k = 1; k <= s; k++) tCtx.lineTo(points[k].x, points[k].y);
+          tCtx.moveTo(screenPoints[0].x, screenPoints[0].y);
+          for (let k = 1; k <= s; k++) {
+            tCtx.lineTo(screenPoints[k].x, screenPoints[k].y);
+          }
           tCtx.lineTo(curX, curY);
           tCtx.stroke();
 
-          // Pins
+          // 4. Spot Pin Markers
           for (let k = 0; k <= s; k++) {
             tCtx.fillStyle = '#10b981';
             tCtx.beginPath();
-            tCtx.arc(points[k].x, points[k].y, 9, 0, Math.PI * 2);
+            tCtx.arc(screenPoints[k].x, screenPoints[k].y, 10, 0, Math.PI * 2);
             tCtx.fill();
-            tCtx.fillStyle = '#000';
+
+            tCtx.strokeStyle = '#fff';
+            tCtx.lineWidth = 2;
+            tCtx.stroke();
+
+            tCtx.fillStyle = '#04121d';
             tCtx.font = 'bold 10px sans-serif';
             tCtx.textAlign = 'center';
-            tCtx.fillText(k + 1, points[k].x, points[k].y + 3);
+            tCtx.fillText(k + 1, screenPoints[k].x, screenPoints[k].y + 3.5);
           }
 
-          // Moving dot / vehicle
-          tCtx.fillStyle = '#ec4899';
-          tCtx.beginPath();
-          tCtx.arc(curX, curY, 7, 0, Math.PI * 2);
-          tCtx.fill();
+          // 5. Traveling Vehicle Icon
+          tCtx.save();
+          tCtx.translate(curX, curY);
+          tCtx.rotate(angleRad);
+          tCtx.font = '24px sans-serif';
+          tCtx.textAlign = 'center';
+          tCtx.textBaseline = 'middle';
+          tCtx.fillText(tourState.vehicleIcon, 0, 0);
+          tCtx.restore();
 
-          // Photo Card Popup
+          // 6. Floating Photo Preview Card
           const activeImg = loadedImgs[s];
           if (activeImg) {
             const cardW = 120, cardH = 96;
             let popX = curX - cardW / 2;
-            let popY = curY - cardH - 18;
-            if (popY < 20) popY = curY + 20;
-            if (popX < 20) popX = 20;
-            if (popX + cardW > w - 20) popX = w - cardW - 20;
+            let popY = curY - cardH - 20;
+            if (popY < 55) popY = curY + 22;
+            if (popX < 15) popX = 15;
+            if (popX + cardW > w - 15) popX = w - cardW - 15;
 
             tCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-            tCtx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+            tCtx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
             tCtx.lineWidth = 1.5;
             tCtx.fillRect(popX, popY, cardW, cardH);
             tCtx.strokeRect(popX, popY, cardW, cardH);
@@ -1108,7 +1847,8 @@
             tCtx.fillStyle = '#f8fafc';
             tCtx.font = 'bold 10px Pretendard, sans-serif';
             tCtx.textAlign = 'center';
-            tCtx.fillText(points[s].name, popX + cardW / 2, popY + cardH - 10);
+            const truncName = screenPoints[s].name.length > 10 ? screenPoints[s].name.substring(0, 9) + '…' : screenPoints[s].name;
+            tCtx.fillText(truncName, popX + cardW / 2, popY + cardH - 9);
           }
 
           frames.push(tempC.toDataURL('image/jpeg', 0.85));
@@ -1136,7 +1876,9 @@
       });
     }
 
-    // Demo Samples Generator
+    // ==========================================
+    // Demo Sample Generator
+    // ==========================================
     function getSampleSpots() {
       const spotsData = [
         { name: '제주국제공항 ✈️', lat: 33.5065, lng: 126.4930, date: '2026-10-10', col1: '#0284c7', col2: '#06b6d4', emoji: '✈️' },
@@ -1168,13 +1910,18 @@
           lat: s.lat,
           lng: s.lng,
           isGps: true,
-          timeVal: Date.now() + idx * 10000000
+          timeVal: 1791700000000 + idx * 7200000 // 2-hour intervals
         };
       });
     }
 
     function loadDemoSamples() {
       travelSpots = getSampleSpots();
+      currentSortMode = 'time-asc';
+      updateSortBadges('⏱️ 촬영 과거순');
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById('btnSortTimeAsc');
+      if (btn) btn.classList.add('active');
       refreshTripUI();
     }
 
