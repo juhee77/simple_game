@@ -593,6 +593,30 @@
       box-shadow: 0 12px 28px -6px rgba(139, 92, 246, 0.5);
     }
 
+    .btn-gradient-amber {
+      flex: 1;
+      min-width: 220px;
+      background: linear-gradient(135deg, #f59e0b 0%, #ec4899 100%);
+      border: none;
+      color: #ffffff;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px -6px rgba(245, 158, 11, 0.4);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-gradient-amber:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -6px rgba(236, 72, 153, 0.6);
+    }
+
     .btn-gradient-stop {
       background: rgba(239, 68, 68, 0.2);
       border: 1px solid rgba(239, 68, 68, 0.4);
@@ -960,18 +984,21 @@
         <button class="btn-gradient-primary" id="btnTourToggle" onclick="toggleMapTourAnimation()">
           <span id="btnTourText">▶ 여행 동선 비행 투어 재생</span>
         </button>
-        <button class="btn-gradient-secondary" onclick="generateTravelGIF()">
-          <span>🎬 실제 위성 타임랩스 GIF 다운로드</span>
+        <button class="btn-gradient-secondary" onclick="exportMapImage()">
+          <span>🗺️ 고화질 지도 사진 (PNG) 내보내기</span>
+        </button>
+        <button class="btn-gradient-amber" onclick="generateTravelGIF()">
+          <span>🎬 위성 동선 타임랩스 GIF 내보내기</span>
         </button>
       </div>
 
-      <div class="status-alert" id="statusAlert">⏳ 실제 위성 지도 타일과 사진을 결합하여 고화질 타임랩스 GIF를 렌더링 중입니다...</div>
+      <div class="status-alert" id="statusAlert">⏳ 실제 위성 지도 타일과 사진을 결합하여 고화질 파일을 렌더링 중입니다...</div>
 
       <!-- Result Box -->
       <div class="gif-result-box" id="gifResultBox">
         <div style="font-weight: 700; color: #38bdf8; font-size: 15px;">🎉 완성된 위성 기반 여행 타임랩스 GIF</div>
         <img id="gifPreview" class="gif-preview-img" alt="Travel GIF Preview">
-        <a id="gifDownloadLink" class="btn-gradient-secondary" style="text-decoration: none; width: 100%; text-align: center;" download="travel_satellite_route.gif">
+        <a id="gifDownloadLink" class="btn-gradient-amber" style="text-decoration: none; width: 100%; text-align: center;" download="travel_satellite_route.gif">
           📥 고화질 위성 GIF 파일 저장
         </a>
       </div>
@@ -1019,6 +1046,7 @@
     let tourProgressLine = null;
     let tourVehicleMarker = null;
     let currentMapTileLayer = null;
+    let currentMapStyleKey = 'satellite';
     let currentSortMode = 'time-asc'; // 'time-asc', 'time-desc', 'tsp', 'name', 'custom'
 
     // Tour State Engine
@@ -1048,11 +1076,13 @@
       }).setView([33.38, 126.55], 10);
 
       currentMapTileLayer = L.tileLayer(MAP_STYLES.satellite, {
-        maxZoom: 18
+        maxZoom: 18,
+        crossOrigin: true
       }).addTo(leafletMap);
     }
 
     function changeMapStyle(styleKey, el) {
+      currentMapStyleKey = styleKey;
       document.querySelectorAll('.map-pill').forEach(b => b.classList.remove('active'));
       if (el) el.classList.add('active');
 
@@ -1063,7 +1093,8 @@
       }
       currentMapTileLayer = L.tileLayer(MAP_STYLES[styleKey], {
         maxZoom: 19,
-        subdomains: 'abcd'
+        subdomains: 'abcd',
+        crossOrigin: true
       }).addTo(leafletMap);
     }
 
@@ -1599,7 +1630,7 @@
     }
 
     // ==========================================
-    // Real Satellite Map Tiles & GIF Generation
+    // Real Satellite Map Tiles & Export Engine
     // ==========================================
     // Mercator tile math
     function lon2tile(lon, zoom) {
@@ -1622,12 +1653,266 @@
         img.crossOrigin = 'anonymous';
         img.onload = () => resolve(img);
         img.onerror = () => resolve(null);
-        // 2s timeout
-        setTimeout(() => resolve(null), 2000);
+        setTimeout(() => resolve(null), 8000);
         img.src = url;
       });
     }
 
+    // High-fidelity Basemap Renderer (Captures real satellite tiles from DOM or network)
+    async function renderBasemapToCanvas(bCtx, w, h) {
+      const mapEl = document.getElementById('realMap');
+      let domCapturedCount = 0;
+
+      // Base background
+      bCtx.fillStyle = currentMapStyleKey === 'osm' ? '#e2e8f0' : '#08111e';
+      bCtx.fillRect(0, 0, w, h);
+
+      // 1. Direct screen capture from Leaflet's rendered DOM tiles (Instant, zero-lag, 100% WYSIWYG)
+      if (mapEl) {
+        const mapRect = mapEl.getBoundingClientRect();
+        const domTiles = Array.from(mapEl.querySelectorAll('img.leaflet-tile'));
+        const scaleX = w / (mapRect.width || 1);
+        const scaleY = h / (mapRect.height || 1);
+
+        domTiles.forEach(img => {
+          if (img.complete && img.naturalWidth > 0) {
+            const r = img.getBoundingClientRect();
+            const dx = Math.round((r.left - mapRect.left) * scaleX);
+            const dy = Math.round((r.top - mapRect.top) * scaleY);
+            const dw = Math.round(r.width * scaleX) + 1;
+            const dh = Math.round(r.height * scaleY) + 1;
+            try {
+              bCtx.drawImage(img, dx, dy, dw, dh);
+              domCapturedCount++;
+            } catch (e) {
+              // Ignore CORS taint if any
+            }
+          }
+        });
+      }
+
+      if (domCapturedCount >= 4) {
+        return { usedDom: true };
+      }
+
+      // 2. Network Fetch fallback using current map style
+      let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+      travelSpots.forEach(s => {
+        if (s.lat < minLat) minLat = s.lat;
+        if (s.lat > maxLat) maxLat = s.lat;
+        if (s.lng < minLng) minLng = s.lng;
+        if (s.lng > maxLng) maxLng = s.lng;
+      });
+
+      let bestZoom = 11;
+      for (let z = 14; z >= 4; z--) {
+        const pMin = projectMercator(maxLat, minLng, z);
+        const pMax = projectMercator(minLat, maxLng, z);
+        const spanX = Math.abs(pMax.x - pMin.x);
+        const spanY = Math.abs(pMax.y - pMin.y);
+        if (spanX <= w * 0.75 && spanY <= h * 0.75) {
+          bestZoom = z;
+          break;
+        }
+      }
+
+      const pCenter = projectMercator((minLat + maxLat) / 2, (minLng + maxLng) / 2, bestZoom);
+      const minTileX = lon2tile(minLng, bestZoom) - 1;
+      const maxTileX = lon2tile(maxLng, bestZoom) + 1;
+      const minTileY = Math.min(lat2tile(maxLat, bestZoom), lat2tile(minLat, bestZoom)) - 1;
+      const maxTileY = Math.max(lat2tile(maxLat, bestZoom), lat2tile(minLat, bestZoom)) + 1;
+
+      const tilePromises = [];
+      for (let tx = minTileX; tx <= maxTileX; tx++) {
+        for (let ty = minTileY; ty <= maxTileY; ty++) {
+          let tileUrl = '';
+          if (currentMapStyleKey === 'osm') {
+            tileUrl = `https://tile.openstreetmap.org/${bestZoom}/${tx}/${ty}.png`;
+          } else if (currentMapStyleKey === 'topo') {
+            tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${bestZoom}/${ty}/${tx}`;
+          } else {
+            tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${bestZoom}/${ty}/${tx}`;
+          }
+
+          tilePromises.push((async () => {
+            const img = await loadTileImage(tileUrl);
+            return { img, tx, ty };
+          })());
+        }
+      }
+
+      const loadedTiles = await Promise.all(tilePromises);
+      let successTileCount = 0;
+
+      loadedTiles.forEach(({ img, tx, ty }) => {
+        if (!img) return;
+        successTileCount++;
+        const tileWorldX = tx * 256;
+        const tileWorldY = ty * 256;
+        const dx = Math.round(w / 2 + (tileWorldX - pCenter.x));
+        const dy = Math.round(h / 2 + (tileWorldY - pCenter.y));
+        try {
+          bCtx.drawImage(img, dx, dy, 257, 257);
+        } catch (e) {}
+      });
+
+      if (successTileCount === 0 && domCapturedCount === 0) {
+        // Fallback: stylish dark topo radar
+        bCtx.fillStyle = '#0b1329';
+        bCtx.fillRect(0, 0, w, h);
+        bCtx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
+        bCtx.lineWidth = 1;
+        for (let x = 0; x < w; x += 35) { bCtx.beginPath(); bCtx.moveTo(x, 0); bCtx.lineTo(x, h); bCtx.stroke(); }
+        for (let y = 0; y < h; y += 35) { bCtx.beginPath(); bCtx.moveTo(0, y); bCtx.lineTo(w, y); bCtx.stroke(); }
+      }
+
+      return { usedDom: false, bestZoom, pCenter };
+    }
+
+    // 1. Export High-Res Map Image (PNG 저장)
+    async function exportMapImage() {
+      if (travelSpots.length === 0) return;
+
+      const alertEl = document.getElementById('statusAlert');
+      alertEl.style.display = 'block';
+      alertEl.textContent = '⏳ 현재 화면의 고화질 위성 지도 사진(PNG)을 생성하는 중입니다...';
+
+      const mapEl = document.getElementById('realMap');
+      const w = 1200, h = 850;
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Draw Real Map Basemap
+      const basemapInfo = await renderBasemapToCanvas(ctx, w, h);
+
+      // 2. Map coordinates of spots
+      const mapRect = mapEl.getBoundingClientRect();
+      const scaleX = w / (mapRect.width || 1);
+      const scaleY = h / (mapRect.height || 1);
+
+      const pts = travelSpots.map(s => {
+        if (leafletMap && basemapInfo.usedDom) {
+          const pt = leafletMap.latLngToContainerPoint([s.lat, s.lng]);
+          return { x: pt.x * scaleX, y: pt.y * scaleY, spot: s };
+        } else if (basemapInfo.bestZoom) {
+          const p = projectMercator(s.lat, s.lng, basemapInfo.bestZoom);
+          return {
+            x: w / 2 + (p.x - basemapInfo.pCenter.x),
+            y: h / 2 + (p.y - basemapInfo.pCenter.y),
+            spot: s
+          };
+        }
+        return { x: w / 2, y: h / 2, spot: s };
+      });
+
+      // 3. Draw Route Polyline
+      if (pts.length >= 2) {
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i].x, pts[i].y);
+        }
+        ctx.stroke();
+      }
+
+      // 4. Preload photos for pins
+      const loadedImgs = await Promise.all(travelSpots.map(s => {
+        return new Promise(res => {
+          const img = new Image();
+          img.onload = () => res(img);
+          img.onerror = () => res(null);
+          img.src = s.dataUrl;
+        });
+      }));
+
+      // 5. Draw Pins with Thumbnails
+      pts.forEach((p, idx) => {
+        const radius = 26;
+        const img = loadedImgs[idx];
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetY = 6;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#0f172a';
+        ctx.fill();
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        if (img) {
+          ctx.clip();
+          ctx.drawImage(img, p.x - radius, p.y - radius, radius * 2, radius * 2);
+        }
+        ctx.restore();
+
+        // Pin badge number
+        ctx.beginPath();
+        ctx.arc(p.x + radius - 4, p.y + radius - 4, 11, 0, Math.PI * 2);
+        ctx.fillStyle = '#10b981';
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#04121d';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(idx + 1, p.x + radius - 4, p.y + radius - 4);
+
+        // Label bubble
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+        ctx.lineWidth = 1.5;
+        const txt = `${idx + 1}. ${p.spot.name}`;
+        ctx.font = 'bold 14px "Pretendard", sans-serif';
+        const txtW = ctx.measureText(txt).width;
+        ctx.fillRect(p.x - txtW / 2 - 10, p.y + radius + 10, txtW + 20, 28);
+        ctx.strokeRect(p.x - txtW / 2 - 10, p.y + radius + 10, txtW + 20, 28);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText(txt, p.x, p.y + radius + 25);
+      });
+
+      // 6. Header Bar Overlay
+      ctx.fillStyle = 'rgba(10, 16, 30, 0.9)';
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(30, 30, 440, 75);
+      ctx.strokeRect(30, 30, 440, 75);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 20px "Pretendard", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('🗺️ TRAVEL MAP JOURNEY', 50, 62);
+
+      const dates = travelSpots.map(s => s.date).sort();
+      const period = dates[0] === dates[dates.length - 1] ? dates[0] : `${dates[0]} ~ ${dates[dates.length - 1]}`;
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px "Pretendard", sans-serif';
+      ctx.fillText(`총 ${travelSpots.length}개 스팟 • ${period} • ${currentMapStyleKey.toUpperCase()}`, 50, 88);
+
+      try {
+        const link = document.createElement('a');
+        link.download = `travel_map_${currentMapStyleKey}_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        alert('지도 이미지 저장 중 오류: ' + err.message);
+      } finally {
+        alertEl.style.display = 'none';
+      }
+    }
+
+    // 2. Export Real Satellite Animated GIF
     async function generateTravelGIF() {
       if (travelSpots.length < 2) {
         alert('GIF를 생성하려면 최소 2장 이상의 사진이 필요합니다.');
@@ -1636,6 +1921,7 @@
 
       const alertEl = document.getElementById('statusAlert');
       alertEl.style.display = 'block';
+      alertEl.textContent = '⏳ 실제 위성 지도 타일과 사진을 결합하여 고화질 타임랩스 GIF를 렌더링 중입니다...';
 
       const w = 560, h = 420;
       const tempC = document.createElement('canvas');
@@ -1652,106 +1938,37 @@
         });
       }));
 
-      // Calculate bounding box in lat/lng
-      let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
-      travelSpots.forEach(s => {
-        if (s.lat < minLat) minLat = s.lat;
-        if (s.lat > maxLat) maxLat = s.lat;
-        if (s.lng < minLng) minLng = s.lng;
-        if (s.lng > maxLng) maxLng = s.lng;
-      });
-
-      // Find optimal zoom level for bounding box
-      let bestZoom = 11;
-      for (let z = 14; z >= 4; z--) {
-        const pMin = projectMercator(maxLat, minLng, z);
-        const pMax = projectMercator(minLat, maxLng, z);
-        const spanX = Math.abs(pMax.x - pMin.x);
-        const spanY = Math.abs(pMax.y - pMin.y);
-        if (spanX <= w * 0.72 && spanY <= h * 0.72) {
-          bestZoom = z;
-          break;
-        }
-      }
-
-      const pCenter = projectMercator((minLat + maxLat) / 2, (minLng + maxLng) / 2, bestZoom);
-      const minTileX = lon2tile(minLng, bestZoom) - 1;
-      const maxTileX = lon2tile(maxLng, bestZoom) + 1;
-      const minTileY = lat2tile(maxLat, bestZoom) - 1;
-      const maxTileY = lat2tile(minLat, bestZoom) + 1;
-
-      // Base Canvas for Pre-rendering Satellite Basemap
+      // Base Canvas for Pre-rendering Real Satellite Basemap
       const basemapC = document.createElement('canvas');
       basemapC.width = w; basemapC.height = h;
       const bCtx = basemapC.getContext('2d');
-
-      // Default dark ocean
-      bCtx.fillStyle = '#08111e';
-      bCtx.fillRect(0, 0, w, h);
+      const basemapInfo = await renderBasemapToCanvas(bCtx, w, h);
 
       // Coordinate mapping to screen
-      const centerScreenX = w / 2;
-      const centerScreenY = h / 2;
+      const mapEl = document.getElementById('realMap');
+      const mapRect = mapEl.getBoundingClientRect();
+      const scaleX = w / (mapRect.width || 1);
+      const scaleY = h / (mapRect.height || 1);
 
-      function toScreen(lat, lng) {
-        const p = projectMercator(lat, lng, bestZoom);
-        return {
-          x: centerScreenX + (p.x - pCenter.x),
-          y: centerScreenY + (p.y - pCenter.y)
-        };
-      }
-
-      // Fetch and composite real satellite tiles
-      const tilePromises = [];
-      for (let tx = minTileX; tx <= maxTileX; tx++) {
-        for (let ty = minTileY; ty <= maxTileY; ty++) {
-          const tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${bestZoom}/${ty}/${tx}`;
-          tilePromises.push((async () => {
-            const img = await loadTileImage(tileUrl);
-            return { img, tx, ty };
-          })());
-        }
-      }
-
-      const loadedTiles = await Promise.all(tilePromises);
-      let successTileCount = 0;
-
-      loadedTiles.forEach(({ img, tx, ty }) => {
-        if (!img) return;
-        successTileCount++;
-        const tileWorldX = tx * 256;
-        const tileWorldY = ty * 256;
-        const dx = Math.round(centerScreenX + (tileWorldX - pCenter.x));
-        const dy = Math.round(centerScreenY + (tileWorldY - pCenter.y));
-        bCtx.drawImage(img, dx, dy, 257, 257);
-      });
-
-      // If tiles failed (offline/error), draw stylish dark radar topographic terrain
-      if (successTileCount === 0) {
-        bCtx.fillStyle = '#0b1329';
-        bCtx.fillRect(0, 0, w, h);
-        bCtx.strokeStyle = 'rgba(6, 182, 212, 0.12)';
-        bCtx.lineWidth = 1;
-        for (let x = 0; x < w; x += 35) { bCtx.beginPath(); bCtx.moveTo(x, 0); bCtx.lineTo(x, h); bCtx.stroke(); }
-        for (let y = 0; y < h; y += 35) { bCtx.beginPath(); bCtx.moveTo(0, y); bCtx.lineTo(w, y); bCtx.stroke(); }
-      }
-
-      // Subtle dark vignette overlay for luxury cinematic feel
-      const vigGrad = bCtx.createRadialGradient(w/2, h/2, h/3, w/2, h/2, w * 0.7);
-      vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      vigGrad.addColorStop(1, 'rgba(5, 10, 20, 0.65)');
-      bCtx.fillStyle = vigGrad;
-      bCtx.fillRect(0, 0, w, h);
-
-      // Map points on screen
       const screenPoints = travelSpots.map(s => {
-        const sc = toScreen(s.lat, s.lng);
-        return {
-          x: sc.x,
-          y: sc.y,
-          name: s.name,
-          date: s.date
-        };
+        if (leafletMap && basemapInfo.usedDom) {
+          const pt = leafletMap.latLngToContainerPoint([s.lat, s.lng]);
+          return {
+            x: pt.x * scaleX,
+            y: pt.y * scaleY,
+            name: s.name,
+            date: s.date
+          };
+        } else if (basemapInfo.bestZoom) {
+          const p = projectMercator(s.lat, s.lng, basemapInfo.bestZoom);
+          return {
+            x: w / 2 + (p.x - basemapInfo.pCenter.x),
+            y: h / 2 + (p.y - basemapInfo.pCenter.y),
+            name: s.name,
+            date: s.date
+          };
+        }
+        return { x: w / 2, y: h / 2, name: s.name, date: s.date };
       });
 
       const frames = [];
@@ -1769,15 +1986,15 @@
           const curX = p1.x + (p2.x - p1.x) * prog;
           const curY = p1.y + (p2.y - p1.y) * prog;
 
-          // 1. Draw Satellite Basemap
+          // 1. Draw Real Satellite Basemap
           tCtx.drawImage(basemapC, 0, 0);
 
-          // 2. Broadcast Voyage HUD Header
-          tCtx.fillStyle = 'rgba(10, 16, 30, 0.85)';
-          tCtx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+          // 2. Voyage HUD Header
+          tCtx.fillStyle = 'rgba(10, 16, 30, 0.88)';
+          tCtx.strokeStyle = 'rgba(6, 182, 212, 0.5)';
           tCtx.lineWidth = 1;
-          tCtx.fillRect(16, 14, 260, 36);
-          tCtx.strokeRect(16, 14, 260, 36);
+          tCtx.fillRect(16, 14, 270, 36);
+          tCtx.strokeRect(16, 14, 270, 36);
 
           tCtx.fillStyle = '#38bdf8';
           tCtx.font = 'bold 12px Pretendard, sans-serif';
