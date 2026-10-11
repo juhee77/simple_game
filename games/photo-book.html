@@ -621,38 +621,11 @@
       box-shadow: 0 12px 25px -6px rgba(6, 182, 212, 0.6);
     }
 
-    .dock-btn-print {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(212, 175, 55, 0.4);
-      color: var(--gold-light);
-    }
-    .dock-btn-print:hover {
-      background: rgba(212, 175, 55, 0.15);
-      border-color: var(--gold);
-      transform: translateY(-2px);
-    }
-
     .status-msg {
       color: var(--gold-light);
       font-size: 13px;
       text-align: center;
       display: none;
-    }
-
-    /* Print Specific Media Styles */
-    @media print {
-      body { background: white !important; color: black !important; }
-      header, #uploadCard, .book-nav-bar, .publishing-dock, .back-btn { display: none !important; }
-      .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-      .glass-card { background: white !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
-      .book-stage { display: block !important; margin: 0 !important; }
-      .book-spread-container {
-        box-shadow: none !important;
-        border: 1px dashed #ccc !important;
-        page-break-after: always;
-        width: 100% !important;
-      }
-      .book-spread-container::before, .ribbon-bookmark { display: none !important; }
     }
 
     @media (max-width: 768px) {
@@ -670,7 +643,7 @@
         <a href="../index.html" class="back-btn" title="목록으로">←</a>
         <div class="header-title-box">
           <h1>📖 디지털 플립북 & 포토북 아틀리에</h1>
-          <p>수제 양장본 책 만들기 공방 • 양면 3D 뷰어 • 원페이지 롤 & A4 인쇄 출력</p>
+          <p>수제 양장본 책 만들기 공방 • 양면 3D 플립북 • A4 소장용 PDF & 롤 이미지 저장</p>
         </div>
       </div>
     </header>
@@ -764,13 +737,10 @@
       <!-- Publishing Export Dock (Various Export Formats) -->
       <div class="publishing-dock">
         <button class="dock-btn dock-btn-pdf" onclick="exportToPDF()">
-          <span>📄 다중 페이지 소장용 PDF</span>
+          <span>📄 고화질 A4 소장/인쇄용 PDF 다운로드</span>
         </button>
         <button class="dock-btn dock-btn-scroll" onclick="exportToLongScrollImage()">
-          <span>📜 원페이지 롱 롤(SNS용) 저장</span>
-        </button>
-        <button class="dock-btn dock-btn-print" onclick="window.print()">
-          <span>🖨️ A4 실물 인쇄 / 접지용 출력</span>
+          <span>📜 원페이지 세로 롱 롤(SNS용) 저장</span>
         </button>
       </div>
     </div>
@@ -787,11 +757,11 @@
   "앨범의 제목과 부제(날짜), 제본 방식(양장본/스프링/중철)과 용지 테마를 선택합니다.",
   "'플립북 앨범 펼치기'를 눌러 실제 책처럼 넘겨보며 감상합니다.",
   "페이지 하단의 캡션을 클릭하여 사진별 코멘트를 자유롭게 입력합니다.",
-  "'소장용 PDF 다운로드', '원페이지 롱 롤 이미지 저장', 또는 'A4 인쇄 모드'를 통해 나만의 책을 완성합니다."
+  "'고화질 A4 PDF 다운로드' 또는 '원페이지 롱 롤 이미지 저장'을 통해 나만의 소장용 책을 완성합니다."
  ],
  "tips": [
   "키보드 좌우 방향키(←, →)로도 부드럽게 책장을 넘길 수 있습니다.",
-  "페이지를 넘길 때 실감나는 아날로그 종이 넘김 사운드가 재생됩니다.",
+  "다운로드한 PDF는 A4 규격에 정밀하게 맞춰져 있어 집이나 사무실 프린터로 바로 출력할 수 있습니다.",
   "원페이지 롱 롤 이미지는 카카오톡이나 인스타그램 스토리 등에 길게 공유하기에 최적입니다."
  ]
 }
@@ -802,30 +772,6 @@
     let currentTheme = 'linen';
     let currentBinding = 'hardcover';
     let currentSpreadIndex = 0; // 0 is cover, 1..N are dual page spreads
-
-    // Native Web Audio Page Turn Paper Rustle Synthesizer
-    function playPageTurnSound() {
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const bufferSize = ctx.sampleRate * 0.12;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.035));
-        }
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.value = 1400;
-        filter.Q.value = 1.2;
-        noise.connect(filter);
-        filter.connect(ctx.destination);
-        noise.start();
-      } catch (e) {}
-    }
 
     // Smart Client-side Downsampling: Prevents mobile OOM crash on massive uploads
     function downscalePhoto(file, maxDim = 1600) {
@@ -1033,7 +979,6 @@
     function prevSpread() {
       if (currentSpreadIndex > 0) {
         currentSpreadIndex--;
-        playPageTurnSound();
         renderCurrentSpread();
       }
     }
@@ -1042,7 +987,6 @@
       const totalSpreads = Math.ceil(albumPhotos.length / 2);
       if (currentSpreadIndex < totalSpreads) {
         currentSpreadIndex++;
-        playPageTurnSound();
         renderCurrentSpread();
       }
     }
@@ -1054,13 +998,13 @@
       if (e.key === 'ArrowRight') nextSpread();
     });
 
-    // 1. Export to Multi-page PDF via jsPDF
+    // 1. Export to Multi-page High-DPI A4 PDF (인쇄 최적화)
     async function exportToPDF() {
       if (albumPhotos.length === 0) return;
 
       const statusEl = document.getElementById('statusMsg');
       statusEl.style.display = 'block';
-      statusEl.textContent = '⏳ 고화질 소장용 PDF 포토북을 생성하는 중입니다...';
+      statusEl.textContent = '⏳ 고화질 소장용 A4 PDF 포토북을 생성하는 중입니다...';
 
       try {
         const { jsPDF } = window.jspdf;
@@ -1068,41 +1012,115 @@
         const title = document.getElementById('albumTitle').value || 'MY MEMORY BOOK';
         const subtitle = document.getElementById('albumSubtitle').value || 'SPECIAL MOMENTS';
 
-        // 1. Cover Page
-        doc.setFillColor(250, 248, 245);
-        doc.rect(0, 0, 210, 297, 'F');
-        doc.setDrawColor(212, 175, 55);
-        doc.setLineWidth(1.5);
-        doc.rect(15, 15, 180, 267);
+        // Preload all photos
+        const loadedImgs = await Promise.all(albumPhotos.map(item => {
+          return new Promise(res => {
+            const img = new Image();
+            img.onload = () => res({ img, caption: item.caption });
+            img.onerror = () => res(null);
+            img.src = item.dataUrl;
+          });
+        }));
 
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(26);
-        doc.text(title, 105, 130, { align: 'center' });
-        doc.setFontSize(14);
-        doc.setTextColor(100, 116, 139);
-        doc.text(subtitle, 105, 145, { align: 'center' });
-        doc.setFontSize(10);
-        doc.text(`Archived ${albumPhotos.length} moments`, 105, 160, { align: 'center' });
+        const a4W = 1240;
+        const a4H = 1754;
 
-        // 2. Photo Pages
-        for (let i = 0; i < albumPhotos.length; i++) {
+        // Render Cover Canvas
+        const coverC = document.createElement('canvas');
+        coverC.width = a4W; coverC.height = a4H;
+        const cCtx = coverC.getContext('2d');
+        cCtx.fillStyle = currentTheme === 'noir' ? '#131722' : (currentTheme === 'rose' ? '#fff1f2' : '#fbf9f5');
+        cCtx.fillRect(0, 0, a4W, a4H);
+
+        // Gold border
+        cCtx.strokeStyle = '#d4af37';
+        cCtx.lineWidth = 4;
+        cCtx.strokeRect(80, 80, a4W - 160, a4H - 160);
+        cCtx.strokeRect(96, 96, a4W - 192, a4H - 192);
+
+        cCtx.font = '64px sans-serif';
+        cCtx.textAlign = 'center';
+        cCtx.textBaseline = 'middle';
+        cCtx.fillText('✨', a4W / 2, 540);
+
+        cCtx.fillStyle = currentTheme === 'noir' ? '#f8fafc' : '#1c1917';
+        cCtx.font = 'bold 52px "Cinzel", "Nanum Myeongjo", "Pretendard", serif';
+        cCtx.fillText(title, a4W / 2, 750);
+
+        cCtx.fillStyle = currentTheme === 'noir' ? '#94a3b8' : '#78716c';
+        cCtx.font = '600 24px "Plus Jakarta Sans", "Pretendard", sans-serif';
+        cCtx.fillText(subtitle, a4W / 2, 840);
+
+        cCtx.font = '18px "Plus Jakarta Sans", sans-serif';
+        cCtx.fillText(`ARCHIVED ${albumPhotos.length} MEMORIES • PRINTED EDITION`, a4W / 2, 1000);
+
+        doc.addImage(coverC.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+
+        // Render Each Photo Page on Canvas
+        for (let i = 0; i < loadedImgs.length; i++) {
           doc.addPage();
-          doc.setFillColor(250, 248, 245);
-          doc.rect(0, 0, 210, 297, 'F');
+          const pageC = document.createElement('canvas');
+          pageC.width = a4W; pageC.height = a4H;
+          const pCtx = pageC.getContext('2d');
+          pCtx.fillStyle = currentTheme === 'noir' ? '#131722' : (currentTheme === 'rose' ? '#fff1f2' : '#fbf9f5');
+          pCtx.fillRect(0, 0, a4W, a4H);
 
-          const photo = albumPhotos[i];
-          doc.addImage(photo.dataUrl, 'JPEG', 25, 35, 160, 180, undefined, 'FAST');
+          // Header
+          pCtx.fillStyle = currentTheme === 'noir' ? '#64748b' : '#94a3b8';
+          pCtx.font = '18px "Plus Jakarta Sans", "Pretendard", sans-serif';
+          pCtx.textAlign = 'left';
+          pCtx.fillText(title, 100, 110);
+          pCtx.textAlign = 'right';
+          pCtx.fillText(subtitle, a4W - 100, 110);
 
-          doc.setFontSize(13);
-          doc.setTextColor(30, 41, 59);
-          doc.text(photo.caption || `Page ${i + 1}`, 105, 235, { align: 'center' });
+          pCtx.strokeStyle = currentTheme === 'noir' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+          pCtx.lineWidth = 1.5;
+          pCtx.beginPath();
+          pCtx.moveTo(100, 130);
+          pCtx.lineTo(a4W - 100, 130);
+          pCtx.stroke();
 
-          doc.setFontSize(9);
-          doc.setTextColor(148, 163, 184);
-          doc.text(`- ${i + 1} -`, 105, 275, { align: 'center' });
+          // Photo Frame
+          const pItem = loadedImgs[i];
+          if (pItem && pItem.img) {
+            const img = pItem.img;
+            const maxW = a4W - 240;
+            const maxH = a4H - 520;
+            const ratio = img.width / img.height;
+            let drawW = maxW;
+            let drawH = maxW / ratio;
+            if (drawH > maxH) {
+              drawH = maxH;
+              drawW = maxH * ratio;
+            }
+            const drawX = (a4W - drawW) / 2;
+            const drawY = 220 + (maxH - drawH) / 2;
+
+            // Soft shadow behind photo
+            pCtx.save();
+            pCtx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+            pCtx.shadowBlur = 30;
+            pCtx.shadowOffsetY = 15;
+            pCtx.drawImage(img, drawX, drawY, drawW, drawH);
+            pCtx.restore();
+
+            // Caption
+            pCtx.fillStyle = currentTheme === 'noir' ? '#f8fafc' : '#1c1917';
+            pCtx.font = 'bold 30px "Pretendard", "Nanum Myeongjo", sans-serif';
+            pCtx.textAlign = 'center';
+            pCtx.fillText(pItem.caption || `Page ${i + 1}`, a4W / 2, 220 + maxH + 70);
+          }
+
+          // Page Number Footer
+          pCtx.fillStyle = currentTheme === 'noir' ? '#64748b' : '#94a3b8';
+          pCtx.font = '20px monospace';
+          pCtx.textAlign = 'center';
+          pCtx.fillText(`- ${i + 1} -`, a4W / 2, a4H - 90);
+
+          doc.addImage(pageC.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
         }
 
-        doc.save(`${title.replace(/\s+/g, '_')}_photobook.pdf`);
+        doc.save(`${title.replace(/\s+/g, '_')}_photobook_A4.pdf`);
       } catch (err) {
         alert('PDF 내보내기 중 오류가 발생했습니다: ' + err.message);
       } finally {
