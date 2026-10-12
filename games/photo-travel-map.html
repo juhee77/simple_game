@@ -1067,8 +1067,11 @@
         <button class="btn-gradient-secondary" onclick="exportMapImage()">
           <span>🗺️ 고화질 지도 사진 (PNG) 내보내기</span>
         </button>
-        <button class="btn-gradient-amber" onclick="generateTravelGIF()">
-          <span>🎬 위성 동선 타임랩스 GIF 내보내기</span>
+        <button class="btn-gradient-amber" onclick="generateTravelGIF('square')">
+          <span>🎬 타임랩스 GIF · 정사각 1:1</span>
+        </button>
+        <button class="btn-gradient-amber" onclick="generateTravelGIF('story')">
+          <span>📱 타임랩스 GIF · 세로 9:16 (스토리)</span>
         </button>
       </div>
 
@@ -2014,7 +2017,7 @@
     }
 
     // 2. Export Real Satellite Animated GIF
-    async function generateTravelGIF() {
+    async function generateTravelGIF(format = 'square') {
       if (travelSpots.length < 2) {
         alert('GIF를 생성하려면 최소 2장 이상의 사진이 필요합니다.');
         return;
@@ -2030,9 +2033,20 @@
       fitAllMarkers();
       await new Promise(r => setTimeout(r, 1100));   // 지도 이동 + 위성 타일 로드 대기
 
-      // 공유용 정사각 트래블로그 프레임: 위쪽 지도 + 아래쪽 캡션 패널
-      const GW = 800, GH = 800;
-      const MAP_H = 600;                 // 지도 영역 높이 (나머지 200px는 캡션)
+      // 출력 포맷: 정사각 1:1 또는 세로 9:16(스토리)
+      const isStory = format === 'story';
+      const GW = isStory ? 540 : 720;
+      const GH = isStory ? 960 : 720;
+
+      // 지도 컨테이너의 종횡비를 그대로 보존해 지도 영역 높이를 잡는다.
+      // 이래야 위성 지도가 눌리거나 늘어나지 않는다(가로·세로 같은 배율).
+      const mapEl = document.getElementById('realMap');
+      const mapRect = mapEl.getBoundingClientRect();
+      const mapAspect = (mapRect.height || 480) / (mapRect.width || 800);
+      let MAP_H = Math.round(GW * mapAspect);
+      MAP_H = Math.max(200, Math.min(MAP_H, GH - 150));   // 캡션 패널 최소 공간 확보
+      const panelH = GH - MAP_H;
+
       const tempC = document.createElement('canvas');
       tempC.width = GW; tempC.height = GH;
       const tCtx = tempC.getContext('2d');
@@ -2067,8 +2081,6 @@
       const basemapInfo = await renderBasemapToCanvas(bCtx, GW, MAP_H);
 
       // 좌표 매핑 (지도 영역 기준)
-      const mapEl = document.getElementById('realMap');
-      const mapRect = mapEl.getBoundingClientRect();
       const scaleX = GW / (mapRect.width || 1);
       const scaleY = MAP_H / (mapRect.height || 1);
 
@@ -2203,45 +2215,81 @@
         }
 
         // 하단 캡션 패널
-        const panelG = tCtx.createLinearGradient(0, MAP_H - 40, 0, GH);
+        const panelTop = MAP_H;
+        const panelG = tCtx.createLinearGradient(0, panelTop - 40, 0, GH);
         panelG.addColorStop(0, 'rgba(10,15,30,0)');
-        panelG.addColorStop(0.25, '#0a0f1e');
+        panelG.addColorStop(0.2, '#0a0f1e');
         panelG.addColorStop(1, '#0a0f1e');
         tCtx.fillStyle = panelG;
-        tCtx.fillRect(0, MAP_H - 40, GW, GH - (MAP_H - 40));
+        tCtx.fillRect(0, panelTop - 40, GW, GH - (panelTop - 40));
 
         const fc = screenPoints[focus];
         const fcol = spotColor(focus);
+        const bigPanel = panelH >= 300;     // 세로 포맷: 큰 사진 + 캡션
+
+        let capY = panelTop + 50;
+        if (bigPanel) {
+          // 스토리용 큰 사진 카드
+          const fImg = loadedImgs[focus];
+          const bw = GW - 64;
+          const bh = Math.min(panelH - 150, Math.round(bw * 0.72));
+          const bx = 32, by = panelTop + 24;
+          if (fImg) {
+            tCtx.save();
+            tCtx.shadowColor = 'rgba(0,0,0,0.5)'; tCtx.shadowBlur = 16; tCtx.shadowOffsetY = 6;
+            rrect(tCtx, bx, by, bw, bh, 16); tCtx.fillStyle = '#0f172a'; tCtx.fill();
+            tCtx.restore();
+            tCtx.save(); rrect(tCtx, bx + 6, by + 6, bw - 12, bh - 12, 11); tCtx.clip();
+            const ir = fImg.width / fImg.height, tr = (bw - 12) / (bh - 12);
+            let sw = fImg.width, sh = fImg.height, sxx = 0, syy = 0;
+            if (ir > tr) { sw = fImg.height * tr; sxx = (fImg.width - sw) / 2; }
+            else { sh = fImg.width / tr; syy = (fImg.height - sh) / 2; }
+            tCtx.drawImage(fImg, sxx, syy, sw, sh, bx + 6, by + 6, bw - 12, bh - 12);
+            tCtx.restore();
+            rrect(tCtx, bx + 1, by + 1, bw - 2, bh - 2, 15); tCtx.lineWidth = 3; tCtx.strokeStyle = fcol; tCtx.stroke();
+          }
+          capY = by + bh + 44;
+        }
+
         // 색 액센트 바
         tCtx.fillStyle = fcol;
-        rrect(tCtx, 26, MAP_H + 42, 6, 52, 3);
-        tCtx.fill();
+        rrect(tCtx, 32, capY - 8, 6, 52, 3); tCtx.fill();
         // SPOT n/N
         tCtx.textAlign = 'left';
         tCtx.fillStyle = fcol;
         tCtx.font = '800 14px Pretendard, sans-serif';
-        tCtx.fillText('SPOT ' + (focus + 1) + ' / ' + N, 46, MAP_H + 50);
-        // 스팟 이름 (크게)
+        tCtx.fillText('SPOT ' + (focus + 1) + ' / ' + N, 52, capY);
+        // 스팟 이름
         tCtx.fillStyle = '#f8fafc';
-        tCtx.font = '800 28px Pretendard, sans-serif';
-        const bigName = fc.name.length > 18 ? fc.name.substring(0, 17) + '…' : fc.name;
-        tCtx.fillText(bigName, 46, MAP_H + 82);
+        tCtx.font = '800 26px Pretendard, sans-serif';
+        const maxName = isStory ? 15 : 18;
+        const bigName = fc.name.length > maxName ? fc.name.substring(0, maxName - 1) + '…' : fc.name;
+        tCtx.fillText(bigName, 52, capY + 30);
         // 날짜
         tCtx.fillStyle = 'rgba(255,255,255,0.62)';
         tCtx.font = '600 15px Pretendard, sans-serif';
-        tCtx.fillText('📅  ' + fc.date, 46, MAP_H + 108);
+        tCtx.fillText('📅  ' + fc.date, 52, capY + 56);
         // 진행 점
-        const dotR = 5, dotGap = 20;
-        const dotsW = (N - 1) * dotGap;
-        let dx = GW - 30 - dotsW;
-        const dy = MAP_H + 72;
-        for (let i = 0; i < N; i++) {
-          tCtx.beginPath();
-          tCtx.arc(dx + i * dotGap, dy, i === focus ? dotR + 1.5 : dotR, 0, Math.PI * 2);
-          tCtx.fillStyle = i <= focus ? spotColor(i) : 'rgba(255,255,255,0.22)';
-          tCtx.fill();
+        const dotGap = 20, dotR = 5;
+        if (bigPanel) {
+          const totalW = (N - 1) * dotGap;
+          const sx0 = (GW - totalW) / 2, yy = GH - 32;
+          for (let i = 0; i < N; i++) {
+            tCtx.beginPath();
+            tCtx.arc(sx0 + i * dotGap, yy, i === focus ? dotR + 1.5 : dotR, 0, Math.PI * 2);
+            tCtx.fillStyle = i <= focus ? spotColor(i) : 'rgba(255,255,255,0.22)';
+            tCtx.fill();
+          }
+        } else {
+          const dotsW = (N - 1) * dotGap;
+          const dxk = GW - 30 - dotsW, yy = capY + 22;
+          for (let i = 0; i < N; i++) {
+            tCtx.beginPath();
+            tCtx.arc(dxk + i * dotGap, yy, i === focus ? dotR + 1.5 : dotR, 0, Math.PI * 2);
+            tCtx.fillStyle = i <= focus ? spotColor(i) : 'rgba(255,255,255,0.22)';
+            tCtx.fill();
+          }
         }
-
         frames.push(tempC.toDataURL('image/jpeg', 0.8));
       }
 
