@@ -2024,6 +2024,12 @@
       alertEl.style.display = 'block';
       alertEl.textContent = '⏳ 실제 위성 지도 타일과 사진을 결합하여 고화질 타임랩스 GIF를 렌더링 중입니다...';
 
+      // 전체 동선이 프레임 안에 펼쳐지도록 지도를 먼저 모든 스팟에 맞춘다.
+      // (이걸 안 하면 현재 확대된 화면 그대로 캡처돼 점들이 한 곳에 뭉치거나
+      //  화면 밖으로 나간다 — "한 공간에 몰려 있는" 현상의 원인)
+      fitAllMarkers();
+      await new Promise(r => setTimeout(r, 1100));   // 지도 이동 + 위성 타일 로드 대기
+
       const w = 560, h = 420;
       const tempC = document.createElement('canvas');
       tempC.width = w; tempC.height = h;
