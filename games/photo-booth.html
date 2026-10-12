@@ -886,6 +886,9 @@
 
       const canvas = document.getElementById('fourCutCanvas');
       const ctx = canvas.getContext('2d');
+      // 프레임을 3배 해상도로 렌더한다. 캔버스 표시 크기는 CSS(max-width:100%)가
+      // 잡아 주므로 화면은 그대로이고, 저장되는 PNG만 또렷해진다.
+      const SCALE = 3;
       const ratioNum = RATIO_MAP[activePhotoRatio] ? RATIO_MAP[activePhotoRatio].num : (4 / 3);
 
       let itemW = 400;
@@ -995,16 +998,27 @@
         }
       }
 
+      // 여기까지 canvas.width/height는 '논리 치수'로 잡혀 있다.
+      // 백업 스토어만 SCALE배로 키우고 컨텍스트를 그만큼 확대하면,
+      // 아래 그리기 코드는 논리 좌표 그대로 쓰면서 3배 해상도로 찍힌다.
+      const frameW = canvas.width;
+      const frameH = canvas.height;
+      canvas.width = frameW * SCALE;
+      canvas.height = frameH * SCALE;
+      ctx.scale(SCALE, SCALE);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
       // Draw Frame BG
       ctx.fillStyle = activeLayout === 'film' ? '#0a0a0a' : activeFrameColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, frameW, frameH);
 
       // Film Holes if film mode
       if (activeLayout === 'film') {
         ctx.fillStyle = '#ffffff';
-        for (let y = 15; y < canvas.height - 30; y += 25) {
+        for (let y = 15; y < frameH - 30; y += 25) {
           ctx.fillRect(8, y, 10, 14);
-          ctx.fillRect(canvas.width - 18, y, 10, 14);
+          ctx.fillRect(frameW - 18, y, 10, 14);
         }
       }
 
@@ -1027,8 +1041,8 @@
               const fSize = (activeLayout === 'grid2x2_16_9' || activeLayout === 'grid2x2_9_16') ? 26 : 22;
               ctx.font = `bold ${fSize}px Outfit, Pretendard, sans-serif`;
               ctx.textAlign = 'center';
-              const textY = activeLayout === 'grid2x2_9_16' ? canvas.height - 32 : canvas.height - 24;
-              ctx.fillText(title, canvas.width / 2, textY);
+              const textY = activeLayout === 'grid2x2_9_16' ? frameH - 32 : frameH - 24;
+              ctx.fillText(title, frameW / 2, textY);
             }
 
             document.getElementById('previewContainer').style.display = 'flex';
