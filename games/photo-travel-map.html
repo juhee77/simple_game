@@ -2030,160 +2030,247 @@
       fitAllMarkers();
       await new Promise(r => setTimeout(r, 1100));   // 지도 이동 + 위성 타일 로드 대기
 
-      const w = 560, h = 420;
+      // 공유용 정사각 트래블로그 프레임: 위쪽 지도 + 아래쪽 캡션 패널
+      const GW = 800, GH = 800;
+      const MAP_H = 600;                 // 지도 영역 높이 (나머지 200px는 캡션)
       const tempC = document.createElement('canvas');
-      tempC.width = w; tempC.height = h;
+      tempC.width = GW; tempC.height = GH;
       const tCtx = tempC.getContext('2d');
+      tCtx.imageSmoothingEnabled = true;
+      tCtx.imageSmoothingQuality = 'high';
+
+      const rrect = (c, x, y, w2, h2, r) => {
+        r = Math.min(r, w2 / 2, h2 / 2);
+        c.beginPath();
+        c.moveTo(x + r, y);
+        c.arcTo(x + w2, y, x + w2, y + h2, r);
+        c.arcTo(x + w2, y + h2, x, y + h2, r);
+        c.arcTo(x, y + h2, x, y, r);
+        c.arcTo(x, y, x + w2, y, r);
+        c.closePath();
+      };
 
       // Preload user photos
-      const loadedImgs = await Promise.all(travelSpots.map(s => {
+      const loadedImgs = await Promise.all(travelSpots.map(sp => {
         return new Promise(res => {
           const img = new Image();
           img.onload = () => res(img);
           img.onerror = () => res(null);
-          img.src = s.dataUrl;
+          img.src = sp.dataUrl;
         });
       }));
 
-      // Base Canvas for Pre-rendering Real Satellite Basemap
+      // 지도 영역용 베이스맵 (위쪽 GW x MAP_H)
       const basemapC = document.createElement('canvas');
-      basemapC.width = w; basemapC.height = h;
+      basemapC.width = GW; basemapC.height = MAP_H;
       const bCtx = basemapC.getContext('2d');
-      const basemapInfo = await renderBasemapToCanvas(bCtx, w, h);
+      const basemapInfo = await renderBasemapToCanvas(bCtx, GW, MAP_H);
 
-      // Coordinate mapping to screen
+      // 좌표 매핑 (지도 영역 기준)
       const mapEl = document.getElementById('realMap');
       const mapRect = mapEl.getBoundingClientRect();
-      const scaleX = w / (mapRect.width || 1);
-      const scaleY = h / (mapRect.height || 1);
+      const scaleX = GW / (mapRect.width || 1);
+      const scaleY = MAP_H / (mapRect.height || 1);
 
-      const screenPoints = travelSpots.map(s => {
+      const screenPoints = travelSpots.map(sp => {
         if (leafletMap && basemapInfo.usedDom) {
-          const pt = leafletMap.latLngToContainerPoint([s.lat, s.lng]);
-          return {
-            x: pt.x * scaleX,
-            y: pt.y * scaleY,
-            name: s.name,
-            date: s.date
-          };
+          const pt = leafletMap.latLngToContainerPoint([sp.lat, sp.lng]);
+          return { x: pt.x * scaleX, y: pt.y * scaleY, name: sp.name, date: sp.date };
         } else if (basemapInfo.bestZoom) {
-          const p = projectMercator(s.lat, s.lng, basemapInfo.bestZoom);
-          return {
-            x: w / 2 + (p.x - basemapInfo.pCenter.x),
-            y: h / 2 + (p.y - basemapInfo.pCenter.y),
-            name: s.name,
-            date: s.date
-          };
+          const pr = projectMercator(sp.lat, sp.lng, basemapInfo.bestZoom);
+          return { x: GW / 2 + (pr.x - basemapInfo.pCenter.x), y: MAP_H / 2 + (pr.y - basemapInfo.pCenter.y), name: sp.name, date: sp.date };
         }
-        return { x: w / 2, y: h / 2, name: s.name, date: s.date };
+        return { x: GW / 2, y: MAP_H / 2, name: sp.name, date: sp.date };
       });
 
-      const frames = [];
-      const stepsBetween = 7;
+      const N = screenPoints.length;
+      const tripTitle = 'MY TRAVEL LOG';
+      const firstDate = travelSpots[0].date;
+      const lastDate = travelSpots[N - 1].date;
 
-      for (let s = 0; s < screenPoints.length - 1; s++) {
+      // 한 프레임 그리기 — prog 구간(s -> s+1), focus = 캡션/사진에 쓸 스팟 index
+      function drawFrame(s, curX, curY, angleRad, focus) {
+        // BG
+        tCtx.fillStyle = '#0a0f1e';
+        tCtx.fillRect(0, 0, GW, GH);
+
+        // 지도
+        tCtx.drawImage(basemapC, 0, 0, GW, MAP_H);
+
+        // 지도 비네트 (가장자리 어둡게 — 시네마틱)
+        const vg = tCtx.createRadialGradient(GW / 2, MAP_H / 2, MAP_H * 0.28, GW / 2, MAP_H / 2, MAP_H * 0.8);
+        vg.addColorStop(0, 'rgba(0,0,0,0)');
+        vg.addColorStop(1, 'rgba(0,0,0,0.4)');
+        tCtx.fillStyle = vg;
+        tCtx.fillRect(0, 0, GW, MAP_H);
+
+        // 상단 타이틀 바
+        const topG = tCtx.createLinearGradient(0, 0, 0, 86);
+        topG.addColorStop(0, 'rgba(5,10,20,0.82)');
+        topG.addColorStop(1, 'rgba(5,10,20,0)');
+        tCtx.fillStyle = topG;
+        tCtx.fillRect(0, 0, GW, 86);
+        tCtx.textAlign = 'left';
+        tCtx.fillStyle = '#ffffff';
+        tCtx.font = '800 24px Pretendard, sans-serif';
+        tCtx.fillText('✈  ' + tripTitle, 26, 40);
+        tCtx.fillStyle = 'rgba(255,255,255,0.72)';
+        tCtx.font = '600 14px Pretendard, sans-serif';
+        tCtx.fillText(firstDate + '  —  ' + lastDate, 28, 64);
+
+        // 지나온 경로 — 흰 casing + 흰 선
+        tCtx.lineCap = 'round';
+        tCtx.lineJoin = 'round';
+        tCtx.strokeStyle = 'rgba(255,255,255,0.28)';
+        tCtx.lineWidth = 10;
+        tCtx.beginPath();
+        tCtx.moveTo(screenPoints[0].x, screenPoints[0].y);
+        for (let k = 1; k <= s; k++) tCtx.lineTo(screenPoints[k].x, screenPoints[k].y);
+        tCtx.lineTo(curX, curY);
+        tCtx.stroke();
+        tCtx.strokeStyle = '#ffffff';
+        tCtx.lineWidth = 3.5;
+        tCtx.beginPath();
+        tCtx.moveTo(screenPoints[0].x, screenPoints[0].y);
+        for (let k = 1; k <= s; k++) tCtx.lineTo(screenPoints[k].x, screenPoints[k].y);
+        tCtx.lineTo(curX, curY);
+        tCtx.stroke();
+
+        // 핀 — 스팟 색
+        for (let k = 0; k <= s; k++) {
+          const col = spotColor(k);
+          tCtx.beginPath();
+          tCtx.arc(screenPoints[k].x, screenPoints[k].y, 13, 0, Math.PI * 2);
+          tCtx.fillStyle = col;
+          tCtx.fill();
+          tCtx.lineWidth = 3;
+          tCtx.strokeStyle = '#ffffff';
+          tCtx.stroke();
+          tCtx.fillStyle = '#ffffff';
+          tCtx.font = 'bold 13px sans-serif';
+          tCtx.textAlign = 'center';
+          tCtx.fillText(k + 1, screenPoints[k].x, screenPoints[k].y + 4.5);
+        }
+
+        // 차량 아이콘
+        tCtx.save();
+        tCtx.translate(curX, curY);
+        tCtx.rotate(angleRad);
+        tCtx.font = '30px sans-serif';
+        tCtx.textAlign = 'center';
+        tCtx.textBaseline = 'middle';
+        tCtx.fillText(tourState.vehicleIcon, 0, 0);
+        tCtx.restore();
+        tCtx.textBaseline = 'alphabetic';
+
+        // 사진 카드 — 둥근 모서리 + 스팟 색 테두리 (지도 영역 안)
+        const activeImg = loadedImgs[focus];
+        if (activeImg) {
+          const cardW = 150, cardH = 120;
+          let px = curX - cardW / 2;
+          let py = curY - cardH - 26;
+          if (py < 92) py = curY + 28;
+          if (px < 14) px = 14;
+          if (px + cardW > GW - 14) px = GW - cardW - 14;
+          if (py + cardH > MAP_H - 10) py = MAP_H - cardH - 10;
+          const col = spotColor(focus);
+          tCtx.save();
+          tCtx.shadowColor = 'rgba(0,0,0,0.5)';
+          tCtx.shadowBlur = 12;
+          tCtx.shadowOffsetY = 4;
+          rrect(tCtx, px, py, cardW, cardH, 12);
+          tCtx.fillStyle = '#0f172a';
+          tCtx.fill();
+          tCtx.restore();
+          tCtx.save();
+          rrect(tCtx, px + 6, py + 6, cardW - 12, cardH - 34, 8);
+          tCtx.clip();
+          const ir = activeImg.width / activeImg.height, tr = (cardW - 12) / (cardH - 34);
+          let sw = activeImg.width, sh = activeImg.height, sxx = 0, syy = 0;
+          if (ir > tr) { sw = activeImg.height * tr; sxx = (activeImg.width - sw) / 2; }
+          else { sh = activeImg.width / tr; syy = (activeImg.height - sh) / 2; }
+          tCtx.drawImage(activeImg, sxx, syy, sw, sh, px + 6, py + 6, cardW - 12, cardH - 34);
+          tCtx.restore();
+          rrect(tCtx, px + 1, py + 1, cardW - 2, cardH - 2, 11);
+          tCtx.lineWidth = 2.5;
+          tCtx.strokeStyle = col;
+          tCtx.stroke();
+          tCtx.fillStyle = '#f8fafc';
+          tCtx.font = 'bold 12px Pretendard, sans-serif';
+          tCtx.textAlign = 'center';
+          const tn = screenPoints[focus].name.length > 13 ? screenPoints[focus].name.substring(0, 12) + '…' : screenPoints[focus].name;
+          tCtx.fillText(tn, px + cardW / 2, py + cardH - 11);
+        }
+
+        // 하단 캡션 패널
+        const panelG = tCtx.createLinearGradient(0, MAP_H - 40, 0, GH);
+        panelG.addColorStop(0, 'rgba(10,15,30,0)');
+        panelG.addColorStop(0.25, '#0a0f1e');
+        panelG.addColorStop(1, '#0a0f1e');
+        tCtx.fillStyle = panelG;
+        tCtx.fillRect(0, MAP_H - 40, GW, GH - (MAP_H - 40));
+
+        const fc = screenPoints[focus];
+        const fcol = spotColor(focus);
+        // 색 액센트 바
+        tCtx.fillStyle = fcol;
+        rrect(tCtx, 26, MAP_H + 42, 6, 52, 3);
+        tCtx.fill();
+        // SPOT n/N
+        tCtx.textAlign = 'left';
+        tCtx.fillStyle = fcol;
+        tCtx.font = '800 14px Pretendard, sans-serif';
+        tCtx.fillText('SPOT ' + (focus + 1) + ' / ' + N, 46, MAP_H + 50);
+        // 스팟 이름 (크게)
+        tCtx.fillStyle = '#f8fafc';
+        tCtx.font = '800 28px Pretendard, sans-serif';
+        const bigName = fc.name.length > 18 ? fc.name.substring(0, 17) + '…' : fc.name;
+        tCtx.fillText(bigName, 46, MAP_H + 82);
+        // 날짜
+        tCtx.fillStyle = 'rgba(255,255,255,0.62)';
+        tCtx.font = '600 15px Pretendard, sans-serif';
+        tCtx.fillText('📅  ' + fc.date, 46, MAP_H + 108);
+        // 진행 점
+        const dotR = 5, dotGap = 20;
+        const dotsW = (N - 1) * dotGap;
+        let dx = GW - 30 - dotsW;
+        const dy = MAP_H + 72;
+        for (let i = 0; i < N; i++) {
+          tCtx.beginPath();
+          tCtx.arc(dx + i * dotGap, dy, i === focus ? dotR + 1.5 : dotR, 0, Math.PI * 2);
+          tCtx.fillStyle = i <= focus ? spotColor(i) : 'rgba(255,255,255,0.22)';
+          tCtx.fill();
+        }
+
+        frames.push(tempC.toDataURL('image/jpeg', 0.8));
+      }
+
+      const frames = [];
+      const stepsBetween = 5;
+
+      for (let s = 0; s < N - 1; s++) {
         const p1 = screenPoints[s];
         const p2 = screenPoints[s + 1];
-
-        // Heading angle for vehicle
         const angleRad = Math.atan2(p2.x - p1.x, -(p2.y - p1.y));
-
         for (let st = 0; st <= stepsBetween; st++) {
           const prog = st / stepsBetween;
           const curX = p1.x + (p2.x - p1.x) * prog;
           const curY = p1.y + (p2.y - p1.y) * prog;
-
-          // 1. Draw Real Satellite Basemap
-          tCtx.drawImage(basemapC, 0, 0);
-
-          // 2. Voyage HUD Header
-          tCtx.fillStyle = 'rgba(10, 16, 30, 0.88)';
-          tCtx.strokeStyle = 'rgba(6, 182, 212, 0.5)';
-          tCtx.lineWidth = 1;
-          tCtx.fillRect(16, 14, 270, 36);
-          tCtx.strokeRect(16, 14, 270, 36);
-
-          tCtx.fillStyle = '#38bdf8';
-          tCtx.font = 'bold 12px Pretendard, sans-serif';
-          tCtx.textAlign = 'left';
-          tCtx.fillText(`🛰️ REAL VOYAGE • SPOT ${s + 1}/${screenPoints.length}`, 28, 30);
-          tCtx.fillStyle = '#94a3b8';
-          tCtx.font = '10px Pretendard, sans-serif';
-          tCtx.fillText(`${p1.date} → ${p2.date}`, 28, 44);
-
-          // 3. Traveled Static Line
-          tCtx.strokeStyle = '#10b981';
-          tCtx.lineWidth = 4;
-          tCtx.lineCap = 'round';
-          tCtx.beginPath();
-          tCtx.moveTo(screenPoints[0].x, screenPoints[0].y);
-          for (let k = 1; k <= s; k++) {
-            tCtx.lineTo(screenPoints[k].x, screenPoints[k].y);
-          }
-          tCtx.lineTo(curX, curY);
-          tCtx.stroke();
-
-          // 4. Spot Pin Markers
-          for (let k = 0; k <= s; k++) {
-            tCtx.fillStyle = '#10b981';
-            tCtx.beginPath();
-            tCtx.arc(screenPoints[k].x, screenPoints[k].y, 10, 0, Math.PI * 2);
-            tCtx.fill();
-
-            tCtx.strokeStyle = '#fff';
-            tCtx.lineWidth = 2;
-            tCtx.stroke();
-
-            tCtx.fillStyle = '#04121d';
-            tCtx.font = 'bold 10px sans-serif';
-            tCtx.textAlign = 'center';
-            tCtx.fillText(k + 1, screenPoints[k].x, screenPoints[k].y + 3.5);
-          }
-
-          // 5. Traveling Vehicle Icon
-          tCtx.save();
-          tCtx.translate(curX, curY);
-          tCtx.rotate(angleRad);
-          tCtx.font = '24px sans-serif';
-          tCtx.textAlign = 'center';
-          tCtx.textBaseline = 'middle';
-          tCtx.fillText(tourState.vehicleIcon, 0, 0);
-          tCtx.restore();
-
-          // 6. Floating Photo Preview Card
-          const activeImg = loadedImgs[s];
-          if (activeImg) {
-            const cardW = 120, cardH = 96;
-            let popX = curX - cardW / 2;
-            let popY = curY - cardH - 20;
-            if (popY < 55) popY = curY + 22;
-            if (popX < 15) popX = 15;
-            if (popX + cardW > w - 15) popX = w - cardW - 15;
-
-            tCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-            tCtx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
-            tCtx.lineWidth = 1.5;
-            tCtx.fillRect(popX, popY, cardW, cardH);
-            tCtx.strokeRect(popX, popY, cardW, cardH);
-
-            tCtx.drawImage(activeImg, popX + 5, popY + 5, cardW - 10, cardH - 32);
-
-            tCtx.fillStyle = '#f8fafc';
-            tCtx.font = 'bold 10px Pretendard, sans-serif';
-            tCtx.textAlign = 'center';
-            const truncName = screenPoints[s].name.length > 10 ? screenPoints[s].name.substring(0, 9) + '…' : screenPoints[s].name;
-            tCtx.fillText(truncName, popX + cardW / 2, popY + cardH - 9);
-          }
-
-          frames.push(tempC.toDataURL('image/jpeg', 0.85));
+          const focus = prog < 0.5 ? s : s + 1;
+          drawFrame(s, curX, curY, angleRad, focus);
         }
+      }
+      // 마지막 스팟에서 잠깐 멈춰 마무리
+      const last = screenPoints[N - 1];
+      for (let hold = 0; hold < 4; hold++) {
+        drawFrame(N - 2, last.x, last.y, 0, N - 1);
       }
 
       gifshot.createGIF({
         images: frames,
-        gifWidth: w,
-        gifHeight: h,
-        interval: 0.12,
+        gifWidth: GW,
+        gifHeight: GH,
+        interval: 0.14,
         numWorkers: 2
       }, function(obj) {
         alertEl.style.display = 'none';
