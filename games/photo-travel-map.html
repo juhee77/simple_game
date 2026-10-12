@@ -2208,8 +2208,10 @@
 
       return spotsData.map((s, idx) => {
         const c = document.createElement('canvas');
-        c.width = 400; c.height = 300;
+        const S = 2;
+        c.width = 400 * S; c.height = 300 * S;
         const ctx = c.getContext('2d');
+        ctx.scale(S, S); ctx.imageSmoothingQuality = 'high';
         const grad = ctx.createLinearGradient(0, 0, 400, 300);
         grad.addColorStop(0, s.col1); grad.addColorStop(1, s.col2);
         ctx.fillStyle = grad;

@@ -1159,6 +1159,7 @@
         canvas.width = rollW;
         canvas.height = totalH;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
 
         // Background
         ctx.fillStyle = currentTheme === 'noir' ? '#121620' : '#faf7f2';
@@ -1265,8 +1266,10 @@
       ];
       return samples.map(s => {
         const c = document.createElement('canvas');
-        c.width = 800; c.height = 600;
+        const S = 2;
+        c.width = 800 * S; c.height = 600 * S;
         const ctx = c.getContext('2d');
+        ctx.scale(S, S); ctx.imageSmoothingQuality = 'high';
         const grad = ctx.createLinearGradient(0, 0, 800, 600);
         grad.addColorStop(0, s.col1); grad.addColorStop(1, s.col2);
         ctx.fillStyle = grad;

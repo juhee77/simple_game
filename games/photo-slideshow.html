@@ -631,11 +631,11 @@
 
       const canvas = document.getElementById('motionCanvas');
       if (currentRatio === '1:1') {
-        canvas.width = 600; canvas.height = 600;
+        canvas.width = 900; canvas.height = 900;
       } else if (currentRatio === '9:16') {
-        canvas.width = 450; canvas.height = 800;
+        canvas.width = 675; canvas.height = 1200;
       } else {
-        canvas.width = 800; canvas.height = 450;
+        canvas.width = 1200; canvas.height = 675;
       }
 
       loadedImgObjects = await Promise.all(slideImages.map(src => {
@@ -673,6 +673,7 @@
 
       const canvas = document.getElementById('motionCanvas');
       const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
       const w = canvas.width, h = canvas.height;
 
       ctx.fillStyle = '#000000';
@@ -794,6 +795,7 @@
       const tempC = document.createElement('canvas');
       tempC.width = w; tempC.height = h;
       const tCtx = tempC.getContext('2d');
+      tCtx.imageSmoothingEnabled = true; tCtx.imageSmoothingQuality = 'high';
 
       const frames = [];
       const numPhotos = loadedImgObjects.length;
@@ -856,8 +858,10 @@
 
       return samples.map(s => {
         const c = document.createElement('canvas');
-        c.width = 600; c.height = 600;
+        const S = 2;
+        c.width = 600 * S; c.height = 600 * S;
         const ctx = c.getContext('2d');
+        ctx.scale(S, S); ctx.imageSmoothingQuality = 'high';
         const grad = ctx.createLinearGradient(0, 0, 600, 600);
         grad.addColorStop(0, s.col1); grad.addColorStop(1, s.col2);
         ctx.fillStyle = grad;
