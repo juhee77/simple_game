@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>디지털 플립북 & 포토북 아틀리에 | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <script src="../scripts/game-common.js?v=baed11c3"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Cinzel:wght@700;800;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -774,47 +774,30 @@
     let currentSpreadIndex = 0; // 0 is cover, 1..N are dual page spreads
 
     // Smart Client-side Downsampling: Prevents mobile OOM crash on massive uploads
-    function downscalePhoto(file, maxDim = 1600) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            let w = img.width, h = img.height;
-            if (w > maxDim || h > maxDim) {
-              if (w > h) {
-                h = Math.round((h * maxDim) / w);
-                w = maxDim;
-              } else {
-                w = Math.round((w * maxDim) / h);
-                h = maxDim;
-              }
-            }
-            const c = document.createElement('canvas');
-            c.width = w; c.height = h;
-            const ctx = c.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
-            resolve(c.toDataURL('image/jpeg', 0.88));
-          };
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
+    async function downscalePhoto(file, maxDim = 1600) {
+      const { dataUrl } = await loadPhotoFile(file, maxDim, 0.9);
+      return dataUrl;
     }
 
     async function handleAlbumUpload(event) {
       const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
       if (!files.length) return;
 
+      event.target.value = '';
       for (const file of files) {
-        const downscaledUrl = await downscalePhoto(file);
+        let downscaledUrl;
+        try {
+          downscaledUrl = await downscalePhoto(file);
+        } catch (err) {
+          alert(err.message);
+          continue;
+        }
         albumPhotos.push({
           dataUrl: downscaledUrl,
           caption: file.name.replace(/\.[^/.]+$/, "") || '기억하고 싶은 순간'
         });
       }
       updateTray();
-      event.target.value = '';
     }
 
     function removePhoto(idx) {
@@ -1029,6 +1012,7 @@
         const coverC = document.createElement('canvas');
         coverC.width = a4W; coverC.height = a4H;
         const cCtx = coverC.getContext('2d');
+        cCtx.imageSmoothingEnabled = true; cCtx.imageSmoothingQuality = 'high';
         cCtx.fillStyle = currentTheme === 'noir' ? '#131722' : (currentTheme === 'rose' ? '#fff1f2' : '#fbf9f5');
         cCtx.fillRect(0, 0, a4W, a4H);
 
@@ -1062,6 +1046,7 @@
           const pageC = document.createElement('canvas');
           pageC.width = a4W; pageC.height = a4H;
           const pCtx = pageC.getContext('2d');
+          pCtx.imageSmoothingEnabled = true; pCtx.imageSmoothingQuality = 'high';
           pCtx.fillStyle = currentTheme === 'noir' ? '#131722' : (currentTheme === 'rose' ? '#fff1f2' : '#fbf9f5');
           pCtx.fillRect(0, 0, a4W, a4H);
 

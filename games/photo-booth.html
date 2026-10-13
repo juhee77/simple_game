@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>네온 4컷 사진관 | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <script src="../scripts/game-common.js?v=baed11c3"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -738,24 +738,25 @@
       event.target.value = '';
     }
 
-    function addFilesToGallery(files) {
+    async function addFilesToGallery(files) {
       const imageFiles = files.filter(f => f.type.startsWith('image/'));
       if (imageFiles.length === 0) {
         if (files.length > 0) alert('이미지 파일(JPG, PNG 등)만 등록할 수 있습니다.');
         return;
       }
 
-      imageFiles.forEach(file => {
-        if (capturedPhotos.length >= 20) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
+      for (const file of imageFiles) {
+        if (capturedPhotos.length >= 20) break;
+        try {
+          const { dataUrl } = await loadPhotoFile(file, 2000);
           if (capturedPhotos.length < 20) {
-            capturedPhotos.push(e.target.result);
+            capturedPhotos.push(dataUrl);
             updateGallery();
           }
-        };
-        reader.readAsDataURL(file);
-      });
+        } catch (err) {
+          alert(err.message);
+        }
+      }
     }
 
     function deletePhoto(idx, event) {

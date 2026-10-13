@@ -8,6 +8,64 @@ function escapeHtml(value) {
     })[ch]);
 }
 
+// ── 사진 업로드 ────────────────────────────────────────────
+// 폰 원본 사진(12MP 이상)을 data URL로 통째로 들고 있으면 장당 수십 MB를 먹는다.
+// 여러 장을 한꺼번에 고르면 모바일 브라우저가 메모리 부족으로 탭을 다시 띄워
+// "사진을 넣었더니 새로고침되며 초기화"되는 일이 생겼다.
+// 그래서 읽는 즉시 긴 변 기준으로 줄인 JPEG data URL로 바꾸고 원본 디코딩 결과는 바로 버린다.
+// 호출하는 쪽은 여러 장을 forEach로 동시에 돌리지 말고 for...of + await로 한 장씩 처리해야
+// 메모리 정점이 한 장 분량으로 유지된다. width/height는 축소 전 원본 크기다.
+async function loadPhotoFile(file, maxEdge = 2400, quality = 0.9) {
+    let source = null;
+    let url = null;
+    try {
+        if (typeof createImageBitmap === 'function') {
+            try {
+                source = await createImageBitmap(file, { imageOrientation: 'from-image' });
+            } catch {
+                source = null;   // 옵션을 모르는 브라우저나 HEIC 등은 <img> 경로로 다시 시도한다
+            }
+        }
+        if (!source) {
+            url = URL.createObjectURL(file);
+            source = await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error(`이미지를 읽을 수 없습니다: ${file.name}`));
+                img.src = url;
+            });
+        }
+
+        const width = source.naturalWidth || source.width;
+        const height = source.naturalHeight || source.height;
+        const k = Math.min(1, maxEdge / Math.max(width, height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(width * k));
+        c.height = Math.max(1, Math.round(height * k));
+        const ctx = c.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.fillStyle = '#ffffff';   // 투명 PNG가 JPEG로 바뀌며 검게 변하지 않도록
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(source, 0, 0, c.width, c.height);
+        const dataUrl = c.toDataURL('image/jpeg', quality);
+        c.width = c.height = 0;   // iOS는 캔버스 메모리를 늦게 돌려주므로 직접 비운다
+        return { dataUrl, width, height };
+    } finally {
+        if (source && typeof source.close === 'function') source.close();
+        if (url) URL.revokeObjectURL(url);
+    }
+}
+
+// 드롭 영역을 살짝 벗어난 곳에 사진을 놓으면 브라우저가 페이지를 그 이미지로 바꿔 버려
+// 작업 중이던 내용이 통째로 날아간다. 파일 드래그일 때만 기본 동작을 막는다.
+['dragover', 'drop'].forEach((type) => {
+    window.addEventListener(type, (e) => {
+        const types = e.dataTransfer ? Array.from(e.dataTransfer.types || []) : [];
+        if (types.includes('Files')) e.preventDefault();
+    });
+});
+
 // 최고 기록 저장. 클래식 퍼즐 중 일부만 기록이 남아 있어 카테고리 안에서도
 // 어떤 게임은 기록이 쌓이고 어떤 게임은 사라지는 불일치가 있었다.
 function loadBestRecord(key) {

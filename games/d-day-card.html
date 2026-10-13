@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>D-Day & 모임 카운트다운 | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <script src="../scripts/game-common.js?v=baed11c3"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -429,13 +429,13 @@
       const file = e.target.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = (evt) => {
+      e.target.value = '';
+
+      loadPhotoFile(file, 2000).then(({ dataUrl }) => {
         const img = new Image();
         img.onload = () => { customBgImg = img; alert('커스텀 배경 사진이 등록되었습니다!'); };
-        img.src = evt.target.result;
-      };
-      reader.readAsDataURL(file);
+        img.src = dataUrl;
+      }).catch(err => alert(err.message));
     }
 
     // D-Day는 '며칠 남았나'가 아니라 '날짜가 며칠 차이나나'로 센다.

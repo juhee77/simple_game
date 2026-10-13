@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>사진 메타데이터 & 포렌식 인스펙터 | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=841f759d"></script>
+  <script src="../scripts/game-common.js?v=baed11c3"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -754,36 +754,32 @@
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // Smart Client-side Downscaling for smooth thumbnail & fast analysis
-    function readFileAsDataUrl(file) {
-      return new Promise(res => {
-        const reader = new FileReader();
-        reader.onload = e => res(e.target.result);
-        reader.readAsDataURL(file);
-      });
-    }
-
     async function handlePhotoUpload(event) {
       const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
+      event.target.value = '';
       if (!files.length) return;
 
       for (const file of files) {
-        await parseSinglePhoto(file);
+        try {
+          await parseSinglePhoto(file);
+        } catch (err) {
+          alert(err.message);
+        }
       }
 
       applySorting();
-      event.target.value = '';
     }
 
     async function parseSinglePhoto(file) {
-      const dataUrl = await readFileAsDataUrl(file);
-      const arrayBuffer = await file.arrayBuffer();
-      const sha256 = await computeSha256(arrayBuffer);
+      // 원본은 해시와 EXIF에만 쓰고, 화면용으로는 줄인 사본만 들고 있는다 (모바일 탭 재시작 방지)
+      const { dataUrl, width: origW, height: origH } = await loadPhotoFile(file, 1600);
+      const sha256 = await computeSha256(await file.arrayBuffer());
+      const exifReady = new Promise(res => EXIF.getData(file, res));
 
       return new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
-          EXIF.getData(img, function() {
+          exifReady.then(() => (function() {
             const lat = EXIF.getTag(this, "GPSLatitude");
             const latRef = EXIF.getTag(this, "GPSLatitudeRef");
             const lng = EXIF.getTag(this, "GPSLongitude");
@@ -819,8 +815,8 @@
               file: file,
               dataUrl: dataUrl,
               imgElement: img,
-              width: img.naturalWidth || 4000,
-              height: img.naturalHeight || 3000,
+              width: origW || img.naturalWidth,
+              height: origH || img.naturalHeight,
               size: file.size,
               timeVal: timeVal,
               dateStr: dateStr,
@@ -838,7 +834,7 @@
             });
 
             resolve();
-          });
+          }).call(file));
         };
         img.src = dataUrl;
       });
@@ -1118,16 +1114,25 @@
       const p = photoItems[selectedPhotoIndex];
       if (!p) return;
 
+      // 화면용 축소본이 아니라 원본 파일에서 다시 그려 원래 해상도로 내보낸다 (데모 사진은 file이 없다)
+      const exportClean = (dataUrl) => {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `clean_${p.name.replace(/\.[^/.]+$/, "")}.jpg`;
+        a.click();
+      };
+      if (p.file) {
+        loadPhotoFile(p.file, Infinity, 0.95)
+          .then(r => exportClean(r.dataUrl))
+          .catch(err => alert(err.message));
+        return;
+      }
       const c = document.createElement('canvas');
       c.width = p.width;
       c.height = p.height;
       const ctx = c.getContext('2d');
       ctx.drawImage(p.imgElement, 0, 0, p.width, p.height);
-
-      const a = document.createElement('a');
-      a.href = c.toDataURL('image/jpeg', 0.95);
-      a.download = `clean_${p.name.replace(/\.[^/.]+$/, "")}.jpg`;
-      a.click();
+      exportClean(c.toDataURL('image/jpeg', 0.95));
     }
 
     // Demo Samples Generator
