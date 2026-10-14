@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모임 날짜 맞추기 - 미니게임 천국</title>
+    <script src="../scripts/game-common.js?v=baed11c3"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #34d399;
+            --yes: #4ade80;
+            --maybe: #fbbf24;
+            --no: #f87171;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Outfit', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 44px 0 4px;
+            background: linear-gradient(135deg, #34d399, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 그라데이션 글자 안에 이모지를 두면 색이 빠져 네모로 보인다 */
+        h1 .emoji { -webkit-text-fill-color: initial; }
+
+        .sub { color: var(--muted); font-size: .88rem; margin-bottom: 18px; text-align: center; }
+
+        .wrap { width: 100%; max-width: 480px; }
+
+        .screen { display: none; }
+        .screen.on { display: block; }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+
+        .card h2 { font-size: 1.05rem; margin-bottom: 4px; }
+        .card .hint { color: var(--muted); font-size: .8rem; line-height: 1.6; margin-bottom: 12px; }
+
+        label { display: block; font-size: .78rem; color: var(--muted); margin: 12px 0 6px; }
+        label:first-of-type { margin-top: 0; }
+
+        input[type=text], input[type=date] {
+            width: 100%;
+            padding: 13px 15px;
+            border-radius: 13px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            color-scheme: dark;
+        }
+
+        input:focus { border-color: var(--accent); }
+
+        .row { display: flex; gap: 8px; }
+        .row > * { flex: 1; min-width: 0; }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 14px;
+            background: linear-gradient(135deg, #34d399, #38bdf8);
+            color: #04161a;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+        .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+        .chip {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .04);
+            color: var(--muted);
+            font-family: inherit;
+            font-size: .86rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .chip.on { background: rgba(52, 211, 153, .18); border-color: var(--accent); color: var(--text); }
+        .chips.dows { flex-wrap: nowrap; gap: 4px; }
+        .chip.dow { min-width: 0; padding: 8px 0; flex: 1; }
+
+        .person-chip { display: inline-flex; align-items: center; gap: 4px; color: var(--text); }
+        .person-chip .x { color: var(--muted); font-weight: 800; padding-left: 4px; }
+
+        /* ── 달력 ─────────────────────────────── */
+        .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); margin-bottom: 10px; }
+        .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: -2px; margin-right: 4px; }
+
+        .month { margin-top: 14px; }
+        .month:first-child { margin-top: 0; }
+        .month-title { font-weight: 800; font-size: .95rem; margin-bottom: 6px; }
+
+        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .dow-head { font-size: .72rem; color: var(--muted); text-align: center; padding-bottom: 2px; }
+        .dow-head.sun, .num.sun { color: #fb7185; }
+        .dow-head.sat, .num.sat { color: #7dd3fc; }
+
+        .cell {
+            position: relative;
+            min-height: 46px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .06);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .cell.blank { background: none; border-color: transparent; }
+        .cell.off { opacity: .28; }
+
+        .num { font-size: .78rem; font-weight: 700; padding: 3px 0 0 5px; line-height: 1.2; pointer-events: none; }
+        .cell.holiday .num { color: #fb7185; }
+
+        /* 탭·드래그 대상. 세로 스크롤은 살리고 가로 드래그로 여러 날을 칠한다 */
+        .slot {
+            border: none;
+            background: transparent;
+            color: inherit;
+            font-family: inherit;
+            cursor: pointer;
+            touch-action: pan-y;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .cell.slot { width: 100%; text-align: left; }
+        .cell.slot .mark { position: absolute; right: 4px; bottom: 2px; font-size: .9rem; pointer-events: none; }
+
+        .half {
+            flex: 1;
+            font-size: .62rem;
+            color: var(--muted);
+            border-top: 1px solid rgba(255, 255, 255, .06);
+            min-height: 22px;
+        }
+
+        .slot.y { background: rgba(74, 222, 128, .85); color: #052e16; }
+        .slot.m { background: rgba(251, 191, 36, .8); color: #422006; }
+        .cell.slot.y .num, .cell.slot.m .num { color: inherit; }
+
+        /* 결과 히트맵 */
+        .heat { cursor: pointer; }
+        .heat .cnt { font-size: .66rem; font-weight: 800; text-align: right; padding: 0 5px 3px; margin-top: auto; pointer-events: none; }
+        .heat .half { cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+        .heat.sel, .half.sel { outline: 2px solid #fff; outline-offset: -2px; }
+
+        .quick { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .quick .chip { font-size: .78rem; padding: 7px 12px; }
+
+        /* ── 넘겨주기 ─────────────────────────── */
+        .handoff { text-align: center; padding: 34px 20px; }
+        .handoff .big { font-size: 3.2rem; margin-bottom: 10px; }
+        .handoff h2 { font-size: 1.3rem; margin-bottom: 8px; }
+        .handoff .chips { justify-content: center; margin: 16px 0 6px; }
+
+        /* ── 결과 ─────────────────────────────── */
+        .rank {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 14px;
+            margin-top: 8px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .rank.first { background: rgba(52, 211, 153, .12); border-color: rgba(52, 211, 153, .45); }
+        .rank .medal { font-size: 1.5rem; }
+        .rank .info { flex: 1; min-width: 0; }
+        .rank .date { font-weight: 800; font-size: 1.02rem; }
+        .rank .meta { font-size: .78rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+        .rank .count { font-weight: 800; white-space: nowrap; }
+
+        .notice {
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(251, 191, 36, .1);
+            border: 1px solid rgba(251, 191, 36, .35);
+            font-size: .85rem;
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+
+        .detail { margin-top: 12px; font-size: .86rem; line-height: 1.8; }
+        .detail .who { color: var(--muted); }
+        .detail b { color: var(--text); }
+
+        .persuade { font-size: .86rem; line-height: 1.7; margin-top: 8px; }
+        .persuade div { padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, .06); }
+        .persuade div:first-child { border-top: none; }
+
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+        .actions .btn { margin-top: 0; font-size: .9rem; padding: 12px 8px; }
+
+        .empty { color: var(--muted); font-size: .85rem; text-align: center; padding: 14px 0; }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1><span class="emoji">📅</span> 모임 날짜 맞추기</h1>
+    <p class="sub">폰을 돌려가며 되는 날을 누르면, 다 같이 되는 날을 찾아 드립니다</p>
+
+    <div class="wrap">
+        <!-- 1. 기간 설정 -->
+        <section class="screen" id="screen-setup">
+            <div class="card">
+                <h2>1. 무슨 모임인가요?</h2>
+                <label for="title">모임 이름 (선택)</label>
+                <input type="text" id="title" placeholder="예: 연말 동창회" maxlength="24">
+
+                <label>후보 기간 (최대 3개월)</label>
+                <div class="row">
+                    <input type="date" id="start-date" aria-label="시작일">
+                    <input type="date" id="end-date" aria-label="종료일">
+                </div>
+
+                <label>요일</label>
+                <div class="chips dows" id="dow-picker"></div>
+                <div class="chips" style="margin-top:6px">
+                    <button class="chip" onclick="setDowPreset('all')">전체</button>
+                    <button class="chip" onclick="setDowPreset('weekend')">주말만</button>
+                    <button class="chip" onclick="setDowPreset('weekday')">평일만</button>
+                </div>
+
+                <label>시간 단위</label>
+                <div class="chips" id="mode-picker">
+                    <button class="chip on" data-mode="day" onclick="setMode('day')">하루 단위</button>
+                    <button class="chip" data-mode="meal" onclick="setMode('meal')">점심 / 저녁</button>
+                </div>
+
+                <button class="btn" onclick="startPlanning()">참가자 입력 시작 →</button>
+            </div>
+        </section>
+
+        <!-- 2. 참가자 입력 -->
+        <section class="screen" id="screen-turn">
+            <div class="card">
+                <h2 id="turn-heading">참가자 입력</h2>
+                <p class="hint">한 번 누르면 ✅ 가능, 두 번 누르면 🤔 애매, 세 번 누르면 지워집니다.
+                    가로로 쓸어서 여러 날을 한꺼번에 칠할 수 있어요.</p>
+                <label for="person-name">이름</label>
+                <input type="text" id="person-name" placeholder="이름을 입력하세요" maxlength="12" oninput="saveDraftName()">
+            </div>
+
+            <div class="card">
+                <div class="legend">
+                    <span><i style="background:var(--yes)"></i>가능</span>
+                    <span><i style="background:var(--maybe)"></i>애매</span>
+                    <span><i style="background:rgba(255,255,255,.08)"></i>안 됨</span>
+                </div>
+                <div class="quick">
+                    <button class="chip" onclick="quickFill('weekend')">주말 전부 ✅</button>
+                    <button class="chip" onclick="quickFill('all')">전부 ✅</button>
+                    <button class="chip" onclick="quickFill('clear')">모두 지우기</button>
+                </div>
+                <div id="edit-calendar"></div>
+            </div>
+
+            <button class="btn" onclick="finishTurn()">✅ 입력 완료</button>
+            <button class="btn ghost" id="turn-cancel" onclick="cancelTurn()">취소</button>
+        </section>
+
+        <!-- 3. 넘겨주기 -->
+        <section class="screen" id="screen-handoff">
+            <div class="card handoff">
+                <div class="big" id="handoff-icon">📱</div>
+                <h2 id="handoff-title">다음 사람에게 폰을 넘겨주세요</h2>
+                <p class="hint" id="handoff-hint">앞사람이 고른 날짜는 보이지 않아요.</p>
+                <div class="chips" id="done-list"></div>
+                <button class="btn" onclick="beginTurn()">✋ 다음 사람 입력</button>
+                <button class="btn ghost" id="to-result" onclick="showResult()">🏁 결과 보기</button>
+            </div>
+        </section>
+
+        <!-- 4. 결과 -->
+        <section class="screen" id="screen-result">
+            <div class="card">
+                <h2 id="result-title">🏆 추천 날짜</h2>
+                <p class="hint" id="result-sub"></p>
+                <div id="top-list"></div>
+            </div>
+
+            <div class="card" id="persuade-card">
+                <h2>🙏 한 명만 설득하면 되는 날</h2>
+                <div class="persuade" id="persuade-list"></div>
+            </div>
+
+            <div class="card">
+                <h2>🗓️ 전체 히트맵</h2>
+                <p class="hint">진할수록 많이 되는 날이에요. 날짜를 누르면 누가 되는지 보여요.</p>
+                <div id="heat-calendar"></div>
+                <div class="detail" id="slot-detail"></div>
+            </div>
+
+            <div class="card">
+                <h2>👥 응답한 사람</h2>
+                <p class="hint">이름을 누르면 그 사람의 응답을 고칠 수 있어요.</p>
+                <div class="chips" id="people-list"></div>
+                <button class="btn ghost" onclick="beginTurn()">➕ 한 명 더 입력</button>
+            </div>
+
+            <div class="actions">
+                <button class="btn" onclick="copyResult()">📋 결과 복사</button>
+                <button class="btn" onclick="saveImage()">🖼️ 이미지 저장</button>
+                <button class="btn ghost" onclick="shareLink()">🔗 응답 링크 만들기</button>
+                <button class="btn ghost" onclick="resetAll()">↺ 새로 만들기</button>
+            </div>
+            <p class="hint" style="margin-top:10px; text-align:center">
+                자리에 없는 사람에게 응답 링크를 보내면, 그 사람이 응답을 더해서 다시 링크로 돌려줄 수 있어요.
+            </p>
+        </section>
+    </div>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "모임 날짜 맞추기",
+ "players": "2~20인",
+ "time": "약 3분",
+ "goal": "폰 한 대를 돌려가며 각자 되는 날을 고르고, 다 같이 되는 날을 찾습니다.",
+ "steps": [
+  "후보 기간과 요일, 시간 단위(하루 / 점심·저녁)를 정합니다.",
+  "첫 사람이 이름을 적고 달력에서 되는 날을 누릅니다. 한 번은 가능, 두 번은 애매입니다.",
+  "입력 완료 후 폰을 다음 사람에게 넘깁니다. 앞사람 응답은 보이지 않습니다.",
+  "모두 끝나면 결과 보기에서 추천 날짜 TOP 3와 히트맵을 확인합니다.",
+  "결과를 복사하거나 이미지로 저장해 단톡방에 올립니다."
+ ],
+ "tips": [
+  "가로로 쓸면 한 주의 여러 날을 한 번에 칠할 수 있습니다.",
+  "자리에 없는 사람은 '응답 링크 만들기'로 링크를 보내 이어서 입력하게 할 수 있습니다. 응답은 링크 안에만 담기고 서버로 보내지지 않습니다.",
+  "'한 명만 설득하면 되는 날'을 보면 누구와 먼저 이야기하면 되는지 알 수 있습니다.",
+  "공휴일은 빨간 날짜로 표시되며 참고용입니다."
+ ]
+}
+</script>
+
+    <script>
+        const STORE_KEY = 'meetup-planner:v1';
+        const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+        const MAX_DAYS = 92;
+        const MEALS = [['L', '점심'], ['D', '저녁']];
+
+        // 참고용 공휴일 (대체공휴일 포함)
+        const HOLIDAYS = {
+            '2026-01-01': '신정', '2026-02-16': '설날', '2026-02-17': '설날', '2026-02-18': '설날',
+            '2026-03-01': '삼일절', '2026-03-02': '대체공휴일', '2026-05-05': '어린이날',
+            '2026-05-24': '부처님오신날', '2026-05-25': '대체공휴일', '2026-06-03': '지방선거',
+            '2026-06-06': '현충일', '2026-08-15': '광복절', '2026-08-17': '대체공휴일',
+            '2026-09-24': '추석', '2026-09-25': '추석', '2026-09-26': '추석',
+            '2026-10-03': '개천절', '2026-10-05': '대체공휴일', '2026-10-09': '한글날', '2026-12-25': '성탄절',
+            '2027-01-01': '신정', '2027-02-05': '설날', '2027-02-06': '설날', '2027-02-07': '설날',
+            '2027-02-08': '대체공휴일', '2027-03-01': '삼일절', '2027-05-05': '어린이날',
+            '2027-05-13': '부처님오신날', '2027-06-06': '현충일', '2027-08-15': '광복절',
+            '2027-08-16': '대체공휴일', '2027-09-14': '추석', '2027-09-15': '추석', '2027-09-16': '추석',
+            '2027-10-03': '개천절', '2027-10-04': '대체공휴일', '2027-10-09': '한글날',
+            '2027-10-11': '대체공휴일', '2027-12-25': '성탄절', '2027-12-27': '대체공휴일'
+        };
+
+        // phase: setup → turn ⇄ handoff → result
+        let state = freshState();
+        let draft = { name: '', marks: {}, editing: null };   // 지금 입력 중인 사람
+        let selectedKey = null;                               // 결과 히트맵에서 고른 칸
+
+        function freshState() {
+            const start = new Date();
+            const end = addDays(start, 27);
+            return {
+                title: '',
+                start: todayKey(start),
+                end: todayKey(end),
+                dows: [true, true, true, true, true, true, true],
+                mode: 'day',
+                people: [],          // { name, marks: { slotKey: 'y' | 'm' } }
+                phase: 'setup',
+                handoffNote: ''
+            };
+        }
+
+        // ── 날짜 도우미 ───────────────────────────────
+        function parseKey(key) {
+            const [y, m, d] = key.slice(0, 10).split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        function addDays(date, n) {
+            const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            d.setDate(d.getDate() + n);
+            return d;
+        }
+
+        function dayLabel(key) {
+            const d = parseKey(key);
+            const meal = key.includes('|') ? ' ' + (key.endsWith('|L') ? '점심' : '저녁') : '';
+            return `${d.getMonth() + 1}/${d.getDate()}(${DOW[d.getDay()]})${meal}`;
+        }
+
+        function rangeDays(s = state) {
+            const days = [];
+            const end = parseKey(s.end);
+            for (let d = parseKey(s.start); d <= end; d = addDays(d, 1)) days.push(d);
+            return days;
+        }
+
+        // 응답을 받을 칸 목록. 링크 인코딩도 이 순서를 그대로 쓴다.
+        function buildSlots(s = state) {
+            const slots = [];
+            rangeDays(s).forEach(d => {
+                if (!s.dows[d.getDay()]) return;
+                const key = todayKey(d);
+                if (s.mode === 'meal') MEALS.forEach(([code]) => slots.push(`${key}|${code}`));
+                else slots.push(key);
+            });
+            return slots;
+        }
+
+        // ── 저장 ────────────────────────────────────
+        // 폰을 돌리다 실수로 새로고침하거나 탭이 다시 열려도 입력이 남아 있어야 한다
+        function saveState() {
+            try { localStorage.setItem(STORE_KEY, JSON.stringify({ state, draft })); } catch { /* 저장 실패는 무시 */ }
+        }
+
+        function loadState() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+                if (raw && raw.state && Array.isArray(raw.state.people)) {
+                    state = Object.assign(freshState(), raw.state);
+                    draft = Object.assign({ name: '', marks: {}, editing: null }, raw.draft || {});
+                }
+            } catch { /* 깨진 저장값은 버리고 새로 시작 */ }
+        }
+
+        // ── 화면 전환 ───────────────────────────────
+        function show(phase) {
+            state.phase = phase;
+            document.querySelectorAll('.screen').forEach(el => el.classList.toggle('on', el.id === `screen-${phase}`));
+            if (phase === 'setup') renderSetup();
+            if (phase === 'turn') renderTurn();
+            if (phase === 'handoff') renderHandoff();
+            if (phase === 'result') renderResult();
+            saveState();
+            window.scrollTo({ top: 0 });
+        }
+
+        // ── 1. 설정 ─────────────────────────────────
+        function renderSetup() {
+            document.getElementById('title').value = state.title;
+            const startEl = document.getElementById('start-date');
+            const endEl = document.getElementById('end-date');
+            startEl.value = state.start;
+            endEl.value = state.end;
+            startEl.min = todayKey();
+            endEl.min = todayKey();
+            renderDowPicker();
+            document.querySelectorAll('#mode-picker .chip').forEach(c => c.classList.toggle('on', c.dataset.mode === state.mode));
+        }
+
+        function renderDowPicker() {
+            const box = document.getElementById('dow-picker');
+            box.innerHTML = '';
+            DOW.forEach((label, i) => {
+                const b = document.createElement('button');
+                b.className = 'chip dow' + (state.dows[i] ? ' on' : '');
+                b.textContent = label;
+                b.onclick = () => { state.dows[i] = !state.dows[i]; renderDowPicker(); };
+                box.appendChild(b);
+            });
+        }
+
+        function setDowPreset(kind) {
+            state.dows = DOW.map((_, i) => kind === 'all' || (kind === 'weekend' ? (i === 0 || i === 6) : (i > 0 && i < 6)));
+            renderDowPicker();
+        }
+
+        function setMode(mode) {
+            state.mode = mode;
+            document.querySelectorAll('#mode-picker .chip').forEach(c => c.classList.toggle('on', c.dataset.mode === mode));
+        }
+
+        function startPlanning() {
+            const start = document.getElementById('start-date').value;
+            const end = document.getElementById('end-date').value;
+            if (!start || !end) return gameAlert('시작일과 종료일을 골라 주세요.');
+            if (end < start) return gameAlert('종료일이 시작일보다 빠릅니다.');
+            const span = Math.round((parseKey(end) - parseKey(start)) / 86400000) + 1;
+            if (span > MAX_DAYS) return gameAlert('기간은 최대 3개월(92일)까지 고를 수 있어요.');
+            if (!state.dows.some(Boolean)) return gameAlert('요일을 하나 이상 골라 주세요.');
+
+            state.title = document.getElementById('title').value.trim();
+            state.start = start;
+            state.end = end;
+            if (!buildSlots().length) return gameAlert('고른 기간에 해당 요일이 없어요.');
+
+            state.people = [];
+            draft = { name: '', marks: {}, editing: null };
+            show('turn');
+        }
+
+        // ── 2. 참가자 입력 ──────────────────────────
+        function beginTurn(editName = null) {
+            const person = editName ? state.people.find(p => p.name === editName) : null;
+            draft = person
+                ? { name: person.name, marks: { ...person.marks }, editing: person.name }
+                : { name: '', marks: {}, editing: null };
+            show('turn');
+        }
+
+        function renderTurn() {
+            const nth = draft.editing ? null : state.people.length + 1;
+            document.getElementById('turn-heading').textContent = draft.editing
+                ? `✏️ ${draft.editing} 님 응답 고치기`
+                : `🙋 ${nth}번째 참가자`;
+            document.getElementById('person-name').value = draft.name;
+            document.getElementById('turn-cancel').style.display = state.people.length ? 'block' : 'none';
+            renderCalendar(document.getElementById('edit-calendar'), 'edit');
+        }
+
+        function saveDraftName() {
+            draft.name = document.getElementById('person-name').value;
+            saveState();
+        }
+
+        function nextMark(cur) {
+            return cur === 'y' ? 'm' : (cur === 'm' ? null : 'y');
+        }
+
+        function setMark(key, value) {
+            if (value) draft.marks[key] = value;
+            else delete draft.marks[key];
+            const el = document.querySelector(`#edit-calendar .slot[data-key="${key}"]`);
+            if (el) paintSlot(el, value);
+        }
+
+        function paintSlot(el, value) {
+            el.classList.toggle('y', value === 'y');
+            el.classList.toggle('m', value === 'm');
+            const mark = el.querySelector('.mark');
+            if (mark) mark.textContent = value === 'y' ? '✅' : (value === 'm' ? '🤔' : '');
+            el.setAttribute('aria-label', `${dayLabel(el.dataset.key)} ${value === 'y' ? '가능' : value === 'm' ? '애매' : '안 됨'}`);
+        }
+
+        function quickFill(kind) {
+            buildSlots().forEach(key => {
+                const dow = parseKey(key).getDay();
+                if (kind === 'clear') delete draft.marks[key];
+                else if (kind === 'all' || dow === 0 || dow === 6) draft.marks[key] = 'y';
+            });
+            renderCalendar(document.getElementById('edit-calendar'), 'edit');
+            saveState();
+        }
+
+        function finishTurn() {
+            const name = document.getElementById('person-name').value.trim();
+            if (!name) return gameAlert('이름을 입력해 주세요.');
+
+            const clash = state.people.find(p => p.name === name);
+            if (clash && name !== draft.editing &&
+                !confirm(`'${name}' 님의 응답이 이미 있어요. 새로 입력한 내용으로 바꿀까요?`)) return;
+
+            if (!Object.keys(draft.marks).length &&
+                !confirm('가능한 날을 하나도 고르지 않았어요. 이대로 완료할까요?')) return;
+
+            // 이름을 바꿔 고친 경우 예전 이름의 응답은 지운다
+            state.people = state.people.filter(p => p.name !== name && p.name !== draft.editing);
+            state.people.push({ name, marks: { ...draft.marks } });
+
+            const wasEditing = !!draft.editing;
+            draft = { name: '', marks: {}, editing: null };
+            state.handoffNote = '';
+            show(wasEditing ? 'result' : 'handoff');
+        }
+
+        function cancelTurn() {
+            draft = { name: '', marks: {}, editing: null };
+            show(state.people.length ? 'handoff' : 'setup');
+        }
+
+        // 탭 한 번은 바로 칠하지 않고 손을 뗄 때 칠한다.
+        // 누르자마자 칠하면 달력 위에서 세로로 스크롤만 해도 첫 칸이 바뀌어 버린다.
+        let stroke = null;
+
+        function bindPainting(root) {
+            root.addEventListener('pointerdown', (e) => {
+                const slot = e.target.closest('.slot');
+                if (!slot || (e.pointerType === 'mouse' && e.button !== 0)) return;
+                // 터치는 누른 요소에 포인터가 묶여 다른 칸 위를 지나가도 모르므로 풀어 둔다
+                if (e.target.hasPointerCapture && e.target.hasPointerCapture(e.pointerId)) {
+                    e.target.releasePointerCapture(e.pointerId);
+                }
+                const key = slot.dataset.key;
+                stroke = {
+                    id: e.pointerId, startKey: key, value: nextMark(draft.marks[key]),
+                    done: new Set(), started: false, last: { x: e.clientX, y: e.clientY }
+                };
+            });
+
+            root.addEventListener('click', (e) => {
+                // 키보드(Enter/Space)로 누른 경우만 여기서 처리한다. 마우스·터치는 pointerup에서 처리.
+                if (e.detail !== 0) return;
+                const slot = e.target.closest('.slot');
+                if (!slot) return;
+                setMark(slot.dataset.key, nextMark(draft.marks[slot.dataset.key]));
+                saveState();
+            });
+        }
+
+        function paintAt(x, y) {
+            const hit = document.elementFromPoint(x, y);
+            const slot = hit && hit.closest('#edit-calendar .slot');
+            if (!slot) return;
+            const key = slot.dataset.key;
+            if (key === stroke.startKey && !stroke.started) return;
+            if (!stroke.started) {
+                stroke.started = true;
+                stroke.done.add(stroke.startKey);
+                setMark(stroke.startKey, stroke.value);
+            }
+            if (!stroke.done.has(key)) {
+                stroke.done.add(key);
+                setMark(key, stroke.value);
+            }
+        }
+
+        window.addEventListener('pointermove', (e) => {
+            if (!stroke || e.pointerId !== stroke.id) return;
+            // 빠르게 쓸면 이벤트 사이에 칸 하나를 통째로 건너뛰므로, 지나온 선을 따라 촘촘히 칠한다
+            const from = stroke.last || { x: e.clientX, y: e.clientY };
+            const steps = Math.max(1, Math.ceil(Math.hypot(e.clientX - from.x, e.clientY - from.y) / 8));
+            for (let i = 1; i <= steps; i++) {
+                paintAt(from.x + (e.clientX - from.x) * i / steps, from.y + (e.clientY - from.y) * i / steps);
+            }
+            stroke.last = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (!stroke || e.pointerId !== stroke.id) return;
+            if (!stroke.started) setMark(stroke.startKey, stroke.value);
+            stroke = null;
+            saveState();
+        });
+
+        // 세로 스크롤이 시작되면 브라우저가 취소를 보낸다. 이미 칠한 칸만 남긴다.
+        window.addEventListener('pointercancel', () => {
+            if (stroke && stroke.started) saveState();
+            stroke = null;
+        });
+
+        // ── 달력 그리기 (입력 / 결과 공용) ───────────
+        function renderCalendar(container, kind, stats = null) {
+            container.innerHTML = '';
+            const start = parseKey(state.start);
+            const end = parseKey(state.end);
+            const n = state.people.length;
+
+            let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+            while (cursor <= end) {
+                const y = cursor.getFullYear();
+                const m = cursor.getMonth();
+                const monthEnd = new Date(y, m + 1, 0);
+                const first = start > cursor ? start : cursor;
+                const last = end < monthEnd ? end : monthEnd;
+
+                const block = document.createElement('div');
+                block.className = 'month';
+                block.innerHTML = `<div class="month-title">${y}년 ${m + 1}월</div>`;
+                const grid = document.createElement('div');
+                grid.className = 'grid';
+                DOW.forEach((d, i) => {
+                    const h = document.createElement('div');
+                    h.className = 'dow-head' + (i === 0 ? ' sun' : i === 6 ? ' sat' : '');
+                    h.textContent = d;
+                    grid.appendChild(h);
+                });
+
+                // 범위와 겹치는 주만 그려 달력이 쓸데없이 길어지지 않게 한다
+                const from = addDays(first, -first.getDay());
+                const to = addDays(last, 6 - last.getDay());
+                for (let d = from; d <= to; d = addDays(d, 1)) {
+                    grid.appendChild(buildCell(d, m, start, end, kind, stats, n));
+                }
+
+                block.appendChild(grid);
+                container.appendChild(block);
+                cursor = new Date(y, m + 1, 1);
+            }
+
+            if (kind === 'edit' && !container.dataset.bound) {
+                bindPainting(container);
+                container.dataset.bound = '1';
+            }
+        }
+
+        function buildCell(d, month, start, end, kind, stats, n) {
+            const key = todayKey(d);
+            const dow = d.getDay();
+            const numCls = 'num' + (dow === 0 ? ' sun' : dow === 6 ? ' sat' : '');
+            const holiday = HOLIDAYS[key];
+
+            if (d.getMonth() !== month) {
+                const blank = document.createElement('div');
+                blank.className = 'cell blank';
+                return blank;
+            }
+
+            const active = d >= start && d <= end && state.dows[dow];
+            if (!active) {
+                const off = document.createElement('div');
+                off.className = 'cell off' + (holiday ? ' holiday' : '');
+                off.innerHTML = `<span class="${numCls}">${d.getDate()}</span>`;
+                return off;
+            }
+
+            const title = holiday ? ` title="${holiday}"` : '';
+
+            if (state.mode === 'day') {
+                const cell = document.createElement('button');
+                cell.className = 'cell slot' + (holiday ? ' holiday' : '') + (kind === 'result' ? ' heat' : '');
+                cell.dataset.key = key;
+                if (holiday) cell.title = holiday;
+                cell.innerHTML = `<span class="${numCls}">${d.getDate()}</span>`;
+                if (kind === 'edit') {
+                    cell.innerHTML += '<span class="mark"></span>';
+                    paintSlot(cell, draft.marks[key]);
+                } else {
+                    decorateHeat(cell, stats.get(key), n);
+                }
+                return cell;
+            }
+
+            const cell = document.createElement('div');
+            cell.className = 'cell' + (holiday ? ' holiday' : '');
+            cell.innerHTML = `<span class="${numCls}"${title}>${d.getDate()}</span>`;
+            MEALS.forEach(([code, label]) => {
+                const slotKey = `${key}|${code}`;
+                const half = document.createElement('button');
+                half.className = 'slot half' + (kind === 'result' ? ' heat' : '');
+                half.dataset.key = slotKey;
+                half.textContent = label;
+                if (kind === 'edit') paintSlot(half, draft.marks[slotKey]);
+                else decorateHeat(half, stats.get(slotKey), n, true);
+                cell.appendChild(half);
+            });
+            return cell;
+        }
+
+        function decorateHeat(el, st, n, isHalf = false) {
+            const ratio = n ? st.score / n : 0;
+            if (ratio > 0) {
+                el.style.background = `rgba(52, 211, 153, ${(0.12 + ratio * 0.78).toFixed(2)})`;
+                if (ratio > 0.6) el.style.color = '#04161a';
+            }
+            if (st.tier === 0) el.style.boxShadow = 'inset 0 0 0 2px #fff';
+            const avail = st.yes.length + st.maybe.length;
+            const count = `${avail}/${n}`;
+            // 아무도 안 되는 칸에 0/N을 찍으면 달력이 숫자로 지저분해진다
+            if (isHalf) {
+                el.textContent = avail ? count : '';
+            } else if (avail) {
+                el.insertAdjacentHTML('beforeend', `<span class="cnt">${count}</span>`);
+            }
+            el.setAttribute('aria-label', `${dayLabel(st.key)} ${count}명 가능`);
+            el.classList.toggle('sel', st.key === selectedKey);
+            el.onclick = () => { selectedKey = st.key; renderResult(); };
+        }
+
+        // ── 3. 넘겨주기 ─────────────────────────────
+        function renderHandoff() {
+            const n = state.people.length;
+            document.getElementById('handoff-icon').textContent = state.handoffNote ? '📨' : '📱';
+            document.getElementById('handoff-title').textContent = state.handoffNote || '다음 사람에게 폰을 넘겨주세요';
+            document.getElementById('handoff-hint').textContent = state.handoffNote
+                ? '내 응답을 더한 뒤 결과에서 다시 링크를 만들어 돌려주세요.'
+                : `지금까지 ${n}명이 입력했어요. 앞사람이 고른 날짜는 보이지 않아요.`;
+            const box = document.getElementById('done-list');
+            box.innerHTML = '';
+            state.people.forEach(p => {
+                const c = document.createElement('span');
+                c.className = 'chip on';
+                c.textContent = `✓ ${p.name}`;
+                box.appendChild(c);
+            });
+            document.getElementById('to-result').disabled = n === 0;
+        }
+
+        // ── 4. 결과 ─────────────────────────────────
+        // tier 0: 전원 가능 / 1: 애매 포함 전원 / 2: 한 명 빠짐 / 3: 그 외
+        function computeStats() {
+            const names = state.people.map(p => p.name);
+            return buildSlots().map((key, idx) => {
+                const yes = [], maybe = [], no = [];
+                state.people.forEach(p => {
+                    const v = p.marks[key];
+                    (v === 'y' ? yes : v === 'm' ? maybe : no).push(p.name);
+                });
+                const tier = no.length === 0 ? (maybe.length === 0 ? 0 : 1) : (no.length === 1 ? 2 : 3);
+                return { key, idx, yes, maybe, no, tier, score: yes.length + maybe.length * 0.5, total: names.length };
+            });
+        }
+
+        function rankStats(stats) {
+            return [...stats]
+                .filter(s => s.score > 0)
+                .sort((a, b) => a.tier - b.tier || b.score - a.score || b.yes.length - a.yes.length || a.idx - b.idx);
+        }
+
+        function tierText(s) {
+            if (s.tier === 0) return '전원 가능 ✅';
+            if (s.tier === 1) return `애매 포함 전원 🤔 (${s.maybe.join(', ')})`;
+            if (s.tier === 2) return `${s.no[0]} 님만 안 돼요`;
+            return `${s.yes.length + s.maybe.length}명 가능`;
+        }
+
+        function renderResult() {
+            const stats = computeStats();
+            const ranked = rankStats(stats);
+            const n = state.people.length;
+
+            document.getElementById('result-title').textContent = `🏆 ${state.title ? state.title + ' ' : ''}추천 날짜`;
+            document.getElementById('result-sub').textContent =
+                `${dayLabel(state.start)} ~ ${dayLabel(state.end)} · ${n}명 응답`;
+
+            const top = document.getElementById('top-list');
+            top.innerHTML = '';
+            if (!ranked.length) {
+                top.innerHTML = '<div class="notice">겹치는 날이 하나도 없어요. 기간을 늘리거나 요일을 넓혀 보세요.</div>';
+            } else {
+                if (ranked[0].tier >= 2) {
+                    top.insertAdjacentHTML('beforeend',
+                        '<div class="notice">전원이 되는 날은 없어요. 가장 많이 겹치는 날을 보여 드려요. 기간을 늘려 보는 것도 방법이에요.</div>');
+                }
+                ['🥇', '🥈', '🥉'].forEach((medal, i) => {
+                    const s = ranked[i];
+                    if (!s) return;
+                    const row = document.createElement('div');
+                    row.className = 'rank' + (i === 0 ? ' first' : '');
+                    row.innerHTML = `
+                        <div class="medal">${medal}</div>
+                        <div class="info">
+                            <div class="date">${dayLabel(s.key)}${HOLIDAYS[s.key.slice(0, 10)] ? ` · ${HOLIDAYS[s.key.slice(0, 10)]}` : ''}</div>
+                            <div class="meta">${escapeHtml(tierText(s))}</div>
+                        </div>
+                        <div class="count">${s.yes.length + s.maybe.length}/${n}</div>`;
+                    row.onclick = () => { selectedKey = s.key; renderResult(); };
+                    top.appendChild(row);
+                });
+            }
+
+            // 한 명만 빠지는 날을 사람별로 묶는다 → 누구랑 먼저 얘기하면 되는지 보인다
+            const byPerson = new Map();
+            stats.filter(s => s.tier === 2).forEach(s => {
+                const who = s.no[0];
+                if (!byPerson.has(who)) byPerson.set(who, []);
+                byPerson.get(who).push(s.key);
+            });
+            const persuadeCard = document.getElementById('persuade-card');
+            const persuade = document.getElementById('persuade-list');
+            persuade.innerHTML = '';
+            persuadeCard.style.display = byPerson.size && n > 1 ? 'block' : 'none';
+            [...byPerson.entries()]
+                .sort((a, b) => b[1].length - a[1].length)
+                .forEach(([who, keys]) => {
+                    const shown = keys.slice(0, 4).map(dayLabel).join(', ') + (keys.length > 4 ? ` 외 ${keys.length - 4}일` : '');
+                    persuade.insertAdjacentHTML('beforeend',
+                        `<div><b>${escapeHtml(who)}</b> 님만 되면 → ${escapeHtml(shown)}</div>`);
+                });
+
+            const statMap = new Map(stats.map(s => [s.key, s]));
+            renderCalendar(document.getElementById('heat-calendar'), 'result', statMap);
+
+            const detail = document.getElementById('slot-detail');
+            const sel = selectedKey && statMap.get(selectedKey);
+            detail.innerHTML = sel ? `
+                <b>${dayLabel(sel.key)}</b><br>
+                ✅ <span class="who">${escapeHtml(sel.yes.join(', ') || '없음')}</span><br>
+                🤔 <span class="who">${escapeHtml(sel.maybe.join(', ') || '없음')}</span><br>
+                ❌ <span class="who">${escapeHtml(sel.no.join(', ') || '없음')}</span>` : '';
+
+            const list = document.getElementById('people-list');
+            list.innerHTML = '';
+            state.people.forEach(p => {
+                const chip = document.createElement('button');
+                chip.className = 'chip on person-chip';
+                chip.innerHTML = `${escapeHtml(p.name)}<span class="x" role="button" aria-label="${escapeHtml(p.name)} 삭제">✕</span>`;
+                chip.onclick = (e) => {
+                    if (e.target.classList.contains('x')) {
+                        if (!confirm(`${p.name} 님의 응답을 지울까요?`)) return;
+                        state.people = state.people.filter(q => q.name !== p.name);
+                        if (!state.people.length) return show('handoff');
+                        saveState();
+                        renderResult();
+                    } else {
+                        beginTurn(p.name);
+                    }
+                };
+                list.appendChild(chip);
+            });
+        }
+
+        function showResult() {
+            selectedKey = null;
+            show('result');
+        }
+
+        function resultText() {
+            const ranked = rankStats(computeStats());
+            const lines = [`📅 ${state.title || '모임'} 날짜 맞추기 결과 (${state.people.length}명)`];
+            if (!ranked.length) lines.push('겹치는 날이 없어요 😢');
+            ranked.slice(0, 3).forEach((s, i) => lines.push(`${i + 1}. ${dayLabel(s.key)} — ${tierText(s)}`));
+            lines.push(`응답: ${state.people.map(p => p.name).join(', ')}`);
+            return lines.join('\n');
+        }
+
+        function copyResult() {
+            navigator.clipboard.writeText(resultText())
+                .then(() => gameAlert('결과를 복사했습니다. 단톡방에 붙여넣어 보세요!'))
+                .catch(() => gameAlert('복사에 실패했습니다. 화면을 직접 캡처해 주세요.'));
+        }
+
+        function resetAll() {
+            if (!confirm('지금까지의 응답을 모두 지우고 새로 만들까요?')) return;
+            state = freshState();
+            draft = { name: '', marks: {}, editing: null };
+            show('setup');
+        }
+
+        // ── 응답 링크 ───────────────────────────────
+        // 서버가 없으므로 응답 전체를 URL hash에 담는다. hash는 서버로 전송되지 않는다.
+        // 칸 순서(buildSlots) 기준 비트마스크라 20명 × 4주도 짧게 들어간다.
+        function bytesToB64u(bytes) {
+            let bin = '';
+            bytes.forEach(b => { bin += String.fromCharCode(b); });
+            return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        function b64uToBytes(str) {
+            const bin = atob(str.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((str.length + 3) % 4));
+            return Uint8Array.from(bin, c => c.charCodeAt(0));
+        }
+
+        function maskOf(slots, marks, value) {
+            const bytes = new Uint8Array(Math.ceil(slots.length / 8));
+            slots.forEach((key, i) => { if (marks[key] === value) bytes[i >> 3] |= 1 << (i & 7); });
+            return bytesToB64u(bytes);
+        }
+
+        function encodeState() {
+            const slots = buildSlots();
+            const payload = {
+                v: 1,
+                t: state.title,
+                s: state.start,
+                e: state.end,
+                w: state.dows.reduce((acc, on, i) => acc | (on ? 1 << i : 0), 0),
+                m: state.mode === 'meal' ? 1 : 0,
+                p: state.people.map(p => [p.name, maskOf(slots, p.marks, 'y'), maskOf(slots, p.marks, 'm')])
+            };
+            return bytesToB64u(new TextEncoder().encode(JSON.stringify(payload)));
+        }
+
+        function decodeState(code) {
+            const payload = JSON.parse(new TextDecoder().decode(b64uToBytes(code)));
+            if (payload.v !== 1 || !/^\d{4}-\d{2}-\d{2}$/.test(payload.s) || !/^\d{4}-\d{2}-\d{2}$/.test(payload.e)) {
+                throw new Error('bad payload');
+            }
+            const s = freshState();
+            s.title = String(payload.t || '').slice(0, 24);
+            s.start = payload.s;
+            s.end = payload.e;
+            s.dows = DOW.map((_, i) => !!(payload.w & (1 << i)));
+            s.mode = payload.m ? 'meal' : 'day';
+            const slots = buildSlots(s);
+            s.people = (payload.p || []).map(([name, yes, maybe]) => {
+                const y = b64uToBytes(yes), m = b64uToBytes(maybe);
+                const marks = {};
+                slots.forEach((key, i) => {
+                    const bit = 1 << (i & 7);
+                    if (y[i >> 3] & bit) marks[key] = 'y';
+                    else if (m[i >> 3] & bit) marks[key] = 'm';
+                });
+                return { name: String(name).slice(0, 12), marks };
+            });
+            return s;
+        }
+
+        function shareLink() {
+            const url = `${location.origin}${location.pathname}#r=${encodeState()}`;
+            const text = `📅 ${state.title || '모임'} 날짜 맞추기 — 되는 날을 골라서 다시 링크로 보내 주세요!`;
+            if (navigator.share) {
+                navigator.share({ title: '모임 날짜 맞추기', text, url }).catch(() => {});
+                return;
+            }
+            navigator.clipboard.writeText(`${text}\n${url}`)
+                .then(() => gameAlert('응답 링크를 복사했습니다. 자리에 없는 사람에게 보내 주세요.'))
+                .catch(() => gameAlert('복사에 실패했습니다.'));
+        }
+
+        function sameSetup(a, b) {
+            return a.start === b.start && a.end === b.end && a.mode === b.mode && a.dows.join() === b.dows.join();
+        }
+
+        // 링크로 들어오면: 같은 일정이면 이름 기준으로 합치고, 다른 일정이면 바꿀지 묻는다.
+        // 두 사람이 같은 링크를 받아 따로 답해 돌려줘도 차례로 열면 모두 합쳐진다.
+        function importFromHash() {
+            const match = location.hash.match(/^#r=([A-Za-z0-9_-]+)$/);
+            if (!match) return false;
+            history.replaceState(null, '', location.pathname + location.search);
+
+            let incoming;
+            try {
+                incoming = decodeState(match[1]);
+            } catch {
+                gameAlert('링크가 올바르지 않아요. 링크 전체가 복사됐는지 확인해 주세요.');
+                return false;
+            }
+
+            const hasLocal = state.people.length > 0;
+            if (hasLocal && sameSetup(state, incoming)) {
+                const before = state.people.length;
+                // 이미 있는 사람은 그 자리에서 갱신해 응답 순서가 뒤섞이지 않게 한다
+                incoming.people.forEach(p => {
+                    const i = state.people.findIndex(q => q.name === p.name);
+                    if (i >= 0) state.people[i] = p;
+                    else state.people.push(p);
+                });
+                const added = state.people.length - before;
+                state.handoffNote = added > 0
+                    ? `링크에서 ${added}명의 응답을 새로 합쳤어요`
+                    : '링크의 응답을 최신으로 맞췄어요';
+            } else {
+                if (hasLocal && !confirm('이 기기에 진행 중인 다른 날짜 맞추기가 있어요. 링크의 일정으로 바꿀까요?')) return false;
+                state = incoming;
+                state.handoffNote = `${state.title || '모임'} 날짜 맞추기에 초대받았어요`;
+            }
+            draft = { name: '', marks: {}, editing: null };
+            show(state.people.length ? 'handoff' : 'turn');
+            return true;
+        }
+
+        // ── 이미지 저장 ─────────────────────────────
+        function saveImage() {
+            const stats = computeStats();
+            const ranked = rankStats(stats);
+            const statMap = new Map(stats.map(s => [s.key, s]));
+            const n = state.people.length;
+            const W = 540, PAD = 28, CELL = (W - PAD * 2 - 6 * 6) / 7, GAP = 6;
+
+            // 달력 블록 높이를 먼저 계산한다
+            const months = [];
+            const start = parseKey(state.start), end = parseKey(state.end);
+            for (let c = new Date(start.getFullYear(), start.getMonth(), 1); c <= end; c = new Date(c.getFullYear(), c.getMonth() + 1, 1)) {
+                const monthEnd = new Date(c.getFullYear(), c.getMonth() + 1, 0);
+                const first = start > c ? start : c;
+                const last = end < monthEnd ? end : monthEnd;
+                const from = addDays(first, -first.getDay());
+                const weeks = Math.round((addDays(last, 6 - last.getDay()) - from) / 86400000 + 1) / 7;
+                months.push({ y: c.getFullYear(), m: c.getMonth(), from, weeks });
+            }
+            const topRows = Math.max(1, Math.min(3, ranked.length));
+            const H = 130 + topRows * 64 + 30 + months.reduce((h, mo) => h + 34 + 20 + mo.weeks * (CELL + GAP), 0) + 40;
+
+            const S = 2;
+            const c = document.createElement('canvas');
+            c.width = W * S; c.height = H * S;
+            const ctx = c.getContext('2d');
+            ctx.scale(S, S);
+
+            const bg = ctx.createLinearGradient(0, 0, 0, H);
+            bg.addColorStop(0, '#0f172a'); bg.addColorStop(1, '#0b1f1c');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillStyle = '#34d399';
+            ctx.font = '800 13px Outfit, sans-serif';
+            ctx.fillText('📅 MEETUP PLANNER', PAD, 44);
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '800 26px Outfit, sans-serif';
+            ctx.fillText(`${state.title || '모임'} 날짜 맞추기`, PAD, 78);
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '500 13px Outfit, sans-serif';
+            ctx.fillText(`${dayLabel(state.start)} ~ ${dayLabel(state.end)} · ${n}명 응답`, PAD, 102);
+
+            let y = 126;
+            if (!ranked.length) {
+                ctx.fillStyle = '#fbbf24';
+                ctx.font = '700 15px Outfit, sans-serif';
+                ctx.fillText('겹치는 날이 없어요', PAD, y + 34);
+                y += 64;
+            }
+            ['🥇', '🥈', '🥉'].slice(0, ranked.length).forEach((medal, i) => {
+                const s = ranked[i];
+                roundRect(ctx, PAD, y, W - PAD * 2, 54, 14);
+                ctx.fillStyle = i === 0 ? 'rgba(52, 211, 153, 0.16)' : 'rgba(255, 255, 255, 0.05)';
+                ctx.fill();
+                ctx.font = '24px sans-serif';
+                ctx.fillText(medal, PAD + 12, y + 36);
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = '800 17px Outfit, sans-serif';
+                ctx.fillText(dayLabel(s.key), PAD + 50, y + 25);
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '500 12px Outfit, sans-serif';
+                ctx.fillText(tierText(s).slice(0, 34), PAD + 50, y + 43);
+                ctx.fillStyle = '#34d399';
+                ctx.font = '800 16px Outfit, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(`${s.yes.length + s.maybe.length}/${n}`, W - PAD - 14, y + 33);
+                ctx.textAlign = 'left';
+                y += 64;
+            });
+
+            y += 22;
+            months.forEach(mo => {
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = '800 15px Outfit, sans-serif';
+                ctx.fillText(`${mo.y}년 ${mo.m + 1}월`, PAD, y + 16);
+                y += 34;
+                ctx.font = '600 11px Outfit, sans-serif';
+                ctx.textAlign = 'center';
+                DOW.forEach((d, i) => {
+                    ctx.fillStyle = i === 0 ? '#fb7185' : i === 6 ? '#7dd3fc' : '#94a3b8';
+                    ctx.fillText(d, PAD + i * (CELL + GAP) + CELL / 2, y + 8);
+                });
+                ctx.textAlign = 'left';
+                y += 20;
+                for (let i = 0; i < mo.weeks * 7; i++) {
+                    const d = addDays(mo.from, i);
+                    if (d.getMonth() !== mo.m) continue;
+                    const x = PAD + (i % 7) * (CELL + GAP);
+                    const cy = y + Math.floor(i / 7) * (CELL + GAP);
+                    const key = todayKey(d);
+                    const active = d >= start && d <= end && state.dows[d.getDay()];
+                    const keys = state.mode === 'meal' ? MEALS.map(([code]) => `${key}|${code}`) : [key];
+                    const parts = keys.length;
+                    keys.forEach((k, pi) => {
+                        const st = statMap.get(k);
+                        const ph = CELL / parts;
+                        roundRect(ctx, x, cy + pi * ph, CELL, ph - (parts > 1 ? 1 : 0), parts > 1 ? 6 : 10);
+                        const ratio = active && st && n ? st.score / n : 0;
+                        ctx.fillStyle = ratio > 0 ? `rgba(52, 211, 153, ${(0.12 + ratio * 0.78).toFixed(2)})` : 'rgba(255, 255, 255, 0.05)';
+                        ctx.fill();
+                        if (st && st.tier === 0) {
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                        }
+                    });
+                    const dow = d.getDay();
+                    ctx.globalAlpha = active ? 1 : 0.3;
+                    ctx.fillStyle = HOLIDAYS[key] || dow === 0 ? '#fb7185' : dow === 6 ? '#7dd3fc' : '#e2e8f0';
+                    ctx.font = '700 11px Outfit, sans-serif';
+                    ctx.fillText(String(d.getDate()), x + 6, cy + 14);
+                    ctx.globalAlpha = 1;
+                }
+                y += mo.weeks * (CELL + GAP);
+            });
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '500 11px Outfit, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('흰 테두리 = 전원 가능 · 미니게임 천국', W / 2, H - 16);
+
+            const a = document.createElement('a');
+            a.href = c.toDataURL('image/png');
+            a.download = `meetup_${state.start}.png`;
+            a.click();
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        // ── 시작 ────────────────────────────────────
+        loadState();
+        window.addEventListener('hashchange', importFromHash);
+        if (!importFromHash()) show(state.phase || 'setup');
+    </script>
+</body>
+
+</html>
