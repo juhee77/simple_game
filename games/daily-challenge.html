@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>오늘의 도전 - 미니게임 천국</title>
-    <script src="../scripts/game-common.js?v=b1448849"></script>
+    <script src="../scripts/game-common.js?v=a8725fa3"></script>
     <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
@@ -220,7 +220,7 @@
         // 후보 풀은 '혼자서', '짧게', '끝이 분명한' 게임만 넣는다.
         // 각 게임은 완료 시점에 markGameCompleted(slug)를 호출하도록 손봐 두었다.
         const POOL = [
-            { slug: 'hangul-wordle', icon: '🟩', name: '한글 워들', goal: '두 글자 단어를 여섯 번 안에 맞히기' },
+            { slug: 'hangul-wordle', icon: '🟩', name: '두 글자 추리', goal: '두 글자 단어를 여섯 번 안에 맞히기' },
             { slug: 'nonogram', icon: '🧩', name: '노노그램', goal: '숫자 힌트로 픽셀 그림 완성하기' },
             { slug: 'sokoban', icon: '📦', name: '창고지기', goal: '상자를 목표 지점으로 밀어 넣기' },
             { slug: 'math', icon: '🔢', name: '1분 산수', goal: '60초 안에 최대한 많이 계산하기' },
@@ -231,7 +231,7 @@
             { slug: 'minesweeper', icon: '💣', name: '지뢰찾기', goal: '지뢰를 피해 모든 칸 열기' },
             { slug: 'typing-racer', icon: '⌨️', name: '타이핑 레이서', goal: '문장을 정확하고 빠르게 치기' },
             { slug: 'whack', icon: '🔨', name: '두더지 잡기', goal: '제한 시간 안에 최대한 많이 잡기' }
-        ];
+        ].filter(g => !isGameBlocked(g.slug));   // 저작권 검토로 닫아 둔 게임은 빼고 뽑는다
 
         const STATE_KEY = 'daily-hub-state';
 

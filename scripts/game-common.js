@@ -1,5 +1,34 @@
 // Common logic for all games
 
+// ── 저작권 검토로 잠시 닫아 둔 게임 ─────────────────────────
+// 다른 게임의 고유 콘텐츠(설명서 문구·카드 구성)를 옮겼거나, 시판 보드게임의 규칙을 그대로 옮긴 게임이다.
+// (이름만 겹치던 게임은 이름을 바꿔 다시 열었다: 네온 추리극장·늑대가 사는 마을·두 글자 추리)
+// 목록에 있으면 게임 페이지로 직접 들어와도 메인으로 돌려보내고,
+// 메인 목록과 오늘의 도전에서도 빠진다. 문제를 고친 뒤 여기서 지우면 바로 다시 열린다.
+const BLOCKED_GAMES = {
+    // 다른 게임의 문구·카드 구성을 그대로 옮김
+    'bomb-defusal': { title: '폭탄 해체반', reason: 'Keep Talking and Nobody Explodes 설명서 규칙 문구를 옮겨 씀' },
+    'royal-secret-letter': { title: '왕궁의 밀서', reason: 'Love Letter의 카드 이름·숫자·장수·효과 구성을 그대로 씀' },
+    // 시판 보드게임의 고유 규칙·구성을 거의 그대로 옮긴 게임 (기획서에 모티브로 명시되었거나 구성이 같음)
+    'tower-of-gods': { title: '신들의 탑', reason: '보드게임 Santorini 규칙 그대로' },
+    'pocket-quilt': { title: '포켓 퀼트', reason: '보드게임 Patchwork 규칙 그대로 (단추·시간 트랙·조각 배치)' },
+    'starlight-tuners': { title: '별빛 조율사', reason: '보드게임 Patchwork 규칙 그대로 (시간 트랙·9×9 보드·폴리오미노)' },
+    'shadow-syndicate': { title: '그림자 상단', reason: '보드게임 7 Wonders Duel 구성 (3시대·카드 피라미드 드래프트·갈색 자원 카드)' },
+    'agent-codebreaker': { title: '첩보원: 암호 해독', reason: '보드게임 Codenames Duet 규칙 그대로' },
+    'arena-of-legends': { title: '아레나 오브 레전드', reason: '카드게임 Dominion / Star Realms 구성' },
+    'relics-of-greed': { title: '탐욕의 유적', reason: '보드게임 Skull 규칙 그대로' }
+};
+
+function isGameBlocked(slug) {
+    return Object.prototype.hasOwnProperty.call(BLOCKED_GAMES, slug);
+}
+
+// 게임 페이지는 이 스크립트를 <head>에서 불러오므로, 본문이 그려지기 전에 메인으로 보낸다
+(function redirectIfBlocked() {
+    const m = location.pathname.match(/\/games\/([a-z0-9-]+)\.html$/);
+    if (m && isGameBlocked(m[1])) location.replace(`../index.html?closed=${m[1]}`);
+})();
+
 // 참가자가 입력한 이름·답변·문장을 innerHTML 템플릿에 넣기 전에 이스케이프한다.
 // 이스케이프하지 않으면 이름에 '<' 하나만 들어가도 결과 목록이 통째로 깨진다.
 function escapeHtml(value) {
@@ -133,6 +162,32 @@ function dominantColor(source, fallback = null) {
         return Math.round(v * 255).toString(16).padStart(2, '0');
     };
     return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+// 만든 이미지·GIF를 사진첩(갤러리)에 넣는다.
+// 휴대폰에서 <a download>로 받으면 '파일/다운로드' 폴더로만 가고 사진 앱에는 안 보인다.
+// 공유 시트(Web Share)로 넘기면 아이폰은 '이미지 저장', 안드로이드는 갤러리·메신저로 바로 보낼 수 있다.
+// 공유 시트를 못 쓰는 환경(대부분의 PC 브라우저)에서는 일반 다운로드로 대신한다.
+// 사파리는 클릭 직후에만 공유를 허락하므로, blob은 미리 만들어 두고 클릭 핸들러에서 바로 부른다.
+async function saveToGallery(blob, filename) {
+    const file = new File([blob], filename, { type: blob.type || 'image/gif' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({ files: [file] });
+            return 'shared';
+        } catch (err) {
+            if (err && err.name === 'AbortError') return 'cancelled';   // 사용자가 공유 창을 닫음
+        }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return 'downloaded';
 }
 
 // 드롭 영역을 살짝 벗어난 곳에 사진을 놓으면 브라우저가 페이지를 그 이미지로 바꿔 버려
@@ -397,7 +452,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initRulesPanel();
     makeClickablesFocusable();
     // 1. Dynamic Back Button Logic
-    const backBtn = document.querySelector('.back-button, .back-btn, .back');
+    // 메인 페이지도 이 스크립트를 불러오므로(닫힌 게임 목록), 게임 페이지에서만 동작하게 한다.
+    // 메인의 '카테고리로 돌아가기' 버튼도 .back-btn이라 여기 걸리면 엉뚱한 주소로 이동한다.
+    const onGamePage = /\/games\/[^/]+\.html$/.test(location.pathname);
+    const backBtn = onGamePage ? document.querySelector('.back-button, .back-btn, .back') : null;
     if (backBtn) {
         backBtn.addEventListener('click', (e) => {
             const lastCategory = localStorage.getItem('lastCategory');

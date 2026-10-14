@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>여행 사진 동선 맵 & 애니메이션 GIF | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=b1448849"></script>
+  <script src="../scripts/game-common.js?v=a8725fa3"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -967,7 +967,10 @@
       .trip-stats-bar { grid-template-columns: repeat(2, 1fr); }
       .map-frame { height: 360px; }
       .tour-control-dock { flex-direction: column; align-items: stretch; }
-      .dock-group { justify-content: space-between; }
+      /* 좁은 화면: 라벨은 위, 버튼은 한 줄을 나눠 쓰게 해 글자가 두 줄로 깨지지 않게 한다 */
+      .dock-group { flex-direction: column; align-items: stretch; gap: 6px; }
+      .transport-pill-group, .speed-pill-group, .gif-pill-group { width: 100%; }
+      .dock-pill-btn { flex: 1; white-space: nowrap; padding: 6px 4px; font-size: 11.5px; }
 
       /* 좁은 화면에서 타임라인 메타 배지가 뭉치지 않게 공간을 확보한다 */
       .timeline-item { padding: 10px 10px 10px 24px; gap: 8px; }
@@ -1100,14 +1103,21 @@
       <!-- GIF Options -->
       <div class="tour-control-dock">
         <div class="dock-group">
-          <span class="dock-label">GIF 사진</span>
+          <span class="dock-label">저장 형식</span>
+          <div class="gif-pill-group">
+            <button class="dock-pill-btn active" onclick="setGifOption('output', 'gif', this)">움짤 (GIF)</button>
+            <button class="dock-pill-btn" id="btnOutputMp4" onclick="setGifOption('output', 'mp4', this)">영상 (MP4)</button>
+          </div>
+        </div>
+        <div class="dock-group">
+          <span class="dock-label">사진 표시</span>
           <div class="gif-pill-group">
             <button class="dock-pill-btn active" onclick="setGifOption('fit', 'cover', this)">꽉 채우기 (잘림)</button>
             <button class="dock-pill-btn" onclick="setGifOption('fit', 'contain', this)">전체 보이기 (여백)</button>
           </div>
         </div>
         <div class="dock-group">
-          <span class="dock-label">GIF 길이·용량</span>
+          <span class="dock-label">길이·용량</span>
           <div class="gif-pill-group">
             <button class="dock-pill-btn" onclick="setGifOption('quality', 'light', this)">가볍게</button>
             <button class="dock-pill-btn active" onclick="setGifOption('quality', 'normal', this)">보통</button>
@@ -1115,7 +1125,7 @@
           </div>
         </div>
         <div class="dock-group">
-          <span class="dock-label">GIF 카메라</span>
+          <span class="dock-label">카메라</span>
           <div class="gif-pill-group">
             <button class="dock-pill-btn active" onclick="setGifOption('camera', 'follow', this)">🔍 줌인 따라가기</button>
             <button class="dock-pill-btn" onclick="setGifOption('camera', 'overview', this)">🗺️ 전체 동선</button>
@@ -1127,6 +1137,7 @@
             <button class="dock-pill-btn" onclick="setGifOption('zoom', 'area', this)">동네 (5km)</button>
             <button class="dock-pill-btn active" onclick="setGifOption('zoom', 'street', this)">거리 (2km)</button>
             <button class="dock-pill-btn" onclick="setGifOption('zoom', 'alley', this)">골목 (700m)</button>
+            <button class="dock-pill-btn" onclick="setGifOption('zoom', 'building', this)">건물 (350m)</button>
           </div>
         </div>
       </div>
@@ -1140,13 +1151,13 @@
           <span>🗺️ 고화질 지도 사진 (PNG) 내보내기</span>
         </button>
         <button class="btn-gradient-amber" onclick="generateTravelGIF('square')">
-          <span>🎬 타임랩스 GIF · 정사각 1:1<small class="gif-est" data-fmt="square"></small></span>
+          <span>🎬 타임랩스 · 정사각 1:1<small class="gif-est" data-fmt="square"></small></span>
         </button>
         <button class="btn-gradient-amber" onclick="generateTravelGIF('wide')">
-          <span>🖥️ 타임랩스 GIF · 가로 16:9 (지도 + 사진)<small class="gif-est" data-fmt="wide"></small></span>
+          <span>🖥️ 타임랩스 · 가로 16:9 (지도 + 사진)<small class="gif-est" data-fmt="wide"></small></span>
         </button>
         <button class="btn-gradient-amber" onclick="generateTravelGIF('story')">
-          <span>📱 타임랩스 GIF · 세로 9:16 (스토리)<small class="gif-est" data-fmt="story"></small></span>
+          <span>📱 타임랩스 · 세로 9:16 (스토리)<small class="gif-est" data-fmt="story"></small></span>
         </button>
       </div>
 
@@ -1156,8 +1167,12 @@
       <div class="gif-result-box" id="gifResultBox">
         <div style="font-weight: 700; color: #38bdf8; font-size: 15px;">🎉 완성된 위성 기반 여행 타임랩스 GIF</div>
         <img id="gifPreview" class="gif-preview-img" alt="Travel GIF Preview">
-        <a id="gifDownloadLink" class="btn-gradient-amber" style="text-decoration: none; width: 100%; text-align: center;" download="travel_satellite_route.gif">
-          📥 고화질 위성 GIF 파일 저장
+        <video id="videoPreview" class="gif-preview-img" controls loop muted playsinline style="display: none;"></video>
+        <button class="btn-gradient-amber" style="width: 100%;" onclick="saveTravelGifToGallery()">
+          📲 사진첩에 저장 / 공유
+        </button>
+        <a id="gifDownloadLink" class="btn-gradient-secondary" style="text-decoration: none; width: 100%; text-align: center;" download="travel_satellite_route.gif">
+          📥 파일로 다운로드
         </a>
       </div>
     </div>
@@ -2222,6 +2237,7 @@
       if (kind === 'fit') gifPhotoFit = value;
       else if (kind === 'quality') gifQuality = value;
       else if (kind === 'zoom') gifZoom = value;
+      else if (kind === 'output') travelOutput = value;
       else gifCamera = value;
       updateGifEstimates();
       const group = el && el.parentElement;
@@ -2365,11 +2381,17 @@
     const GIF_BYTES_PER_PX = 0.45;
     const GIF_DELAY = { travel: 110, arrive: 1100, start: 1000, end: 2200 };   // ms
     let gifQuality = 'normal';
-    // 도착 장면의 지도 줌. 14 ≈ 화면 폭 5km(동네), 15.5 ≈ 2km(거리), 17 ≈ 0.7km(골목)
-    const GIF_ZOOM = { area: 14, street: 15.5, alley: 17 };
+    // 저장 형식: 'gif' 움짤 / 'mp4' 영상. 영상은 이동 장면을 초당 30프레임으로 부드럽게 그리고,
+    // 같은 장면이 이어지는 구간은 거의 용량을 먹지 않아 보통 GIF보다 작다.
+    let travelOutput = 'gif';
+    const VIDEO_FPS = 30;
+    const videoBitrate = (w, h) => Math.round(Math.min(6e6, Math.max(1.5e6, w * h * VIDEO_FPS * 0.2)));
+    // 도착 장면의 지도 줌. 14 ≈ 화면 폭 5km(동네), 15.5 ≈ 2km(거리), 17 ≈ 0.7km(골목), 18 ≈ 350m(건물)
+    // Esri 위성 사진은 국내 어디서나 18까지 있고, 19는 도시만 있어 시골에서 빈 칸이 나오므로 18까지만 둔다.
+    const GIF_ZOOM = { area: 14, street: 15.5, alley: 17, building: 18 };
     let gifZoom = 'street';
 
-    function planTravelGif(format, quality = gifQuality) {
+    function planTravelGif(format, quality = gifQuality, output = travelOutput) {
       const lay = GIF_LAYOUTS[format] || GIF_LAYOUTS.square;
       const q = GIF_QUALITY[quality] || GIF_QUALITY.normal;
       const MW = lay.map[2], MH = lay.map[3];
@@ -2402,11 +2424,15 @@
 
       // 사진이 많으면 한 장씩 머무는 시간을 줄여 GIF가 1분을 훌쩍 넘지 않게 한다
       const arriveDelay = N > 20 ? 700 : GIF_DELAY.arrive;
+      const video = output === 'mp4';
+      const frameMs = 1000 / VIDEO_FPS;
       const plan = [[0, 0, 0, GIF_DELAY.start]];
       legs.forEach(({ i, steps }) => {
-        for (let st = 1; st < steps; st++) {
-          const t = st / steps;
-          plan.push([i, t, t < 0.5 ? i : i + 1, GIF_DELAY.travel]);
+        // 영상은 같은 이동을 조금 더 여유 있게(1.3배), 초당 30장으로 그린다
+        const n = video && steps > 0 ? Math.max(steps, Math.round(steps * GIF_DELAY.travel * 1.3 / frameMs)) : steps;
+        for (let st = 1; st < n; st++) {
+          const t = st / n;
+          plan.push([i, t, t < 0.5 ? i : i + 1, video ? frameMs : GIF_DELAY.travel]);
         }
         plan.push([i, 1, i + 1, arriveDelay]);
       });
@@ -2414,11 +2440,13 @@
 
       const outW = Math.round(lay.GW * q.scale / 2) * 2;
       const outH = Math.round(lay.GH * q.scale / 2) * 2;
-      return {
-        lay, spots, N, overview, localZoom, follow, plan, outW, outH,
-        estBytes: plan.length * outW * outH * GIF_BYTES_PER_PX,
-        seconds: plan.reduce((sum, f) => sum + f[3], 0) / 1000
-      };
+      const seconds = plan.reduce((sum, f) => sum + f[3], 0) / 1000;
+      // 영상: 움직이는 구간은 비트레이트만큼, 멈춘 구간은 장면 전환 비용까지 쳐서 3/4 정도로 어림한다 (실측 기준)
+      const moving = plan.filter(f => f[3] < 200).length * frameMs / 1000;
+      const estBytes = video
+        ? videoBitrate(outW, outH) / 8 * (moving + (seconds - moving) * 0.75)
+        : plan.length * outW * outH * GIF_BYTES_PER_PX;
+      return { lay, spots, N, overview, localZoom, follow, plan, outW, outH, estBytes, seconds, video };
     }
 
     // 포맷 버튼마다 예상 용량과 길이를 붙여 보여 준다
@@ -2427,13 +2455,13 @@
         if (travelSpots.length < 2) { el.textContent = ''; return; }
         const p = planTravelGif(el.dataset.fmt);
         const mb = p.estBytes / 1048576;
-        el.textContent = ` · 약 ${Math.max(1, Math.round(mb))}MB · ${Math.round(p.seconds)}초`;
+        el.textContent = ` · ${p.video ? 'MP4' : 'GIF'} 약 ${Math.max(1, Math.round(mb))}MB · ${Math.round(p.seconds)}초`;
       });
     }
 
     async function generateTravelGIF(format = 'square') {
       if (travelSpots.length < 2) {
-        alert('GIF를 생성하려면 최소 2장 이상의 사진이 필요합니다.');
+        alert('타임랩스를 만들려면 최소 2장 이상의 사진이 필요합니다.');
         return;
       }
 
@@ -2753,57 +2781,160 @@
       oCtx.imageSmoothingEnabled = true;
       oCtx.imageSmoothingQuality = 'high';
 
-      // gifshot은 모든 프레임을 메모리에 쌓았다가 한꺼번에 묶어 프레임이 많으면 브라우저가 버티지 못한다.
-      // gifenc로 프레임을 그리는 즉시 인코딩하고 버려, 메모리는 프레임 한 장 + 완성 파일 크기만 쓴다.
-      let gifenc;
-      try {
-        gifenc = await loadGifEncoder();
-      } catch (err) {
+      const fail = (msg) => {
         alertEl.style.display = 'none';
-        alert('GIF 인코더를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
-        return;
-      }
-      const { GIFEncoder, quantize, applyPalette } = gifenc;
-      const encoder = GIFEncoder();
-
-      try {
-        for (let i = 0; i < plan.length; i++) {
-          const [s, t, focus, delay] = plan[i];
-          await drawFrame(s, t, focus);
-          oCtx.drawImage(tempC, 0, 0, P.outW, P.outH);
-          const { data } = oCtx.getImageData(0, 0, P.outW, P.outH);
-          const palette = quantize(data, 256);
-          encoder.writeFrame(applyPalette(data, palette), P.outW, P.outH, { palette, delay });
-          setStatus(`⏳ 타임랩스 GIF를 그리는 중입니다... (${i + 1}/${plan.length})`);
-          // 화면이 멈춰 보이지 않게 프레임마다 숨을 돌린다
-          await new Promise(r => setTimeout(r, 0));
-        }
-        encoder.finish();
-      } catch (err) {
-        alertEl.style.display = 'none';
-        alert('GIF 생성 실패: ' + err.message);
-        return;
-      } finally {
-        // 지도 타일 이미지는 다음 GIF에서 다시 받아도 되므로 메모리에서 비운다
         gifTileCache.clear();
+        alert(msg);
+      };
+      const label = P.video ? '영상' : 'GIF';
+      const tick = (i) => setStatus(`⏳ 타임랩스 ${label}을(를) 만드는 중입니다... (${i + 1}/${plan.length})`);
+
+      let blob;
+      if (P.video) {
+        // ── MP4: WebCodecs(H.264)로 인코딩하고 mp4-muxer로 파일에 담는다 ──
+        // 아이폰 사진 앱은 WebM을 못 읽으므로 MP4로 만든다.
+        const config = { codec: 'avc1.4d0028', width: P.outW, height: P.outH, bitrate: videoBitrate(P.outW, P.outH), framerate: VIDEO_FPS };
+        let mux;
+        try {
+          if (typeof VideoEncoder !== 'function' || !(await VideoEncoder.isConfigSupported(config)).supported) {
+            return fail('이 브라우저는 영상 저장을 지원하지 않아요. 최신 크롬이나 사파리에서 열거나 GIF로 저장해 주세요.');
+          }
+          mux = await loadMp4Muxer();
+        } catch (err) {
+          return fail('영상 인코더를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
+        }
+        const muxer = new mux.Muxer({
+          target: new mux.ArrayBufferTarget(),
+          video: { codec: 'avc', width: P.outW, height: P.outH, frameRate: VIDEO_FPS },
+          fastStart: 'in-memory'
+        });
+        let encodeError = null;
+        const encoder = new VideoEncoder({
+          output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+          error: (e) => { encodeError = e; }
+        });
+        encoder.configure(config);
+
+        const frameUs = 1e6 / VIDEO_FPS;
+        let frameNo = 0;
+        try {
+          for (let i = 0; i < plan.length; i++) {
+            const [s, t, focus, delay] = plan[i];
+            await drawFrame(s, t, focus);
+            oCtx.drawImage(tempC, 0, 0, P.outW, P.outH);
+            // 오래 머무는 장면은 같은 그림을 여러 프레임으로 넣는다 (변화가 없어 용량은 거의 안 늘어난다)
+            const repeat = Math.max(1, Math.round(delay / (1000 / VIDEO_FPS)));
+            for (let r = 0; r < repeat; r++) {
+              const vf = new VideoFrame(outC, { timestamp: Math.round(frameNo * frameUs), duration: Math.round(frameUs) });
+              // 키프레임은 용량을 많이 먹어 4초에 한 번만 넣는다 (멈춘 장면이 많아 이걸로 충분하다)
+              encoder.encode(vf, { keyFrame: frameNo % (VIDEO_FPS * 4) === 0 });
+              vf.close();
+              frameNo++;
+              // 인코더가 밀리면 잠깐 기다려 메모리에 프레임이 쌓이지 않게 한다
+              while (encoder.encodeQueueSize > 8) await yieldToBrowser();
+            }
+            if (encodeError) throw encodeError;
+            tick(i);
+            await yieldToBrowser();
+          }
+          await encoder.flush();
+          if (encodeError) throw encodeError;
+          muxer.finalize();
+        } catch (err) {
+          try { encoder.close(); } catch { /* 이미 닫힘 */ }
+          return fail('영상 생성 실패: ' + err.message);
+        } finally {
+          gifTileCache.clear();
+        }
+        encoder.close();
+        blob = new Blob([muxer.target.buffer], { type: 'video/mp4' });
+      } else {
+        // ── GIF ──
+        // gifshot은 모든 프레임을 메모리에 쌓았다가 한꺼번에 묶어 프레임이 많으면 브라우저가 버티지 못한다.
+        // gifenc로 프레임을 그리는 즉시 인코딩하고 버려, 메모리는 프레임 한 장 + 완성 파일 크기만 쓴다.
+        let gifenc;
+        try {
+          gifenc = await loadGifEncoder();
+        } catch (err) {
+          return fail('GIF 인코더를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
+        }
+        const { GIFEncoder, quantize, applyPalette } = gifenc;
+        const encoder = GIFEncoder();
+        try {
+          for (let i = 0; i < plan.length; i++) {
+            const [s, t, focus, delay] = plan[i];
+            await drawFrame(s, t, focus);
+            oCtx.drawImage(tempC, 0, 0, P.outW, P.outH);
+            const { data } = oCtx.getImageData(0, 0, P.outW, P.outH);
+            const palette = quantize(data, 256);
+            encoder.writeFrame(applyPalette(data, palette), P.outW, P.outH, { palette, delay });
+            tick(i);
+            // 화면이 멈춰 보이지 않게 프레임마다 숨을 돌린다
+            await yieldToBrowser();
+          }
+          encoder.finish();
+        } catch (err) {
+          return fail('GIF 생성 실패: ' + err.message);
+        } finally {
+          // 지도 타일 이미지는 다음에 다시 받아도 되므로 메모리에서 비운다
+          gifTileCache.clear();
+        }
+        blob = new Blob([encoder.bytes()], { type: 'image/gif' });
       }
 
-      const blob = new Blob([encoder.bytes()], { type: 'image/gif' });
+      const ext = P.video ? 'mp4' : 'gif';
+      lastGifBlob = blob;
+      lastGifName = `travel_${format}_${gifCamera}.${ext}`;
       if (lastGifUrl) URL.revokeObjectURL(lastGifUrl);
       lastGifUrl = URL.createObjectURL(blob);
 
       alertEl.style.display = 'none';
-      document.getElementById('gifPreview').src = lastGifUrl;
+      const img = document.getElementById('gifPreview');
+      const vid = document.getElementById('videoPreview');
+      img.style.display = P.video ? 'none' : '';
+      vid.style.display = P.video ? '' : 'none';
+      if (P.video) { vid.src = lastGifUrl; vid.play().catch(() => {}); } else { vid.removeAttribute('src'); img.src = lastGifUrl; }
       const dlLink = document.getElementById('gifDownloadLink');
       dlLink.href = lastGifUrl;
-      dlLink.download = `travel_${format}_${gifCamera}.gif`;
+      dlLink.download = lastGifName;
       const head = document.querySelector('#gifResultBox > div');
-      if (head) head.textContent = `🎉 완성된 여행 타임랩스 GIF · ${N}곳 · ${(blob.size / 1048576).toFixed(1)}MB`;
+      if (head) head.textContent = `🎉 완성된 여행 타임랩스 ${label} · ${N}곳 · ${(blob.size / 1048576).toFixed(1)}MB`;
       document.getElementById('gifResultBox').style.display = 'flex';
       document.getElementById('gifResultBox').scrollIntoView({ behavior: 'smooth' });
     }
 
+    // 영상 인코더(WebCodecs)가 없는 브라우저에서는 영상 버튼을 끈다
+    if (typeof VideoEncoder !== 'function') {
+      const b = document.getElementById('btnOutputMp4');
+      if (b) { b.disabled = true; b.style.opacity = 0.4; b.title = '이 브라우저는 영상 저장을 지원하지 않아요'; }
+    }
+
+    // 프레임 사이에 잠깐 쉬어 화면이 멈추지 않게 한다.
+    // setTimeout은 탭이 뒤로 가면 1초 이상으로 늦춰져 생성이 수십 배 느려지므로 MessageChannel을 쓴다.
+    function yieldToBrowser() {
+      return new Promise(resolve => {
+        const ch = new MessageChannel();
+        ch.port1.onmessage = () => resolve();
+        ch.port2.postMessage(0);
+      });
+    }
+
+    let mp4MuxerModule = null;
+    function loadMp4Muxer() {
+      if (!mp4MuxerModule) {
+        mp4MuxerModule = import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.mjs')
+          .catch(err => { mp4MuxerModule = null; throw err; });
+      }
+      return mp4MuxerModule;
+    }
+
     let lastGifUrl = null;
+    let lastGifBlob = null;
+    let lastGifName = 'travel.gif';
+
+    function saveTravelGifToGallery() {
+      if (lastGifBlob) saveToGallery(lastGifBlob, lastGifName);
+    }
     let gifEncoderModule = null;
     function loadGifEncoder() {
       if (!gifEncoderModule) {

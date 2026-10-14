@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>켄 번스 무빙 슬라이드쇼 & 루핑 GIF | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=b1448849"></script>
+  <script src="../scripts/game-common.js?v=a8725fa3"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -491,8 +491,11 @@
         <div class="gif-download-area" id="gifArea">
           <div class="section-label" style="width: 100%;"><span>🎉 완성된 감성 루핑 GIF</span></div>
           <img id="gifOutput" src="" alt="GIF Output">
-          <a id="gifDownload" class="btn-gradient-cinema" style="text-decoration: none; width: 100%; text-align: center;" download="slideshow_loop.gif">
-            📥 완성된 GIF 파일 다운로드
+          <button class="btn-gradient-cinema" style="width: 100%;" onclick="saveSlideGifToGallery()">
+            📲 사진첩에 저장 / 공유
+          </button>
+          <a id="gifDownload" class="hud-btn" style="text-decoration: none; justify-content: center; width: 100%;" download="slideshow_loop.gif">
+            📥 파일로 다운로드
           </a>
         </div>
       </div>
@@ -952,6 +955,13 @@
 
     // 루핑 GIF: 정사각/와이드는 현재 비율 그대로, 스토리는 540×960 세로로 만든다.
     // 크기를 키운 만큼 장당 프레임은 아껴서 용량을 공유 가능한 수준으로 묶는다.
+    let lastSlideGifBlob = null;
+    let lastSlideGifName = 'slideshow_loop.gif';
+
+    function saveSlideGifToGallery() {
+      if (lastSlideGifBlob) saveToGallery(lastSlideGifBlob, lastSlideGifName);
+    }
+
     async function generateSlideGIF(format) {
       if (loadedImgObjects.length < 2) return;
 
@@ -1003,6 +1013,9 @@
           const dl = document.getElementById('gifDownload');
           dl.href = obj.image;
           dl.download = story ? 'slideshow_story_9x16.gif' : 'slideshow_loop.gif';
+          // 공유 시트는 클릭 직후에만 열 수 있어, 저장 버튼을 누르기 전에 파일을 미리 만들어 둔다
+          lastSlideGifName = dl.download;
+          fetch(obj.image).then(r => r.blob()).then(b => { lastSlideGifBlob = b; });
           document.getElementById('gifArea').style.display = 'flex';
           document.getElementById('gifArea').scrollIntoView({ behavior: 'smooth' });
         } else {

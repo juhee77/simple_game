@@ -4,7 +4,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameView = document.getElementById('game-view');
     const categoryCards = document.querySelectorAll('.category-card');
     const backBtn = document.getElementById('back-to-categories');
+    // 저작권 검토로 닫아 둔 게임(BLOCKED_GAMES, game-common.js)은 목록에서 아예 뺀다
+    const blocked = typeof isGameBlocked === 'function' ? isGameBlocked : () => false;
+    document.querySelectorAll('.game-card').forEach(card => {
+        const slug = (card.getAttribute('href') || '').match(/games\/([a-z0-9-]+)\.html/);
+        if (slug && blocked(slug[1])) card.remove();
+    });
     const gameCards = document.querySelectorAll('.game-card');
+    const subtitle = document.querySelector('.subtitle');
+    if (subtitle) subtitle.textContent = subtitle.textContent.replace(/\d+가지/, `${gameCards.length}가지`);
+
+    const closedSlug = new URLSearchParams(location.search).get('closed');
+    if (closedSlug && typeof BLOCKED_GAMES === 'object' && BLOCKED_GAMES[closedSlug]) {
+        history.replaceState(null, '', location.pathname + location.hash);
+        const msg = `'${BLOCKED_GAMES[closedSlug].title}'은(는) 저작권 검토 중이라 잠시 닫아 두었어요.`;
+        setTimeout(() => (typeof gameAlert === 'function' ? gameAlert(msg) : alert(msg)), 300);
+    }
     const currentCategoryTitle = document.getElementById('current-category-title');
     
     const searchInput = document.getElementById('game-search');
