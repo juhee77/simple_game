@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>멀티터치 손가락 룰렛 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Noto+Sans+KR:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #060913;
+            --accent-gold: #f59e0b;
+            --accent-cyan: #06b6d4;
+            --accent-pink: #ec4899;
+            --accent-lime: #10b981;
+            --accent-purple: #8b5cf6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: #ffffff;
+            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            touch-action: none;
+            position: fixed;
+        }
+
+        /* Ambient Glow Background */
+        .ambient-bg {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.5) 0%, rgba(6, 9, 19, 0.95) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Game Canvas */
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            display: block;
+        }
+
+        /* Top HUD Controls */
+        .hud-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: calc(env(safe-area-inset-top, 12px) + 8px) 16px 12px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .hud-title-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .hud-back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .hud-back-btn:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .hud-title {
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 40%, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hud-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .hud-btn {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e1;
+            padding: 7px 12px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .hud-btn:active, .hud-btn.active {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            color: #fef3c7;
+            transform: scale(0.95);
+        }
+
+        /* Mode Selector Pills */
+        .mode-selector {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding-bottom: 4px;
+            pointer-events: auto;
+        }
+
+        .mode-selector::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mode-pill {
+            flex-shrink: 0;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+        }
+
+        .mode-pill.active {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(139, 92, 246, 0.3));
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        /* Center Instruction Overlay */
+        .instruction-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            width: 85%;
+            max-width: 360px;
+        }
+
+        .instruction-box.hidden {
+            opacity: 0;
+            transform: translate(-50%, -45%) scale(0.95);
+        }
+
+        .instruction-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.5));
+            animation: pulseTouch 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseTouch {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 30px rgba(245, 158, 11, 0.8)); }
+        }
+
+        .instruction-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            margin-bottom: 6px;
+            color: #f8fafc;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .instruction-desc {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
+        .desktop-notice {
+            display: inline-block;
+            margin-top: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #38bdf8;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* Countdown Display */
+        .countdown-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            font-size: 7rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 40px rgba(245, 158, 11, 0.8), 0 0 80px rgba(236, 72, 153, 0.5);
+            pointer-events: none;
+            display: none;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Penalty Roulette Modal (Bottom Sheet) */
+        .penalty-modal {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 2px solid rgba(245, 158, 11, 0.5);
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px calc(env(safe-area-inset-bottom, 16px) + 16px);
+            z-index: 50;
+            backdrop-filter: blur(20px);
+            transform: translateY(105%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .penalty-modal.active {
+            transform: translateY(0);
+        }
+
+        .penalty-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .penalty-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .penalty-roulette-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .penalty-result-text {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #fef08a;
+            min-height: 2.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+        }
+
+        .penalty-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-spin-again {
+            flex: 1;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-spin-again:active {
+            transform: scale(0.96);
+        }
+
+        .btn-close-modal {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Warning Toast */
+        .toast-msg {
+            position: absolute;
+            bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(239, 68, 68, 0.9);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top HUD Navigation & Settings -->
+    <div class="hud-container">
+        <div class="hud-header">
+            <div class="hud-title-box">
+                <a href="../index.html" class="hud-back-btn" title="메인으로">‹</a>
+                <span class="hud-title">손가락 룰렛</span>
+            </div>
+            <div class="hud-actions">
+                <button id="btnPenaltyToggle" class="hud-btn active" title="벌칙 룰렛 켜기/끄기">
+                    <span>🎰</span> 벌칙 ON
+                </button>
+                <button id="btnSimulateTouch" class="hud-btn" title="가상 손가락 추가 (PC/테스트용)">
+                    <span>🤖</span> +봇
+                </button>
+            </div>
+        </div>
+
+        <!-- Selection Modes -->
+        <div class="mode-selector">
+            <button class="mode-pill active" data-mode="single" data-count="1">🎯 1명 지목</button>
+            <button class="mode-pill" data-mode="multi" data-count="2">👥 2명 당첨</button>
+            <button class="mode-pill" data-mode="multi" data-count="3">👥 3명 당첨</button>
+            <button class="mode-pill" data-mode="teams" data-count="2">⚖️ 2팀 나누기</button>
+            <button class="mode-pill" data-mode="teams" data-count="3">⚖️ 3팀 나누기</button>
+            <button class="mode-pill" data-mode="order" data-count="0">🔢 순서 정하기</button>
+        </div>
+    </div>
+
+    <!-- Center Idle Instruction -->
+    <div id="instructionBox" class="instruction-box">
+        <div class="instruction-icon">👆</div>
+        <div class="instruction-title">화면에 손가락을 올리세요</div>
+        <div class="instruction-desc">2명 이상 손가락을 대고 3초간 기다리면 당첨자를 골라냅니다!</div>
+        <div id="desktopNoticeBtn" class="desktop-notice">PC 마우스는 화면을 클릭하거나 [+봇] 버튼을 누르세요</div>
+    </div>
+
+    <!-- Large Countdown Indicator -->
+    <div id="countdownOverlay" class="countdown-overlay">3</div>
+
+    <!-- Warning Toast -->
+    <div id="toastMsg" class="toast-msg">손가락을 떼지 마세요!</div>
+
+    <!-- Penalty Roulette Modal -->
+    <div id="penaltyModal" class="penalty-modal">
+        <div class="penalty-badge">지목된 사람 벌칙 확정!</div>
+        <div class="penalty-title">
+            <span>🎉 즉석 벌칙 룰렛</span>
+            <span id="penaltyPickedSummary" style="font-size: 0.9rem; color: #f59e0b;"></span>
+        </div>
+        <div class="penalty-roulette-box">
+            <div id="penaltyResultText" class="penalty-result-text">룰렛 회전 중...</div>
+        </div>
+        <div class="penalty-actions">
+            <button id="btnSpinAgain" class="btn-spin-again">🎲 벌칙 다시 뽑기</button>
+            <button id="btnClosePenalty" class="btn-close-modal">닫기</button>
+        </div>
+    </div>
+
+    <!-- Common Game Scripts -->
+    <script src="../scripts/game-common.js?v=3a12429a"></script>
+
+    <script>
+        (function() {
+            // Palette of Neon High-Energy Colors for Finger Rings
+            const COLOR_PALETTE = [
+                { hex: '#06b6d4', glow: 'rgba(6, 182, 212, 0.7)', name: '시안 블루' },
+                { hex: '#ec4899', glow: 'rgba(236, 72, 153, 0.7)', name: '네온 핑크' },
+                { hex: '#10b981', glow: 'rgba(16, 185, 129, 0.7)', name: '에메랄드' },
+                { hex: '#f59e0b', glow: 'rgba(245, 158, 11, 0.7)', name: '골드 앰버' },
+                { hex: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.7)', name: '울트라 바이올렛' },
+                { hex: '#f43f5e', glow: 'rgba(244, 63, 94, 0.7)', name: '루비 레드' },
+                { hex: '#3b82f6', glow: 'rgba(59, 130, 246, 0.7)', name: '코발트 블루' },
+                { hex: '#14b8a6', glow: 'rgba(20, 184, 166, 0.7)', name: '터콰이즈' },
+                { hex: '#eab308', glow: 'rgba(234, 179, 8, 0.7)', name: '일렉트릭 옐로' },
+                { hex: '#a855f7', glow: 'rgba(168, 85, 247, 0.7)', name: '퍼플 헤이즈' }
+            ];
+
+            const PENALTIES = [
+                "🍺 소주 1잔 원샷!",
+                "☕ 다음 차수 커피 쏘기",
+                "🍗 편의점 야식 간식 쏘기",
+                "🎤 좋아하는 노래 1절 부르기",
+                "🧹 오늘 모임 뒷정리 / 분리수거",
+                "💌 단톡방에 흑역사 사진 1장 공개",
+                "🕺 최신 유행 댄스 10초 보여주기",
+                "🤐 다음 차수까지 3분간 침묵하기",
+                "💖 오른쪽 사람에게 진심 어린 칭찬 1가지",
+                "😇 흑기사 소환권 (원하는 사람 1명 지목)"
+            ];
+
+            // Web Audio Synthesizer
+            class AudioEngine {
+                constructor() {
+                    this.ctx = null;
+                }
+                init() {
+                    if (!this.ctx) {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) this.ctx = new AudioCtx();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                }
+                playTouchDown() {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(320, this.ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.15);
+                }
+                playCountdownTick(pitchMultiplier = 1) {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(350 * pitchMultiplier, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.12);
+                }
+                playWinFanfare() {
+                    this.init();
+                    if (!this.ctx) return;
+                    const notes = [440, 554.37, 659.25, 880];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.setValueAtTime(0, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.linearRampToValueAtTime(0.25, this.ctx.currentTime + idx * 0.08 + 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.5);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + idx * 0.08);
+                        osc.stop(this.ctx.currentTime + idx * 0.08 + 0.5);
+                    });
+                }
+                playError() {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(90, this.ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.2);
+                }
+            }
+
+            const audio = new AudioEngine();
+
+            // DOM Elements
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const instructionBox = document.getElementById('instructionBox');
+            const countdownOverlay = document.getElementById('countdownOverlay');
+            const toastMsg = document.getElementById('toastMsg');
+            const penaltyModal = document.getElementById('penaltyModal');
+            const penaltyResultText = document.getElementById('penaltyResultText');
+            const penaltyPickedSummary = document.getElementById('penaltyPickedSummary');
+            const btnPenaltyToggle = document.getElementById('btnPenaltyToggle');
+            const btnSimulateTouch = document.getElementById('btnSimulateTouch');
+            const btnSpinAgain = document.getElementById('btnSpinAgain');
+            const btnClosePenalty = document.getElementById('btnClosePenalty');
+            const desktopNoticeBtn = document.getElementById('desktopNoticeBtn');
+            const modePills = document.querySelectorAll('.mode-pill');
+
+            // Game State
+            let dpr = window.devicePixelRatio || 1;
+            let width = 0;
+            let height = 0;
+
+            let touchesMap = new Map(); // identifier -> TouchObject
+            let simulatedTouches = [];
+            let currentMode = 'single'; // 'single', 'multi', 'teams', 'order'
+            let targetCount = 1; // 1, 2, 3
+            let isPenaltyEnabled = true;
+
+            let gameState = 'waiting'; // 'waiting', 'countdown', 'selected', 'finished'
+            let countdownStart = 0;
+            const COUNTDOWN_DURATION = 2600; // ms
+            let lastTickSecond = 0;
+
+            let particles = [];
+            let shockwaves = [];
+            let winners = []; // Array of chosen identifiers
+
+            function resizeCanvas() {
+                dpr = window.devicePixelRatio || 1;
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = Math.floor(width * dpr);
+                canvas.height = Math.floor(height * dpr);
+                ctx.scale(dpr, dpr);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // Vibration Helper
+            function triggerVibration(pattern) {
+                if ('vibrate' in navigator) {
+                    try { navigator.vibrate(pattern); } catch (e) {}
+                }
+            }
+
+            // Mode Selector Event
+            modePills.forEach(pill => {
+                pill.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    modePills.forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    currentMode = pill.dataset.mode;
+                    targetCount = parseInt(pill.dataset.count, 10);
+                    resetRound();
+                });
+            });
+
+            btnPenaltyToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                isPenaltyEnabled = !isPenaltyEnabled;
+                btnPenaltyToggle.classList.toggle('active', isPenaltyEnabled);
+                btnPenaltyToggle.innerHTML = `<span>🎰</span> 벌칙 ${isPenaltyEnabled ? 'ON' : 'OFF'}`;
+            });
+
+            // Simulated Touch for Desktop / PC
+            let simCounter = 1000;
+            function addSimulatedTouch(x = null, y = null) {
+                simCounter++;
+                const simId = simCounter;
+                const px = x !== null ? x : width * (0.2 + Math.random() * 0.6);
+                const py = y !== null ? y : height * (0.3 + Math.random() * 0.4);
+                const colorObj = COLOR_PALETTE[touchesMap.size % COLOR_PALETTE.length];
+
+                touchesMap.set(simId, {
+                    id: simId,
+                    x: px,
+                    y: py,
+                    radius: 46,
+                    color: colorObj.hex,
+                    glow: colorObj.glow,
+                    name: colorObj.name,
+                    born: performance.now(),
+                    pulse: Math.random() * Math.PI,
+                    isSimulated: true
+                });
+
+                audio.playTouchDown();
+                triggerVibration(25);
+                checkTouchesState();
+            }
+
+            btnSimulateTouch.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addSimulatedTouch();
+            });
+
+            desktopNoticeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addSimulatedTouch();
+            });
+
+            // Touch Handling
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                audio.init();
+
+                Array.from(e.changedTouches).forEach(t => {
+                    const colorObj = COLOR_PALETTE[touchesMap.size % COLOR_PALETTE.length];
+                    touchesMap.set(t.identifier, {
+                        id: t.identifier,
+                        x: t.clientX,
+                        y: t.clientY,
+                        radius: 48,
+                        color: colorObj.hex,
+                        glow: colorObj.glow,
+                        name: colorObj.name,
+                        born: performance.now(),
+                        pulse: Math.random() * Math.PI,
+                        isSimulated: false
+                    });
+                    createSparkle(t.clientX, t.clientY, colorObj.hex, 8);
+                });
+
+                audio.playTouchDown();
+                triggerVibration(30);
+                checkTouchesState();
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                Array.from(e.changedTouches).forEach(t => {
+                    const item = touchesMap.get(t.identifier);
+                    if (item) {
+                        item.x = t.clientX;
+                        item.y = t.clientY;
+                    }
+                });
+            }, { passive: false });
+
+            function handleTouchEnd(e) {
+                e.preventDefault();
+                let wasInCountdown = (gameState === 'countdown');
+
+                Array.from(e.changedTouches).forEach(t => {
+                    touchesMap.delete(t.identifier);
+                });
+
+                if (wasInCountdown && touchesMap.size < 2 && gameState !== 'selected') {
+                    showToast("손가락을 떼지 마세요!");
+                    audio.playError();
+                    triggerVibration([50, 50, 50]);
+                    resetRound();
+                } else {
+                    checkTouchesState();
+                }
+            }
+
+            canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+            canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+            // Mouse Click for PC Testing
+            canvas.addEventListener('mousedown', (e) => {
+                if (e.target !== canvas) return;
+                audio.init();
+                // If clicked, add a simulated finger at that position
+                addSimulatedTouch(e.clientX, e.clientY);
+            });
+
+            function showToast(text) {
+                toastMsg.textContent = text;
+                toastMsg.classList.add('show');
+                clearTimeout(toastMsg._timer);
+                toastMsg._timer = setTimeout(() => {
+                    toastMsg.classList.remove('show');
+                }, 1600);
+            }
+
+            function resetRound() {
+                gameState = 'waiting';
+                countdownOverlay.style.display = 'none';
+                instructionBox.classList.remove('hidden');
+                winners = [];
+            }
+
+            function checkTouchesState() {
+                if (gameState === 'selected') {
+                    // If all touches lifted after selection, ready for next
+                    if (touchesMap.size === 0) {
+                        resetRound();
+                    }
+                    return;
+                }
+
+                if (touchesMap.size >= 2) {
+                    if (gameState === 'waiting') {
+                        startCountdown();
+                    }
+                } else {
+                    if (gameState === 'countdown') {
+                        resetRound();
+                    }
+                }
+
+                if (touchesMap.size > 0) {
+                    instructionBox.classList.add('hidden');
+                } else {
+                    instructionBox.classList.remove('hidden');
+                }
+            }
+
+            function startCountdown() {
+                gameState = 'countdown';
+                countdownStart = performance.now();
+                lastTickSecond = 3;
+                countdownOverlay.textContent = '3';
+                countdownOverlay.style.display = 'block';
+                audio.playCountdownTick(1.0);
+                triggerVibration(40);
+            }
+
+            function finalizeSelection() {
+                gameState = 'selected';
+                countdownOverlay.style.display = 'none';
+
+                const candidates = Array.from(touchesMap.values());
+                if (candidates.length === 0) {
+                    resetRound();
+                    return;
+                }
+
+                // Cryptographic Shuffle
+                const shuffled = [...candidates].sort(() => {
+                    const arr = new Uint32Array(1);
+                    crypto.getRandomValues(arr);
+                    return arr[0] - 2147483648;
+                });
+
+                if (currentMode === 'single') {
+                    winners = [shuffled[0].id];
+                } else if (currentMode === 'multi') {
+                    const count = Math.min(targetCount, candidates.length);
+                    winners = shuffled.slice(0, count).map(c => c.id);
+                } else if (currentMode === 'teams') {
+                    // Assign team labels to each
+                    const teamColors = ['#06b6d4', '#ec4899', '#10b981'];
+                    const numTeams = targetCount;
+                    shuffled.forEach((c, idx) => {
+                        const teamIdx = idx % numTeams;
+                        c.team = `팀 ${teamIdx + 1}`;
+                        c.teamColor = teamColors[teamIdx];
+                    });
+                    winners = candidates.map(c => c.id);
+                } else if (currentMode === 'order') {
+                    // Order 1, 2, 3...
+                    shuffled.forEach((c, idx) => {
+                        c.order = idx + 1;
+                    });
+                    winners = candidates.map(c => c.id);
+                }
+
+                // Trigger Shockwave & Confetti on winners
+                candidates.forEach(c => {
+                    if (winners.includes(c.id)) {
+                        shockwaves.push({
+                            x: c.x,
+                            y: c.y,
+                            radius: 10,
+                            maxRadius: 180,
+                            color: c.teamColor || '#f59e0b',
+                            alpha: 1
+                        });
+                        createSparkle(c.x, c.y, c.teamColor || '#f59e0b', 36);
+                    }
+                });
+
+                audio.playWinFanfare();
+                triggerVibration([80, 50, 120]);
+
+                if (isPenaltyEnabled && (currentMode === 'single' || currentMode === 'multi')) {
+                    setTimeout(() => {
+                        openPenaltyRoulette();
+                    }, 500);
+                }
+            }
+
+            // Penalty Roulette Logic
+            function openPenaltyRoulette() {
+                const pickedCount = winners.length;
+                penaltyPickedSummary.textContent = `${pickedCount}명 당첨!`;
+                penaltyModal.classList.add('active');
+                spinPenaltyRoulette();
+            }
+
+            function spinPenaltyRoulette() {
+                let count = 0;
+                const totalSpins = 18;
+                btnSpinAgain.disabled = true;
+
+                const timer = setInterval(() => {
+                    count++;
+                    const randomPenalty = PENALTIES[Math.floor(Math.random() * PENALTIES.length)];
+                    penaltyResultText.textContent = randomPenalty;
+                    audio.playCountdownTick(1.2 + (count / totalSpins));
+
+                    if (count >= totalSpins) {
+                        clearInterval(timer);
+                        btnSpinAgain.disabled = false;
+                        triggerVibration(100);
+                    }
+                }, 60 + count * 6);
+            }
+
+            btnSpinAgain.addEventListener('click', () => {
+                spinPenaltyRoulette();
+            });
+
+            btnClosePenalty.addEventListener('click', () => {
+                penaltyModal.classList.remove('active');
+            });
+
+            // Particle and Sparkle Systems
+            function createSparkle(x, y, color, count = 12) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 6;
+                    particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        color,
+                        alpha: 1,
+                        decay: 0.015 + Math.random() * 0.02,
+                        size: 3 + Math.random() * 4
+                    });
+                }
+            }
+
+            // 60fps Main Render Loop
+            function render(now) {
+                requestAnimationFrame(render);
+                ctx.clearRect(0, 0, width, height);
+
+                // Handle Countdown Progression
+                if (gameState === 'countdown') {
+                    const elapsed = now - countdownStart;
+                    const remainingRatio = Math.max(0, 1 - (elapsed / COUNTDOWN_DURATION));
+                    const secondsLeft = Math.ceil(remainingRatio * 3);
+
+                    if (secondsLeft > 0 && secondsLeft !== lastTickSecond) {
+                        lastTickSecond = secondsLeft;
+                        countdownOverlay.textContent = secondsLeft;
+                        audio.playCountdownTick(1.0 + (3 - secondsLeft) * 0.3);
+                        triggerVibration(40);
+                    }
+
+                    if (elapsed >= COUNTDOWN_DURATION) {
+                        finalizeSelection();
+                    }
+                }
+
+                // Draw Shockwaves
+                for (let i = shockwaves.length - 1; i >= 0; i--) {
+                    const sw = shockwaves[i];
+                    sw.radius += 5;
+                    sw.alpha -= 0.025;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = sw.color;
+                    ctx.lineWidth = 4 * sw.alpha;
+                    ctx.globalAlpha = Math.max(0, sw.alpha);
+                    ctx.shadowColor = sw.color;
+                    ctx.shadowBlur = 15;
+                    ctx.stroke();
+                    ctx.restore();
+
+                    if (sw.alpha <= 0) {
+                        shockwaves.splice(i, 1);
+                    }
+                }
+
+                // Draw Active Touch Rings
+                touchesMap.forEach(touch => {
+                    touch.pulse += 0.06;
+                    const isWinner = winners.includes(touch.id);
+                    const isLoser = (gameState === 'selected' && !isWinner && (currentMode === 'single' || currentMode === 'multi'));
+
+                    ctx.save();
+
+                    if (isLoser) {
+                        // Dimmed out losers
+                        ctx.globalAlpha = 0.2;
+                        ctx.beginPath();
+                        ctx.arc(touch.x, touch.y, touch.radius * 0.7, 0, Math.PI * 2);
+                        ctx.fillStyle = '#475569';
+                        ctx.fill();
+                        ctx.restore();
+                        return;
+                    }
+
+                    const ringColor = touch.teamColor || (isWinner ? '#f59e0b' : touch.color);
+                    const ringRadius = touch.radius + Math.sin(touch.pulse) * 4;
+
+                    // Outer Energy Ripple
+                    ctx.beginPath();
+                    ctx.arc(touch.x, touch.y, ringRadius + 14, 0, Math.PI * 2);
+                    ctx.strokeStyle = ringColor;
+                    ctx.lineWidth = 1.5;
+                    ctx.globalAlpha = 0.4 + Math.sin(touch.pulse) * 0.2;
+                    ctx.stroke();
+
+                    // Main Glow Ring
+                    ctx.beginPath();
+                    ctx.arc(touch.x, touch.y, ringRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = isWinner ? 'rgba(245, 158, 11, 0.3)' : 'rgba(15, 23, 42, 0.6)';
+                    ctx.fill();
+                    ctx.lineWidth = isWinner ? 6 : 4;
+                    ctx.strokeStyle = ringColor;
+                    ctx.shadowColor = ringColor;
+                    ctx.shadowBlur = isWinner ? 30 : 18;
+                    ctx.stroke();
+
+                    // Inner Dot
+                    ctx.beginPath();
+                    ctx.arc(touch.x, touch.y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+
+                    // Mode Specific Overlays (Crown, Team Name, Order)
+                    if (gameState === 'selected') {
+                        if (isWinner && (currentMode === 'single' || currentMode === 'multi')) {
+                            // Crown on Winner
+                            ctx.font = '36px sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText('👑', touch.x, touch.y - ringRadius - 8);
+                        } else if (currentMode === 'teams') {
+                            ctx.font = 'bold 18px "Outfit", sans-serif';
+                            ctx.fillStyle = touch.teamColor;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.shadowColor = touch.teamColor;
+                            ctx.shadowBlur = 12;
+                            ctx.fillText(touch.team, touch.x, touch.y - ringRadius - 16);
+                        } else if (currentMode === 'order') {
+                            ctx.font = '900 24px "Outfit", sans-serif';
+                            ctx.fillStyle = '#ffffff';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.shadowColor = '#f59e0b';
+                            ctx.shadowBlur = 15;
+                            ctx.fillText(`#${touch.order}`, touch.x, touch.y - ringRadius - 16);
+                        }
+                    }
+
+                    // Rotating Orbital Particle around Ring
+                    const orbitAngle = touch.pulse * 1.5;
+                    const orbitX = touch.x + Math.cos(orbitAngle) * (ringRadius + 7);
+                    const orbitY = touch.y + Math.sin(orbitAngle) * (ringRadius + 7);
+                    ctx.beginPath();
+                    ctx.arc(orbitX, orbitY, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowBlur = 8;
+                    ctx.fill();
+
+                    ctx.restore();
+                });
+
+                // Draw Connecting Tension Arcs during Countdown
+                if (gameState === 'countdown' && touchesMap.size >= 2) {
+                    const arr = Array.from(touchesMap.values());
+                    ctx.save();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+                    ctx.setLineDash([6, 6]);
+                    ctx.lineDashOffset = -now * 0.05;
+
+                    ctx.beginPath();
+                    for (let i = 0; i < arr.length; i++) {
+                        const curr = arr[i];
+                        const next = arr[(i + 1) % arr.length];
+                        ctx.moveTo(curr.x, curr.y);
+                        ctx.lineTo(next.x, next.y);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Draw Confetti & Sparkle Particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= p.decay;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = Math.max(0, p.alpha);
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 8;
+                    ctx.fill();
+                    ctx.restore();
+
+                    if (p.alpha <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+            }
+
+            requestAnimationFrame(render);
+        })();
+    </script>
+
+    <!-- Project Standard Game Rules JSON Block -->
+    <script type="application/json" id="game-rules">
+    {
+        "title": "멀티터치 손가락 룰렛",
+        "goal": "스마트폰 화면에 손가락을 올려놓고 3초간 기다려 당첨자를 뽑습니다.",
+        "steps": [
+            "모임이나 술자리에서 폰을 테이블 중앙에 평평하게 놓습니다.",
+            "참가자들이 화면에 각자 손가락을 1개씩 동시에 터치하고 유지합니다.",
+            "2명 이상 감지되면 3... 2... 1... 카운트다운이 시작됩니다.",
+            "카운트다운이 끝나면 네온 번개와 함께 당첨자 1명이 골드 링으로 지목됩니다.",
+            "벌칙 옵션이 켜져 있으면 즉석 벌칙 룰렛(소주 원샷, 커피 쏘기 등)이 이어집니다."
+        ],
+        "tips": [
+            "카운트다운 도중에 손가락을 떼면 경고음과 함께 취소되니 떼지 마세요.",
+            "상단 모드 탭에서 '2명 당첨', '팀 나누기', '순서 정하기' 모드로 변경할 수 있습니다.",
+            "PC 마우스 환경에서는 화면을 클릭하거나 [+봇] 버튼을 눌러 테스트할 수 있습니다."
+        ],
+        "players": "2~8명",
+        "time": "약 30초"
+    }
+    </script>
+</body>
+</html>

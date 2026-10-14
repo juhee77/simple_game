@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>켄 번스 무빙 슬라이드쇼 & 루핑 GIF | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=a8725fa3"></script>
+  <script src="../scripts/game-common.js?v=3a12429a"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -355,7 +355,13 @@
       transition: all 0.2s;
     }
 
-    .hud-gif-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .hud-gif-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+
+    /* 저장 형식 GIF / 영상 */
+    .hud-seg { display: inline-flex; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--card-border); border-radius: 8px; padding: 2px; }
+    .hud-seg-btn { background: transparent; border: none; color: var(--text-dim); font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+    .hud-seg-btn.active { background: var(--yellow); color: #1a1205; }
+    .hud-seg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     @media (max-width: 520px) {
       .player-hud-bar { flex-wrap: wrap; justify-content: center; }
@@ -481,16 +487,21 @@
           <button class="hud-btn" id="playPauseBtn" onclick="togglePlayPause()">⏸️ 일시 정지</button>
           <span id="currentSlideIdxText" style="font-size: 12px; color: var(--text-dim); font-weight: 600;">1 / 4</span>
           <span class="hud-gif-group">
-            <button class="hud-btn" onclick="generateSlideGIF()">🎁 GIF (현재 비율)</button>
-            <button class="hud-btn" onclick="generateSlideGIF('9:16')">📱 스토리 GIF 9:16</button>
+            <span class="hud-seg" role="group" aria-label="저장 형식">
+              <button class="hud-seg-btn active" data-out="gif" onclick="setSlideOutput('gif', this)">GIF</button>
+              <button class="hud-seg-btn" data-out="mp4" id="slideOutMp4" onclick="setSlideOutput('mp4', this)">영상</button>
+            </span>
+            <button class="hud-btn" onclick="exportSlides()">🎁 저장 (현재 비율)</button>
+            <button class="hud-btn" onclick="exportSlides('9:16')">📱 스토리 9:16</button>
           </span>
         </div>
 
         <div class="gif-status" id="gifStatus">⏳ 고화질 루핑 GIF 생성 중입니다. 잠시만 기다려주세요...</div>
 
         <div class="gif-download-area" id="gifArea">
-          <div class="section-label" style="width: 100%;"><span>🎉 완성된 감성 루핑 GIF</span></div>
+          <div class="section-label" style="width: 100%;"><span id="exportTitle">🎉 완성된 감성 루핑 GIF</span></div>
           <img id="gifOutput" src="" alt="GIF Output">
+          <video id="videoOutput" controls loop muted playsinline style="display: none; width: auto; max-width: 100%; max-height: 78vh; border-radius: 12px;"></video>
           <button class="btn-gradient-cinema" style="width: 100%;" onclick="saveSlideGifToGallery()">
             📲 사진첩에 저장 / 공유
           </button>
@@ -513,7 +524,7 @@
   "1:1 피드용, 9:16 인스타 스토리용, 16:9 와이드 중 원하는 화면 비율을 고릅니다.",
   "전환 속도와 90s 캠코더 REC 오버레이 또는 아날로그 날짜 스탬프를 선택합니다.",
   "'슬라이드쇼 시작'을 눌러 영화처럼 부드럽게 움직이는 모션 영상을 감상합니다.",
-  "'GIF (현재 비율)' 또는 '스토리 GIF 9:16'을 눌러 인스타그램 스토리나 메신저로 공유할 반복 재생 GIF를 다운로드합니다."
+  "GIF 또는 영상을 고르고 '저장 (현재 비율)'이나 '스토리 9:16'을 누르면 반복 재생 GIF나 1080p 영상(MP4)이 만들어집니다. '사진첩에 저장'으로 바로 갤러리에 넣을 수 있습니다."
  ],
  "tips": [
   "켄 번스(Ken Burns) 효과란 사진을 고정시키지 않고 카메라가 부드럽게 줌/팬하여 생동감을 주는 영화적 기법입니다.",
@@ -955,11 +966,110 @@
 
     // 루핑 GIF: 정사각/와이드는 현재 비율 그대로, 스토리는 540×960 세로로 만든다.
     // 크기를 키운 만큼 장당 프레임은 아껴서 용량을 공유 가능한 수준으로 묶는다.
+    // 영상 인코더가 없는 브라우저에서는 영상 버튼을 끈다 (DOM이 이 스크립트보다 앞에 있다)
+    if (!canRecordMp4()) {
+      const b = document.getElementById('slideOutMp4');
+      if (b) { b.disabled = true; b.title = '이 브라우저는 영상 저장을 지원하지 않아요'; }
+    }
+
     let lastSlideGifBlob = null;
     let lastSlideGifName = 'slideshow_loop.gif';
 
     function saveSlideGifToGallery() {
       if (lastSlideGifBlob) saveToGallery(lastSlideGifBlob, lastSlideGifName);
+    }
+
+    let slideOutput = 'gif';
+
+    function setSlideOutput(kind, el) {
+      slideOutput = kind;
+      document.querySelectorAll('.hud-seg-btn').forEach(b => b.classList.toggle('active', b === el));
+    }
+
+    function exportSlides(format) {
+      return slideOutput === 'mp4' ? generateSlideVideo(format) : generateSlideGIF(format);
+    }
+
+    // 영상(MP4): 인스타그램 규격 1080p로, 고른 전환 속도 그대로 초당 30프레임으로 만든다.
+    // GIF와 달리 화질을 줄일 필요가 없고, 용량도 보통 더 작다.
+    async function generateSlideVideo(format) {
+      if (loadedImgObjects.length < 2) return;
+      const ratio = format || currentRatio;
+      const story = ratio === '9:16';
+      const [w, h] = story ? [1080, 1920] : (ratio === '1:1' ? [1080, 1080] : [1920, 1080]);
+      const fps = 30;
+
+      const statusEl = document.getElementById('gifStatus');
+      statusEl.style.display = 'block';
+      statusEl.textContent = '⏳ 영상(MP4)을 만드는 중입니다...';
+
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+
+      let writer;
+      try {
+        writer = await createMp4Writer(w, h, { fps });
+      } catch (err) {
+        statusEl.style.display = 'none';
+        alert(err.message);
+        return;
+      }
+
+      const perPhoto = Math.max(fps, Math.round(slideDuration / 1000 * fps));
+      const total = perPhoto * loadedImgObjects.length;
+      let blob;
+      try {
+        let n = 0;
+        for (let i = 0; i < loadedImgObjects.length; i++) {
+          for (let f = 0; f < perPhoto; f++, n++) {
+            // 마지막 장은 첫 장으로 넘어가며 끝나서, 반복 재생해도 이어진다
+            renderSlideFrame(ctx, w, h, {
+              story,
+              index: i,
+              progress: f / perPhoto,
+              fadeStart: 0.65,
+              blink: Math.floor(n / (fps * 0.6)) % 2 === 0
+            });
+            await writer.addFrame(c);
+            if (n % 15 === 0) {
+              statusEl.textContent = `⏳ 영상(MP4)을 만드는 중입니다... ${Math.round(n / total * 100)}%`;
+              await yieldToBrowser();
+            }
+          }
+        }
+        blob = await writer.finish();
+      } catch (err) {
+        writer.cancel();
+        statusEl.style.display = 'none';
+        alert('영상 생성 실패: ' + err.message);
+        return;
+      }
+
+      statusEl.style.display = 'none';
+      showSlideExport(blob, story ? 'slideshow_story_9x16.mp4' : `slideshow_${ratio.replace(':', 'x')}.mp4`, true);
+    }
+
+    // 완성된 GIF·영상을 결과 칸에 보여 주고 저장 버튼에 연결한다
+    let lastSlideUrl = null;
+    function showSlideExport(blob, name, isVideo) {
+      lastSlideGifBlob = blob;
+      lastSlideGifName = name;
+      if (lastSlideUrl) URL.revokeObjectURL(lastSlideUrl);
+      lastSlideUrl = URL.createObjectURL(blob);
+      const img = document.getElementById('gifOutput');
+      const vid = document.getElementById('videoOutput');
+      img.style.display = isVideo ? 'none' : '';
+      vid.style.display = isVideo ? '' : 'none';
+      if (isVideo) { vid.src = lastSlideUrl; vid.play().catch(() => {}); } else { vid.removeAttribute('src'); img.src = lastSlideUrl; }
+      const dl = document.getElementById('gifDownload');
+      dl.href = lastSlideUrl;
+      dl.download = name;
+      document.getElementById('exportTitle').textContent =
+        `🎉 완성된 ${isVideo ? '슬라이드쇼 영상' : '감성 루핑 GIF'} · ${(blob.size / 1048576).toFixed(1)}MB`;
+      document.getElementById('gifArea').style.display = 'flex';
+      document.getElementById('gifArea').scrollIntoView({ behavior: 'smooth' });
     }
 
     async function generateSlideGIF(format) {
@@ -1009,15 +1119,10 @@
       }, function(obj) {
         statusEl.style.display = 'none';
         if (!obj.error) {
-          document.getElementById('gifOutput').src = obj.image;
-          const dl = document.getElementById('gifDownload');
-          dl.href = obj.image;
-          dl.download = story ? 'slideshow_story_9x16.gif' : 'slideshow_loop.gif';
           // 공유 시트는 클릭 직후에만 열 수 있어, 저장 버튼을 누르기 전에 파일을 미리 만들어 둔다
-          lastSlideGifName = dl.download;
-          fetch(obj.image).then(r => r.blob()).then(b => { lastSlideGifBlob = b; });
-          document.getElementById('gifArea').style.display = 'flex';
-          document.getElementById('gifArea').scrollIntoView({ behavior: 'smooth' });
+          fetch(obj.image).then(r => r.blob()).then(b => {
+            showSlideExport(b, story ? 'slideshow_story_9x16.gif' : 'slideshow_loop.gif', false);
+          });
         } else {
           alert('GIF 생성 실패: ' + obj.error);
         }

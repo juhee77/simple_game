@@ -190,6 +190,91 @@ async function saveToGallery(blob, filename) {
     return 'downloaded';
 }
 
+// ── 영상(MP4) 저장 ───────────────────────────────────────
+// 캔버스 장면을 WebCodecs(H.264)로 인코딩하고 mp4-muxer로 MP4 파일에 담는다.
+// 아이폰 사진 앱은 WebM을 못 읽으므로 MP4로 만든다. 인코더 라이브러리는 영상을 만들 때만 불러온다.
+// 사용: const w = await createMp4Writer(가로, 세로); await w.addFrame(canvas, 반복수); const blob = await w.finish();
+function canRecordMp4() {
+    return typeof VideoEncoder === 'function' && typeof VideoFrame === 'function';
+}
+
+let mp4MuxerModule = null;
+function loadMp4Muxer() {
+    if (!mp4MuxerModule) {
+        mp4MuxerModule = import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.mjs')
+            .catch((err) => { mp4MuxerModule = null; throw err; });
+    }
+    return mp4MuxerModule;
+}
+
+// 프레임 사이에 잠깐 쉬어 화면이 멈추지 않게 한다.
+// setTimeout은 탭이 뒤로 가면 1초 이상으로 늦춰져 생성이 수십 배 느려지므로 MessageChannel을 쓴다.
+function yieldToBrowser() {
+    return new Promise((resolve) => {
+        const ch = new MessageChannel();
+        ch.port1.onmessage = () => resolve();
+        ch.port2.postMessage(0);
+    });
+}
+
+async function createMp4Writer(width, height, { fps = 30, bitrate } = {}) {
+    const config = {
+        codec: 'avc1.4d0028',   // H.264 Main, 1080p까지
+        width,
+        height,
+        bitrate: bitrate || Math.round(Math.min(8e6, Math.max(1.5e6, width * height * fps * 0.12))),
+        framerate: fps
+    };
+    if (!canRecordMp4() || !(await VideoEncoder.isConfigSupported(config)).supported) {
+        throw new Error('이 브라우저는 영상 저장을 지원하지 않아요. 최신 크롬이나 사파리에서 열어 주세요.');
+    }
+    let mux;
+    try {
+        mux = await loadMp4Muxer();
+    } catch {
+        throw new Error('영상 인코더를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
+    }
+    const muxer = new mux.Muxer({
+        target: new mux.ArrayBufferTarget(),
+        video: { codec: 'avc', width, height, frameRate: fps },
+        fastStart: 'in-memory'
+    });
+    let error = null;
+    const encoder = new VideoEncoder({
+        output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+        error: (e) => { error = e; }
+    });
+    encoder.configure(config);
+
+    const frameUs = 1e6 / fps;
+    let count = 0;
+    return {
+        // 같은 그림을 repeat 프레임 동안 보여 준다 (멈춘 장면은 용량이 거의 늘지 않는다)
+        async addFrame(source, repeat = 1) {
+            for (let r = 0; r < repeat; r++) {
+                const vf = new VideoFrame(source, { timestamp: Math.round(count * frameUs), duration: Math.round(frameUs) });
+                // 키프레임은 용량을 많이 먹어 4초에 한 번만 넣는다
+                encoder.encode(vf, { keyFrame: count % (fps * 4) === 0 });
+                vf.close();
+                count++;
+                // 인코더가 밀리면 잠깐 기다려 메모리에 프레임이 쌓이지 않게 한다
+                while (encoder.encodeQueueSize > 8) await yieldToBrowser();
+            }
+            if (error) throw error;
+        },
+        async finish() {
+            await encoder.flush();
+            if (error) throw error;
+            encoder.close();
+            muxer.finalize();
+            return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+        },
+        cancel() {
+            try { encoder.close(); } catch { /* 이미 닫힘 */ }
+        }
+    };
+}
+
 // 드롭 영역을 살짝 벗어난 곳에 사진을 놓으면 브라우저가 페이지를 그 이미지로 바꿔 버려
 // 작업 중이던 내용이 통째로 날아간다. 파일 드래그일 때만 기본 동작을 막는다.
 ['dragover', 'drop'].forEach((type) => {

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>여행 사진 동선 맵 & 애니메이션 GIF | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=a8725fa3"></script>
+  <script src="../scripts/game-common.js?v=3a12429a"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -2791,63 +2791,30 @@
 
       let blob;
       if (P.video) {
-        // ── MP4: WebCodecs(H.264)로 인코딩하고 mp4-muxer로 파일에 담는다 ──
-        // 아이폰 사진 앱은 WebM을 못 읽으므로 MP4로 만든다.
-        const config = { codec: 'avc1.4d0028', width: P.outW, height: P.outH, bitrate: videoBitrate(P.outW, P.outH), framerate: VIDEO_FPS };
-        let mux;
+        // ── MP4 (createMp4Writer, game-common.js) ──
+        let writer;
         try {
-          if (typeof VideoEncoder !== 'function' || !(await VideoEncoder.isConfigSupported(config)).supported) {
-            return fail('이 브라우저는 영상 저장을 지원하지 않아요. 최신 크롬이나 사파리에서 열거나 GIF로 저장해 주세요.');
-          }
-          mux = await loadMp4Muxer();
+          writer = await createMp4Writer(P.outW, P.outH, { fps: VIDEO_FPS, bitrate: videoBitrate(P.outW, P.outH) });
         } catch (err) {
-          return fail('영상 인코더를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
+          return fail(err.message);
         }
-        const muxer = new mux.Muxer({
-          target: new mux.ArrayBufferTarget(),
-          video: { codec: 'avc', width: P.outW, height: P.outH, frameRate: VIDEO_FPS },
-          fastStart: 'in-memory'
-        });
-        let encodeError = null;
-        const encoder = new VideoEncoder({
-          output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-          error: (e) => { encodeError = e; }
-        });
-        encoder.configure(config);
-
-        const frameUs = 1e6 / VIDEO_FPS;
-        let frameNo = 0;
         try {
           for (let i = 0; i < plan.length; i++) {
             const [s, t, focus, delay] = plan[i];
             await drawFrame(s, t, focus);
             oCtx.drawImage(tempC, 0, 0, P.outW, P.outH);
-            // 오래 머무는 장면은 같은 그림을 여러 프레임으로 넣는다 (변화가 없어 용량은 거의 안 늘어난다)
-            const repeat = Math.max(1, Math.round(delay / (1000 / VIDEO_FPS)));
-            for (let r = 0; r < repeat; r++) {
-              const vf = new VideoFrame(outC, { timestamp: Math.round(frameNo * frameUs), duration: Math.round(frameUs) });
-              // 키프레임은 용량을 많이 먹어 4초에 한 번만 넣는다 (멈춘 장면이 많아 이걸로 충분하다)
-              encoder.encode(vf, { keyFrame: frameNo % (VIDEO_FPS * 4) === 0 });
-              vf.close();
-              frameNo++;
-              // 인코더가 밀리면 잠깐 기다려 메모리에 프레임이 쌓이지 않게 한다
-              while (encoder.encodeQueueSize > 8) await yieldToBrowser();
-            }
-            if (encodeError) throw encodeError;
+            // 오래 머무는 장면은 같은 그림을 여러 프레임으로 넣는다
+            await writer.addFrame(outC, Math.max(1, Math.round(delay / (1000 / VIDEO_FPS))));
             tick(i);
             await yieldToBrowser();
           }
-          await encoder.flush();
-          if (encodeError) throw encodeError;
-          muxer.finalize();
+          blob = await writer.finish();
         } catch (err) {
-          try { encoder.close(); } catch { /* 이미 닫힘 */ }
+          writer.cancel();
           return fail('영상 생성 실패: ' + err.message);
         } finally {
           gifTileCache.clear();
         }
-        encoder.close();
-        blob = new Blob([muxer.target.buffer], { type: 'video/mp4' });
       } else {
         // ── GIF ──
         // gifshot은 모든 프레임을 메모리에 쌓았다가 한꺼번에 묶어 프레임이 많으면 브라우저가 버티지 못한다.
@@ -2904,28 +2871,9 @@
     }
 
     // 영상 인코더(WebCodecs)가 없는 브라우저에서는 영상 버튼을 끈다
-    if (typeof VideoEncoder !== 'function') {
+    if (!canRecordMp4()) {
       const b = document.getElementById('btnOutputMp4');
       if (b) { b.disabled = true; b.style.opacity = 0.4; b.title = '이 브라우저는 영상 저장을 지원하지 않아요'; }
-    }
-
-    // 프레임 사이에 잠깐 쉬어 화면이 멈추지 않게 한다.
-    // setTimeout은 탭이 뒤로 가면 1초 이상으로 늦춰져 생성이 수십 배 느려지므로 MessageChannel을 쓴다.
-    function yieldToBrowser() {
-      return new Promise(resolve => {
-        const ch = new MessageChannel();
-        ch.port1.onmessage = () => resolve();
-        ch.port2.postMessage(0);
-      });
-    }
-
-    let mp4MuxerModule = null;
-    function loadMp4Muxer() {
-      if (!mp4MuxerModule) {
-        mp4MuxerModule = import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.mjs')
-          .catch(err => { mp4MuxerModule = null; throw err; });
-      }
-      return mp4MuxerModule;
     }
 
     let lastGifUrl = null;
