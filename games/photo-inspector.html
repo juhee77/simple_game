@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>사진 메타데이터 & 포렌식 인스펙터 | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=baed11c3"></script>
+  <script src="../scripts/game-common.js?v=b1448849"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -500,8 +500,8 @@
     }
 
     /* Map Custom Marker */
+    /* position을 덮어쓰면 Leaflet 마커가 문서 흐름에 쌓여 순번마다 2px씩 아래로 밀린다 */
     .inspector-map-pin {
-      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -528,6 +528,17 @@
       font-weight: 800;
       padding: 0 5px;
       border-radius: 10px;
+    }
+    /* 지도 출처 표기: 어두운 화면에 맞추고 작게 */
+    .leaflet-container .leaflet-control-attribution {
+      background: rgba(8, 12, 24, 0.65);
+      color: #cbd5e1;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+    .leaflet-container .leaflet-control-attribution a { color: #7dd3fc; }
+    @media (max-width: 520px) {
+      .leaflet-container .leaflet-control-attribution { font-size: 9px; }
     }
   </style>
 </head>
@@ -865,11 +876,13 @@
       if (inspectorMap) return;
       inspectorMap = L.map('inspectorMap', {
         zoomControl: true,
-        attributionControl: false
+        attributionControl: true
       }).setView([33.38, 126.55], 10);
 
+      // Esri 타일 사용 조건에 따라 출처를 지도에 표기한다
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 18
+        maxZoom: 18,
+        attribution: 'Tiles &copy; Esri &mdash; Esri, Maxar, Earthstar Geographics, and the GIS User Community'
       }).addTo(inspectorMap);
     }
 

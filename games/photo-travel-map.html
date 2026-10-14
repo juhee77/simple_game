@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>여행 사진 동선 맵 & 애니메이션 GIF | 미니게임 천국</title>
-  <script src="../scripts/game-common.js?v=baed11c3"></script>
+  <script src="../scripts/game-common.js?v=b1448849"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -13,9 +13,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- EXIF & GIFshot -->
+  <!-- EXIF (GIF 인코더 gifenc는 GIF를 만들 때 불러온다) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
 
   <style>
     :root {
@@ -396,7 +395,7 @@
       letter-spacing: 0.05em;
     }
 
-    .transport-pill-group, .speed-pill-group {
+    .transport-pill-group, .speed-pill-group, .gif-pill-group {
       display: flex;
       background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--card-border);
@@ -427,8 +426,9 @@
     }
 
     /* Custom Map Markers & Vehicle */
+    /* position을 덮어쓰면 안 된다. Leaflet 마커는 position:absolute 로 각자 좌표에 놓이는데,
+       relative로 바꾸면 마커들이 문서 흐름에 쌓여 순번마다 2px씩(50번째는 약 100px) 아래로 밀린다. */
     .custom-leaflet-marker {
-      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -461,6 +461,21 @@
       border-right: 7px solid transparent;
       border-top: 12px solid var(--pin, #10b981);
       filter: drop-shadow(0 3px 2px rgba(0,0,0,0.4));
+    }
+
+    /* 사진 카드는 좌표 위에 떠 있으므로, 실제 좌표(iconAnchor 25,56)에 작은 점을 찍는다.
+       동선 선과 비행 투어는 이 점을 지나간다. */
+    .marker-ground {
+      position: absolute;
+      left: 20px;
+      top: 51px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--pin, #10b981);
+      border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+      pointer-events: none;
     }
 
     .custom-leaflet-marker:hover .marker-card-thumb {
@@ -802,7 +817,7 @@
       height: 48px;
       border-radius: 10px;
       object-fit: cover;
-      border: 2px solid var(--spot, #06b6d4);
+      border: 2px solid var(--frame, var(--spot, #06b6d4));
       box-shadow: 0 2px 8px rgba(0,0,0,0.35);
     }
 
@@ -893,6 +908,16 @@
       color: #04121d;
     }
 
+    .timeline-header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .btn-purge {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+
+    .btn-purge:hover { background: #ef4444; color: #fff; }
+
     .btn-del {
       background: none;
       border: none;
@@ -929,6 +954,8 @@
       border: 1px solid var(--card-border);
     }
 
+    .gif-est { font-size: 12px; font-weight: 700; opacity: 0.85; }
+
     .gif-preview-img {
       max-width: 100%;
       border-radius: 12px;
@@ -952,6 +979,17 @@
       .item-actions { flex-direction: column; gap: 5px; }
       .btn-focus { padding: 4px 9px; font-size: 10px; }
     }
+    /* 지도 출처 표기: 어두운 화면에 맞추고 작게 */
+    .leaflet-container .leaflet-control-attribution {
+      background: rgba(8, 12, 24, 0.65);
+      color: #cbd5e1;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+    .leaflet-container .leaflet-control-attribution a { color: #7dd3fc; }
+    @media (max-width: 520px) {
+      .leaflet-container .leaflet-control-attribution { font-size: 9px; }
+    }
   </style>
 </head>
 <body>
@@ -972,7 +1010,7 @@
         <input type="file" id="travelFiles" multiple accept="image/*" style="display: none;" onchange="handleTravelUpload(event)">
         <div class="drop-icon-wrapper">🧭</div>
         <div class="drop-title">여행 사진들을 여러 장 업로드하거나 끌어다 놓으세요</div>
-        <div class="drop-sub">사진 속 EXIF GPS 좌표와 촬영 일시를 자동 추출하여 실제 지도 위에 경로를 그립니다</div>
+        <div class="drop-sub">사진 속 EXIF GPS 좌표와 촬영 일시를 자동 추출하여 실제 지도 위에 경로를 그립니다 (최대 50장)</div>
         <button type="button" class="demo-btn-pill" onclick="event.stopPropagation(); loadDemoSamples();">
           ✨ 제주도 여행 샘플 사진 즉시 로드
         </button>
@@ -1059,6 +1097,40 @@
         </div>
       </div>
 
+      <!-- GIF Options -->
+      <div class="tour-control-dock">
+        <div class="dock-group">
+          <span class="dock-label">GIF 사진</span>
+          <div class="gif-pill-group">
+            <button class="dock-pill-btn active" onclick="setGifOption('fit', 'cover', this)">꽉 채우기 (잘림)</button>
+            <button class="dock-pill-btn" onclick="setGifOption('fit', 'contain', this)">전체 보이기 (여백)</button>
+          </div>
+        </div>
+        <div class="dock-group">
+          <span class="dock-label">GIF 길이·용량</span>
+          <div class="gif-pill-group">
+            <button class="dock-pill-btn" onclick="setGifOption('quality', 'light', this)">가볍게</button>
+            <button class="dock-pill-btn active" onclick="setGifOption('quality', 'normal', this)">보통</button>
+            <button class="dock-pill-btn" onclick="setGifOption('quality', 'smooth', this)">부드럽게</button>
+          </div>
+        </div>
+        <div class="dock-group">
+          <span class="dock-label">GIF 카메라</span>
+          <div class="gif-pill-group">
+            <button class="dock-pill-btn active" onclick="setGifOption('camera', 'follow', this)">🔍 줌인 따라가기</button>
+            <button class="dock-pill-btn" onclick="setGifOption('camera', 'overview', this)">🗺️ 전체 동선</button>
+          </div>
+        </div>
+        <div class="dock-group">
+          <span class="dock-label">줌인 정도</span>
+          <div class="gif-pill-group">
+            <button class="dock-pill-btn" onclick="setGifOption('zoom', 'area', this)">동네 (5km)</button>
+            <button class="dock-pill-btn active" onclick="setGifOption('zoom', 'street', this)">거리 (2km)</button>
+            <button class="dock-pill-btn" onclick="setGifOption('zoom', 'alley', this)">골목 (700m)</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Action Buttons -->
       <div class="action-button-row">
         <button class="btn-gradient-primary" id="btnTourToggle" onclick="toggleMapTourAnimation()">
@@ -1068,10 +1140,13 @@
           <span>🗺️ 고화질 지도 사진 (PNG) 내보내기</span>
         </button>
         <button class="btn-gradient-amber" onclick="generateTravelGIF('square')">
-          <span>🎬 타임랩스 GIF · 정사각 1:1</span>
+          <span>🎬 타임랩스 GIF · 정사각 1:1<small class="gif-est" data-fmt="square"></small></span>
+        </button>
+        <button class="btn-gradient-amber" onclick="generateTravelGIF('wide')">
+          <span>🖥️ 타임랩스 GIF · 가로 16:9 (지도 + 사진)<small class="gif-est" data-fmt="wide"></small></span>
         </button>
         <button class="btn-gradient-amber" onclick="generateTravelGIF('story')">
-          <span>📱 타임랩스 GIF · 세로 9:16 (스토리)</span>
+          <span>📱 타임랩스 GIF · 세로 9:16 (스토리)<small class="gif-est" data-fmt="story"></small></span>
         </button>
       </div>
 
@@ -1094,7 +1169,10 @@
           <span>🚩 추출된 여행 타임라인 순서</span>
           <span style="font-size: 12px; color: var(--text-dim); font-weight: normal;">(▲/▼ 버튼으로 순서를 변경하거나 스팟명을 수정하세요)</span>
         </div>
-        <button class="btn-focus" onclick="fitAllMarkers()">📍 전체 경로 맞춤</button>
+        <div class="timeline-header-actions">
+          <button class="btn-focus btn-purge" id="btnPurgeNoGps" onclick="removeSpotsWithoutGps()" style="display: none;"></button>
+          <button class="btn-focus" onclick="fitAllMarkers()">📍 전체 경로 맞춤</button>
+        </div>
       </div>
       <div class="timeline-list" id="routeList"></div>
     </div>
@@ -1125,8 +1203,10 @@
     // 지도 핀과 타임라인 노드가 같은 색을 쓰도록 공용 팔레트로 둔다 (스팟 순서대로 순환)
     const SPOT_PALETTE = ['#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#6366f1', '#ef4444'];
     const spotColor = (i) => SPOT_PALETTE[i % SPOT_PALETTE.length];
+    // 사진 테두리는 사진의 대표 색으로 (뽑을 색이 없으면 순번 색)
+    const frameColor = (spot, i) => (spot && spot.accent) || spotColor(i);
 
-    let travelSpots = []; // { dataUrl, lat, lng, date, name, isGps, timeVal }
+    let travelSpots = []; // { dataUrl(1600px), thumbUrl(320px), lat, lng, date, name, isGps, timeVal }
     let leafletMap = null;
     let mapMarkers = [];
     let routeGlow = null;
@@ -1155,18 +1235,52 @@
       topo: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
     };
 
+    // 타일 제공처의 사용 조건이 출처 표기다. 지도 화면은 Leaflet 출처 칸에,
+    // 저장하는 PNG·GIF에는 짧은 표기(MAP_CREDIT_SHORT)를 그려 넣는다.
+    const MAP_ATTRIBUTION = {
+      satellite: 'Tiles &copy; Esri &mdash; Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+      osm: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+      topo: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, FAO, NOAA, USGS, &copy; OpenStreetMap contributors, and the GIS User Community'
+    };
+    const MAP_CREDIT_SHORT = {
+      satellite: 'Imagery © Esri, Maxar, Earthstar Geographics',
+      osm: '© OpenStreetMap contributors',
+      topo: 'Map © Esri, © OpenStreetMap contributors'
+    };
+
+    function makeTileLayer(styleKey) {
+      return L.tileLayer(MAP_STYLES[styleKey], {
+        maxZoom: styleKey === 'satellite' ? 18 : 19,
+        crossOrigin: true,
+        attribution: MAP_ATTRIBUTION[styleKey]
+      });
+    }
+
+    // 저장 이미지 오른쪽 아래에 지도 출처를 작게 찍는다
+    function drawMapCredit(ctx, right, bottom, fontPx = 11) {
+      const text = MAP_CREDIT_SHORT[currentMapStyleKey] || MAP_CREDIT_SHORT.satellite;
+      ctx.save();
+      ctx.font = `600 ${fontPx}px Pretendard, sans-serif`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      const tw = ctx.measureText(text).width;
+      const padX = fontPx * 0.6, padY = fontPx * 0.35;
+      ctx.fillStyle = 'rgba(8, 12, 24, 0.55)';
+      ctx.fillRect(right - tw - padX * 2, bottom - fontPx - padY * 2, tw + padX * 2, fontPx + padY * 2);
+      ctx.fillStyle = 'rgba(241, 245, 249, 0.85)';
+      ctx.fillText(text, right - padX, bottom - padY);
+      ctx.restore();
+    }
+
     function initMapIfNeeded() {
       if (leafletMap) return;
 
       leafletMap = L.map('realMap', {
         zoomControl: true,
-        attributionControl: false
+        attributionControl: true
       }).setView([33.38, 126.55], 10);
 
-      currentMapTileLayer = L.tileLayer(MAP_STYLES.satellite, {
-        maxZoom: 18,
-        crossOrigin: true
-      }).addTo(leafletMap);
+      currentMapTileLayer = makeTileLayer('satellite').addTo(leafletMap);
     }
 
     function changeMapStyle(styleKey, el) {
@@ -1179,24 +1293,34 @@
       if (currentMapTileLayer) {
         leafletMap.removeLayer(currentMapTileLayer);
       }
-      currentMapTileLayer = L.tileLayer(MAP_STYLES[styleKey], {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        crossOrigin: true
-      }).addTo(leafletMap);
+      currentMapTileLayer = makeTileLayer(styleKey).addTo(leafletMap);
     }
+
+    // 사진은 전부 브라우저 메모리에 들고 있으므로, 오래된 폰에서도 버틸 수 있는 선으로 묶는다
+    const MAX_SPOTS = 50;
+    const THUMB_EDGE = 320;
 
     async function handleTravelUpload(event) {
       const files = Array.from(event.target.files || []);
-      const images = files.filter(f => f.type.startsWith('image/'));
+      let images = files.filter(f => f.type.startsWith('image/'));
       event.target.value = '';
       if (!images.length) return;
+
+      const room = MAX_SPOTS - travelSpots.length;
+      if (room <= 0) {
+        alert(`사진은 최대 ${MAX_SPOTS}장까지 넣을 수 있어요. 필요 없는 사진을 지운 뒤 다시 추가해 주세요.`);
+        return;
+      }
+      if (images.length > room) {
+        alert(`사진은 최대 ${MAX_SPOTS}장까지 넣을 수 있어요. 고른 ${images.length}장 중 앞의 ${room}장만 추가합니다.`);
+        images = images.slice(0, room);
+      }
 
       // 한 장씩 처리해 원본 디코딩이 동시에 몰리지 않게 한다 (모바일 탭 재시작 방지)
       for (const file of images) {
         try {
-          const { dataUrl } = await loadPhotoFile(file, 1600);
-          await new Promise(res => parseExifAndAdd(file, dataUrl, res));
+          const { dataUrl, thumbUrl, accent } = await loadPhotoFile(file, 1600, 0.9, THUMB_EDGE);
+          await new Promise(res => parseExifAndAdd(file, dataUrl, res, thumbUrl, accent));
         } catch (err) {
           alert(err.message);
         }
@@ -1205,7 +1329,7 @@
     }
 
     // EXIF는 축소본에서 사라지므로 원본 File에서 바로 읽는다
-    function parseExifAndAdd(file, dataUrl, callback) {
+    function parseExifAndAdd(file, dataUrl, callback, thumbUrl = null, accent = null) {
       EXIF.getData(file, function() {
         const lat = EXIF.getTag(this, "GPSLatitude");
         const latRef = EXIF.getTag(this, "GPSLatitudeRef");
@@ -1235,6 +1359,8 @@
 
         travelSpots.push({
           dataUrl: dataUrl,
+          thumbUrl: thumbUrl,
+          accent: accent,
           name: file.name.replace(/\.[^/.]+$/, "") || `스팟 #${travelSpots.length + 1}`,
           date: todayKey(when),
           lat: decLat,
@@ -1276,7 +1402,8 @@
       const d = new Date(spot.timeVal);
       const hh = String(d.getHours()).padStart(2, '0');
       const mm = String(d.getMinutes()).padStart(2, '0');
-      return `${todayKey(d)} ${hh}:${mm}`;
+      // 작은 글씨에서 일반 공백은 날짜와 시간이 붙어 보여 조금 넓은 공백(en space)을 쓴다
+      return `${todayKey(d)}\u2002${hh}:${mm}`;
     }
 
     // 최신순으로 보면 앞 스팟보다 과거이므로 '전'으로 표시한다
@@ -1394,7 +1521,11 @@
     // UI Refresh & Map Rendering
     // ==========================================
     function refreshTripUI() {
-      if (travelSpots.length === 0) return;
+      updatePurgeButton();
+      if (travelSpots.length === 0) {
+        clearTripUI();
+        return;
+      }
 
       document.getElementById('tripStatsBar').style.display = 'grid';
       document.getElementById('sortToolbar').style.display = 'flex';
@@ -1418,6 +1549,7 @@
 
       renderMapElements();
       renderTimelineList();
+      updateGifEstimates();
     }
 
     function renderMapElements() {
@@ -1441,9 +1573,10 @@
         const customIcon = L.divIcon({
           className: 'custom-leaflet-marker',
           html: `
-            <div class="marker-card-thumb" style="--pin:${pin}; background-image: url('${spot.dataUrl}')">
+            <div class="marker-card-thumb" style="--pin:${frameColor(spot, idx)}; background-image: url('${spot.thumbUrl || spot.dataUrl}')">
               <div class="marker-number-tag" style="--pin:${pin}">${idx + 1}</div>
             </div>
+            <span class="marker-ground" style="--pin:${pin}"></span>
           `,
           iconSize: [50, 58],
           iconAnchor: [25, 56],
@@ -1453,7 +1586,7 @@
         const marker = L.marker(latlng, { icon: customIcon }).addTo(leafletMap);
         marker.bindPopup(`
           <div class="popup-content-box">
-            <img src="${spot.dataUrl}" class="popup-img">
+            <img src="${spot.thumbUrl || spot.dataUrl}" class="popup-img">
             <div class="popup-title">${idx + 1}. ${spot.name}</div>
             <div class="popup-meta">📅 ${spotWhen(spot)} • ${spot.isGps ? '📍 GPS' : '⏱️ 시간정렬'}</div>
           </div>
@@ -1517,6 +1650,7 @@
         const item = document.createElement('div');
         item.className = 'timeline-item';
         item.style.setProperty('--spot', spotColor(idx));   // 지도 핀과 같은 색
+        item.style.setProperty('--frame', frameColor(spot, idx));   // 썸네일 테두리는 사진의 대표 색
 
         // Calculate delta with previous spot
         let intervalHtml = '';
@@ -1534,7 +1668,7 @@
             <button class="btn-reorder" onclick="moveSpotDown(${idx})" ${idx === travelSpots.length - 1 ? 'disabled' : ''} title="아래로">▼</button>
           </div>
           <div class="item-idx">${idx + 1}</div>
-          <img src="${spot.dataUrl}" class="item-thumb" alt="spot">
+          <img src="${spot.thumbUrl || spot.dataUrl}" class="item-thumb" alt="spot">
           <div class="item-info">
             <input type="text" class="item-name-input" value="${spot.name}" onchange="updateSpotName(${idx}, this.value)">
             <div class="item-meta">
@@ -1563,6 +1697,45 @@
       travelSpots.splice(idx, 1);
       stopTourAnimation();
       refreshTripUI();
+    }
+
+    // 위치 정보가 없는 사진은 지도에서 임의 위치(서울 근처)에 찍혀 동선을 어지럽힌다.
+    // 메신저로 받은 사진처럼 GPS가 지워진 사진을 한 번에 걸러낸다.
+    function updatePurgeButton() {
+      const btn = document.getElementById('btnPurgeNoGps');
+      if (!btn) return;
+      const n = travelSpots.filter(s => !s.isGps).length;
+      btn.style.display = n ? 'inline-block' : 'none';
+      btn.textContent = `🧹 GPS 없는 사진 지우기 (${n})`;
+    }
+
+    function removeSpotsWithoutGps() {
+      const n = travelSpots.filter(s => !s.isGps).length;
+      if (!n) return;
+      const all = n === travelSpots.length;
+      const msg = all
+        ? `모든 사진(${n}장)에 위치 정보가 없어요. 전부 지우면 목록이 비게 됩니다. 지울까요?`
+        : `위치 정보(GPS)가 없는 사진 ${n}장을 지울까요?`;
+      if (!confirm(msg)) return;
+      travelSpots = travelSpots.filter(s => s.isGps);
+      stopTourAnimation();
+      refreshTripUI();
+    }
+
+    // 마지막 사진까지 지우면 예전 지도·목록이 그대로 남아 있지 않게 화면을 처음 상태로 돌린다
+    function clearTripUI() {
+      ['tripStatsBar', 'sortToolbar', 'mapSection', 'timelineCard'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      if (leafletMap) {
+        mapMarkers.forEach(m => leafletMap.removeLayer(m));
+        [routeGlow, routePolyline, tourProgressLine, tourVehicleMarker].forEach(l => { if (l) leafletMap.removeLayer(l); });
+      }
+      mapMarkers = [];
+      document.getElementById('routeList').innerHTML = '';
+      const gifBox = document.getElementById('gifResultBox');
+      if (gifBox) gifBox.style.display = 'none';
     }
 
     // ==========================================
@@ -1943,13 +2116,13 @@
         ctx.stroke();
       }
 
-      // 4. Preload photos for pins
+      // 4. Preload photos for pins (핀은 작으므로 썸네일로 충분하다)
       const loadedImgs = await Promise.all(travelSpots.map(s => {
         return new Promise(res => {
           const img = new Image();
           img.onload = () => res(img);
           img.onerror = () => res(null);
-          img.src = s.dataUrl;
+          img.src = s.thumbUrl || s.dataUrl;
         });
       }));
 
@@ -1967,7 +2140,7 @@
         ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
         ctx.fillStyle = '#0f172a';
         ctx.fill();
-        ctx.strokeStyle = '#10b981';
+        ctx.strokeStyle = frameColor(p.spot, idx);
         ctx.lineWidth = 4;
         ctx.stroke();
 
@@ -2023,6 +2196,8 @@
       ctx.font = '13px "Pretendard", sans-serif';
       ctx.fillText(`총 ${travelSpots.length}개 스팟 • ${period} • ${currentMapStyleKey.toUpperCase()}`, 50, 88);
 
+      drawMapCredit(ctx, w - 12, h - 12, 13);
+
       try {
         const link = document.createElement('a');
         link.download = `travel_map_${currentMapStyleKey}_${Date.now()}.png`;
@@ -2036,6 +2211,226 @@
     }
 
     // 2. Export Real Satellite Animated GIF
+    // ------------------------------------------
+    // 지도는 Leaflet 화면을 캡처하지 않고 타일을 직접 받아 그린다.
+    // 그래야 프레임마다 카메라(중심·줌)를 바꿀 수 있어, 먼 거리를 이동할 때
+    // 출발지에서 줌인 → 이동 중 줌아웃 → 도착지에서 다시 줌인하는 연출이 가능하다.
+    let gifPhotoFit = 'cover';     // 'cover' 꽉 채우기(잘림) | 'contain' 전체 보이기(여백)
+    let gifCamera = 'follow';      // 'follow' 줌인 따라가기 | 'overview' 전체 동선 고정
+
+    function setGifOption(kind, value, el) {
+      if (kind === 'fit') gifPhotoFit = value;
+      else if (kind === 'quality') gifQuality = value;
+      else if (kind === 'zoom') gifZoom = value;
+      else gifCamera = value;
+      updateGifEstimates();
+      const group = el && el.parentElement;
+      if (group) group.querySelectorAll('.dock-pill-btn').forEach(b => b.classList.toggle('active', b === el));
+    }
+
+    const GIF_TILE_URL = {
+      satellite: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`,
+      topo: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${z}/${y}/${x}`,
+      osm: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`
+    };
+    const gifTileCache = new Map();   // url -> Promise<Image|null>
+
+    // view = { lat, lng, zoom(소수 가능) } 를 w×h 영역에 그릴 때 필요한 타일 목록
+    function tilesForView(view, w, h) {
+      const z = Math.max(1, Math.min(18, Math.round(view.zoom)));
+      const scale = Math.pow(2, view.zoom - z);
+      const c = projectMercator(view.lat, view.lng, z);
+      const halfW = w / 2 / scale, halfH = h / 2 / scale;
+      const n = Math.pow(2, z);
+      const tiles = [];
+      for (let tx = Math.floor((c.x - halfW) / 256); tx <= Math.floor((c.x + halfW) / 256); tx++) {
+        for (let ty = Math.max(0, Math.floor((c.y - halfH) / 256)); ty <= Math.min(n - 1, Math.floor((c.y + halfH) / 256)); ty++) {
+          const wx = ((tx % n) + n) % n;
+          tiles.push({ tx, ty, url: GIF_TILE_URL[currentMapStyleKey] ? GIF_TILE_URL[currentMapStyleKey](z, wx, ty) : GIF_TILE_URL.satellite(z, wx, ty) });
+        }
+      }
+      return { z, scale, c, tiles };
+    }
+
+    // 타일 이미지를 무한정 들고 있으면 장면이 많은 GIF에서 메모리가 계속 늘어난다
+    const GIF_TILE_CACHE_MAX = 300;
+    function loadGifTile(url) {
+      if (gifTileCache.has(url)) {
+        const hit = gifTileCache.get(url);
+        gifTileCache.delete(url);
+        gifTileCache.set(url, hit);   // 최근 사용으로 갱신
+        return hit;
+      }
+      gifTileCache.set(url, loadTileImage(url));
+      while (gifTileCache.size > GIF_TILE_CACHE_MAX) gifTileCache.delete(gifTileCache.keys().next().value);
+      return gifTileCache.get(url);
+    }
+
+    async function drawMapView(ctx, view, x0, y0, w, h) {
+      const plan = tilesForView(view, w, h);
+      const imgs = await Promise.all(plan.tiles.map(t => loadGifTile(t.url)));
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x0, y0, w, h);
+      ctx.clip();
+      ctx.fillStyle = currentMapStyleKey === 'osm' ? '#e2e8f0' : '#0b1329';
+      ctx.fillRect(x0, y0, w, h);
+      const size = 256 * plan.scale;
+      plan.tiles.forEach((t, i) => {
+        if (!imgs[i]) return;
+        const dx = x0 + w / 2 + (t.tx * 256 - plan.c.x) * plan.scale;
+        const dy = y0 + h / 2 + (t.ty * 256 - plan.c.y) * plan.scale;
+        try { ctx.drawImage(imgs[i], dx, dy, size + 1, size + 1); } catch (e) { /* CORS로 막힌 타일은 건너뛴다 */ }
+      });
+      ctx.restore();
+      return imgs.filter(Boolean).length;
+    }
+
+    // 위경도 → 지도 영역 안의 화면 좌표
+    function viewToScreen(view, lat, lng, x0, y0, w, h) {
+      const p = projectMercator(lat, lng, view.zoom);
+      const c = projectMercator(view.lat, view.lng, view.zoom);
+      return { x: x0 + w / 2 + (p.x - c.x), y: y0 + h / 2 + (p.y - c.y) };
+    }
+
+    // 점들이 w×h 안에 (여백 margin 비율로) 들어오는 view
+    function fitView(points, w, h, margin = 0.72, maxZoom = 16) {
+      const ps = points.map(p => projectMercator(p.lat, p.lng, 0));
+      const xs = ps.map(p => p.x), ys = ps.map(p => p.y);
+      const spanX = Math.max(...xs) - Math.min(...xs);
+      const spanY = Math.max(...ys) - Math.min(...ys);
+      let zoom = maxZoom;
+      if (spanX > 0 || spanY > 0) {
+        zoom = Math.log2(Math.min(
+          spanX > 0 ? (w * margin) / spanX : Infinity,
+          spanY > 0 ? (h * margin) / spanY : Infinity
+        ));
+      }
+      zoom = Math.max(2, Math.min(maxZoom, zoom));
+      // 중심은 메르카토르 평면의 가운데 (위도 평균이 아니라)
+      const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+      const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+      return { ...unproject0(cx, cy), zoom };
+    }
+
+    function unproject0(x, y) {
+      const lng = (x / 256 - 0.5) * 360;
+      const n = Math.PI - 2 * Math.PI * (y / 256);
+      const lat = 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+      return { lat, lng };
+    }
+
+    // 사진을 상자에 그린다. cover는 잘라서 꽉 채우고, contain은 흐린 배경 위에 전체를 보인다.
+    function drawPhotoInBox(ctx, img, x, y, w, h, fit) {
+      const ir = img.width / img.height, br = w / h;
+      if (fit === 'contain') {
+        ctx.fillStyle = '#0b1222';
+        ctx.fillRect(x, y, w, h);
+        // 같은 사진을 꽉 채워 어둡게 깔아 여백이 휑하지 않게 한다
+        let sw = img.width, sh = img.height, sx = 0, sy = 0;
+        if (ir > br) { sw = img.height * br; sx = (img.width - sw) / 2; }
+        else { sh = img.width / br; sy = (img.height - sh) / 2; }
+        ctx.globalAlpha = 0.28;
+        ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+        ctx.globalAlpha = 1;
+        let dw = w, dh = w / ir;
+        if (dh > h) { dh = h; dw = h * ir; }
+        ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+        return;
+      }
+      let sw = img.width, sh = img.height, sx = 0, sy = 0;
+      if (ir > br) { sw = img.height * br; sx = (img.width - sw) / 2; }
+      else { sh = img.width / br; sy = (img.height - sh) / 2; }
+      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+    }
+
+    // square 720×720: 위 지도 + 아래 캡션 (사진은 지도 위 카드)
+    // story  540×960: 위 지도 + 아래 큰 사진·캡션
+    // wide   960×540: 왼쪽 지도 + 오른쪽 큰 사진·캡션
+    const GIF_LAYOUTS = {
+      square: { GW: 720, GH: 720, map: [0, 0, 720, 480], panel: 'bottom' },
+      story: { GW: 540, GH: 960, map: [0, 0, 540, 420], panel: 'bottom-big' },
+      wide: { GW: 960, GH: 540, map: [0, 0, 560, 540], panel: 'right' }
+    };
+
+    // 길이·용량 프리셋. 사진은 어느 프리셋이든 모두 등장하고, 이동 장면의 양과 출력 크기만 다르다.
+    //  few: 사진 8장 이하일 때 구간마다 프레임 수 / far·pan: 사진이 많을 때 먼·중간 구간 프레임 수
+    //  maxTravel: 이동 장면에 쓸 수 있는 프레임 총량 (먼 구간부터 배정)
+    const GIF_QUALITY = {
+      light: { scale: 0.75, few: 4, far: 4, pan: 0, maxTravel: 24 },
+      normal: { scale: 1, few: 6, far: 5, pan: 0, maxTravel: 90 },
+      smooth: { scale: 1, few: 8, far: 7, pan: 3, maxTravel: 220 }
+    };
+    // 실측: 위성 지도 + 사진 프레임은 GIF로 픽셀당 약 0.45바이트
+    const GIF_BYTES_PER_PX = 0.45;
+    const GIF_DELAY = { travel: 110, arrive: 1100, start: 1000, end: 2200 };   // ms
+    let gifQuality = 'normal';
+    // 도착 장면의 지도 줌. 14 ≈ 화면 폭 5km(동네), 15.5 ≈ 2km(거리), 17 ≈ 0.7km(골목)
+    const GIF_ZOOM = { area: 14, street: 15.5, alley: 17 };
+    let gifZoom = 'street';
+
+    function planTravelGif(format, quality = gifQuality) {
+      const lay = GIF_LAYOUTS[format] || GIF_LAYOUTS.square;
+      const q = GIF_QUALITY[quality] || GIF_QUALITY.normal;
+      const MW = lay.map[2], MH = lay.map[3];
+      const spots = travelSpots.map(s => ({ lat: s.lat, lng: s.lng }));
+      const N = spots.length;
+
+      const overview = fitView(spots, MW, MH, 0.74, 15);
+      // 도착지 근처에서 쓸 줌 (GIF_ZOOM). 여행 전체가 이미 그보다 좁은 지역이면 전체 보기 줌을 그대로 쓴다.
+      const localZoom = Math.min(18, Math.max(overview.zoom, GIF_ZOOM[gifZoom] || GIF_ZOOM.street));
+      const follow = gifCamera === 'follow' && localZoom - overview.zoom > 0.6;
+
+      // 구간별 이동 프레임 수. 먼 구간: 줌아웃 → 이동 → 줌인 / 중간 구간: 짧게 패닝 / 가까운 구간: 바로 다음 사진
+      const travelZoom = follow ? localZoom : overview.zoom;
+      const view = Math.min(MW, MH);
+      const legs = spots.slice(1).map((b, i) => {
+        const pa = projectMercator(spots[i].lat, spots[i].lng, travelZoom);
+        const pb = projectMercator(b.lat, b.lng, travelZoom);
+        const d = Math.hypot(pb.x - pa.x, pb.y - pa.y);
+        const want = N <= 8 ? q.few : (d > view * 0.4 ? q.far : (q.pan && d > view * 0.12 ? q.pan : 0));
+        return { i, d, want, steps: 0 };
+      });
+      if (N <= 8) {
+        legs.forEach(l => { l.steps = l.want; });
+      } else {
+        let budget = q.maxTravel;
+        [...legs].sort((a, b) => b.d - a.d).forEach(l => {
+          if (l.want > 1 && l.want - 1 <= budget) { l.steps = l.want; budget -= l.want - 1; }
+        });
+      }
+
+      // 사진이 많으면 한 장씩 머무는 시간을 줄여 GIF가 1분을 훌쩍 넘지 않게 한다
+      const arriveDelay = N > 20 ? 700 : GIF_DELAY.arrive;
+      const plan = [[0, 0, 0, GIF_DELAY.start]];
+      legs.forEach(({ i, steps }) => {
+        for (let st = 1; st < steps; st++) {
+          const t = st / steps;
+          plan.push([i, t, t < 0.5 ? i : i + 1, GIF_DELAY.travel]);
+        }
+        plan.push([i, 1, i + 1, arriveDelay]);
+      });
+      plan[plan.length - 1][3] = GIF_DELAY.end;
+
+      const outW = Math.round(lay.GW * q.scale / 2) * 2;
+      const outH = Math.round(lay.GH * q.scale / 2) * 2;
+      return {
+        lay, spots, N, overview, localZoom, follow, plan, outW, outH,
+        estBytes: plan.length * outW * outH * GIF_BYTES_PER_PX,
+        seconds: plan.reduce((sum, f) => sum + f[3], 0) / 1000
+      };
+    }
+
+    // 포맷 버튼마다 예상 용량과 길이를 붙여 보여 준다
+    function updateGifEstimates() {
+      document.querySelectorAll('.gif-est').forEach(el => {
+        if (travelSpots.length < 2) { el.textContent = ''; return; }
+        const p = planTravelGif(el.dataset.fmt);
+        const mb = p.estBytes / 1048576;
+        el.textContent = ` · 약 ${Math.max(1, Math.round(mb))}MB · ${Math.round(p.seconds)}초`;
+      });
+    }
+
     async function generateTravelGIF(format = 'square') {
       if (travelSpots.length < 2) {
         alert('GIF를 생성하려면 최소 2장 이상의 사진이 필요합니다.');
@@ -2044,27 +2439,13 @@
 
       const alertEl = document.getElementById('statusAlert');
       alertEl.style.display = 'block';
-      alertEl.textContent = '⏳ 실제 위성 지도 타일과 사진을 결합하여 고화질 타임랩스 GIF를 렌더링 중입니다...';
+      const setStatus = (msg) => { alertEl.textContent = msg; };
+      setStatus('⏳ 지도 타일과 사진을 불러오는 중입니다...');
 
-      // 전체 동선이 프레임 안에 펼쳐지도록 지도를 먼저 모든 스팟에 맞춘다.
-      // (이걸 안 하면 현재 확대된 화면 그대로 캡처돼 점들이 한 곳에 뭉치거나
-      //  화면 밖으로 나간다 — "한 공간에 몰려 있는" 현상의 원인)
-      fitAllMarkers();
-      await new Promise(r => setTimeout(r, 1100));   // 지도 이동 + 위성 타일 로드 대기
-
-      // 출력 포맷: 정사각 1:1 또는 세로 9:16(스토리)
-      const isStory = format === 'story';
-      const GW = isStory ? 540 : 720;
-      const GH = isStory ? 960 : 720;
-
-      // 지도 컨테이너의 종횡비를 그대로 보존해 지도 영역 높이를 잡는다.
-      // 이래야 위성 지도가 눌리거나 늘어나지 않는다(가로·세로 같은 배율).
-      const mapEl = document.getElementById('realMap');
-      const mapRect = mapEl.getBoundingClientRect();
-      const mapAspect = (mapRect.height || 480) / (mapRect.width || 800);
-      let MAP_H = Math.round(GW * mapAspect);
-      MAP_H = Math.max(200, Math.min(MAP_H, GH - 150));   // 캡션 패널 최소 공간 확보
-      const panelH = GH - MAP_H;
+      const P = planTravelGif(format);
+      const lay = P.lay;
+      const { GW, GH } = lay;
+      const [MX, MY, MW, MH] = lay.map;
 
       const tempC = document.createElement('canvas');
       tempC.width = GW; tempC.height = GH;
@@ -2083,275 +2464,353 @@
         c.closePath();
       };
 
-      // Preload user photos
-      const loadedImgs = await Promise.all(travelSpots.map(sp => {
-        return new Promise(res => {
-          const img = new Image();
-          img.onload = () => res(img);
-          img.onerror = () => res(null);
-          img.src = sp.dataUrl;
-        });
-      }));
+      // 50장을 한꺼번에 펼치면 1600px 비트맵만 수백 MB가 된다.
+      // 프레임은 한 번에 한 사진만 쓰므로, 지금 쓰는 사진 두어 장만 들고 있는다.
+      const gs = travelSpots;
 
-      // 지도 영역용 베이스맵 (위쪽 GW x MAP_H)
-      const basemapC = document.createElement('canvas');
-      basemapC.width = GW; basemapC.height = MAP_H;
-      const bCtx = basemapC.getContext('2d');
-      const basemapInfo = await renderBasemapToCanvas(bCtx, GW, MAP_H);
-
-      // 좌표 매핑 (지도 영역 기준)
-      const scaleX = GW / (mapRect.width || 1);
-      const scaleY = MAP_H / (mapRect.height || 1);
-
-      const screenPoints = travelSpots.map(sp => {
-        if (leafletMap && basemapInfo.usedDom) {
-          const pt = leafletMap.latLngToContainerPoint([sp.lat, sp.lng]);
-          return { x: pt.x * scaleX, y: pt.y * scaleY, name: sp.name, date: sp.date };
-        } else if (basemapInfo.bestZoom) {
-          const pr = projectMercator(sp.lat, sp.lng, basemapInfo.bestZoom);
-          return { x: GW / 2 + (pr.x - basemapInfo.pCenter.x), y: MAP_H / 2 + (pr.y - basemapInfo.pCenter.y), name: sp.name, date: sp.date };
+      const photoCache = new Map();
+      function getPhoto(i) {
+        if (!photoCache.has(i)) {
+          photoCache.set(i, new Promise(res => {
+            const img = new Image();
+            img.onload = () => res(img);
+            img.onerror = () => res(null);
+            img.src = gs[i].dataUrl;
+          }));
+          while (photoCache.size > 2) photoCache.delete(photoCache.keys().next().value);
         }
-        return { x: GW / 2, y: MAP_H / 2, name: sp.name, date: sp.date };
-      });
+        return photoCache.get(i);
+      }
+      let currentPhoto = null;
 
-      const N = screenPoints.length;
-      const tripTitle = 'MY TRAVEL LOG';
-      const firstDate = travelSpots[0].date;
-      const lastDate = travelSpots[N - 1].date;
+      const { N, spots, overview, localZoom, follow } = P;
+      const firstDate = gs[0].date;
+      const lastDate = gs[N - 1].date;
 
-      // 한 프레임 그리기 — prog 구간(s -> s+1), focus = 캡션/사진에 쓸 스팟 index
-      function drawFrame(s, curX, curY, angleRad, focus) {
-        // BG
+      // ── 카메라 ──
+      const ease = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+      function cameraAt(s, t) {
+        if (!follow) return overview;
+        const a = spots[s], b = spots[Math.min(s + 1, N - 1)];
+        const pa = projectMercator(a.lat, a.lng, 0), pb = projectMercator(b.lat, b.lng, 0);
+        const e = ease(t);
+        const center = unproject0(pa.x + (pb.x - pa.x) * e, pa.y + (pb.y - pa.y) * e);
+        // 이동 중간에는 두 지점이 함께 보이는 줌까지 빠졌다가 다시 들어간다
+        const segZoom = Math.min(localZoom, fitView([a, b], MW, MH, 0.62, 18).zoom);
+        const zoom = localZoom - (localZoom - segZoom) * Math.sin(Math.PI * t);
+        return { ...center, zoom };
+      }
+
+      function vehicleAt(s, t) {
+        const a = spots[s], b = spots[Math.min(s + 1, N - 1)];
+        const pa = projectMercator(a.lat, a.lng, 0), pb = projectMercator(b.lat, b.lng, 0);
+        const e = ease(t);
+        return { ...unproject0(pa.x + (pb.x - pa.x) * e, pa.y + (pb.y - pa.y) * e), angle: Math.atan2(pb.x - pa.x, -(pb.y - pa.y)) };
+      }
+
+      // 줌인 모드에서는 전체 동선을 보여 주는 작은 지도를 구석에 둔다
+      const inset = follow ? { w: Math.round(MW * (lay.panel === 'right' ? 0.34 : 0.3)) } : null;
+      let insetBase = null, insetView = null;
+      if (inset) {
+        inset.h = Math.round(inset.w * 0.72);
+        inset.x = MX + MW - inset.w - 14;
+        inset.y = MY + 16;
+        insetView = fitView(spots, inset.w, inset.h, 0.7, 15);
+        insetBase = document.createElement('canvas');
+        insetBase.width = inset.w; insetBase.height = inset.h;
+        await drawMapView(insetBase.getContext('2d'), insetView, 0, 0, inset.w, inset.h);
+      }
+
+      // ── 한 프레임 ──
+      async function drawFrame(s, t, focus) {
+        currentPhoto = await getPhoto(focus);
+        const view = cameraAt(s, t);
+        const veh = vehicleAt(s, t);
+
         tCtx.fillStyle = '#0a0f1e';
         tCtx.fillRect(0, 0, GW, GH);
+        await drawMapView(tCtx, view, MX, MY, MW, MH);
 
-        // 지도
-        tCtx.drawImage(basemapC, 0, 0, GW, MAP_H);
+        const toS = (lat, lng) => viewToScreen(view, lat, lng, MX, MY, MW, MH);
 
-        // 지도 비네트 (가장자리 어둡게 — 시네마틱)
-        const vg = tCtx.createRadialGradient(GW / 2, MAP_H / 2, MAP_H * 0.28, GW / 2, MAP_H / 2, MAP_H * 0.8);
+        tCtx.save();
+        tCtx.beginPath(); tCtx.rect(MX, MY, MW, MH); tCtx.clip();
+
+        // 비네트
+        const vg = tCtx.createRadialGradient(MX + MW / 2, MY + MH / 2, Math.min(MW, MH) * 0.3, MX + MW / 2, MY + MH / 2, Math.max(MW, MH) * 0.75);
         vg.addColorStop(0, 'rgba(0,0,0,0)');
-        vg.addColorStop(1, 'rgba(0,0,0,0.4)');
+        vg.addColorStop(1, 'rgba(0,0,0,0.42)');
         tCtx.fillStyle = vg;
-        tCtx.fillRect(0, 0, GW, MAP_H);
+        tCtx.fillRect(MX, MY, MW, MH);
 
-        // 상단 타이틀 바
-        const topG = tCtx.createLinearGradient(0, 0, 0, 86);
-        topG.addColorStop(0, 'rgba(5,10,20,0.82)');
-        topG.addColorStop(1, 'rgba(5,10,20,0)');
-        tCtx.fillStyle = topG;
-        tCtx.fillRect(0, 0, GW, 86);
-        tCtx.textAlign = 'left';
-        tCtx.fillStyle = '#ffffff';
-        tCtx.font = '800 24px Pretendard, sans-serif';
-        tCtx.fillText('✈  ' + tripTitle, 26, 40);
-        tCtx.fillStyle = 'rgba(255,255,255,0.72)';
-        tCtx.font = '600 14px Pretendard, sans-serif';
-        tCtx.fillText(firstDate + '  —  ' + lastDate, 28, 64);
-
-        // 지나온 경로 — 흰 casing + 흰 선
-        tCtx.lineCap = 'round';
-        tCtx.lineJoin = 'round';
-        tCtx.strokeStyle = 'rgba(255,255,255,0.28)';
-        tCtx.lineWidth = 10;
-        tCtx.beginPath();
-        tCtx.moveTo(screenPoints[0].x, screenPoints[0].y);
-        for (let k = 1; k <= s; k++) tCtx.lineTo(screenPoints[k].x, screenPoints[k].y);
-        tCtx.lineTo(curX, curY);
-        tCtx.stroke();
-        tCtx.strokeStyle = '#ffffff';
-        tCtx.lineWidth = 3.5;
-        tCtx.beginPath();
-        tCtx.moveTo(screenPoints[0].x, screenPoints[0].y);
-        for (let k = 1; k <= s; k++) tCtx.lineTo(screenPoints[k].x, screenPoints[k].y);
-        tCtx.lineTo(curX, curY);
-        tCtx.stroke();
-
-        // 핀 — 스팟 색
-        for (let k = 0; k <= s; k++) {
-          const col = spotColor(k);
+        // 지나온 경로
+        const pts = spots.map(p => toS(p.lat, p.lng));
+        const cur = toS(veh.lat, veh.lng);
+        const tracePath = () => {
           tCtx.beginPath();
-          tCtx.arc(screenPoints[k].x, screenPoints[k].y, 13, 0, Math.PI * 2);
-          tCtx.fillStyle = col;
-          tCtx.fill();
-          tCtx.lineWidth = 3;
-          tCtx.strokeStyle = '#ffffff';
-          tCtx.stroke();
+          tCtx.moveTo(pts[0].x, pts[0].y);
+          for (let k = 1; k <= s; k++) tCtx.lineTo(pts[k].x, pts[k].y);
+          tCtx.lineTo(cur.x, cur.y);
+        };
+        tCtx.lineCap = 'round'; tCtx.lineJoin = 'round';
+        tracePath(); tCtx.strokeStyle = 'rgba(255,255,255,0.3)'; tCtx.lineWidth = 10; tCtx.stroke();
+        tracePath(); tCtx.strokeStyle = '#ffffff'; tCtx.lineWidth = 3.5; tCtx.stroke();
+
+        // 핀
+        const reached = t >= 1 ? s + 1 : s;
+        for (let k = 0; k <= reached; k++) {
+          tCtx.beginPath();
+          tCtx.arc(pts[k].x, pts[k].y, 13, 0, Math.PI * 2);
+          tCtx.fillStyle = spotColor(k); tCtx.fill();
+          tCtx.lineWidth = 3; tCtx.strokeStyle = '#ffffff'; tCtx.stroke();
           tCtx.fillStyle = '#ffffff';
           tCtx.font = 'bold 13px sans-serif';
           tCtx.textAlign = 'center';
-          tCtx.fillText(k + 1, screenPoints[k].x, screenPoints[k].y + 4.5);
+          tCtx.fillText(k + 1, pts[k].x, pts[k].y + 4.5);
         }
 
-        // 차량 아이콘
+        // 이동 수단
         tCtx.save();
-        tCtx.translate(curX, curY);
-        tCtx.rotate(angleRad);
+        tCtx.translate(cur.x, cur.y);
+        tCtx.rotate(veh.angle);
         tCtx.font = '30px sans-serif';
-        tCtx.textAlign = 'center';
-        tCtx.textBaseline = 'middle';
+        tCtx.textAlign = 'center'; tCtx.textBaseline = 'middle';
         tCtx.fillText(tourState.vehicleIcon, 0, 0);
         tCtx.restore();
         tCtx.textBaseline = 'alphabetic';
 
-        // 사진 카드 — 둥근 모서리 + 스팟 색 테두리 (지도 영역 안)
-        const activeImg = loadedImgs[focus];
-        if (activeImg) {
-          const cardW = 150, cardH = 120;
-          let px = curX - cardW / 2;
-          let py = curY - cardH - 26;
-          if (py < 92) py = curY + 28;
-          if (px < 14) px = 14;
-          if (px + cardW > GW - 14) px = GW - cardW - 14;
-          if (py + cardH > MAP_H - 10) py = MAP_H - cardH - 10;
-          const col = spotColor(focus);
+        // 정사각형은 사진을 지도 위 카드로 띄운다 (나머지는 패널에 큰 사진)
+        const activeImg = currentPhoto;
+        if (lay.panel === 'bottom' && activeImg) {
+          const cardW = 170, cardH = 140;
+          let px = cur.x - cardW / 2;
+          let py = cur.y - cardH - 26;
+          if (py < MY + 92) py = cur.y + 28;
+          px = Math.max(MX + 14, Math.min(px, MX + MW - cardW - 14));
+          py = Math.min(py, MY + MH - cardH - 26);
           tCtx.save();
-          tCtx.shadowColor = 'rgba(0,0,0,0.5)';
-          tCtx.shadowBlur = 12;
-          tCtx.shadowOffsetY = 4;
-          rrect(tCtx, px, py, cardW, cardH, 12);
-          tCtx.fillStyle = '#0f172a';
-          tCtx.fill();
+          tCtx.shadowColor = 'rgba(0,0,0,0.5)'; tCtx.shadowBlur = 12; tCtx.shadowOffsetY = 4;
+          rrect(tCtx, px, py, cardW, cardH, 12); tCtx.fillStyle = '#0f172a'; tCtx.fill();
           tCtx.restore();
           tCtx.save();
-          rrect(tCtx, px + 6, py + 6, cardW - 12, cardH - 34, 8);
-          tCtx.clip();
-          const ir = activeImg.width / activeImg.height, tr = (cardW - 12) / (cardH - 34);
-          let sw = activeImg.width, sh = activeImg.height, sxx = 0, syy = 0;
-          if (ir > tr) { sw = activeImg.height * tr; sxx = (activeImg.width - sw) / 2; }
-          else { sh = activeImg.width / tr; syy = (activeImg.height - sh) / 2; }
-          tCtx.drawImage(activeImg, sxx, syy, sw, sh, px + 6, py + 6, cardW - 12, cardH - 34);
+          rrect(tCtx, px + 6, py + 6, cardW - 12, cardH - 34, 8); tCtx.clip();
+          drawPhotoInBox(tCtx, activeImg, px + 6, py + 6, cardW - 12, cardH - 34, gifPhotoFit);
           tCtx.restore();
           rrect(tCtx, px + 1, py + 1, cardW - 2, cardH - 2, 11);
-          tCtx.lineWidth = 2.5;
-          tCtx.strokeStyle = col;
-          tCtx.stroke();
+          tCtx.lineWidth = 2.5; tCtx.strokeStyle = frameColor(gs[focus], focus); tCtx.stroke();
           tCtx.fillStyle = '#f8fafc';
           tCtx.font = 'bold 12px Pretendard, sans-serif';
           tCtx.textAlign = 'center';
-          const tn = screenPoints[focus].name.length > 13 ? screenPoints[focus].name.substring(0, 12) + '…' : screenPoints[focus].name;
-          tCtx.fillText(tn, px + cardW / 2, py + cardH - 11);
+          const nm = gs[focus].name;
+          tCtx.fillText(nm.length > 15 ? nm.substring(0, 14) + '…' : nm, px + cardW / 2, py + cardH - 11);
         }
 
-        // 하단 캡션 패널
-        const panelTop = MAP_H;
-        const panelG = tCtx.createLinearGradient(0, panelTop - 40, 0, GH);
-        panelG.addColorStop(0, 'rgba(10,15,30,0)');
-        panelG.addColorStop(0.2, '#0a0f1e');
-        panelG.addColorStop(1, '#0a0f1e');
-        tCtx.fillStyle = panelG;
-        tCtx.fillRect(0, panelTop - 40, GW, GH - (panelTop - 40));
-
-        const fc = screenPoints[focus];
-        const fcol = spotColor(focus);
-        const bigPanel = panelH >= 300;     // 세로 포맷: 큰 사진 + 캡션
-
-        let capY = panelTop + 50;
-        if (bigPanel) {
-          // 스토리용 큰 사진 카드
-          const fImg = loadedImgs[focus];
-          const bw = GW - 64;
-          const bh = Math.min(panelH - 150, Math.round(bw * 0.72));
-          const bx = 32, by = panelTop + 24;
-          if (fImg) {
-            tCtx.save();
-            tCtx.shadowColor = 'rgba(0,0,0,0.5)'; tCtx.shadowBlur = 16; tCtx.shadowOffsetY = 6;
-            rrect(tCtx, bx, by, bw, bh, 16); tCtx.fillStyle = '#0f172a'; tCtx.fill();
-            tCtx.restore();
-            tCtx.save(); rrect(tCtx, bx + 6, by + 6, bw - 12, bh - 12, 11); tCtx.clip();
-            const ir = fImg.width / fImg.height, tr = (bw - 12) / (bh - 12);
-            let sw = fImg.width, sh = fImg.height, sxx = 0, syy = 0;
-            if (ir > tr) { sw = fImg.height * tr; sxx = (fImg.width - sw) / 2; }
-            else { sh = fImg.width / tr; syy = (fImg.height - sh) / 2; }
-            tCtx.drawImage(fImg, sxx, syy, sw, sh, bx + 6, by + 6, bw - 12, bh - 12);
-            tCtx.restore();
-            rrect(tCtx, bx + 1, by + 1, bw - 2, bh - 2, 15); tCtx.lineWidth = 3; tCtx.strokeStyle = fcol; tCtx.stroke();
-          }
-          capY = by + bh + 44;
-        }
-
-        // 색 액센트 바
-        tCtx.fillStyle = fcol;
-        rrect(tCtx, 32, capY - 8, 6, 52, 3); tCtx.fill();
-        // SPOT n/N
+        // 타이틀
+        const topG = tCtx.createLinearGradient(0, MY, 0, MY + 86);
+        topG.addColorStop(0, 'rgba(5,10,20,0.82)');
+        topG.addColorStop(1, 'rgba(5,10,20,0)');
+        tCtx.fillStyle = topG;
+        tCtx.fillRect(MX, MY, MW, 86);
         tCtx.textAlign = 'left';
-        tCtx.fillStyle = fcol;
+        tCtx.fillStyle = '#ffffff';
+        tCtx.font = '800 22px Pretendard, sans-serif';
+        tCtx.fillText('✈  MY TRAVEL LOG', MX + 24, MY + 38);
+        tCtx.fillStyle = 'rgba(255,255,255,0.72)';
+        tCtx.font = '600 13px Pretendard, sans-serif';
+        tCtx.fillText(firstDate === lastDate ? firstDate : firstDate + '  —  ' + lastDate, MX + 26, MY + 60);
+
+        // 미니맵
+        if (inset) {
+          tCtx.save();
+          tCtx.shadowColor = 'rgba(0,0,0,0.5)'; tCtx.shadowBlur = 10;
+          rrect(tCtx, inset.x, inset.y, inset.w, inset.h, 10); tCtx.fillStyle = '#0b1329'; tCtx.fill();
+          tCtx.restore();
+          tCtx.save();
+          rrect(tCtx, inset.x, inset.y, inset.w, inset.h, 10); tCtx.clip();
+          tCtx.drawImage(insetBase, inset.x, inset.y);
+          tCtx.fillStyle = 'rgba(5,10,20,0.25)';
+          tCtx.fillRect(inset.x, inset.y, inset.w, inset.h);
+          const ip = spots.map(p => viewToScreen(insetView, p.lat, p.lng, inset.x, inset.y, inset.w, inset.h));
+          const ic = viewToScreen(insetView, veh.lat, veh.lng, inset.x, inset.y, inset.w, inset.h);
+          tCtx.lineCap = 'round'; tCtx.lineJoin = 'round';
+          tCtx.beginPath(); ip.forEach((p, i) => i ? tCtx.lineTo(p.x, p.y) : tCtx.moveTo(p.x, p.y));
+          tCtx.strokeStyle = 'rgba(255,255,255,0.35)'; tCtx.lineWidth = 1.5; tCtx.stroke();
+          tCtx.beginPath(); tCtx.moveTo(ip[0].x, ip[0].y);
+          for (let k = 1; k <= s; k++) tCtx.lineTo(ip[k].x, ip[k].y);
+          tCtx.lineTo(ic.x, ic.y);
+          tCtx.strokeStyle = '#ffffff'; tCtx.lineWidth = 2.5; tCtx.stroke();
+          ip.forEach((p, k) => {
+            tCtx.beginPath(); tCtx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            tCtx.fillStyle = k <= reached ? spotColor(k) : 'rgba(255,255,255,0.5)'; tCtx.fill();
+          });
+          tCtx.beginPath(); tCtx.arc(ic.x, ic.y, 5, 0, Math.PI * 2);
+          tCtx.fillStyle = '#ffffff'; tCtx.fill();
+          tCtx.lineWidth = 2; tCtx.strokeStyle = spotColor(focus); tCtx.stroke();
+          tCtx.restore();
+          rrect(tCtx, inset.x + 0.5, inset.y + 0.5, inset.w - 1, inset.h - 1, 10);
+          tCtx.lineWidth = 1.5; tCtx.strokeStyle = 'rgba(255,255,255,0.75)'; tCtx.stroke();
+        }
+        tCtx.restore();
+
+        drawPanel(focus);
+      }
+
+      // ── 캡션 패널 ──
+      function drawDots(cx, y, focus) {
+        // 스팟이 많으면 점 대신 진행 막대
+        if (N > 14) {
+          const bw = 240, bh = 6, bx = cx - bw / 2;
+          rrect(tCtx, bx, y - bh / 2, bw, bh, 3);
+          tCtx.fillStyle = 'rgba(255,255,255,0.18)'; tCtx.fill();
+          rrect(tCtx, bx, y - bh / 2, Math.max(bh, bw * (focus + 1) / N), bh, 3);
+          tCtx.fillStyle = spotColor(focus); tCtx.fill();
+          return;
+        }
+        const gap = 20, r = 5;
+        const x0 = cx - (N - 1) * gap / 2;
+        for (let i = 0; i < N; i++) {
+          tCtx.beginPath();
+          tCtx.arc(x0 + i * gap, y, i === focus ? r + 1.5 : r, 0, Math.PI * 2);
+          tCtx.fillStyle = i <= focus ? spotColor(i) : 'rgba(255,255,255,0.22)';
+          tCtx.fill();
+        }
+      }
+
+      function drawCaption(x, y, focus, maxChars) {
+        const col = spotColor(focus);
+        const sp = gs[focus];
+        tCtx.fillStyle = col;
+        rrect(tCtx, x, y - 8, 6, 52, 3); tCtx.fill();
+        tCtx.textAlign = 'left';
         tCtx.font = '800 14px Pretendard, sans-serif';
-        tCtx.fillText('SPOT ' + (focus + 1) + ' / ' + N, 52, capY);
-        // 스팟 이름
+        tCtx.fillText('SPOT ' + (focus + 1) + ' / ' + N, x + 20, y);
         tCtx.fillStyle = '#f8fafc';
         tCtx.font = '800 26px Pretendard, sans-serif';
-        const maxName = isStory ? 15 : 18;
-        const bigName = fc.name.length > maxName ? fc.name.substring(0, maxName - 1) + '…' : fc.name;
-        tCtx.fillText(bigName, 52, capY + 30);
-        // 날짜
+        tCtx.fillText(sp.name.length > maxChars ? sp.name.substring(0, maxChars - 1) + '…' : sp.name, x + 20, y + 30);
         tCtx.fillStyle = 'rgba(255,255,255,0.62)';
         tCtx.font = '600 15px Pretendard, sans-serif';
-        tCtx.fillText('📅  ' + fc.date, 52, capY + 56);
-        // 진행 점
-        const dotGap = 20, dotR = 5;
-        if (bigPanel) {
-          const totalW = (N - 1) * dotGap;
-          const sx0 = (GW - totalW) / 2, yy = GH - 32;
-          for (let i = 0; i < N; i++) {
-            tCtx.beginPath();
-            tCtx.arc(sx0 + i * dotGap, yy, i === focus ? dotR + 1.5 : dotR, 0, Math.PI * 2);
-            tCtx.fillStyle = i <= focus ? spotColor(i) : 'rgba(255,255,255,0.22)';
-            tCtx.fill();
-          }
+        tCtx.fillText('📅  ' + spotWhen(sp), x + 20, y + 56);
+      }
+
+      function drawBigPhoto(x, y, w, h, focus) {
+        const img = currentPhoto;
+        if (!img) return;
+        tCtx.save();
+        tCtx.shadowColor = 'rgba(0,0,0,0.5)'; tCtx.shadowBlur = 16; tCtx.shadowOffsetY = 6;
+        rrect(tCtx, x, y, w, h, 16); tCtx.fillStyle = '#0f172a'; tCtx.fill();
+        tCtx.restore();
+        tCtx.save();
+        rrect(tCtx, x + 6, y + 6, w - 12, h - 12, 11); tCtx.clip();
+        drawPhotoInBox(tCtx, img, x + 6, y + 6, w - 12, h - 12, gifPhotoFit);
+        tCtx.restore();
+        rrect(tCtx, x + 1, y + 1, w - 2, h - 2, 15);
+        tCtx.lineWidth = 3; tCtx.strokeStyle = frameColor(gs[focus], focus); tCtx.stroke();
+      }
+
+      function drawPanel(focus) {
+        if (lay.panel === 'right') {
+          // 지도와 패널 경계를 부드럽게
+          const g = tCtx.createLinearGradient(MX + MW - 50, 0, MX + MW, 0);
+          g.addColorStop(0, 'rgba(10,15,30,0)');
+          g.addColorStop(1, '#0a0f1e');
+          tCtx.fillStyle = g;
+          tCtx.fillRect(MX + MW - 50, 0, 50, GH);
+          drawMapCredit(tCtx, MX + MW - 8, GH - 8, 10);
+          const px = MX + MW + 8, pw = GW - px - 28;
+          drawBigPhoto(px, 28, pw, 300, focus);
+          drawCaption(px + 4, 376, focus, 14);
+          drawDots(px + pw / 2, GH - 30, focus);
+          return;
+        }
+
+        const top = MY + MH;
+        const g = tCtx.createLinearGradient(0, top - 40, 0, GH);
+        g.addColorStop(0, 'rgba(10,15,30,0)');
+        g.addColorStop(0.2, '#0a0f1e');
+        g.addColorStop(1, '#0a0f1e');
+        tCtx.fillStyle = g;
+        tCtx.fillRect(0, top - 40, GW, GH - (top - 40));
+        drawMapCredit(tCtx, GW - 8, top - 4, 10);
+
+        if (lay.panel === 'bottom-big') {
+          const bw = GW - 64, bh = Math.min(GH - top - 170, Math.round(bw * 0.72));
+          drawBigPhoto(32, top + 20, bw, bh, focus);
+          drawCaption(32, top + 20 + bh + 40, focus, 15);
+          drawDots(GW / 2, GH - 30, focus);
         } else {
-          const dotsW = (N - 1) * dotGap;
-          const dxk = GW - 30 - dotsW, yy = capY + 22;
-          for (let i = 0; i < N; i++) {
-            tCtx.beginPath();
-            tCtx.arc(dxk + i * dotGap, yy, i === focus ? dotR + 1.5 : dotR, 0, Math.PI * 2);
-            tCtx.fillStyle = i <= focus ? spotColor(i) : 'rgba(255,255,255,0.22)';
-            tCtx.fill();
-          }
-        }
-        frames.push(tempC.toDataURL('image/jpeg', 0.8));
-      }
-
-      const frames = [];
-      const stepsBetween = 5;
-
-      for (let s = 0; s < N - 1; s++) {
-        const p1 = screenPoints[s];
-        const p2 = screenPoints[s + 1];
-        const angleRad = Math.atan2(p2.x - p1.x, -(p2.y - p1.y));
-        for (let st = 0; st <= stepsBetween; st++) {
-          const prog = st / stepsBetween;
-          const curX = p1.x + (p2.x - p1.x) * prog;
-          const curY = p1.y + (p2.y - p1.y) * prog;
-          const focus = prog < 0.5 ? s : s + 1;
-          drawFrame(s, curX, curY, angleRad, focus);
+          drawCaption(32, top + 56, focus, 18);
+          drawDots(GW / 2, GH - 34, focus);
         }
       }
-      // 마지막 스팟에서 잠깐 멈춰 마무리
-      const last = screenPoints[N - 1];
-      for (let hold = 0; hold < 4; hold++) {
-        drawFrame(N - 2, last.x, last.y, 0, N - 1);
-      }
 
-      gifshot.createGIF({
-        images: frames,
-        gifWidth: GW,
-        gifHeight: GH,
-        interval: 0.14,
-        numWorkers: 2
-      }, function(obj) {
+      // ── 프레임 순서 (planTravelGif) ──
+      const plan = P.plan;
+      // 가볍게 프리셋은 다 그린 뒤 작게 줄여서 인코딩한다
+      const outC = document.createElement('canvas');
+      outC.width = P.outW; outC.height = P.outH;
+      const oCtx = outC.getContext('2d', { willReadFrequently: true });
+      oCtx.imageSmoothingEnabled = true;
+      oCtx.imageSmoothingQuality = 'high';
+
+      // gifshot은 모든 프레임을 메모리에 쌓았다가 한꺼번에 묶어 프레임이 많으면 브라우저가 버티지 못한다.
+      // gifenc로 프레임을 그리는 즉시 인코딩하고 버려, 메모리는 프레임 한 장 + 완성 파일 크기만 쓴다.
+      let gifenc;
+      try {
+        gifenc = await loadGifEncoder();
+      } catch (err) {
         alertEl.style.display = 'none';
-        if (!obj.error) {
-          const gifImg = document.getElementById('gifPreview');
-          gifImg.src = obj.image;
-          const dlLink = document.getElementById('gifDownloadLink');
-          dlLink.href = obj.image;
-          document.getElementById('gifResultBox').style.display = 'flex';
-          document.getElementById('gifResultBox').scrollIntoView({ behavior: 'smooth' });
-        } else {
-          alert('GIF 생성 실패: ' + obj.error);
+        alert('GIF 인코더를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
+        return;
+      }
+      const { GIFEncoder, quantize, applyPalette } = gifenc;
+      const encoder = GIFEncoder();
+
+      try {
+        for (let i = 0; i < plan.length; i++) {
+          const [s, t, focus, delay] = plan[i];
+          await drawFrame(s, t, focus);
+          oCtx.drawImage(tempC, 0, 0, P.outW, P.outH);
+          const { data } = oCtx.getImageData(0, 0, P.outW, P.outH);
+          const palette = quantize(data, 256);
+          encoder.writeFrame(applyPalette(data, palette), P.outW, P.outH, { palette, delay });
+          setStatus(`⏳ 타임랩스 GIF를 그리는 중입니다... (${i + 1}/${plan.length})`);
+          // 화면이 멈춰 보이지 않게 프레임마다 숨을 돌린다
+          await new Promise(r => setTimeout(r, 0));
         }
-      });
+        encoder.finish();
+      } catch (err) {
+        alertEl.style.display = 'none';
+        alert('GIF 생성 실패: ' + err.message);
+        return;
+      } finally {
+        // 지도 타일 이미지는 다음 GIF에서 다시 받아도 되므로 메모리에서 비운다
+        gifTileCache.clear();
+      }
+
+      const blob = new Blob([encoder.bytes()], { type: 'image/gif' });
+      if (lastGifUrl) URL.revokeObjectURL(lastGifUrl);
+      lastGifUrl = URL.createObjectURL(blob);
+
+      alertEl.style.display = 'none';
+      document.getElementById('gifPreview').src = lastGifUrl;
+      const dlLink = document.getElementById('gifDownloadLink');
+      dlLink.href = lastGifUrl;
+      dlLink.download = `travel_${format}_${gifCamera}.gif`;
+      const head = document.querySelector('#gifResultBox > div');
+      if (head) head.textContent = `🎉 완성된 여행 타임랩스 GIF · ${N}곳 · ${(blob.size / 1048576).toFixed(1)}MB`;
+      document.getElementById('gifResultBox').style.display = 'flex';
+      document.getElementById('gifResultBox').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    let lastGifUrl = null;
+    let gifEncoderModule = null;
+    function loadGifEncoder() {
+      if (!gifEncoderModule) {
+        gifEncoderModule = import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js')
+          .catch(err => { gifEncoderModule = null; throw err; });
+      }
+      return gifEncoderModule;
     }
 
     // ==========================================
@@ -2385,6 +2844,8 @@
 
         return {
           dataUrl: c.toDataURL('image/jpeg', 0.85),
+          thumbUrl: makeThumbnail(c, THUMB_EDGE),
+          accent: dominantColor(c),
           name: s.name,
           date: s.date,
           lat: s.lat,

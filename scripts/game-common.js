@@ -15,7 +15,9 @@ function escapeHtml(value) {
 // 그래서 읽는 즉시 긴 변 기준으로 줄인 JPEG data URL로 바꾸고 원본 디코딩 결과는 바로 버린다.
 // 호출하는 쪽은 여러 장을 forEach로 동시에 돌리지 말고 for...of + await로 한 장씩 처리해야
 // 메모리 정점이 한 장 분량으로 유지된다. width/height는 축소 전 원본 크기다.
-async function loadPhotoFile(file, maxEdge = 2400, quality = 0.9) {
+// thumbEdge를 주면 목록·지도 마커용 작은 썸네일(thumbUrl)도 함께 만든다.
+// 작게 보이는 자리에도 큰 사진을 쓰면 브라우저가 장당 수 MB짜리 비트맵을 펼쳐 둔다.
+async function loadPhotoFile(file, maxEdge = 2400, quality = 0.9, thumbEdge = 0) {
     let source = null;
     let url = null;
     try {
@@ -49,12 +51,88 @@ async function loadPhotoFile(file, maxEdge = 2400, quality = 0.9) {
         ctx.fillRect(0, 0, c.width, c.height);
         ctx.drawImage(source, 0, 0, c.width, c.height);
         const dataUrl = c.toDataURL('image/jpeg', quality);
+        const thumbUrl = thumbEdge > 0 ? makeThumbnail(c, thumbEdge) : null;
+        const accent = dominantColor(c);
         c.width = c.height = 0;   // iOS는 캔버스 메모리를 늦게 돌려주므로 직접 비운다
-        return { dataUrl, width, height };
+        return { dataUrl, thumbUrl, accent, width, height };
     } finally {
         if (source && typeof source.close === 'function') source.close();
         if (url) URL.revokeObjectURL(url);
     }
+}
+
+// 이미 그려진 이미지·캔버스에서 긴 변 edge px짜리 JPEG 썸네일을 만든다
+function makeThumbnail(source, edge = 320, quality = 0.82) {
+    const w = source.naturalWidth || source.width;
+    const h = source.naturalHeight || source.height;
+    const k = Math.min(1, edge / Math.max(w, h));
+    const t = document.createElement('canvas');
+    t.width = Math.max(1, Math.round(w * k));
+    t.height = Math.max(1, Math.round(h * k));
+    const ctx = t.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(source, 0, 0, t.width, t.height);
+    const url = t.toDataURL('image/jpeg', quality);
+    t.width = t.height = 0;
+    return url;
+}
+
+// 사진의 대표 색을 뽑아 테두리·강조색으로 쓸 수 있게 한다 (#rrggbb).
+// 흰 벽·검은 그림자·회색 하늘이 면적상 가장 넓은 경우가 많아, 채도 있는 색을 색상환 구간별로
+// 모아 가장 비중이 큰 구간을 고른다. 테두리로 잘 보이도록 밝기와 채도는 일정 범위로 맞춘다.
+// 쓸 만한 색이 없으면(흑백 사진 등) fallback을 돌려준다.
+function dominantColor(source, fallback = null) {
+    const S = 32;
+    const c = document.createElement('canvas');
+    c.width = S; c.height = S;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    try {
+        ctx.drawImage(source, 0, 0, S, S);
+    } catch {
+        return fallback;
+    }
+    const data = ctx.getImageData(0, 0, S, S).data;
+    const bins = Array.from({ length: 18 }, () => ({ w: 0, r: 0, g: 0, b: 0 }));
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i] / 255, g = data[i + 1] / 255, b = data[i + 2] / 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        const l = (max + min) / 2;
+        const d = max - min;
+        if (d < 0.08 || l < 0.1 || l > 0.93) continue;   // 무채색·너무 어둡거나 밝은 픽셀 제외
+        const sat = d / (1 - Math.abs(2 * l - 1));
+        let h;
+        if (max === r) h = ((g - b) / d) % 6;
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h = (h * 60 + 360) % 360;
+        const bin = bins[Math.floor(h / 20)];
+        const w = sat * (1 - Math.abs(2 * l - 1) * 0.5);   // 선명하고 중간 밝기일수록 가중
+        bin.w += w; bin.r += data[i] * w; bin.g += data[i + 1] * w; bin.b += data[i + 2] * w;
+    }
+    const best = bins.reduce((a, b) => (b.w > a.w ? b : a));
+    if (best.w < 1.5) return fallback;   // 32×32 중 채도 있는 픽셀이 거의 없음
+
+    // 평균색을 HSL로 바꿔 테두리용으로 밝기·채도를 맞춘다
+    const r = best.r / best.w / 255, g = best.g / best.w / 255, b = best.b / best.w / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const d = max - min;
+    let h = 0;
+    if (d) {
+        if (max === r) h = ((g - b) / d) % 6;
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h = (h * 60 + 360) % 360;
+    }
+    const sat = Math.max(0.55, Math.min(0.9, d / (1 - Math.abs(max + min - 1) || 1)));
+    const light = 0.6;
+    const a = sat * Math.min(light, 1 - light);
+    const f = (n) => {
+        const k = (n + h / 30) % 12;
+        const v = light - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+        return Math.round(v * 255).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
 }
 
 // 드롭 영역을 살짝 벗어난 곳에 사진을 놓으면 브라우저가 페이지를 그 이미지로 바꿔 버려
