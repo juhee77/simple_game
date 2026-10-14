@@ -1229,14 +1229,19 @@
           decLng = baseLng;
         }
 
+        // 촬영 시각이 없으면(메신저로 받은 사진 등) 파일 수정 시각으로 대신한다
+        const shotAt = parseExifDateTime(dateTime);
+        const when = shotAt || new Date(file.lastModified || Date.now());
+
         travelSpots.push({
           dataUrl: dataUrl,
           name: file.name.replace(/\.[^/.]+$/, "") || `스팟 #${travelSpots.length + 1}`,
-          date: dateTime ? dateTime.substring(0, 10).replace(/:/g, '-') : new Date().toISOString().slice(0, 10),
+          date: todayKey(when),
           lat: decLat,
           lng: decLng,
           isGps: hasGps,
-          timeVal: dateTime ? new Date(dateTime.replace(/:/g, '/')).getTime() : Date.now() + travelSpots.length * 1000
+          timeVal: when.getTime(),
+          timeFromFile: !shotAt
         });
 
         if (callback) callback();
@@ -1256,18 +1261,39 @@
     }
 
     // Time difference format helper
+    // EXIF 시각은 "2025:05:04 10:20:30" 형식이다. 콜론을 전부 바꾸면 시간 부분까지
+    // "10/20/30"이 되어 날짜가 깨지고(NaN), 시간순 정렬이 아무것도 하지 않게 된다.
+    function parseExifDateTime(str) {
+      const m = /^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):?(\d{2})?/.exec(String(str || '').trim());
+      if (!m) return null;
+      const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0));
+      return isNaN(d.getTime()) || +m[1] < 1990 ? null : d;
+    }
+
+    // 목록·팝업에 보여 줄 촬영 일시 (같은 날 여러 장도 순서를 확인할 수 있게 시:분까지)
+    function spotWhen(spot) {
+      if (!Number.isFinite(spot.timeVal)) return spot.date;
+      const d = new Date(spot.timeVal);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${todayKey(d)} ${hh}:${mm}`;
+    }
+
+    // 최신순으로 보면 앞 스팟보다 과거이므로 '전'으로 표시한다
     function formatTimeDiff(ms) {
-      if (!ms || isNaN(ms) || ms <= 0) return null;
-      const totalMins = Math.round(ms / (1000 * 60));
+      if (!ms || isNaN(ms)) return null;
+      const suffix = ms > 0 ? '후' : '전';
+      const totalMins = Math.round(Math.abs(ms) / (1000 * 60));
+      if (totalMins === 0) return null;
       const hours = Math.floor(totalMins / 60);
       const mins = totalMins % 60;
       if (hours > 24) {
         const days = Math.floor(hours / 24);
         const remHours = hours % 24;
-        return `${days}일 ${remHours}시간 후`;
+        return `${days}일 ${remHours}시간 ${suffix}`;
       }
-      if (hours > 0) return `${hours}시간 ${mins}분 후`;
-      return `${mins}분 후`;
+      if (hours > 0) return `${hours}시간 ${mins}분 ${suffix}`;
+      return `${mins}분 ${suffix}`;
     }
 
     // ==========================================
@@ -1429,7 +1455,7 @@
           <div class="popup-content-box">
             <img src="${spot.dataUrl}" class="popup-img">
             <div class="popup-title">${idx + 1}. ${spot.name}</div>
-            <div class="popup-meta">📅 ${spot.date} • ${spot.isGps ? '📍 GPS' : '⏱️ 시간정렬'}</div>
+            <div class="popup-meta">📅 ${spotWhen(spot)} • ${spot.isGps ? '📍 GPS' : '⏱️ 시간정렬'}</div>
           </div>
         `);
 
@@ -1512,7 +1538,7 @@
           <div class="item-info">
             <input type="text" class="item-name-input" value="${spot.name}" onchange="updateSpotName(${idx}, this.value)">
             <div class="item-meta">
-              <span>📅 ${spot.date}</span>
+              <span title="${spot.timeFromFile ? '사진에 촬영 시각이 없어 파일 시각을 썼어요' : '촬영 시각'}">📅 ${spotWhen(spot)}${spot.timeFromFile ? ' (파일)' : ''}</span>
               ${spot.isGps ? '<span class="badge-gps">📍 GPS</span>' : '<span class="badge-virtual">⏱️ 추정</span>'}
               ${intervalHtml}
             </div>
