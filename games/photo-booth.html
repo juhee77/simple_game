@@ -339,7 +339,8 @@
       max-width: 100%;
       height: auto;
       max-height: 520px;
-      border-radius: 12px;
+      /* 저장되는 4컷처럼 미리보기도 각진 사각형으로 보여 준다 */
+      border-radius: 0;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
@@ -552,7 +553,8 @@
 
       <div class="preview-container" id="previewContainer">
         <canvas id="fourCutCanvas"></canvas>
-        <button onclick="download4Cut()" style="width: 100%;">📥 완성된 4컷 사진 다운로드 (PNG)</button>
+        <button onclick="save4CutToGallery()" style="width: 100%;">📲 사진첩에 저장 / 공유</button>
+        <button onclick="download4Cut()" style="width: 100%; margin-top: 8px; background: rgba(255,255,255,0.08); color: inherit; border: 1px solid rgba(255,255,255,0.15);">📥 파일로 다운로드 (PNG)</button>
       </div>
     </div>
   </div>
@@ -623,7 +625,9 @@
       }
       try {
         currentStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          // 1280×720을 세로 3:4로 자르면 폭이 540px밖에 안 남아 늘려 써야 했다(흐려짐).
+          // 이상값을 크게 주면 브라우저가 카메라가 지원하는 가장 큰 해상도를 고른다.
+          video: { facingMode: facingMode, width: { ideal: 3840 }, height: { ideal: 2160 } },
           audio: false
         });
         video.srcObject = currentStream;
@@ -710,15 +714,19 @@
         sy = (vH - sH) / 2;
       }
 
+      // 잘라낸 원본보다 크게 늘리면 흐려지기만 하므로, 긴 변은 원본 크기와 1600px 중 작은 쪽
+      const longEdge = Math.min(1600, Math.round(Math.max(sW, sH)));
       const tempCanvas = document.createElement('canvas');
       if (targetRatio >= 1) {
-        tempCanvas.width = 1200;
-        tempCanvas.height = Math.round(1200 / targetRatio);
+        tempCanvas.width = longEdge;
+        tempCanvas.height = Math.round(longEdge / targetRatio);
       } else {
-        tempCanvas.height = 1200;
-        tempCanvas.width = Math.round(1200 * targetRatio);
+        tempCanvas.height = longEdge;
+        tempCanvas.width = Math.round(longEdge * targetRatio);
       }
       const ctx = tempCanvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       if (facingMode === 'user') {
         ctx.translate(tempCanvas.width, 0);
@@ -726,7 +734,7 @@
       }
 
       ctx.drawImage(video, sx, sy, sW, sH, 0, 0, tempCanvas.width, tempCanvas.height);
-      const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.92);
+      const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.95);
 
       capturedPhotos.push(dataUrl);
       updateGallery();
@@ -864,18 +872,6 @@
       } else {
         ctx.filter = 'none';
       }
-    }
-
-    // 둥근 사각형 경로. 사진 모서리를 부드럽게 깎고 매트 테두리를 두르는 데 쓴다.
-    function roundRectPath(ctx, x, y, w, h, r) {
-      r = Math.min(r, w / 2, h / 2);
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
     }
 
     function drawImageCover(ctx, img, x, y, targetW, targetH) {
@@ -1040,22 +1036,14 @@
         const img = new Image();
         img.onload = () => {
           const s = slots[slot];
-          const r = activeLayout === 'film' ? 0 : Math.max(6, Math.min(s.w, s.h) * 0.05);
 
-          // 사진을 둥근 모서리로 깎아 넣는다
+          // 인생네컷처럼 사진은 모서리를 깎지 않은 사각형으로, 테두리 선 없이 프레임 색 위에 바로 놓는다
           ctx.save();
-          roundRectPath(ctx, s.x, s.y, s.w, s.h, r);
+          ctx.beginPath();
+          ctx.rect(s.x, s.y, s.w, s.h);
           ctx.clip();
           applyFilterToContext(ctx);
           drawImageCover(ctx, img, s.x, s.y, s.w, s.h);
-          ctx.restore();
-
-          // 사진 둘레에 은은한 매트 테두리 — 배경과 사진 사이에 깊이를 준다
-          ctx.save();
-          roundRectPath(ctx, s.x + 0.75, s.y + 0.75, s.w - 1.5, s.h - 1.5, r);
-          ctx.lineWidth = 1.5;
-          ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-          ctx.stroke();
           ctx.restore();
 
           loadedCount++;
@@ -1096,12 +1084,25 @@
               ctx.stroke();
             }
 
+            lastFrameBlob = null;
+            canvas.toBlob(b => { lastFrameBlob = b; }, 'image/png');
             document.getElementById('previewContainer').style.display = 'flex';
             document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
           }
         };
         img.src = capturedPhotos[photoIdx];
       });
+    }
+
+    let lastFrameBlob = null;
+
+    function save4CutToGallery() {
+      const name = `neon_4cut_${Date.now()}.png`;
+      if (lastFrameBlob) {
+        saveToGallery(lastFrameBlob, name);
+      } else {
+        document.getElementById('fourCutCanvas').toBlob(b => b && saveToGallery(b, name), 'image/png');
+      }
     }
 
     function download4Cut() {
