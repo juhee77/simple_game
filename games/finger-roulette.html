@@ -256,21 +256,124 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* Floating Result Dock */
+        .result-dock {
+            position: absolute;
+            bottom: calc(env(safe-area-inset-bottom, 16px) + 16px);
+            left: 50%;
+            transform: translateX(-50%) translateY(160%);
+            width: calc(100% - 32px);
+            max-width: 440px;
+            background: rgba(15, 23, 42, 0.94);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(245, 158, 11, 0.2);
+            border-radius: 20px;
+            padding: 16px;
+            z-index: 35;
+            backdrop-filter: blur(16px);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: auto;
+        }
+
+        .result-dock.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .result-dock-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-dock-title {
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .result-dock-summary {
+            font-size: 0.88rem;
+            color: #fef08a;
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        .result-btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .result-btn {
+            flex: 1;
+            padding: 11px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            border: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .result-btn-share {
+            background: rgba(6, 182, 212, 0.2);
+            border: 1px solid #06b6d4;
+            color: #67e8f9;
+        }
+
+        .result-btn-share:active {
+            background: rgba(6, 182, 212, 0.4);
+            transform: scale(0.96);
+        }
+
+        .result-btn-copy {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fef08a;
+        }
+
+        .result-btn-copy:active {
+            background: rgba(245, 158, 11, 0.4);
+            transform: scale(0.96);
+        }
+
+        .result-btn-restart {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .result-btn-restart:active {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(0.96);
+        }
+
         /* Penalty Roulette Modal (Bottom Sheet) */
         .penalty-modal {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(15, 23, 42, 0.96);
             border-top: 2px solid rgba(245, 158, 11, 0.5);
             border-radius: 24px 24px 0 0;
-            padding: 24px 20px calc(env(safe-area-inset-bottom, 16px) + 16px);
+            padding: 22px 20px calc(env(safe-area-inset-bottom, 16px) + 16px);
             z-index: 50;
             backdrop-filter: blur(20px);
             transform: translateY(105%);
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+            pointer-events: auto;
         }
 
         .penalty-modal.active {
@@ -290,27 +393,27 @@
         }
 
         .penalty-title {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 900;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
         .penalty-roulette-box {
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.55);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            padding: 20px;
+            padding: 18px;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             position: relative;
             overflow: hidden;
         }
 
         .penalty-result-text {
-            font-size: 1.5rem;
+            font-size: 1.45rem;
             font-weight: 900;
             color: #fef08a;
             min-height: 2.2rem;
@@ -320,19 +423,26 @@
             text-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
         }
 
-        .penalty-actions {
+        .penalty-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .penalty-footer-row {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn-spin-again {
-            flex: 1;
+            flex: 1.3;
             background: linear-gradient(135deg, #f59e0b, #d97706);
             color: #000;
             border: none;
-            padding: 14px;
+            padding: 12px;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 0.92rem;
             font-weight: 900;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
@@ -344,12 +454,13 @@
         }
 
         .btn-close-modal {
+            flex: 0.7;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.15);
             color: #fff;
-            padding: 14px 20px;
+            padding: 12px;
             border-radius: 12px;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: 700;
             cursor: pointer;
         }
@@ -360,22 +471,30 @@
             bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: rgba(239, 68, 68, 0.9);
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
-            padding: 10px 20px;
+            padding: 10px 22px;
             border-radius: 25px;
             font-size: 0.85rem;
             font-weight: 800;
-            z-index: 40;
+            z-index: 60;
             opacity: 0;
             pointer-events: none;
             transition: all 0.25s ease;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            white-space: nowrap;
         }
 
         .toast-msg.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-msg.warning {
+            background: rgba(239, 68, 68, 0.95);
+            border-color: #ef4444;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
         }
     </style>
 </head>
@@ -422,10 +541,31 @@
     <!-- Large Countdown Indicator -->
     <div id="countdownOverlay" class="countdown-overlay">3</div>
 
-    <!-- Warning Toast -->
+    <!-- Warning & Info Toast -->
     <div id="toastMsg" class="toast-msg">손가락을 떼지 마세요!</div>
 
-    <!-- Penalty Roulette Modal -->
+    <!-- Floating Result Dock -->
+    <div id="resultDock" class="result-dock">
+        <div class="result-dock-header">
+            <div class="result-dock-title">
+                <span>👑</span> <span id="resultDockTitle">당첨 결과</span>
+            </div>
+            <div id="resultDockSummary" class="result-dock-summary"></div>
+        </div>
+        <div class="result-btn-row">
+            <button id="btnSaveImageDock" class="result-btn result-btn-share" title="결과 화면 카드 이미지 저장">
+                <span>📸</span> 결과 저장
+            </button>
+            <button id="btnCopyTextDock" class="result-btn result-btn-copy" title="카카오톡 단톡방용 텍스트 복사">
+                <span>📋</span> 카톡 복사
+            </button>
+            <button id="btnRestartDock" class="result-btn result-btn-restart" title="다음 판 시작">
+                <span>🔄</span> 다시 하기
+            </button>
+        </div>
+    </div>
+
+    <!-- Penalty Roulette Modal (Bottom Sheet) -->
     <div id="penaltyModal" class="penalty-modal">
         <div class="penalty-badge">지목된 사람 벌칙 확정!</div>
         <div class="penalty-title">
@@ -435,8 +575,16 @@
         <div class="penalty-roulette-box">
             <div id="penaltyResultText" class="penalty-result-text">룰렛 회전 중...</div>
         </div>
-        <div class="penalty-actions">
-            <button id="btnSpinAgain" class="btn-spin-again">🎲 벌칙 다시 뽑기</button>
+        <div class="penalty-actions-grid">
+            <button id="btnSaveImagePenalty" class="result-btn result-btn-share">
+                <span>📸</span> 결과 저장
+            </button>
+            <button id="btnCopyResultPenalty" class="result-btn result-btn-copy">
+                <span>📋</span> 카톡 복사
+            </button>
+        </div>
+        <div class="penalty-footer-row">
+            <button id="btnSpinAgain" class="btn-spin-again">🎲 벌칙 재추첨</button>
             <button id="btnClosePenalty" class="btn-close-modal">닫기</button>
         </div>
     </div>
@@ -569,18 +717,28 @@
             const desktopNoticeBtn = document.getElementById('desktopNoticeBtn');
             const modePills = document.querySelectorAll('.mode-pill');
 
+            // Result Dock Elements
+            const resultDock = document.getElementById('resultDock');
+            const resultDockTitle = document.getElementById('resultDockTitle');
+            const resultDockSummary = document.getElementById('resultDockSummary');
+            const btnSaveImageDock = document.getElementById('btnSaveImageDock');
+            const btnCopyTextDock = document.getElementById('btnCopyTextDock');
+            const btnRestartDock = document.getElementById('btnRestartDock');
+
+            const btnSaveImagePenalty = document.getElementById('btnSaveImagePenalty');
+            const btnCopyResultPenalty = document.getElementById('btnCopyResultPenalty');
+
             // Game State
             let dpr = window.devicePixelRatio || 1;
             let width = 0;
             let height = 0;
 
             let touchesMap = new Map(); // identifier -> TouchObject
-            let simulatedTouches = [];
             let currentMode = 'single'; // 'single', 'multi', 'teams', 'order'
             let targetCount = 1; // 1, 2, 3
             let isPenaltyEnabled = true;
 
-            let gameState = 'waiting'; // 'waiting', 'countdown', 'selected', 'finished'
+            let gameState = 'waiting'; // 'waiting', 'countdown', 'selected'
             let countdownStart = 0;
             const COUNTDOWN_DURATION = 2600; // ms
             let lastTickSecond = 0;
@@ -588,6 +746,7 @@
             let particles = [];
             let shockwaves = [];
             let winners = []; // Array of chosen identifiers
+            let lastResultSnapshot = null; // Full record of the finished round for image/copy
 
             function resizeCanvas() {
                 dpr = window.devicePixelRatio || 1;
@@ -606,6 +765,14 @@
                 if ('vibrate' in navigator) {
                     try { navigator.vibrate(pattern); } catch (e) {}
                 }
+            }
+
+            function getModeName(mode, count) {
+                if (mode === 'single') return '🎯 1명 지목';
+                if (mode === 'multi') return `👥 ${count}명 당첨`;
+                if (mode === 'teams') return `⚖️ ${count}팀 나누기`;
+                if (mode === 'order') return '🔢 순서 정하기';
+                return '손가락 룰렛';
             }
 
             // Mode Selector Event
@@ -630,6 +797,10 @@
             // Simulated Touch for Desktop / PC
             let simCounter = 1000;
             function addSimulatedTouch(x = null, y = null) {
+                if (gameState === 'selected') {
+                    resetRound();
+                }
+
                 simCounter++;
                 const simId = simCounter;
                 const px = x !== null ? x : width * (0.2 + Math.random() * 0.6);
@@ -668,6 +839,11 @@
             canvas.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 audio.init();
+
+                if (gameState === 'selected') {
+                    // Start new round on new touch
+                    resetRound();
+                }
 
                 Array.from(e.changedTouches).forEach(t => {
                     const colorObj = COLOR_PALETTE[touchesMap.size % COLOR_PALETTE.length];
@@ -711,7 +887,7 @@
                 });
 
                 if (wasInCountdown && touchesMap.size < 2 && gameState !== 'selected') {
-                    showToast("손가락을 떼지 마세요!");
+                    showToast("손가락을 떼지 마세요!", true);
                     audio.playError();
                     triggerVibration([50, 50, 50]);
                     resetRound();
@@ -727,32 +903,32 @@
             canvas.addEventListener('mousedown', (e) => {
                 if (e.target !== canvas) return;
                 audio.init();
-                // If clicked, add a simulated finger at that position
                 addSimulatedTouch(e.clientX, e.clientY);
             });
 
-            function showToast(text) {
+            function showToast(text, isWarning = false) {
                 toastMsg.textContent = text;
+                toastMsg.classList.toggle('warning', isWarning);
                 toastMsg.classList.add('show');
                 clearTimeout(toastMsg._timer);
                 toastMsg._timer = setTimeout(() => {
                     toastMsg.classList.remove('show');
-                }, 1600);
+                }, 2200);
             }
 
             function resetRound() {
                 gameState = 'waiting';
                 countdownOverlay.style.display = 'none';
                 instructionBox.classList.remove('hidden');
+                resultDock.classList.remove('active');
+                penaltyModal.classList.remove('active');
+                touchesMap.clear();
                 winners = [];
             }
 
             function checkTouchesState() {
                 if (gameState === 'selected') {
-                    // If all touches lifted after selection, ready for next
-                    if (touchesMap.size === 0) {
-                        resetRound();
-                    }
+                    // Do not reset when fingers are lifted; let users view, copy, or export!
                     return;
                 }
 
@@ -779,6 +955,8 @@
                 lastTickSecond = 3;
                 countdownOverlay.textContent = '3';
                 countdownOverlay.style.display = 'block';
+                resultDock.classList.remove('active');
+                penaltyModal.classList.remove('active');
                 audio.playCountdownTick(1.0);
                 triggerVibration(40);
             }
@@ -806,7 +984,6 @@
                     const count = Math.min(targetCount, candidates.length);
                     winners = shuffled.slice(0, count).map(c => c.id);
                 } else if (currentMode === 'teams') {
-                    // Assign team labels to each
                     const teamColors = ['#06b6d4', '#ec4899', '#10b981'];
                     const numTeams = targetCount;
                     shuffled.forEach((c, idx) => {
@@ -816,7 +993,6 @@
                     });
                     winners = candidates.map(c => c.id);
                 } else if (currentMode === 'order') {
-                    // Order 1, 2, 3...
                     shuffled.forEach((c, idx) => {
                         c.order = idx + 1;
                     });
@@ -841,10 +1017,56 @@
                 audio.playWinFanfare();
                 triggerVibration([80, 50, 120]);
 
+                // Record Snapshot for image export and clipboard copy
+                lastResultSnapshot = {
+                    mode: currentMode,
+                    targetCount: targetCount,
+                    totalCount: candidates.length,
+                    timestamp: new Date(),
+                    participants: candidates.map(c => ({
+                        id: c.id,
+                        name: c.name,
+                        color: c.color,
+                        isWinner: winners.includes(c.id),
+                        team: c.team,
+                        teamColor: c.teamColor,
+                        order: c.order,
+                        x: c.x,
+                        y: c.y
+                    })),
+                    winners: [...winners],
+                    penalty: null
+                };
+
+                updateResultDockUI();
+
                 if (isPenaltyEnabled && (currentMode === 'single' || currentMode === 'multi')) {
                     setTimeout(() => {
                         openPenaltyRoulette();
                     }, 500);
+                } else {
+                    // Show Floating Result Dock immediately
+                    resultDock.classList.add('active');
+                }
+            }
+
+            function updateResultDockUI() {
+                if (!lastResultSnapshot) return;
+
+                if (lastResultSnapshot.mode === 'single' || lastResultSnapshot.mode === 'multi') {
+                    const winnerNames = lastResultSnapshot.participants
+                        .filter(p => p.isWinner)
+                        .map(p => p.name)
+                        .join(', ');
+                    resultDockTitle.textContent = `당첨: ${winnerNames}`;
+                    resultDockSummary.textContent = lastResultSnapshot.penalty ? `벌칙: ${lastResultSnapshot.penalty}` : `${lastResultSnapshot.totalCount}명 참여`;
+                } else if (lastResultSnapshot.mode === 'teams') {
+                    resultDockTitle.textContent = `팀 나누기 완료 (${lastResultSnapshot.targetCount}팀)`;
+                    resultDockSummary.textContent = `총 ${lastResultSnapshot.totalCount}명 배정`;
+                } else if (lastResultSnapshot.mode === 'order') {
+                    const first = lastResultSnapshot.participants.find(p => p.order === 1);
+                    resultDockTitle.textContent = `1번 순서: ${first ? first.name : ''}`;
+                    resultDockSummary.textContent = `총 ${lastResultSnapshot.totalCount}명 순서 결정`;
                 }
             }
 
@@ -871,6 +1093,11 @@
                         clearInterval(timer);
                         btnSpinAgain.disabled = false;
                         triggerVibration(100);
+
+                        if (lastResultSnapshot) {
+                            lastResultSnapshot.penalty = randomPenalty;
+                            updateResultDockUI();
+                        }
                     }
                 }, 60 + count * 6);
             }
@@ -881,7 +1108,385 @@
 
             btnClosePenalty.addEventListener('click', () => {
                 penaltyModal.classList.remove('active');
+                resultDock.classList.add('active');
             });
+
+            btnRestartDock.addEventListener('click', () => {
+                resetRound();
+            });
+
+            // ── 카카오톡 결과 텍스트 복사 ───────────────────────────
+            function generateShareText(snap) {
+                const timeStr = snap.timestamp.toLocaleDateString('ko-KR', {
+                    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                let lines = [
+                    `[👆 손가락 룰렛 결과]`,
+                    `일시: ${timeStr}`,
+                    `모드: ${getModeName(snap.mode, snap.targetCount)} (총 ${snap.totalCount}명 참여)`
+                ];
+
+                if (snap.mode === 'single' || snap.mode === 'multi') {
+                    const winnerList = snap.participants.filter(p => p.isWinner);
+                    lines.push(``);
+                    lines.push(winnerList.length === 1 ? `👑 당첨자:` : `👑 당첨자 (${winnerList.length}명):`);
+                    winnerList.forEach((w, idx) => {
+                        lines.push(`• ${w.name}`);
+                    });
+
+                    if (snap.penalty) {
+                        lines.push(``);
+                        lines.push(`🎰 확정 벌칙:`);
+                        lines.push(snap.penalty);
+                    }
+                } else if (snap.mode === 'teams') {
+                    const teamsMap = {};
+                    snap.participants.forEach(p => {
+                        if (!teamsMap[p.team]) teamsMap[p.team] = [];
+                        teamsMap[p.team].push(p);
+                    });
+                    lines.push(``);
+                    Object.keys(teamsMap).forEach(tName => {
+                        const mems = teamsMap[tName];
+                        lines.push(`${tName} (${mems.length}명): ${mems.map(m => m.name).join(', ')}`);
+                    });
+                } else if (snap.mode === 'order') {
+                    const sorted = [...snap.participants].sort((a, b) => a.order - b.order);
+                    lines.push(``);
+                    lines.push(`순서:`);
+                    sorted.forEach(p => {
+                        lines.push(`${p.order}번: ${p.name}`);
+                    });
+                }
+
+                lines.push(``);
+                lines.push(`#미니게임천국 #손가락룰렛`);
+                return lines.join('\n');
+            }
+
+            function copyResultToClipboard() {
+                if (!lastResultSnapshot) {
+                    showToast("복사할 결과가 없습니다.", true);
+                    return;
+                }
+                audio.playTouchDown();
+                triggerVibration(30);
+
+                const text = generateShareText(lastResultSnapshot);
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast("📋 결과 텍스트가 복사되었습니다!");
+                    }).catch(() => {
+                        fallbackCopyText(text);
+                    });
+                } else {
+                    fallbackCopyText(text);
+                }
+            }
+
+            function fallbackCopyText(text) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("📋 결과 텍스트가 복사되었습니다!");
+                } catch (e) {
+                    showToast("복사에 실패했습니다.", true);
+                }
+                document.body.removeChild(ta);
+            }
+
+            btnCopyTextDock.addEventListener('click', copyResultToClipboard);
+            btnCopyResultPenalty.addEventListener('click', copyResultToClipboard);
+
+            // ── 고화질 결과 카드 이미지 저장 (사진첩/다운로드) ─────────────
+            function roundRect(c, x, y, width, height, radius) {
+                c.beginPath();
+                c.moveTo(x + radius, y);
+                c.lineTo(x + width - radius, y);
+                c.quadraticCurveTo(x + width, y, x + width, y + radius);
+                c.lineTo(x + width, y + height - radius);
+                c.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                c.lineTo(x + radius, y + height);
+                c.quadraticCurveTo(x, y + height, x, y + height - radius);
+                c.lineTo(x, y + radius);
+                c.quadraticCurveTo(x, y, x + radius, y);
+                c.closePath();
+            }
+
+            async function exportResultImage() {
+                if (!lastResultSnapshot) {
+                    showToast("저장할 결과가 없습니다.", true);
+                    return;
+                }
+                audio.init();
+                triggerVibration(40);
+
+                // Create High-DPI Canvas
+                const cardCanvas = document.createElement('canvas');
+                const cw = 720;
+                const ch = (lastResultSnapshot.penalty || lastResultSnapshot.mode === 'teams' || lastResultSnapshot.mode === 'order') ? 960 : 800;
+                cardCanvas.width = cw;
+                cardCanvas.height = ch;
+                const cctx = cardCanvas.getContext('2d');
+
+                // 1. Background dark cyber gradient
+                const bgGrad = cctx.createLinearGradient(0, 0, 0, ch);
+                bgGrad.addColorStop(0, '#0a0f1d');
+                bgGrad.addColorStop(0.5, '#060913');
+                bgGrad.addColorStop(1, '#020408');
+                cctx.fillStyle = bgGrad;
+                cctx.fillRect(0, 0, cw, ch);
+
+                // Decorative cyber grid lines
+                cctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+                cctx.lineWidth = 1;
+                for (let x = 40; x < cw; x += 40) {
+                    cctx.beginPath();
+                    cctx.moveTo(x, 0);
+                    cctx.lineTo(x, ch);
+                    cctx.stroke();
+                }
+                for (let y = 40; y < ch; y += 40) {
+                    cctx.beginPath();
+                    cctx.moveTo(0, y);
+                    cctx.lineTo(cw, y);
+                    cctx.stroke();
+                }
+
+                // Top Ambient Glow
+                const glowRad = cctx.createRadialGradient(cw / 2, 80, 10, cw / 2, 80, 280);
+                glowRad.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
+                glowRad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                cctx.fillStyle = glowRad;
+                cctx.fillRect(0, 0, cw, 360);
+
+                // 2. Card Header
+                cctx.font = 'bold 15px "Outfit", sans-serif';
+                cctx.fillStyle = '#f59e0b';
+                cctx.textAlign = 'center';
+                cctx.fillText('⚡ MINI GAME HEAVEN • MULTI-TOUCH ⚡', cw / 2, 60);
+
+                cctx.font = '900 36px "Outfit", "Noto Sans KR", sans-serif';
+                cctx.fillStyle = '#ffffff';
+                cctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+                cctx.shadowBlur = 15;
+                cctx.fillText('👆 손가락 룰렛 결과', cw / 2, 105);
+                cctx.shadowBlur = 0;
+
+                // Subtitle / Date / Mode
+                const dStr = lastResultSnapshot.timestamp.toLocaleDateString('ko-KR', {
+                    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                cctx.font = '600 15px "Outfit", "Noto Sans KR", sans-serif';
+                cctx.fillStyle = '#94a3b8';
+                cctx.fillText(`${dStr} • ${getModeName(lastResultSnapshot.mode, lastResultSnapshot.targetCount)} (${lastResultSnapshot.totalCount}명 참여)`, cw / 2, 140);
+
+                // Inner Card Container
+                const cardY = 170;
+                const cardH = ch - 260;
+                cctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+                cctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+                cctx.lineWidth = 2;
+                roundRect(cctx, 40, cardY, cw - 80, cardH, 20);
+                cctx.fill();
+                cctx.stroke();
+
+                // Content based on Mode
+                let contentY = cardY + 50;
+
+                if (lastResultSnapshot.mode === 'single' || lastResultSnapshot.mode === 'multi') {
+                    const winnerList = lastResultSnapshot.participants.filter(p => p.isWinner);
+
+                    cctx.font = '48px sans-serif';
+                    cctx.fillText('👑', cw / 2, contentY);
+                    contentY += 35;
+
+                    cctx.font = '900 24px "Noto Sans KR", sans-serif';
+                    cctx.fillStyle = '#fef08a';
+                    cctx.shadowColor = 'rgba(245, 158, 11, 0.6)';
+                    cctx.shadowBlur = 10;
+                    cctx.fillText(winnerList.length === 1 ? '최종 당첨자' : `최종 당첨자 (${winnerList.length}명)`, cw / 2, contentY);
+                    cctx.shadowBlur = 0;
+                    contentY += 50;
+
+                    // Draw Winner Ring Badges
+                    const itemSpacing = 160;
+                    const startX = (cw - (winnerList.length - 1) * itemSpacing) / 2;
+
+                    winnerList.forEach((w, idx) => {
+                        const wx = startX + idx * itemSpacing;
+                        const wy = contentY + 25;
+
+                        // Outer Glow Ring
+                        cctx.beginPath();
+                        cctx.arc(wx, wy, 38, 0, Math.PI * 2);
+                        cctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
+                        cctx.fill();
+                        cctx.lineWidth = 4;
+                        cctx.strokeStyle = w.color;
+                        cctx.shadowColor = w.color;
+                        cctx.shadowBlur = 18;
+                        cctx.stroke();
+                        cctx.shadowBlur = 0;
+
+                        // Inner circle
+                        cctx.beginPath();
+                        cctx.arc(wx, wy, 10, 0, Math.PI * 2);
+                        cctx.fillStyle = '#ffffff';
+                        cctx.fill();
+
+                        // Name
+                        cctx.font = 'bold 18px "Noto Sans KR", sans-serif';
+                        cctx.fillStyle = '#f8fafc';
+                        cctx.fillText(w.name, wx, wy + 62);
+                    });
+
+                    contentY += 130;
+
+                    // Penalty Box if active
+                    if (lastResultSnapshot.penalty) {
+                        const penW = cw - 140;
+                        const penH = 110;
+                        const penX = (cw - penW) / 2;
+                        const penY = cardY + cardH - 140;
+
+                        cctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+                        cctx.strokeStyle = '#f59e0b';
+                        cctx.lineWidth = 1.5;
+                        roundRect(cctx, penX, penY, penW, penH, 16);
+                        cctx.fill();
+                        cctx.stroke();
+
+                        cctx.font = 'bold 14px "Noto Sans KR", sans-serif';
+                        cctx.fillStyle = '#fbbf24';
+                        cctx.fillText('🎰 확정 벌칙 / 미션', cw / 2, penY + 32);
+
+                        cctx.font = '900 24px "Noto Sans KR", sans-serif';
+                        cctx.fillStyle = '#fef08a';
+                        cctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+                        cctx.shadowBlur = 12;
+                        cctx.fillText(lastResultSnapshot.penalty, cw / 2, penY + 75);
+                        cctx.shadowBlur = 0;
+                    }
+                } else if (lastResultSnapshot.mode === 'teams') {
+                    const teamsMap = {};
+                    lastResultSnapshot.participants.forEach(p => {
+                        if (!teamsMap[p.team]) teamsMap[p.team] = [];
+                        teamsMap[p.team].push(p);
+                    });
+
+                    const teamKeys = Object.keys(teamsMap);
+                    const colW = (cw - 120 - (teamKeys.length - 1) * 20) / teamKeys.length;
+
+                    teamKeys.forEach((tName, tIdx) => {
+                        const members = teamsMap[tName];
+                        const tColor = members[0].teamColor || '#06b6d4';
+                        const bx = 60 + tIdx * (colW + 20);
+                        const by = cardY + 30;
+                        const bh = cardH - 60;
+
+                        cctx.fillStyle = 'rgba(30, 41, 59, 0.5)';
+                        cctx.strokeStyle = tColor;
+                        cctx.lineWidth = 2;
+                        roundRect(cctx, bx, by, colW, bh, 14);
+                        cctx.fill();
+                        cctx.stroke();
+
+                        // Team Header
+                        cctx.font = '900 20px "Outfit", "Noto Sans KR", sans-serif';
+                        cctx.fillStyle = tColor;
+                        cctx.shadowColor = tColor;
+                        cctx.shadowBlur = 10;
+                        cctx.fillText(tName, bx + colW / 2, by + 36);
+                        cctx.shadowBlur = 0;
+
+                        cctx.font = '600 13px sans-serif';
+                        cctx.fillStyle = '#94a3b8';
+                        cctx.fillText(`(${members.length}명)`, bx + colW / 2, by + 58);
+
+                        // Members
+                        let memY = by + 95;
+                        members.forEach(m => {
+                            cctx.beginPath();
+                            cctx.arc(bx + 26, memY - 5, 6, 0, Math.PI * 2);
+                            cctx.fillStyle = m.color;
+                            cctx.fill();
+
+                            cctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+                            cctx.fillStyle = '#ffffff';
+                            cctx.textAlign = 'left';
+                            cctx.fillText(m.name, bx + 42, memY);
+                            cctx.textAlign = 'center';
+                            memY += 36;
+                        });
+                    });
+                } else if (lastResultSnapshot.mode === 'order') {
+                    const sorted = [...lastResultSnapshot.participants].sort((a, b) => a.order - b.order);
+                    let listY = cardY + 45;
+
+                    cctx.font = '900 22px "Noto Sans KR", sans-serif';
+                    cctx.fillStyle = '#ffffff';
+                    cctx.fillText('🔢 결정된 순서', cw / 2, listY);
+                    listY += 45;
+
+                    sorted.forEach(p => {
+                        const rowW = cw - 140;
+                        const rowH = 44;
+                        const rx = (cw - rowW) / 2;
+                        cctx.fillStyle = 'rgba(30, 41, 59, 0.6)';
+                        cctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                        cctx.lineWidth = 1;
+                        roundRect(cctx, rx, listY, rowW, rowH, 10);
+                        cctx.fill();
+                        cctx.stroke();
+
+                        // Order Number Badge
+                        cctx.font = '900 18px "Outfit", sans-serif';
+                        cctx.fillStyle = p.order === 1 ? '#f59e0b' : '#38bdf8';
+                        cctx.textAlign = 'left';
+                        cctx.fillText(`#${p.order}`, rx + 20, listY + 28);
+
+                        // Color circle
+                        cctx.beginPath();
+                        cctx.arc(rx + 75, listY + 22, 7, 0, Math.PI * 2);
+                        cctx.fillStyle = p.color;
+                        cctx.fill();
+
+                        // Name
+                        cctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+                        cctx.fillStyle = '#f8fafc';
+                        cctx.fillText(p.name, rx + 95, listY + 28);
+
+                        cctx.textAlign = 'center';
+                        listY += 54;
+                    });
+                }
+
+                // 4. Card Footer
+                cctx.font = '600 14px "Noto Sans KR", sans-serif';
+                cctx.fillStyle = '#64748b';
+                cctx.fillText('미니게임 천국 • 화면에 손가락만 대면 3초 만에 결정!', cw / 2, ch - 40);
+
+                // Save to Gallery / Download via game-common.js saveToGallery
+                cardCanvas.toBlob(async (blob) => {
+                    if (!blob) return;
+                    const res = await saveToGallery(blob, `finger-roulette-${Date.now()}.png`);
+                    if (res === 'shared') {
+                        showToast("📸 사진첩 저장 / 공유 완료!");
+                    } else if (res === 'downloaded') {
+                        showToast("📸 결과 이미지를 저장했습니다!");
+                    }
+                }, 'image/png');
+            }
+
+            btnSaveImageDock.addEventListener('click', exportResultImage);
+            btnSaveImagePenalty.addEventListener('click', exportResultImage);
 
             // Particle and Sparkle Systems
             function createSparkle(x, y, color, count = 12) {
@@ -954,7 +1559,6 @@
                     ctx.save();
 
                     if (isLoser) {
-                        // Dimmed out losers
                         ctx.globalAlpha = 0.2;
                         ctx.beginPath();
                         ctx.arc(touch.x, touch.y, touch.radius * 0.7, 0, Math.PI * 2);
@@ -996,7 +1600,6 @@
                     // Mode Specific Overlays (Crown, Team Name, Order)
                     if (gameState === 'selected') {
                         if (isWinner && (currentMode === 'single' || currentMode === 'multi')) {
-                            // Crown on Winner
                             ctx.font = '36px sans-serif';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'bottom';
@@ -1090,6 +1693,7 @@
             "참가자들이 화면에 각자 손가락을 1개씩 동시에 터치하고 유지합니다.",
             "2명 이상 감지되면 3... 2... 1... 카운트다운이 시작됩니다.",
             "카운트다운이 끝나면 네온 번개와 함께 당첨자 1명이 골드 링으로 지목됩니다.",
+            "결과 화면에서 고화질 결과 카드 이미지 저장 및 카카오톡 텍스트 복사를 할 수 있습니다.",
             "벌칙 옵션이 켜져 있으면 즉석 벌칙 룰렛(소주 원샷, 커피 쏘기 등)이 이어집니다."
         ],
         "tips": [
