@@ -910,6 +910,121 @@
 
     .timeline-header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
+    /* ── 위치 미지정 트레이 ── */
+    .unplaced-card { display: none; flex-direction: column; gap: 12px; border-color: rgba(245, 158, 11, 0.35); }
+    .unplaced-hint { font-size: 12px; color: var(--text-dim); font-weight: normal; }
+    .unplaced-help { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+    .unplaced-help summary { cursor: pointer; color: #fbbf24; font-weight: 700; }
+    .unplaced-help ul { margin: 6px 0 0 18px; }
+    .unplaced-list { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; }
+    .unplaced-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+      border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--card-border);
+    }
+    .unplaced-item.selected { border-color: #fbbf24; background: rgba(245, 158, 11, 0.1); }
+    .unplaced-item input[type=checkbox] { width: 18px; height: 18px; accent-color: #f59e0b; flex-shrink: 0; }
+    .unplaced-item img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+    .unplaced-info { flex: 1; min-width: 0; }
+    .unplaced-name { font-size: 13px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .unplaced-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+    .unplaced-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .unplaced-selected { font-size: 12px; color: #fbbf24; font-weight: 700; margin-right: auto; }
+    .place-search { display: flex; gap: 8px; }
+    .place-search input {
+      flex: 1; min-width: 0; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--card-border);
+      background: rgba(0, 0, 0, 0.3); color: #f8fafc; font-size: 13px;
+    }
+    .place-results { display: flex; flex-direction: column; gap: 6px; }
+    .place-result {
+      text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.04); color: #e2e8f0; font-size: 12px; cursor: pointer;
+    }
+    .place-result:hover { border-color: #fbbf24; }
+    .place-result b { color: #f8fafc; }
+    .place-credit { font-size: 10px; color: var(--text-dim); }
+
+    /* 촬영 시각 칩: 눌러서 고친다 */
+    .time-chip { cursor: pointer; border-bottom: 1px dashed rgba(148, 163, 184, 0.5); }
+    .time-chip:hover { color: #f8fafc; }
+    .time-edit {
+      font-size: 11px; padding: 2px 4px; border-radius: 4px; border: 1px solid #fbbf24;
+      background: #0f172a; color: #f8fafc; color-scheme: dark;
+    }
+    .badge-manual {
+      background: rgba(99, 102, 241, 0.15); color: #a5b4fc; font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+
+    /* 지도에서 위치 찍기 / 위치 조정 모드 */
+    .map-pick-banner {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 1000;
+      display: none; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px;
+      background: rgba(15, 23, 42, 0.92); border: 1px solid #fbbf24; color: #f8fafc;
+      font-size: 13px; font-weight: 700; white-space: nowrap; max-width: calc(100% - 24px);
+    }
+    .map-pick-banner button {
+      border: none; border-radius: 999px; padding: 4px 10px; background: #fbbf24; color: #1a1205;
+      font-weight: 800; font-size: 12px; cursor: pointer;
+    }
+    .map-frame.picking #realMap { cursor: crosshair; }
+
+    /* 좁은 화면: 미지정 사진의 버튼 줄을 아래로 내려 이름·시각이 눌리지 않게 */
+    @media (max-width: 560px) {
+      .unplaced-item { flex-wrap: wrap; }
+      .unplaced-info { flex: 1 1 calc(100% - 90px); }
+      .unplaced-btns { width: 100%; justify-content: flex-start; }
+      .unplaced-selected { width: 100%; }
+      .unplaced-actions .sort-btn { flex: 1; white-space: nowrap; }
+      .map-style-pills { flex-wrap: wrap; }
+      .map-pill { white-space: nowrap; }
+      .map-pick-banner { font-size: 12px; white-space: normal; }
+    }
+    .map-tool-btn {
+      background: rgba(0, 0, 0, 0.4); border: 1px solid var(--card-border); color: var(--text-dim);
+      font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+    }
+    .map-tool-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+
+    /* ── 투어 줄 ── */
+    .tour-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .tour-bar .btn-gradient-primary { flex: 1; min-width: 110px; padding: 11px 16px; }
+    .tour-bar .btn-gradient-stop { padding: 9px 14px; }
+    .tour-bar .dock-pill-btn { font-size: 15px; padding: 5px 9px; }
+    .tour-bar .speed-pill-group .dock-pill-btn { font-size: 12px; }
+
+    /* ── 저장 ── */
+    .export-panel {
+      display: flex; flex-direction: column; gap: 10px; padding: 14px;
+      border-radius: var(--radius-md); background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .export-title { font-size: 13px; font-weight: 800; color: #f8fafc; }
+    .export-format-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .export-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px;
+      border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.35);
+      background: linear-gradient(160deg, rgba(245, 158, 11, 0.16), rgba(236, 72, 153, 0.12));
+      color: #f8fafc; font-size: 13px; font-weight: 800; cursor: pointer; transition: transform 0.15s;
+    }
+    .export-btn:hover { transform: translateY(-2px); border-color: #f59e0b; }
+    .export-btn:last-child { border-color: rgba(139, 92, 246, 0.35); background: linear-gradient(160deg, rgba(236, 72, 153, 0.12), rgba(139, 92, 246, 0.16)); }
+    .export-icon { font-size: 22px; line-height: 1.2; }
+    .export-btn small { font-size: 10px; font-weight: 600; color: var(--text-dim); text-align: center; line-height: 1.3; }
+    .export-options summary { cursor: pointer; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+    .export-options summary span { color: #fbbf24; margin-left: 4px; }
+    .opt-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; margin-top: 10px; }
+    .opt-label { font-size: 11px; font-weight: 800; color: var(--text-dim); }
+    .opt-grid .gif-pill-group { width: fit-content; max-width: 100%; }
+    .opt-grid .dock-pill-btn { white-space: nowrap; }
+    @media (max-width: 560px) {
+      .export-format-row { grid-template-columns: repeat(2, 1fr); }
+      .opt-grid .gif-pill-group { width: 100%; }
+      .opt-grid .dock-pill-btn { flex: 1; padding: 6px 4px; }
+      .tour-bar .btn-gradient-primary { flex-basis: 100%; }
+      /* 이동 수단·속도·정지를 한 줄에 */
+      .tour-bar .transport-pill-group, .tour-bar .speed-pill-group { width: auto; flex: 1 1 0; min-width: 0; }
+      .tour-bar .btn-gradient-stop { flex: 0 0 auto; }
+    }
+
     .btn-purge {
       background: rgba(239, 68, 68, 0.1);
       border-color: rgba(239, 68, 68, 0.35);
@@ -1001,192 +1116,190 @@
       <div class="header-left">
         <a href="../index.html" class="back-btn" title="목록으로">←</a>
         <div class="header-title-box">
-          <h1>📍 여행 동선 지도 & 순서형 GIF</h1>
-          <p>사진 메타데이터(GPS & 시간) 기반 리얼 위성 인터랙티브 맵 & 부드러운 여정 트래블러</p>
+          <h1>📍 여행 동선 지도</h1>
+          <p>사진 위치로 동선을 그리고 움짤·영상으로 저장해요</p>
         </div>
       </div>
     </header>
 
-    <!-- Upload Card -->
+    <!-- 사진 올리기 -->
     <div class="glass-card" id="uploadCard">
       <div class="drop-zone" id="dropZone" onclick="document.getElementById('travelFiles').click()">
         <input type="file" id="travelFiles" multiple accept="image/*" style="display: none;" onchange="handleTravelUpload(event)">
         <div class="drop-icon-wrapper">🧭</div>
-        <div class="drop-title">여행 사진들을 여러 장 업로드하거나 끌어다 놓으세요</div>
-        <div class="drop-sub">사진 속 EXIF GPS 좌표와 촬영 일시를 자동 추출하여 실제 지도 위에 경로를 그립니다 (최대 50장)</div>
+        <div class="drop-title">📷 여행 사진 올리기</div>
+        <div class="drop-sub">눌러서 고르거나 끌어다 놓기 · 최대 50장</div>
         <button type="button" class="demo-btn-pill" onclick="event.stopPropagation(); loadDemoSamples();">
-          ✨ 제주도 여행 샘플 사진 즉시 로드
+          ✨ 제주 샘플로 해 보기
         </button>
       </div>
     </div>
 
-    <!-- Trip Summary Stats HUD -->
+    <!-- 요약 -->
     <div class="trip-stats-bar" id="tripStatsBar">
       <div class="stat-item">
-        <span class="stat-label">총 이동 거리</span>
+        <span class="stat-label">📏 거리</span>
         <div class="stat-val" id="totalDistVal">0 <span class="stat-unit">km</span></div>
       </div>
       <div class="stat-item">
-        <span class="stat-label">방문 여행 스팟</span>
+        <span class="stat-label">📍 스팟</span>
         <div class="stat-val" id="totalSpotsVal">0 <span class="stat-unit">개소</span></div>
       </div>
       <div class="stat-item">
-        <span class="stat-label">여행 기간</span>
+        <span class="stat-label">📅 기간</span>
         <div class="stat-val" id="tripPeriodVal">- <span class="stat-unit"></span></div>
       </div>
       <div class="stat-item">
-        <span class="stat-label">현재 정렬 모드</span>
-        <div class="stat-val" style="font-size: 14px; color: #34d399;" id="currentSortLabel">⏱️ 촬영 과거순</div>
+        <span class="stat-label">🧭 순서</span>
+        <div class="stat-val" style="font-size: 14px; color: #34d399;" id="currentSortLabel">⏱️ 과거순</div>
       </div>
     </div>
 
-    <!-- Sorting & Route Optimization Card -->
+    <!-- 순서 정하기 -->
     <div class="sort-card" id="sortToolbar">
-      <div class="sort-header">
-        <div class="sort-title">
-          <span>🧭 동선 순서 & 스마트 정렬 툴바</span>
-          <span style="font-size: 12px; color: var(--text-dim); font-weight: normal;">(시간/거리/스팟을 원하는 방식으로 정렬하세요)</span>
-        </div>
-        <span class="sort-current-badge" id="sortModeBadge">⏱️ 촬영 시간순 (과거순)</span>
-      </div>
+      <span class="sort-current-badge" id="sortModeBadge" hidden></span>
       <div class="sort-pills-row">
-        <button class="sort-btn active" id="btnSortTimeAsc" onclick="applySortMode('time-asc')">⏱️ 촬영 과거순</button>
-        <button class="sort-btn" id="btnSortTimeDesc" onclick="applySortMode('time-desc')">⏱️ 최신 촬영순</button>
-        <button class="sort-btn sort-btn-highlight" id="btnSortTsp" onclick="applySortMode('tsp')">⚡ 최적 이동 동선 (최단거리)</button>
-        <button class="sort-btn" id="btnSortName" onclick="applySortMode('name')">🏷️ 스팟 이름순</button>
-        <button class="sort-btn" onclick="reverseSpots()">🔄 순서 뒤집기</button>
+        <button class="sort-btn active" id="btnSortTimeAsc" onclick="applySortMode('time-asc')" title="찍은 시각이 이른 순서">⏱️ 과거순</button>
+        <button class="sort-btn" id="btnSortTimeDesc" onclick="applySortMode('time-desc')" title="찍은 시각이 늦은 순서">⏱️ 최신순</button>
+        <button class="sort-btn sort-btn-highlight" id="btnSortTsp" onclick="applySortMode('tsp')" title="가장 짧게 도는 순서로">⚡ 최단</button>
+        <button class="sort-btn" id="btnSortName" onclick="applySortMode('name')" title="스팟 이름 가나다순">🏷️ 이름</button>
+        <button class="sort-btn" onclick="reverseSpots()" title="지금 순서를 거꾸로">🔄 뒤집기</button>
       </div>
     </div>
 
-    <!-- Real Interactive Map Section -->
-    <div class="glass-card map-section" id="mapSection">
-      <div class="map-top-bar">
-        <div style="font-weight: 700; font-size: 15px; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
-          <span>🗺️ 실시간 인터랙티브 위성 지도</span>
-        </div>
-        <div class="map-style-pills">
-          <button class="map-pill active" onclick="changeMapStyle('satellite', this)">🛰️ 고해상도 위성</button>
-          <button class="map-pill" onclick="changeMapStyle('osm', this)">🗺️ 오픈스트리트맵</button>
-          <button class="map-pill" onclick="changeMapStyle('topo', this)">🏔️ 지형 고도맵</button>
-        </div>
-      </div>
-
-      <div class="map-frame">
-        <div id="realMap"></div>
-      </div>
-
-      <!-- Tour Control Dock -->
-      <div class="tour-control-dock">
-        <div class="dock-group">
-          <span class="dock-label">이동 수단</span>
-          <div class="transport-pill-group">
-            <button class="dock-pill-btn active" onclick="setTransportMode('✈️', this)">✈️ 비행기</button>
-            <button class="dock-pill-btn" onclick="setTransportMode('🚗', this)">🚗 자동차</button>
-            <button class="dock-pill-btn" onclick="setTransportMode('🥾', this)">🥾 트레킹</button>
-          </div>
-        </div>
-
-        <div class="dock-group">
-          <span class="dock-label">재생 속도</span>
-          <div class="speed-pill-group">
-            <button class="dock-pill-btn active" onclick="setTourSpeed(1, this)">1x</button>
-            <button class="dock-pill-btn" onclick="setTourSpeed(2, this)">2x</button>
-            <button class="dock-pill-btn" onclick="setTourSpeed(4, this)">4x</button>
-          </div>
-        </div>
-
-        <div class="dock-group" style="gap: 6px;">
-          <button class="btn-gradient-stop" onclick="stopTourAnimation()">⏹ 정지/리셋</button>
-        </div>
-      </div>
-
-      <!-- GIF Options -->
-      <div class="tour-control-dock">
-        <div class="dock-group">
-          <span class="dock-label">저장 형식</span>
-          <div class="gif-pill-group">
-            <button class="dock-pill-btn active" onclick="setGifOption('output', 'gif', this)">움짤 (GIF)</button>
-            <button class="dock-pill-btn" id="btnOutputMp4" onclick="setGifOption('output', 'mp4', this)">영상 (MP4)</button>
-          </div>
-        </div>
-        <div class="dock-group">
-          <span class="dock-label">사진 표시</span>
-          <div class="gif-pill-group">
-            <button class="dock-pill-btn active" onclick="setGifOption('fit', 'cover', this)">꽉 채우기 (잘림)</button>
-            <button class="dock-pill-btn" onclick="setGifOption('fit', 'contain', this)">전체 보이기 (여백)</button>
-          </div>
-        </div>
-        <div class="dock-group">
-          <span class="dock-label">길이·용량</span>
-          <div class="gif-pill-group">
-            <button class="dock-pill-btn" onclick="setGifOption('quality', 'light', this)">가볍게</button>
-            <button class="dock-pill-btn active" onclick="setGifOption('quality', 'normal', this)">보통</button>
-            <button class="dock-pill-btn" onclick="setGifOption('quality', 'smooth', this)">부드럽게</button>
-          </div>
-        </div>
-        <div class="dock-group">
-          <span class="dock-label">카메라</span>
-          <div class="gif-pill-group">
-            <button class="dock-pill-btn active" onclick="setGifOption('camera', 'follow', this)">🔍 줌인 따라가기</button>
-            <button class="dock-pill-btn" onclick="setGifOption('camera', 'overview', this)">🗺️ 전체 동선</button>
-          </div>
-        </div>
-        <div class="dock-group">
-          <span class="dock-label">줌인 정도</span>
-          <div class="gif-pill-group">
-            <button class="dock-pill-btn" onclick="setGifOption('zoom', 'area', this)">동네 (5km)</button>
-            <button class="dock-pill-btn active" onclick="setGifOption('zoom', 'street', this)">거리 (2km)</button>
-            <button class="dock-pill-btn" onclick="setGifOption('zoom', 'alley', this)">골목 (700m)</button>
-            <button class="dock-pill-btn" onclick="setGifOption('zoom', 'building', this)">건물 (350m)</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="action-button-row">
-        <button class="btn-gradient-primary" id="btnTourToggle" onclick="toggleMapTourAnimation()">
-          <span id="btnTourText">▶ 여행 동선 비행 투어 재생</span>
-        </button>
-        <button class="btn-gradient-secondary" onclick="exportMapImage()">
-          <span>🗺️ 고화질 지도 사진 (PNG) 내보내기</span>
-        </button>
-        <button class="btn-gradient-amber" onclick="generateTravelGIF('square')">
-          <span>🎬 타임랩스 · 정사각 1:1<small class="gif-est" data-fmt="square"></small></span>
-        </button>
-        <button class="btn-gradient-amber" onclick="generateTravelGIF('wide')">
-          <span>🖥️ 타임랩스 · 가로 16:9 (지도 + 사진)<small class="gif-est" data-fmt="wide"></small></span>
-        </button>
-        <button class="btn-gradient-amber" onclick="generateTravelGIF('story')">
-          <span>📱 타임랩스 · 세로 9:16 (스토리)<small class="gif-est" data-fmt="story"></small></span>
-        </button>
-      </div>
-
-      <div class="status-alert" id="statusAlert">⏳ 실제 위성 지도 타일과 사진을 결합하여 고화질 파일을 렌더링 중입니다...</div>
-
-      <!-- Result Box -->
-      <div class="gif-result-box" id="gifResultBox">
-        <div style="font-weight: 700; color: #38bdf8; font-size: 15px;">🎉 완성된 위성 기반 여행 타임랩스 GIF</div>
-        <img id="gifPreview" class="gif-preview-img" alt="Travel GIF Preview">
-        <video id="videoPreview" class="gif-preview-img" controls loop muted playsinline style="display: none;"></video>
-        <button class="btn-gradient-amber" style="width: 100%;" onclick="saveTravelGifToGallery()">
-          📲 사진첩에 저장 / 공유
-        </button>
-        <a id="gifDownloadLink" class="btn-gradient-secondary" style="text-decoration: none; width: 100%; text-align: center;" download="travel_satellite_route.gif">
-          📥 파일로 다운로드
-        </a>
-      </div>
-    </div>
-
-    <!-- Timeline Spots List -->
-    <div class="glass-card timeline-card" id="timelineCard">
+    <!-- 위치 없는 사진 (GPS가 없어 지도에 못 놓은 사진) -->
+    <div class="glass-card unplaced-card" id="unplacedCard">
       <div class="timeline-header">
-        <div class="timeline-title">
-          <span>🚩 추출된 여행 타임라인 순서</span>
-          <span style="font-size: 12px; color: var(--text-dim); font-weight: normal;">(▲/▼ 버튼으로 순서를 변경하거나 스팟명을 수정하세요)</span>
+        <div class="timeline-title" title="지도·동선·GIF·영상에서 빠져 있어요. 위치를 넣어 주세요.">
+          <span>📍 위치 없는 사진 <b id="unplacedCount">0</b></span>
         </div>
         <div class="timeline-header-actions">
-          <button class="btn-focus btn-purge" id="btnPurgeNoGps" onclick="removeSpotsWithoutGps()" style="display: none;"></button>
-          <button class="btn-focus" onclick="fitAllMarkers()">📍 전체 경로 맞춤</button>
+          <button class="btn-focus" onclick="toggleSelectAllUnplaced()" title="모두 고르기 / 해제">☑️ 전체</button>
+          <button class="btn-focus btn-purge" onclick="removeAllUnplaced()" title="위치 없는 사진 모두 지우기">🗑️</button>
+          <button class="btn-focus" onclick="showUnplacedHelp()" title="왜 위치가 없나요?">❓</button>
+        </div>
+      </div>
+      <div class="unplaced-list" id="unplacedList"></div>
+      <div class="unplaced-actions">
+        <span class="unplaced-selected" id="unplacedSelected"></span>
+        <button class="sort-btn" onclick="startMapPick()" title="고른 사진을 지도에서 눌러 놓기">🗺️ 지도에서</button>
+        <button class="sort-btn" onclick="estimateFromTime()" title="앞뒤 사진 사이를 촬영 시각 비율로 추정">⏱️ 자동 추정</button>
+      </div>
+      <div class="place-search">
+        <input type="search" id="placeQuery" placeholder="🔍 장소 검색 (예: 성산일출봉)" onkeydown="if (event.key === 'Enter') searchPlace()">
+        <button class="sort-btn" id="btnPlaceSearch" onclick="searchPlace()" title="검색">🔍</button>
+      </div>
+      <div class="place-results" id="placeResults"></div>
+    </div>
+
+    <!-- 지도 -->
+    <div class="glass-card map-section" id="mapSection">
+      <div class="map-top-bar">
+        <div class="map-style-pills">
+          <button class="map-pill active" onclick="changeMapStyle('satellite', this)" title="위성 사진 (Esri)">🛰️ 위성</button>
+          <button class="map-pill" onclick="changeMapStyle('osm', this)" title="일반 지도 (OpenStreetMap)">🗺️ 일반</button>
+          <button class="map-pill" onclick="changeMapStyle('topo', this)" title="지형 지도 (Esri)">⛰️ 지형</button>
+        </div>
+        <button class="map-tool-btn" id="btnAdjust" onclick="toggleAdjustMode()" title="마커를 끌어 위치 고치기">✋ 위치 조정</button>
+      </div>
+
+      <div class="map-frame" id="mapFrame">
+        <div id="realMap"></div>
+        <div class="map-pick-banner" id="mapPickBanner">
+          <span id="mapPickText"></span>
+          <button onclick="cancelMapPick()">완료</button>
+        </div>
+      </div>
+
+      <!-- 투어 -->
+      <div class="tour-bar">
+        <button class="btn-gradient-primary" id="btnTourToggle" onclick="toggleMapTourAnimation()" title="지도 위에서 동선 따라 이동하기">
+          <span id="btnTourText">▶ 투어</span>
+        </button>
+        <div class="transport-pill-group" title="이동 수단">
+          <button class="dock-pill-btn active" onclick="setTransportMode('✈️', this)" title="비행기">✈️</button>
+          <button class="dock-pill-btn" onclick="setTransportMode('🚗', this)" title="자동차">🚗</button>
+          <button class="dock-pill-btn" onclick="setTransportMode('🥾', this)" title="걷기">🥾</button>
+        </div>
+        <div class="speed-pill-group" title="재생 속도">
+          <button class="dock-pill-btn active" onclick="setTourSpeed(1, this)">1x</button>
+          <button class="dock-pill-btn" onclick="setTourSpeed(2, this)">2x</button>
+          <button class="dock-pill-btn" onclick="setTourSpeed(4, this)">4x</button>
+        </div>
+        <button class="btn-gradient-stop" onclick="stopTourAnimation()" title="정지하고 처음으로">⏹</button>
+      </div>
+
+      <!-- 저장 -->
+      <div class="export-panel">
+        <div class="export-title">🎬 타임랩스 저장</div>
+        <div class="export-format-row">
+          <button class="export-btn" onclick="generateTravelGIF('square')" title="정사각 1:1 (지도 + 사진 카드)">
+            <span class="export-icon">⬜</span><span>정사각</span><small class="gif-est" data-fmt="square"></small>
+          </button>
+          <button class="export-btn" onclick="generateTravelGIF('wide')" title="가로 16:9 (왼쪽 지도 + 오른쪽 사진)">
+            <span class="export-icon">🖥️</span><span>가로</span><small class="gif-est" data-fmt="wide"></small>
+          </button>
+          <button class="export-btn" onclick="generateTravelGIF('story')" title="세로 9:16 (스토리)">
+            <span class="export-icon">📱</span><span>세로</span><small class="gif-est" data-fmt="story"></small>
+          </button>
+          <button class="export-btn" onclick="exportMapImage()" title="지금 지도를 고화질 사진(PNG)으로">
+            <span class="export-icon">🖼️</span><span>지도 사진</span><small>PNG</small>
+          </button>
+        </div>
+
+        <details class="export-options">
+          <summary>⚙️ 옵션 <span id="exportSummary"></span></summary>
+          <div class="opt-grid">
+            <span class="opt-label">형식</span>
+            <div class="gif-pill-group">
+              <button class="dock-pill-btn active" onclick="setGifOption('output', 'gif', this)" title="움짤 (GIF)">GIF</button>
+              <button class="dock-pill-btn" id="btnOutputMp4" onclick="setGifOption('output', 'mp4', this)" title="영상 (MP4) · 더 부드럽고 가벼움">영상</button>
+            </div>
+            <span class="opt-label">길이</span>
+            <div class="gif-pill-group">
+              <button class="dock-pill-btn" onclick="setGifOption('quality', 'light', this)" title="짧고 가볍게">가볍게</button>
+              <button class="dock-pill-btn active" onclick="setGifOption('quality', 'normal', this)">보통</button>
+              <button class="dock-pill-btn" onclick="setGifOption('quality', 'smooth', this)" title="이동 장면 많이">부드럽게</button>
+            </div>
+            <span class="opt-label">카메라</span>
+            <div class="gif-pill-group">
+              <button class="dock-pill-btn active" onclick="setGifOption('camera', 'follow', this)" title="도착지마다 줌인, 이동 중 줌아웃">🔍 따라가기</button>
+              <button class="dock-pill-btn" onclick="setGifOption('camera', 'overview', this)" title="전체 동선을 고정해서 보기">🗺️ 전체</button>
+            </div>
+            <span class="opt-label">줌</span>
+            <div class="gif-pill-group">
+              <button class="dock-pill-btn" onclick="setGifOption('zoom', 'area', this)" title="화면 폭 약 5km">동네</button>
+              <button class="dock-pill-btn active" onclick="setGifOption('zoom', 'street', this)" title="화면 폭 약 2km">거리</button>
+              <button class="dock-pill-btn" onclick="setGifOption('zoom', 'alley', this)" title="화면 폭 약 700m">골목</button>
+              <button class="dock-pill-btn" onclick="setGifOption('zoom', 'building', this)" title="화면 폭 약 350m">건물</button>
+            </div>
+            <span class="opt-label">사진</span>
+            <div class="gif-pill-group">
+              <button class="dock-pill-btn active" onclick="setGifOption('fit', 'cover', this)" title="꽉 채우기 (가장자리 잘림)">꽉 채우기</button>
+              <button class="dock-pill-btn" onclick="setGifOption('fit', 'contain', this)" title="사진 전체 보이기 (여백 생김)">전체 보이기</button>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="status-alert" id="statusAlert">⏳ 만드는 중...</div>
+
+      <!-- 결과 -->
+      <div class="gif-result-box" id="gifResultBox">
+        <div style="font-weight: 700; color: #38bdf8; font-size: 15px;">🎉 완성!</div>
+        <img id="gifPreview" class="gif-preview-img" alt="여행 타임랩스 미리보기">
+        <video id="videoPreview" class="gif-preview-img" controls loop muted playsinline style="display: none;"></video>
+        <button class="btn-gradient-amber" style="width: 100%;" onclick="saveTravelGifToGallery()">📲 사진첩에 저장 / 공유</button>
+        <a id="gifDownloadLink" class="btn-gradient-secondary" style="text-decoration: none; width: 100%; text-align: center;" download="travel.gif">📥 다운로드</a>
+      </div>
+    </div>
+
+    <!-- 순서 목록 -->
+    <div class="glass-card timeline-card" id="timelineCard">
+      <div class="timeline-header">
+        <div class="timeline-title"><span>🚩 순서</span></div>
+        <div class="timeline-header-actions">
+          <button class="btn-focus" onclick="fitAllMarkers()" title="지도에 전체 동선 보기">🔭 전체 보기</button>
         </div>
       </div>
       <div class="timeline-list" id="routeList"></div>
@@ -1195,21 +1308,26 @@
 
   <script type="application/json" id="game-rules">
 {
- "title": "여행 동선 지도 & 순서형 GIF",
+ "title": "여행 동선 지도",
  "players": "1인 이상",
- "time": "2분",
- "goal": "사진 속 GPS 좌표와 시간 순서대로 움직이는 여행 경로 애니메이션 GIF를 만듭니다.",
+ "time": "2~5분",
+ "goal": "여행 사진의 위치(GPS)와 촬영 시각으로 지도 위에 동선을 그리고, 움직이는 타임랩스(GIF·영상)로 저장합니다.",
  "steps": [
-  "스마트폰이나 카메라로 찍은 여행 사진들을 여러 장 업로드합니다.",
-  "사진 속 EXIF 메타데이터에서 촬영 시간과 GPS 좌표가 자동 분석됩니다.",
-  "정렬 툴바를 통해 과거순, 최신순, 또는 최단 거리 최적 동선으로 순서를 맞춥니다.",
-  "'여행 동선 비행 투어 재생'을 눌러 실제 지도를 따라 이동하는 부드러운 애니메이션을 감상합니다.",
-  "'실제 위성 타임랩스 GIF 다운로드'를 눌러 SNS 공유용 루핑 GIF를 저장합니다."
+  "📷 여행 사진을 올립니다 (최대 50장). 사진 속 위치와 촬영 시각을 자동으로 읽습니다.",
+  "🧭 순서를 고릅니다: ⏱️ 과거순·최신순, ⚡ 최단(가장 짧게 도는 순서), 🏷️ 이름순, 🔄 뒤집기. 목록의 ▲▼로 직접 바꿀 수도 있습니다.",
+  "📍 위치 없는 사진이 있으면 위치를 넣습니다: 🗺️ 지도에서 눌러 놓기, 🔍 장소 검색, ◀▶ 앞뒤 사진과 같은 곳, ⏱️ 촬영 시각으로 자동 추정. 여러 장을 골라 한 번에 넣을 수 있습니다.",
+  "▶ 투어로 지도 위에서 동선을 따라가 봅니다 (✈️ 🚗 🥾 이동 수단, 1x·2x·4x 속도).",
+  "🎬 타임랩스 저장에서 ⬜ 정사각 · 🖥️ 가로(지도+사진) · 📱 세로(스토리) 중 하나를 누르면 만들어집니다. 버튼에 예상 용량과 길이가 나옵니다.",
+  "완성되면 📲 사진첩에 저장 / 공유로 갤러리에 넣거나 카톡으로 보냅니다."
  ],
  "tips": [
-  "▲/▼ 버튼으로 특정 스팟의 여행 순서를 언제든지 자유롭게 수동으로 재배치할 수 있습니다.",
-  "이동 수단을 비행기(✈️), 자동차(🚗), 트레킹(🥾)으로 변경하여 여행 테마에 맞출 수 있습니다.",
-  "실제 위성 지도를 바탕으로 GIF가 생성되어 허공에 찍히지 않고 실제 지형 위를 이동합니다."
+  "⚙️ 옵션 — 형식: GIF(움짤) 또는 영상(MP4, 더 부드럽고 가벼움) / 길이: 가볍게·보통·부드럽게 / 카메라: 🔍 따라가기(도착지마다 줌인) 또는 🗺️ 전체 / 줌: 동네(약 5km)·거리(2km)·골목(700m)·건물(350m) / 사진: 꽉 채우기(가장자리 잘림) 또는 전체 보이기(여백).",
+  "✋ 위치 조정을 켜면 지도 위 사진 마커를 끌어 위치를 고칠 수 있습니다. 목록의 📅 날짜를 누르면 촬영 시각을 고칠 수 있습니다.",
+  "목록의 ↩️ 버튼으로 잘못 들어간 위치를 비우면 '위치 없는 사진'으로 돌아갑니다.",
+  "카카오톡 등 메신저로 받은 사진은 위치·촬영 시각이 지워져 있을 수 있습니다. 카톡 '파일'로 보내기, 아이폰 공유 시 '옵션 → 위치 포함', AirDrop을 쓰면 원본 정보가 남는 경우가 많습니다.",
+  "배지 뜻: 📍 GPS(사진 원본 위치) · ✋ 지정(직접 넣음) · ⏱️ 추정(촬영 시각으로 계산) · (파일) = 촬영 시각이 없어 파일 시각을 씀.",
+  "위치가 없는 사진은 지도·동선·타임랩스·지도 사진에서 빠집니다.",
+  "지도: 위성·지형 © Esri, 일반 지도·장소 검색 © OpenStreetMap contributors."
  ]
 }
   </script>
@@ -1221,7 +1339,13 @@
     // 사진 테두리는 사진의 대표 색으로 (뽑을 색이 없으면 순번 색)
     const frameColor = (spot, i) => (spot && spot.accent) || spotColor(i);
 
-    let travelSpots = []; // { dataUrl(1600px), thumbUrl(320px), lat, lng, date, name, isGps, timeVal }
+    let travelSpots = []; // 지도에 놓인 스팟 { uid, dataUrl(1600px), thumbUrl(320px), accent, lat, lng, loc, date, name, timeVal, timeFromFile }
+    // 위치를 모르는 사진. 예전에는 서울 근처 임의 좌표에 찍어 동선이 엉뚱한 곳으로 튀었다.
+    // 지도·동선·내보내기에서 빼 두고, 사용자가 위치를 넣으면 travelSpots로 옮긴다.
+    let unplacedSpots = [];
+    // loc: 'gps' 사진 원본 위치 / 'manual' 직접 지정·조정 / 'estimated' 촬영 시각으로 추정 / 'none' 미지정
+    let spotUidSeq = 0;
+    const newSpotUid = () => `s${Date.now().toString(36)}${(spotUidSeq++).toString(36)}`;
     let leafletMap = null;
     let mapMarkers = [];
     let routeGlow = null;
@@ -1296,6 +1420,7 @@
       }).setView([33.38, 126.55], 10);
 
       currentMapTileLayer = makeTileLayer('satellite').addTo(leafletMap);
+      leafletMap.on('click', onMapClickForPick);
     }
 
     function changeMapStyle(styleKey, el) {
@@ -1321,7 +1446,7 @@
       event.target.value = '';
       if (!images.length) return;
 
-      const room = MAX_SPOTS - travelSpots.length;
+      const room = MAX_SPOTS - travelSpots.length - unplacedSpots.length;
       if (room <= 0) {
         alert(`사진은 최대 ${MAX_SPOTS}장까지 넣을 수 있어요. 필요 없는 사진을 지운 뒤 다시 추가해 주세요.`);
         return;
@@ -1361,29 +1486,29 @@
           decLng = (lng[0] + lng[1] / 60 + lng[2] / 3600) * (lngRef === "W" ? -1 : 1);
           hasGps = true;
         } else {
-          // Default offset around Seoul / Jeju
-          const baseLat = 37.55 + (travelSpots.length * 0.04);
-          const baseLng = 126.97 + (travelSpots.length * 0.05);
-          decLat = baseLat;
-          decLng = baseLng;
+          // 위치가 없으면 지도에 임의로 찍지 않고 '위치 미지정'으로 둔다
+          decLat = null;
+          decLng = null;
         }
 
         // 촬영 시각이 없으면(메신저로 받은 사진 등) 파일 수정 시각으로 대신한다
         const shotAt = parseExifDateTime(dateTime);
         const when = shotAt || new Date(file.lastModified || Date.now());
 
-        travelSpots.push({
+        const spot = {
+          uid: newSpotUid(),
           dataUrl: dataUrl,
           thumbUrl: thumbUrl,
           accent: accent,
-          name: file.name.replace(/\.[^/.]+$/, "") || `스팟 #${travelSpots.length + 1}`,
+          name: file.name.replace(/\.[^/.]+$/, "") || `스팟 #${travelSpots.length + unplacedSpots.length + 1}`,
           date: todayKey(when),
           lat: decLat,
           lng: decLng,
-          isGps: hasGps,
+          loc: hasGps ? 'gps' : 'none',
           timeVal: when.getTime(),
           timeFromFile: !shotAt
-        });
+        };
+        (hasGps ? travelSpots : unplacedSpots).push(spot);
 
         if (callback) callback();
       });
@@ -1449,22 +1574,22 @@
         const btn = document.getElementById('btnSortTimeAsc');
         if (btn) btn.classList.add('active');
         travelSpots.sort((a, b) => a.timeVal - b.timeVal);
-        updateSortBadges('⏱️ 촬영 과거순');
+        updateSortBadges('⏱️ 과거순');
       } else if (mode === 'time-desc') {
         const btn = document.getElementById('btnSortTimeDesc');
         if (btn) btn.classList.add('active');
         travelSpots.sort((a, b) => b.timeVal - a.timeVal);
-        updateSortBadges('⏱️ 최신 촬영순');
+        updateSortBadges('⏱️ 최신순');
       } else if (mode === 'tsp') {
         const btn = document.getElementById('btnSortTsp');
         if (btn) btn.classList.add('active');
         sortSpotsByTsp();
-        updateSortBadges('⚡ 최적 이동 동선');
+        updateSortBadges('⚡ 최단');
       } else if (mode === 'name') {
         const btn = document.getElementById('btnSortName');
         if (btn) btn.classList.add('active');
         travelSpots.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-        updateSortBadges('🏷️ 스팟 이름순');
+        updateSortBadges('🏷️ 이름');
       }
 
       stopTourAnimation();
@@ -1496,7 +1621,7 @@
       travelSpots.reverse();
       currentSortMode = 'custom';
       document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-      updateSortBadges('🔄 역순 반전됨');
+      updateSortBadges('🔄 뒤집음');
       stopTourAnimation();
       refreshTripUI();
     }
@@ -1515,7 +1640,7 @@
       travelSpots[idx - 1] = tmp;
       currentSortMode = 'custom';
       document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-      updateSortBadges('↕️ 사용자 지정 순서');
+      updateSortBadges('↕️ 직접');
       stopTourAnimation();
       refreshTripUI();
     }
@@ -1527,7 +1652,7 @@
       travelSpots[idx + 1] = tmp;
       currentSortMode = 'custom';
       document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-      updateSortBadges('↕️ 사용자 지정 순서');
+      updateSortBadges('↕️ 직접');
       stopTourAnimation();
       refreshTripUI();
     }
@@ -1536,19 +1661,25 @@
     // UI Refresh & Map Rendering
     // ==========================================
     function refreshTripUI() {
-      updatePurgeButton();
-      if (travelSpots.length === 0) {
+      renderUnplaced();
+      if (travelSpots.length === 0 && unplacedSpots.length === 0) {
         clearTripUI();
         return;
       }
 
-      document.getElementById('tripStatsBar').style.display = 'grid';
-      document.getElementById('sortToolbar').style.display = 'flex';
+      // 위치 미지정 사진만 있어도 지도는 보여야 지도에서 위치를 찍을 수 있다
+      const hasPlaced = travelSpots.length > 0;
+      document.getElementById('tripStatsBar').style.display = hasPlaced ? 'grid' : 'none';
+      document.getElementById('sortToolbar').style.display = hasPlaced ? 'flex' : 'none';
       document.getElementById('mapSection').style.display = 'flex';
-      document.getElementById('timelineCard').style.display = 'flex';
+      document.getElementById('timelineCard').style.display = hasPlaced ? 'flex' : 'none';
 
       initMapIfNeeded();
       setTimeout(() => { leafletMap.invalidateSize(); }, 200);
+      if (!hasPlaced) {
+        renderMapElements();
+        return;
+      }
 
       // Calculate Stats
       let totalDist = 0;
@@ -1598,14 +1729,23 @@
           popupAnchor: [0, -50]
         });
 
-        const marker = L.marker(latlng, { icon: customIcon }).addTo(leafletMap);
+        // 위치 조정 모드에서만 끌 수 있다 (지도를 움직이다 실수로 옮기지 않게)
+        const marker = L.marker(latlng, { icon: customIcon, draggable: adjustMode, autoPan: true }).addTo(leafletMap);
         marker.bindPopup(`
           <div class="popup-content-box">
             <img src="${spot.thumbUrl || spot.dataUrl}" class="popup-img">
-            <div class="popup-title">${idx + 1}. ${spot.name}</div>
-            <div class="popup-meta">📅 ${spotWhen(spot)} • ${spot.isGps ? '📍 GPS' : '⏱️ 시간정렬'}</div>
+            <div class="popup-title">${idx + 1}. ${escapeHtml(spot.name)}</div>
+            <div class="popup-meta">📅 ${spotWhen(spot)} • ${locLabel(spot.loc)}</div>
           </div>
         `);
+        marker.on('dragend', () => {
+          const p = marker.getLatLng();
+          spot.lat = p.lat;
+          spot.lng = p.lng;
+          spot.loc = 'manual';
+          keepMapView = true;
+          refreshTripUI();
+        });
 
         mapMarkers.push(marker);
       });
@@ -1639,7 +1779,9 @@
         lineJoin: 'round'
       }).addTo(leafletMap);
 
-      fitAllMarkers();
+      // 위치를 찍거나 끌어 옮긴 직후에는 보던 화면을 유지한다
+      if (!keepMapView) fitAllMarkers();
+      keepMapView = false;
     }
 
     function fitAllMarkers() {
@@ -1685,16 +1827,17 @@
           <div class="item-idx">${idx + 1}</div>
           <img src="${spot.thumbUrl || spot.dataUrl}" class="item-thumb" alt="spot">
           <div class="item-info">
-            <input type="text" class="item-name-input" value="${spot.name}" onchange="updateSpotName(${idx}, this.value)">
+            <input type="text" class="item-name-input" value="${escapeHtml(spot.name)}" onchange="updateSpotName(${idx}, this.value)">
             <div class="item-meta">
-              <span title="${spot.timeFromFile ? '사진에 촬영 시각이 없어 파일 시각을 썼어요' : '촬영 시각'}">📅 ${spotWhen(spot)}${spot.timeFromFile ? ' (파일)' : ''}</span>
-              ${spot.isGps ? '<span class="badge-gps">📍 GPS</span>' : '<span class="badge-virtual">⏱️ 추정</span>'}
+              ${timeChip(spot)}
+              ${locBadge(spot.loc)}
               ${intervalHtml}
             </div>
           </div>
           <div class="item-actions">
-            <button class="btn-focus" onclick="focusSpot(${idx})">포커스</button>
-            <button class="btn-del" onclick="removeSpot(${idx})">✕</button>
+            <button class="btn-focus" onclick="focusSpot(${idx})" title="지도에서 보기">🎯</button>
+            <button class="btn-focus" onclick="unplaceSpot('${spot.uid}')" title="위치 비우기 (위치 없는 사진으로)">↩️</button>
+            <button class="btn-del" onclick="removeSpot(${idx})" title="지우기">✕</button>
           </div>
         `;
         list.appendChild(item);
@@ -1714,32 +1857,314 @@
       refreshTripUI();
     }
 
-    // 위치 정보가 없는 사진은 지도에서 임의 위치(서울 근처)에 찍혀 동선을 어지럽힌다.
-    // 메신저로 받은 사진처럼 GPS가 지워진 사진을 한 번에 걸러낸다.
-    function updatePurgeButton() {
-      const btn = document.getElementById('btnPurgeNoGps');
-      if (!btn) return;
-      const n = travelSpots.filter(s => !s.isGps).length;
-      btn.style.display = n ? 'inline-block' : 'none';
-      btn.textContent = `🧹 GPS 없는 사진 지우기 (${n})`;
+    // ==========================================
+    // 위치 미지정 사진: 위치 넣기·보정 (#36)
+    // ==========================================
+    let unplacedSelected = new Set();   // 고른 미지정 사진 uid
+    let mapPick = null;                  // 지도에서 찍기 진행 중이면 { uids }
+    let adjustMode = false;              // 마커를 끌어 위치를 고치는 모드
+    let keepMapView = false;             // 다음 지도 갱신에서 화면 맞춤 생략
+
+    const LOC_LABEL = { gps: '📍 GPS', manual: '✋ 지정', estimated: '⏱️ 추정', none: '❔ 미지정' };
+    function locLabel(loc) { return LOC_LABEL[loc] || LOC_LABEL.gps; }
+    function locBadge(loc) {
+      const cls = loc === 'gps' ? 'badge-gps' : (loc === 'manual' ? 'badge-manual' : 'badge-virtual');
+      return `<span class="${cls}">${locLabel(loc)}</span>`;
     }
 
-    function removeSpotsWithoutGps() {
-      const n = travelSpots.filter(s => !s.isGps).length;
-      if (!n) return;
-      const all = n === travelSpots.length;
-      const msg = all
-        ? `모든 사진(${n}장)에 위치 정보가 없어요. 전부 지우면 목록이 비게 됩니다. 지울까요?`
-        : `위치 정보(GPS)가 없는 사진 ${n}장을 지울까요?`;
-      if (!confirm(msg)) return;
-      travelSpots = travelSpots.filter(s => s.isGps);
+    function timeChip(spot) {
+      const title = spot.timeFromFile ? '사진에 촬영 시각이 없어 파일 시각을 썼어요. 눌러서 고치기' : '촬영 시각. 눌러서 고치기';
+      return `<span class="time-chip" title="${title}" onclick="editSpotTime('${spot.uid}', this)">📅 ${spotWhen(spot)}${spot.timeFromFile ? ' (파일)' : ''}</span>`;
+    }
+
+    function findSpot(uid) {
+      return travelSpots.find(s => s.uid === uid) || unplacedSpots.find(s => s.uid === uid);
+    }
+
+    // 촬영 시각 기준으로 바로 앞·뒤에 있는 '위치를 아는' 스팟
+    function neighborsInTime(t) {
+      const placed = travelSpots.slice().sort((a, b) => a.timeVal - b.timeVal);
+      let prev = null, next = null;
+      for (const sp of placed) {
+        if (sp.timeVal <= t) prev = sp;
+        else { next = sp; break; }
+      }
+      return { prev, next };
+    }
+
+    function renderUnplaced() {
+      const card = document.getElementById('unplacedCard');
+      if (!card) return;
+      card.style.display = unplacedSpots.length ? 'flex' : 'none';
+      unplacedSelected = new Set([...unplacedSelected].filter(uid => unplacedSpots.some(s => s.uid === uid)));
+      if (unplacedSpots.length === 1) unplacedSelected = new Set([unplacedSpots[0].uid]);
+      document.getElementById('unplacedCount').textContent = unplacedSpots.length;
+
+      const list = document.getElementById('unplacedList');
+      list.innerHTML = '';
+      unplacedSpots.slice().sort((a, b) => a.timeVal - b.timeVal).forEach(spot => {
+        const { prev, next } = neighborsInTime(spot.timeVal);
+        const row = document.createElement('div');
+        const selected = unplacedSelected.has(spot.uid);
+        row.className = 'unplaced-item' + (selected ? ' selected' : '');
+        row.innerHTML = `
+          <input type="checkbox" ${selected ? 'checked' : ''} aria-label="${escapeHtml(spot.name)} 고르기" onchange="toggleUnplaced('${spot.uid}', this.checked)">
+          <img src="${spot.thumbUrl || spot.dataUrl}" alt="">
+          <div class="unplaced-info">
+            <div class="unplaced-name">${escapeHtml(spot.name)}</div>
+            <div class="item-meta">${timeChip(spot)}</div>
+          </div>
+          <div class="unplaced-btns">
+            <button class="btn-focus" ${prev ? '' : 'disabled'} onclick="copyNeighborLocation('${spot.uid}', 'prev')" title="${prev ? '앞 사진(' + escapeHtml(prev.name) + ')과 같은 곳' : '앞 시각에 위치 있는 사진이 없어요'}">◀ 앞</button>
+            <button class="btn-focus" ${next ? '' : 'disabled'} onclick="copyNeighborLocation('${spot.uid}', 'next')" title="${next ? '뒤 사진(' + escapeHtml(next.name) + ')과 같은 곳' : '뒤 시각에 위치 있는 사진이 없어요'}">뒤 ▶</button>
+            <button class="btn-focus" onclick="startMapPick(['${spot.uid}'])" title="지도에서 눌러 놓기">🗺️</button>
+            <button class="btn-del" onclick="removeUnplaced('${spot.uid}')" title="지우기">✕</button>
+          </div>`;
+        list.appendChild(row);
+      });
+
+      const n = unplacedSelected.size;
+      document.getElementById('unplacedSelected').textContent = n ? `${n}장 골랐어요 →` : '사진을 골라 위치를 넣어요';
+    }
+
+    function showUnplacedHelp() {
+      const msg = '카카오톡 같은 메신저로 받은 사진은 위치와 촬영 시각이 지워져 있을 수 있어요.\n\n' +
+        '원본 정보를 살리려면 (앱·설정마다 다를 수 있어요)\n' +
+        '• 카톡에서 사진 대신 \'파일\'로 보내기\n' +
+        '• 아이폰 공유 시 \'옵션 → 위치 포함\' 켜기, 또는 AirDrop\n' +
+        '• 공유 앨범에서 원본으로 내려받기\n\n' +
+        '위치를 넣으면 지도·동선·타임랩스에 들어가요.';
+      (typeof gameAlert === 'function' ? gameAlert : alert)(msg);
+    }
+
+    function toggleUnplaced(uid, on) {
+      if (on) unplacedSelected.add(uid); else unplacedSelected.delete(uid);
+      renderUnplaced();
+    }
+
+    function toggleSelectAllUnplaced() {
+      unplacedSelected = unplacedSelected.size === unplacedSpots.length ? new Set() : new Set(unplacedSpots.map(s => s.uid));
+      renderUnplaced();
+    }
+
+    function removeUnplaced(uid) {
+      unplacedSpots = unplacedSpots.filter(s => s.uid !== uid);
+      refreshTripUI();
+    }
+
+    function removeAllUnplaced() {
+      if (!unplacedSpots.length || !confirm(`위치 미지정 사진 ${unplacedSpots.length}장을 지울까요?`)) return;
+      unplacedSpots = [];
+      refreshTripUI();
+    }
+
+    // 미지정 사진을 지도로 옮긴다. 정렬 방식대로 동선 안에 들어간다.
+    function placeSpots(uids, lat, lng, loc) {
+      const ids = new Set(uids);
+      const moving = unplacedSpots.filter(s => ids.has(s.uid));
+      if (!moving.length) return 0;
+      moving.forEach(s => { s.lat = lat; s.lng = lng; s.loc = loc; });
+      unplacedSpots = unplacedSpots.filter(s => !ids.has(s.uid));
+      travelSpots.push(...moving);
+      moving.forEach(s => unplacedSelected.delete(s.uid));
+      keepMapView = true;
+      applySortMode(currentSortMode === 'custom' ? 'time-asc' : currentSortMode);
+      return moving.length;
+    }
+
+    // 지도에 있던 스팟의 위치를 비워 미지정으로 돌린다 (위치가 틀렸을 때 다시 넣기 위해)
+    function unplaceSpot(uid) {
+      const spot = travelSpots.find(s => s.uid === uid);
+      if (!spot) return;
+      travelSpots = travelSpots.filter(s => s.uid !== uid);
+      spot.lat = null; spot.lng = null; spot.loc = 'none';
+      unplacedSpots.push(spot);
+      unplacedSelected = new Set([uid]);
       stopTourAnimation();
       refreshTripUI();
+      document.getElementById('unplacedCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function copyNeighborLocation(uid, which) {
+      const spot = unplacedSpots.find(s => s.uid === uid);
+      if (!spot) return;
+      const ref = neighborsInTime(spot.timeVal)[which];
+      if (ref) placeSpots([uid], ref.lat, ref.lng, 'manual');
+    }
+
+    // ── 지도에서 찍기 ──
+    function startMapPick(uids) {
+      const target = uids || [...unplacedSelected];
+      if (!target.length) { alert('위치를 넣을 사진을 먼저 골라 주세요.'); return; }
+      if (adjustMode) toggleAdjustMode();
+      mapPick = { uids: target };
+      document.getElementById('mapPickText').textContent = `📍 지도를 눌러 ${target.length}장 놓기`;
+      document.getElementById('mapPickBanner').style.display = 'flex';
+      document.getElementById('mapFrame').classList.add('picking');
+      document.getElementById('mapSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function cancelMapPick() {
+      mapPick = null;
+      document.getElementById('mapPickBanner').style.display = 'none';
+      document.getElementById('mapFrame').classList.remove('picking');
+    }
+
+    function onMapClickForPick(e) {
+      if (!mapPick) return;
+      const uids = mapPick.uids;
+      cancelMapPick();
+      placeSpots(uids, e.latlng.lat, e.latlng.lng, 'manual');
+    }
+
+    // ── 위치 조정 모드: 마커를 끌어 고친다 ──
+    function toggleAdjustMode() {
+      adjustMode = !adjustMode;
+      if (adjustMode && mapPick) cancelMapPick();
+      document.getElementById('btnAdjust').classList.toggle('active', adjustMode);
+      const banner = document.getElementById('mapPickBanner');
+      if (adjustMode) {
+        document.getElementById('mapPickText').textContent = '✋ 마커를 끌어 옮기세요';
+        banner.style.display = 'flex';
+        banner.querySelector('button').onclick = toggleAdjustMode;
+      } else {
+        banner.style.display = 'none';
+        banner.querySelector('button').onclick = cancelMapPick;
+      }
+      mapMarkers.forEach(m => (adjustMode ? m.dragging.enable() : m.dragging.disable()));
+    }
+
+    // ── 장소 검색 (OpenStreetMap Nominatim) ──
+    // 사용 정책: 초당 1회 이하, 자동완성 금지, 출처 표기 → 검색 버튼을 눌렀을 때만 요청하고 1초 간격을 지킨다.
+    let lastPlaceSearchAt = 0;
+    async function searchPlace() {
+      const q = document.getElementById('placeQuery').value.trim();
+      const box = document.getElementById('placeResults');
+      if (!q) return;
+      const btn = document.getElementById('btnPlaceSearch');
+      btn.disabled = true;
+      const wait = 1100 - (Date.now() - lastPlaceSearchAt);
+      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      lastPlaceSearchAt = Date.now();
+      box.innerHTML = '<div class="place-credit">검색 중...</div>';
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=ko&q=${encodeURIComponent(q)}`;
+        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error(res.status);
+        const items = await res.json();
+        box.innerHTML = '';
+        if (!items.length) {
+          box.innerHTML = '<div class="place-credit">찾는 장소가 없어요. 더 짧게 쓰거나 지도에서 직접 찍어 주세요.</div>';
+          return;
+        }
+        items.forEach(it => {
+          const b = document.createElement('button');
+          b.className = 'place-result';
+          const [head, ...rest] = String(it.display_name).split(', ');
+          b.innerHTML = `<b>${escapeHtml(head)}</b> · ${escapeHtml(rest.slice(0, 3).join(', '))}`;
+          b.onclick = () => choosePlace(parseFloat(it.lat), parseFloat(it.lon));
+          box.appendChild(b);
+        });
+        box.insertAdjacentHTML('beforeend', '<div class="place-credit">검색: © OpenStreetMap contributors (Nominatim)</div>');
+      } catch (err) {
+        box.innerHTML = '<div class="place-credit">검색에 실패했어요. 잠시 뒤 다시 하거나 지도에서 직접 찍어 주세요.</div>';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function choosePlace(lat, lng) {
+      if (leafletMap) leafletMap.setView([lat, lng], 16);
+      const uids = [...unplacedSelected];
+      if (!uids.length) {
+        alert('지도를 그 장소로 옮겼어요. 위치를 넣을 사진을 고르고 다시 누르거나, 지도에서 찍어 주세요.');
+        return;
+      }
+      placeSpots(uids, lat, lng, 'manual');
+      document.getElementById('placeResults').innerHTML = '';
+    }
+
+    // ── 촬영 시각으로 자동 추정 ──
+    // 앞뒤로 위치·시각을 아는 사진이 있으면 시간 비율만큼 그 사이(메르카토르 평면 직선 위)에 놓는다.
+    // 한쪽만 있으면 그 사진 위치를 그대로 쓴다. 촬영 시각이 없는(파일 시각) 사진은 추정하지 않는다.
+    function estimateFromTime() {
+      const targets = unplacedSelected.size ? unplacedSpots.filter(s => unplacedSelected.has(s.uid)) : unplacedSpots.slice();
+      if (!targets.length) return;
+      const refs = travelSpots.filter(s => (s.loc === 'gps' || s.loc === 'manual') && !s.timeFromFile)
+        .sort((a, b) => a.timeVal - b.timeVal);
+      if (!refs.length) {
+        alert('촬영 시각과 위치를 함께 아는 사진이 하나 이상 있어야 추정할 수 있어요.');
+        return;
+      }
+      const noTime = targets.filter(s => s.timeFromFile).length;
+      let done = 0;
+      targets.filter(s => !s.timeFromFile).forEach(s => {
+        let prev = null, next = null;
+        for (const r of refs) {
+          if (r.timeVal <= s.timeVal) prev = r;
+          else { next = r; break; }
+        }
+        let lat, lng;
+        if (prev && next && next.timeVal > prev.timeVal) {
+          const f = (s.timeVal - prev.timeVal) / (next.timeVal - prev.timeVal);
+          const a = projectMercator(prev.lat, prev.lng, 0), b = projectMercator(next.lat, next.lng, 0);
+          ({ lat, lng } = unproject0(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f));
+        } else {
+          const r = prev || next;
+          lat = r.lat; lng = r.lng;
+        }
+        s.lat = lat; s.lng = lng; s.loc = 'estimated';
+        done++;
+      });
+      const placed = targets.filter(s => s.loc === 'estimated');
+      if (placed.length) {
+        const ids = new Set(placed.map(s => s.uid));
+        unplacedSpots = unplacedSpots.filter(s => !ids.has(s.uid));
+        travelSpots.push(...placed);
+        applySortMode(currentSortMode === 'custom' ? 'time-asc' : currentSortMode);
+      }
+      alert(`${done}장의 위치를 촬영 시각으로 추정했어요.` +
+        (noTime ? `\n촬영 시각이 없는 ${noTime}장은 추정할 수 없어 그대로 두었어요. 시각을 고치거나 직접 위치를 넣어 주세요.` : ''));
+    }
+
+    // ── 촬영 시각 고치기 ──
+    function toLocalInputValue(ms) {
+      const d = new Date(ms);
+      const p2 = (v) => String(v).padStart(2, '0');
+      return `${todayKey(d)}T${p2(d.getHours())}:${p2(d.getMinutes())}`;
+    }
+
+    function editSpotTime(uid, el) {
+      const spot = findSpot(uid);
+      if (!spot || !el) return;
+      const input = document.createElement('input');
+      input.type = 'datetime-local';
+      input.className = 'time-edit';
+      input.value = toLocalInputValue(spot.timeVal);
+      el.replaceWith(input);
+      input.focus();
+      let applied = false;
+      const finish = () => {
+        if (applied) return;
+        applied = true;
+        const t = input.value ? new Date(input.value).getTime() : NaN;
+        if (Number.isFinite(t) && t !== spot.timeVal) {
+          spot.timeVal = t;
+          spot.date = todayKey(new Date(t));
+          spot.timeFromFile = false;
+          keepMapView = true;
+          if (travelSpots.includes(spot)) { applySortMode(currentSortMode === 'custom' ? 'time-asc' : currentSortMode); return; }
+        }
+        refreshTripUI();
+      };
+      input.addEventListener('change', finish);
+      input.addEventListener('blur', finish);
     }
 
     // 마지막 사진까지 지우면 예전 지도·목록이 그대로 남아 있지 않게 화면을 처음 상태로 돌린다
     function clearTripUI() {
-      ['tripStatsBar', 'sortToolbar', 'mapSection', 'timelineCard'].forEach(id => {
+      cancelMapPick();
+      ['tripStatsBar', 'sortToolbar', 'mapSection', 'timelineCard', 'unplacedCard'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -1804,7 +2229,7 @@
         tourState.isPaused = false;
         tourState.currentSegment = 0;
         tourState.segmentProgress = 0;
-        document.getElementById('btnTourText').textContent = '⏸ 일시정지';
+        document.getElementById('btnTourText').textContent = '⏸ 멈춤';
 
         createVehicleMarker(travelSpots[0].lat, travelSpots[0].lng);
         tourProgressLine.setLatLngs([[travelSpots[0].lat, travelSpots[0].lng]]);
@@ -1820,13 +2245,13 @@
       } else if (tourState.isPaused) {
         // Resume
         tourState.isPaused = false;
-        document.getElementById('btnTourText').textContent = '⏸ 일시정지';
+        document.getElementById('btnTourText').textContent = '⏸ 멈춤';
         tourState.lastTickTime = performance.now();
         tourState.animFrameId = requestAnimationFrame(tourAnimationLoop);
       } else {
         // Pause
         tourState.isPaused = true;
-        document.getElementById('btnTourText').textContent = '▶ 계속 재생';
+        document.getElementById('btnTourText').textContent = '▶ 계속';
         if (tourState.animFrameId) cancelAnimationFrame(tourState.animFrameId);
       }
     }
@@ -1837,7 +2262,7 @@
       tourState.currentSegment = 0;
       tourState.segmentProgress = 0;
       if (tourState.animFrameId) cancelAnimationFrame(tourState.animFrameId);
-      document.getElementById('btnTourText').textContent = '▶ 여행 동선 비행 투어 재생';
+      document.getElementById('btnTourText').textContent = '▶ 투어';
 
       if (tourVehicleMarker) {
         leafletMap.removeLayer(tourVehicleMarker);
@@ -1859,7 +2284,7 @@
       if (segIdx >= travelSpots.length - 1) {
         // Completed
         tourState.isRunning = false;
-        document.getElementById('btnTourText').textContent = '▶ 여행 투어 다시 재생';
+        document.getElementById('btnTourText').textContent = '▶ 다시';
         if (mapMarkers[travelSpots.length - 1]) mapMarkers[travelSpots.length - 1].openPopup();
         setTimeout(fitAllMarkers, 2000);
         return;
@@ -2455,8 +2880,14 @@
         if (travelSpots.length < 2) { el.textContent = ''; return; }
         const p = planTravelGif(el.dataset.fmt);
         const mb = p.estBytes / 1048576;
-        el.textContent = ` · ${p.video ? 'MP4' : 'GIF'} 약 ${Math.max(1, Math.round(mb))}MB · ${Math.round(p.seconds)}초`;
+        el.textContent = `${p.video ? '영상' : 'GIF'} ~${Math.max(1, Math.round(mb))}MB · ${Math.round(p.seconds)}초`;
       });
+      const sum = document.getElementById('exportSummary');
+      if (sum) {
+        const Q = { light: '가볍게', normal: '보통', smooth: '부드럽게' };
+        const Z = { area: '동네', street: '거리', alley: '골목', building: '건물' };
+        sum.textContent = `${travelOutput === 'mp4' ? '영상' : 'GIF'} · ${Q[gifQuality]} · ${gifCamera === 'follow' ? '🔍 ' + Z[gifZoom] : '🗺️ 전체'}`;
+      }
     }
 
     async function generateTravelGIF(format = 'square') {
@@ -2865,7 +3296,8 @@
       dlLink.href = lastGifUrl;
       dlLink.download = lastGifName;
       const head = document.querySelector('#gifResultBox > div');
-      if (head) head.textContent = `🎉 완성된 여행 타임랩스 ${label} · ${N}곳 · ${(blob.size / 1048576).toFixed(1)}MB`;
+      if (head) head.textContent = `🎉 완성된 여행 타임랩스 ${label} · ${N}곳 · ${(blob.size / 1048576).toFixed(1)}MB` +
+        (unplacedSpots.length ? ` (위치 미지정 ${unplacedSpots.length}장 제외)` : '');
       document.getElementById('gifResultBox').style.display = 'flex';
       document.getElementById('gifResultBox').scrollIntoView({ behavior: 'smooth' });
     }
@@ -2929,7 +3361,8 @@
           date: s.date,
           lat: s.lat,
           lng: s.lng,
-          isGps: true,
+          uid: newSpotUid(),
+          loc: 'gps',
           timeVal: 1791700000000 + idx * 7200000 // 2-hour intervals
         };
       });
@@ -2937,8 +3370,9 @@
 
     function loadDemoSamples() {
       travelSpots = getSampleSpots();
+      unplacedSpots = [];
       currentSortMode = 'time-asc';
-      updateSortBadges('⏱️ 촬영 과거순');
+      updateSortBadges('⏱️ 과거순');
       document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
       const btn = document.getElementById('btnSortTimeAsc');
       if (btn) btn.classList.add('active');
