@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>루미너스 라인 - Luminous Lines</title>
+    <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Marked.js -->
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
@@ -23,7 +23,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Pretendard', sans-serif;
             height: 100vh;
             overflow: hidden;
             display: flex;
@@ -360,7 +360,7 @@
                     
                     // Draw Initials
                     ctx.fillStyle = cell.owner === 1 ? varColor('--p1-color') : varColor('--p2-color');
-                    ctx.font = `800 ${CELL_SIZE * 0.4}px Outfit`;
+                    ctx.font = `800 ${CELL_SIZE * 0.4}px Pretendard`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(cell.owner === 1 ? 'P1' : 'P2', x + CELL_SIZE/2, y + CELL_SIZE/2);
@@ -368,7 +368,7 @@
 
                 if (cell.item === 'x2' && cell.owner === 0) {
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-                    ctx.font = `800 ${CELL_SIZE * 0.3}px Outfit`;
+                    ctx.font = `800 ${CELL_SIZE * 0.3}px Pretendard`;
                     ctx.textAlign = 'center';
                     ctx.fillText('x2', x + CELL_SIZE/2, y + CELL_SIZE/2 + 5);
                 }

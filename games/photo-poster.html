@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>대형 매거진 포스터 & 콜라주 | 미니게임 천국</title>
+  <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
   <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;0,900;1,600&family=Cinzel:wght@700;800;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;0,900;1,600&family=Cinzel:wght@700;800;900&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -30,7 +30,7 @@
     body {
       background: radial-gradient(circle at 50% 0%, #1a162b 0%, #07090e 100%);
       color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
+      font-family: 'Pretendard', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -608,7 +608,7 @@
       ctx.stroke();
 
       ctx.fillStyle = subColor;
-      ctx.font = '600 24px "Plus Jakarta Sans", "Pretendard", sans-serif';
+      ctx.font = '600 24px "Pretendard", sans-serif';
       ctx.letterSpacing = '3px';
       ctx.fillText(subtitle, canvas.width / 2, 220);
 
@@ -658,7 +658,7 @@
           drawCover(ctx, img, x, y, cellW, cellH);
 
           ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 16px "Plus Jakarta Sans", monospace';
+          ctx.font = 'bold 16px "Pretendard", monospace';
           ctx.textAlign = 'left';
           ctx.fillText(`FIG. 0${i + 1}`, x + 16, y + 30);
         }
@@ -729,7 +729,7 @@
       // Bottom Signature & Barcode
       const footerY = canvas.height - 70;
       ctx.fillStyle = subColor;
-      ctx.font = '600 20px "Plus Jakarta Sans", sans-serif';
+      ctx.font = '600 20px "Pretendard", sans-serif';
       ctx.letterSpacing = '2px';
       ctx.textAlign = 'left';
       ctx.fillText(`DESIGNED & CURATED WITH STUDIO • ${posterPhotos.length} MOMENTS ARCHIVED`, pad, footerY);
@@ -779,7 +779,7 @@
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(s.emoji, 400, 240);
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 36px "Outfit", sans-serif';
+        ctx.font = 'bold 36px "Pretendard", sans-serif';
         ctx.fillText(s.title, 400, 420);
         return c.toDataURL('image/jpeg', 0.9);
       });

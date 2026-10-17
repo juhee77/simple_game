@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>켄 번스 무빙 슬라이드쇼 & 루핑 GIF | 미니게임 천국</title>
+  <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
   <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
   
   <!-- gifshot for Looping GIF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
@@ -33,7 +33,7 @@
     body {
       background: radial-gradient(circle at 50% 0%, #201a14 0%, #07090e 100%);
       color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
+      font-family: 'Pretendard', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -875,12 +875,12 @@
       ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
       ctx.shadowBlur = 8 * k;
       ctx.fillStyle = '#ffffff';
-      ctx.font = `800 ${46 * k}px "Outfit", "Pretendard", sans-serif`;
+      ctx.font = `800 ${46 * k}px "Pretendard", sans-serif`;
       const num = String(index + 1).padStart(2, '0');
       ctx.fillText(num, 28 * k, h - 30 * k);
       const numW = ctx.measureText(num).width;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.font = `600 ${20 * k}px "Outfit", "Pretendard", sans-serif`;
+      ctx.font = `600 ${20 * k}px "Pretendard", sans-serif`;
       ctx.fillText(`/ ${String(n).padStart(2, '0')}`, 28 * k + numW + 8 * k, h - 32 * k);
       ctx.shadowColor = 'transparent';
     }
@@ -1154,7 +1154,7 @@
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(s.emoji, 300, 240);
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 30px "Outfit", sans-serif';
+        ctx.font = 'bold 30px "Pretendard", sans-serif';
         ctx.fillText(s.title, 300, 390);
         ctx.fillStyle = 'rgba(255,255,255,0.8)';
         ctx.font = '18px monospace';

@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>D-Day & 모임 카운트다운 | 미니게임 천국</title>
+  <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
   <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
   <style>
     :root {
       --bg: #0b0b1a;
@@ -30,7 +29,7 @@
       padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
-      font-family: 'Outfit', 'Pretendard', sans-serif;
+      font-family: 'Pretendard', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -539,7 +538,7 @@
       ctx.fillStyle = activeTheme;
       ctx.fillRect(200, 75, 200, 36);
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 15px Outfit, Pretendard, sans-serif';
+      ctx.font = 'bold 15px Pretendard, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(tagText, 300, 98);
 
@@ -548,11 +547,11 @@
       const desc = document.getElementById('eventDesc').value.trim() || '설레는 모임까지 남은 시간';
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 36px Outfit, Pretendard, sans-serif';
+      ctx.font = 'bold 36px Pretendard, sans-serif';
       ctx.fillText(title, 300, 185);
 
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '18px Outfit, Pretendard, sans-serif';
+      ctx.font = '18px Pretendard, sans-serif';
       ctx.fillText(desc, 300, 235);
 
       // 5. Main D-Day Big Number Display
@@ -560,7 +559,7 @@
       const daysText = dateVal ? ddayLabel(dayDiff(new Date(dateVal), new Date())) : 'D - DAY!';
 
       ctx.fillStyle = '#ffd166';
-      ctx.font = 'bold 96px Outfit, sans-serif';
+      ctx.font = 'bold 96px Pretendard, sans-serif';
       ctx.shadowColor = 'rgba(255, 209, 102, 0.9)';
       ctx.shadowBlur = 35;
       ctx.fillText(daysText, 300, 410);
@@ -578,12 +577,12 @@
       ctx.strokeRect(70, 510, 460, 130);
 
       ctx.fillStyle = '#00d4ff';
-      ctx.font = 'bold 30px Outfit, sans-serif';
+      ctx.font = 'bold 30px Pretendard, sans-serif';
       ctx.fillText(`${days}일  ${hours}시간  ${mins}분  ${secs}초`, 300, 585);
 
       // 7. Footer
       ctx.fillStyle = '#64748b';
-      ctx.font = 'bold 15px Outfit, sans-serif';
+      ctx.font = 'bold 15px Pretendard, sans-serif';
       ctx.fillText('MINI GAME PARADISE | NEON D-DAY POSTER', 300, 770);
 
       document.getElementById('previewContainer').style.display = 'flex';

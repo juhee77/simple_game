@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>디지털 플립북 & 포토북 아틀리에 | 미니게임 천국</title>
+  <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
   <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Cinzel:wght@700;800;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Cinzel:wght@700;800;900&display=swap" rel="stylesheet">
   
   <!-- jsPDF for direct PDF export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -35,7 +35,7 @@
     body {
       background: radial-gradient(circle at 50% 0%, #171b26 0%, #07090e 100%);
       color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
+      font-family: 'Pretendard', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -1032,10 +1032,10 @@
         cCtx.fillText(title, a4W / 2, 750);
 
         cCtx.fillStyle = currentTheme === 'noir' ? '#94a3b8' : '#78716c';
-        cCtx.font = '600 24px "Plus Jakarta Sans", "Pretendard", sans-serif';
+        cCtx.font = '600 24px "Pretendard", sans-serif';
         cCtx.fillText(subtitle, a4W / 2, 840);
 
-        cCtx.font = '18px "Plus Jakarta Sans", sans-serif';
+        cCtx.font = '18px "Pretendard", sans-serif';
         cCtx.fillText(`ARCHIVED ${albumPhotos.length} MEMORIES • PRINTED EDITION`, a4W / 2, 1000);
 
         doc.addImage(coverC.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
@@ -1052,7 +1052,7 @@
 
           // Header
           pCtx.fillStyle = currentTheme === 'noir' ? '#64748b' : '#94a3b8';
-          pCtx.font = '18px "Plus Jakarta Sans", "Pretendard", sans-serif';
+          pCtx.font = '18px "Pretendard", sans-serif';
           pCtx.textAlign = 'left';
           pCtx.fillText(title, 100, 110);
           pCtx.textAlign = 'right';
@@ -1165,11 +1165,11 @@
         ctx.fillText(title, rollW / 2, 280);
 
         ctx.fillStyle = subTextColor;
-        ctx.font = '600 24px "Plus Jakarta Sans", sans-serif';
+        ctx.font = '600 24px "Pretendard", sans-serif';
         ctx.letterSpacing = '2px';
         ctx.fillText(subtitle, rollW / 2, 340);
 
-        ctx.font = '16px "Plus Jakarta Sans", sans-serif';
+        ctx.font = '16px "Pretendard", sans-serif';
         ctx.fillText(`A CURATED PHOTO ESSAY • ${loadedImgs.length} PHOTOGRAPHS`, rollW / 2, 420);
         ctx.restore();
 
@@ -1225,7 +1225,7 @@
         ctx.font = 'italic 20px "Nanum Myeongjo", serif';
         ctx.textAlign = 'center';
         ctx.fillText('The End of Story • 소중했던 모든 순간들', rollW / 2, curY + 150);
-        ctx.font = '14px "Plus Jakarta Sans", sans-serif';
+        ctx.font = '14px "Pretendard", sans-serif';
         ctx.fillText('PUBLISHED WITH DIGITAL FLIPBOOK ARTISAN STUDIO', rollW / 2, curY + 200);
 
         // Download PNG
@@ -1265,7 +1265,7 @@
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(s.emoji, 400, 240);
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 38px "Outfit", "Pretendard", sans-serif';
+        ctx.font = 'bold 38px "Pretendard", sans-serif';
         ctx.fillText(s.title, 400, 420);
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
         ctx.font = '22px "Pretendard", sans-serif';

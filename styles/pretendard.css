@@ -1,0 +1,82 @@
+/*
+ * Pretendard (서브셋) — 사이트 기본 글꼴
+ * Copyright (c) 2021 Kil Hyung-jin, with Reserved Font Name Pretendard.
+ * https://github.com/orioncactus/pretendard
+ * SIL Open Font License 1.1 — 라이선스 전문은 assets/fonts/pretendard/LICENSE.txt
+ *
+ * 외부 CDN 대신 저장소에 넣어 둔 파일을 쓴다. 서브셋은 자주 쓰는 한글 2,350자 + 영문·숫자·기호만 담아
+ * 굵기마다 약 260KB이고, 페이지에서 실제로 쓰는 굵기 파일만 내려받는다.
+ * 서브셋에 없는 드문 글자는 기기 기본 글꼴로 대신 보인다.
+ */
+
+@font-face {
+    font-family: 'Pretendard';
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+    src: local('Pretendard Black'), url('../assets/fonts/pretendard/Pretendard-Black.subset.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+    src: local('Pretendard ExtraBold'), url('../assets/fonts/pretendard/Pretendard-ExtraBold.subset.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+    src: local('Pretendard Bold'), url('../assets/fonts/pretendard/Pretendard-Bold.subset.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    src: local('Pretendard SemiBold'), url('../assets/fonts/pretendard/Pretendard-SemiBold.subset.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+    src: local('Pretendard Medium'), url('../assets/fonts/pretendard/Pretendard-Medium.subset.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: local('Pretendard Regular'), url('../assets/fonts/pretendard/Pretendard-Regular.subset.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+    src: local('Pretendard Light'), url('../assets/fonts/pretendard/Pretendard-Light.subset.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+    src: local('Pretendard ExtraLight'), url('../assets/fonts/pretendard/Pretendard-ExtraLight.subset.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+    src: local('Pretendard Thin'), url('../assets/fonts/pretendard/Pretendard-Thin.subset.woff2') format('woff2');
+}

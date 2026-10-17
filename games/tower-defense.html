@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>네온 타워 디펜스 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
     <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
     <style>
         :root {
             --bg: #0b1120;
@@ -25,7 +25,7 @@
 
         body {
             background: var(--bg);
-            font-family: 'Outfit', system-ui, sans-serif;
+            font-family: 'Pretendard', system-ui, sans-serif;
             color: var(--text);
             min-height: 100vh;
             display: flex;
@@ -514,7 +514,7 @@
                 ctx.arc(px, py, 12 + t.level * 2, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = 'rgba(0,0,0,.55)';
-                ctx.font = 'bold 11px Outfit, sans-serif';
+                ctx.font = 'bold 11px Pretendard, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(String(t.level), px, py);

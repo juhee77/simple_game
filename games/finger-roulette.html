@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>멀티터치 손가락 룰렛 - 미니게임 천국</title>
-    <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Noto+Sans+KR:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
     <style>
         :root {
             --bg-color: #060913;
@@ -33,7 +31,7 @@
             overflow: hidden;
             background-color: var(--bg-color);
             color: #ffffff;
-            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            font-family: 'Pretendard', sans-serif;
             touch-action: none;
             position: fixed;
         }
@@ -1267,12 +1265,12 @@
                 cctx.fillRect(0, 0, cw, 360);
 
                 // 2. Card Header
-                cctx.font = 'bold 15px "Outfit", sans-serif';
+                cctx.font = 'bold 15px "Pretendard", sans-serif';
                 cctx.fillStyle = '#f59e0b';
                 cctx.textAlign = 'center';
                 cctx.fillText('⚡ MINI GAME HEAVEN • MULTI-TOUCH ⚡', cw / 2, 60);
 
-                cctx.font = '900 36px "Outfit", "Noto Sans KR", sans-serif';
+                cctx.font = '900 36px "Pretendard", sans-serif';
                 cctx.fillStyle = '#ffffff';
                 cctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
                 cctx.shadowBlur = 15;
@@ -1283,7 +1281,7 @@
                 const dStr = lastResultSnapshot.timestamp.toLocaleDateString('ko-KR', {
                     year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
-                cctx.font = '600 15px "Outfit", "Noto Sans KR", sans-serif';
+                cctx.font = '600 15px "Pretendard", sans-serif';
                 cctx.fillStyle = '#94a3b8';
                 cctx.fillText(`${dStr} • ${getModeName(lastResultSnapshot.mode, lastResultSnapshot.targetCount)} (${lastResultSnapshot.totalCount}명 참여)`, cw / 2, 140);
 
@@ -1307,7 +1305,7 @@
                     cctx.fillText('👑', cw / 2, contentY);
                     contentY += 35;
 
-                    cctx.font = '900 24px "Noto Sans KR", sans-serif';
+                    cctx.font = '900 24px "Pretendard", sans-serif';
                     cctx.fillStyle = '#fef08a';
                     cctx.shadowColor = 'rgba(245, 158, 11, 0.6)';
                     cctx.shadowBlur = 10;
@@ -1342,7 +1340,7 @@
                         cctx.fill();
 
                         // Name
-                        cctx.font = 'bold 18px "Noto Sans KR", sans-serif';
+                        cctx.font = 'bold 18px "Pretendard", sans-serif';
                         cctx.fillStyle = '#f8fafc';
                         cctx.fillText(w.name, wx, wy + 62);
                     });
@@ -1363,11 +1361,11 @@
                         cctx.fill();
                         cctx.stroke();
 
-                        cctx.font = 'bold 14px "Noto Sans KR", sans-serif';
+                        cctx.font = 'bold 14px "Pretendard", sans-serif';
                         cctx.fillStyle = '#fbbf24';
                         cctx.fillText('🎰 확정 벌칙 / 미션', cw / 2, penY + 32);
 
-                        cctx.font = '900 24px "Noto Sans KR", sans-serif';
+                        cctx.font = '900 24px "Pretendard", sans-serif';
                         cctx.fillStyle = '#fef08a';
                         cctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
                         cctx.shadowBlur = 12;
@@ -1399,7 +1397,7 @@
                         cctx.stroke();
 
                         // Team Header
-                        cctx.font = '900 20px "Outfit", "Noto Sans KR", sans-serif';
+                        cctx.font = '900 20px "Pretendard", sans-serif';
                         cctx.fillStyle = tColor;
                         cctx.shadowColor = tColor;
                         cctx.shadowBlur = 10;
@@ -1418,7 +1416,7 @@
                             cctx.fillStyle = m.color;
                             cctx.fill();
 
-                            cctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+                            cctx.font = 'bold 16px "Pretendard", sans-serif';
                             cctx.fillStyle = '#ffffff';
                             cctx.textAlign = 'left';
                             cctx.fillText(m.name, bx + 42, memY);
@@ -1430,7 +1428,7 @@
                     const sorted = [...lastResultSnapshot.participants].sort((a, b) => a.order - b.order);
                     let listY = cardY + 45;
 
-                    cctx.font = '900 22px "Noto Sans KR", sans-serif';
+                    cctx.font = '900 22px "Pretendard", sans-serif';
                     cctx.fillStyle = '#ffffff';
                     cctx.fillText('🔢 결정된 순서', cw / 2, listY);
                     listY += 45;
@@ -1447,7 +1445,7 @@
                         cctx.stroke();
 
                         // Order Number Badge
-                        cctx.font = '900 18px "Outfit", sans-serif';
+                        cctx.font = '900 18px "Pretendard", sans-serif';
                         cctx.fillStyle = p.order === 1 ? '#f59e0b' : '#38bdf8';
                         cctx.textAlign = 'left';
                         cctx.fillText(`#${p.order}`, rx + 20, listY + 28);
@@ -1459,7 +1457,7 @@
                         cctx.fill();
 
                         // Name
-                        cctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+                        cctx.font = 'bold 16px "Pretendard", sans-serif';
                         cctx.fillStyle = '#f8fafc';
                         cctx.fillText(p.name, rx + 95, listY + 28);
 
@@ -1469,7 +1467,7 @@
                 }
 
                 // 4. Card Footer
-                cctx.font = '600 14px "Noto Sans KR", sans-serif';
+                cctx.font = '600 14px "Pretendard", sans-serif';
                 cctx.fillStyle = '#64748b';
                 cctx.fillText('미니게임 천국 • 화면에 손가락만 대면 3초 만에 결정!', cw / 2, ch - 40);
 
@@ -1605,7 +1603,7 @@
                             ctx.textBaseline = 'bottom';
                             ctx.fillText('👑', touch.x, touch.y - ringRadius - 8);
                         } else if (currentMode === 'teams') {
-                            ctx.font = 'bold 18px "Outfit", sans-serif';
+                            ctx.font = 'bold 18px "Pretendard", sans-serif';
                             ctx.fillStyle = touch.teamColor;
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
@@ -1613,7 +1611,7 @@
                             ctx.shadowBlur = 12;
                             ctx.fillText(touch.team, touch.x, touch.y - ringRadius - 16);
                         } else if (currentMode === 'order') {
-                            ctx.font = '900 24px "Outfit", sans-serif';
+                            ctx.font = '900 24px "Pretendard", sans-serif';
                             ctx.fillStyle = '#ffffff';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';

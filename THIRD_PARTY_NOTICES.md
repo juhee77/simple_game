@@ -1,8 +1,8 @@
 # Third-Party Notices
 
 This project avoids bundling third-party image assets with unclear provenance.
-Nothing below is vendored into the repository: every library, font and map tile is
-loaded at runtime from the public CDN or service listed.
+Apart from the Pretendard font files (see Fonts), nothing below is vendored into the repository:
+every library, font and map tile is loaded at runtime from the public CDN or service listed.
 
 ## Libraries
 
@@ -25,11 +25,12 @@ Loaded from `cdnjs.cloudflare.com`, `cdn.jsdelivr.net` and `unpkg.com`.
 
 All fonts are licensed under the **SIL Open Font License 1.1**.
 
-- **Pretendard** (v1.3.9, via jsDelivr) — https://github.com/orioncactus/pretendard
-- **Google Fonts** (via `fonts.googleapis.com`) — https://fonts.google.com
-  - Outfit, Plus Jakarta Sans, Share Tech Mono, JetBrains Mono, Playfair Display,
-    Noto Sans KR, Noto Serif KR, Nanum Myeongjo, Jua, Bebas Neue, Cinzel, Marcellus,
-    Orbitron, Quicksand, Fredoka
+- **Pretendard** (subset woff2, **bundled** in `assets/fonts/pretendard/`, loaded by `styles/pretendard.css`) — the site-wide default font.
+  Copyright (c) 2021 Kil Hyung-jin, with Reserved Font Name Pretendard — https://github.com/orioncactus/pretendard.
+  The full license text is included at `assets/fonts/pretendard/LICENSE.txt`.
+- **Google Fonts** (via `fonts.googleapis.com`) — decorative fonts used by individual games only — https://fonts.google.com
+  - Share Tech Mono, JetBrains Mono, Playfair Display, Noto Serif KR, Nanum Myeongjo, Jua, Bebas Neue,
+    Cinzel, Marcellus, Orbitron, Quicksand, Fredoka
 
 ## Map tiles and data
 

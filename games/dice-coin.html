@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D 네온 주사위 & 동전 | 미니게임 천국</title>
+  <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
   <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=e8b4cc4d">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
   <style>
     :root {
       --bg: #0b0b1a;
@@ -30,7 +29,7 @@
       padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
       background-color: var(--bg);
       color: var(--text-main);
-      font-family: 'Outfit', 'Pretendard', sans-serif;
+      font-family: 'Pretendard', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -347,7 +346,7 @@
         ctx.stroke();
 
         ctx.fillStyle = '#111122';
-        ctx.font = 'bold 24px Outfit, sans-serif';
+        ctx.font = 'bold 24px Pretendard, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('FRONT', cx, cy + 8);
       }
@@ -389,7 +388,7 @@
 
             const tempVal = Math.floor(Math.random() * 6) + 1;
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 28px Outfit, sans-serif';
+            ctx.font = 'bold 28px Pretendard, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(tempVal, 0, 10);
           } else {
@@ -427,7 +426,7 @@
         ctx.strokeRect(cx - 45, cy - 45, 90, 90);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 44px Outfit, sans-serif';
+        ctx.font = 'bold 44px Pretendard, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(diceVal, cx, cy + 15);
 
@@ -442,7 +441,7 @@
         ctx.stroke();
 
         ctx.fillStyle = '#111122';
-        ctx.font = 'bold 22px Outfit, Pretendard, sans-serif';
+        ctx.font = 'bold 22px Pretendard, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(coinVal.includes('앞면') ? '앞면' : '뒷면', cx, cy + 8);
 
