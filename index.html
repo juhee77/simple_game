@@ -3,946 +3,967 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>미니게임 천국 - Mini Game Paradise</title>
     <link rel="stylesheet" href="styles/pretendard.css?v=c17883c9">
     <meta name="description"
-        content="115가지 재미있는 미니게임을 즐겨보세요! 미스터리/다수/소수/클래식/시뮬레이션/폰넘기기 카테고리별로 분류된 프리미엄 게임">
-    <link rel="stylesheet" href="styles/main.css?v=4a9baa1c">
+        content="모임에서 바로 켜는 미니게임과 모임 도구 모음. 인원과 시간만 고르면 딱 맞는 게임을 골라 드려요.">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="stylesheet" href="styles/main.css?v=81002f5a">
 </head>
 
 <body>
-    <div class="stars"></div>
-    <div class="container">
-        <header class="header">
-            <h1 class="title">
-                <span class="title-icon">🎮</span>
-                미니게임 천국
-                <span class="title-subtitle">Mini Game Paradise</span>
-            </h1>
-            <p class="subtitle">115가지 재미있는 게임을 즐겨보세요!</p>
-            <div class="search-container">
-                <input type="text" id="game-search" placeholder="게임 이름, 설명 또는 태그 검색..." autocomplete="off">
-                <span class="search-icon">🔍</span>
-                <button id="clear-search" class="clear-btn" style="display: none;">✕</button>
-            </div>
-            
-            <!-- 필터 시스템 -->
-            <div class="filter-container" id="filter-container">
-                <div class="filter-group">
-                    <span class="filter-label">👥 인원수</span>
-                    <button class="filter-btn active" data-filter-type="players" data-filter-value="all">전체</button>
-                    <button class="filter-btn" data-filter-type="players" data-filter-value="1">1인</button>
-                    <button class="filter-btn" data-filter-type="players" data-filter-value="2">2인</button>
-                    <button class="filter-btn" data-filter-type="players" data-filter-value="3-4">3~4인</button>
-                    <button class="filter-btn" data-filter-type="players" data-filter-value="5-7">5~7인</button>
-                    <button class="filter-btn" data-filter-type="players" data-filter-value="8+">8인+</button>
-                </div>
-                <div class="filter-group">
-                    <span class="filter-label">⏱️ 소요시간</span>
-                    <button class="filter-btn active" data-filter-type="time" data-filter-value="all">전체</button>
-                    <button class="filter-btn" data-filter-type="time" data-filter-value="5">가볍게 (~5분)</button>
-                    <button class="filter-btn" data-filter-type="time" data-filter-value="15">적당히 (~15분)</button>
-                    <button class="filter-btn" data-filter-type="time" data-filter-value="15+">진득하게 (15분+)</button>
-                </div>
-            </div>
-        </header>
-        <!-- 1단계: 카테고리 뷰 -->
-        <div id="category-view" class="category-grid">
-            <div class="category-card" data-category="solo">
-                <div class="category-icon">🧠</div>
-                <h2 class="category-title">Solo & Mystery</h2>
-                <p class="category-desc">혼자서 즐기는 미스터리 방탈출과 퍼즐</p>
-                <div class="game-badge">Solo & Mystery</div>
+    <div class="app">
+        <div class="top">
+            <header class="topbar">
+                <a class="brand" href="./">
+                    <span class="brand-mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="16" cy="11.5" r="0.6"/><circle cx="18" cy="13.5" r="0.6"/></svg></span>
+                    <span class="brand-name">미니게임 천국</span>
+                </a>
+            </header>
+
+            <div class="search">
+                <label for="game-search" class="sr-only">게임 검색</label>
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                <input type="search" id="game-search" placeholder="게임 이름이나 설명으로 찾기" autocomplete="off" enterkeyhint="search">
+                <button id="clear-search" class="clear-btn" type="button" aria-label="검색어 지우기" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             </div>
 
-            <div class="category-card" data-category="multi">
-                <div class="category-icon">👥</div>
-                <h2 class="category-title">다수 인원용</h2>
-                <p class="category-desc">친구들과 함께 즐기는 파티 & 소셜 게임</p>
-                <div class="game-badge">Party & Social</div>
-            </div>
-
-            <div class="category-card" data-category="duo">
-                <div class="category-icon">⚔️</div>
-                <h2 class="category-title">소수 인원용</h2>
-                <p class="category-desc">1:1 대결이나 소수가 즐기는 액션 게임</p>
-                <div class="game-badge">협동/추리</div>
-            </div>
-
-            <div class="category-card" data-category="classic">
-                <div class="category-icon">🧩</div>
-                <h2 class="category-title">클래식 & 퍼즐</h2>
-                <p class="category-desc">혼자서도 즐거운 정통 퍼즐과 클래식</p>
-                <div class="game-badge">Classic & Puzzle</div>
-            </div>
-
-            <div class="category-card" data-category="sim">
-                <div class="category-icon">✨</div>
-                <h2 class="category-title">시뮬레이션 & 3D</h2>
-                <p class="category-desc">화려한 3D 연출과 시각적 체험</p>
-                <div class="game-badge">Simulation & 3D</div>
-            </div>
-
-            <div class="category-card" data-category="pass">
-                <div class="category-icon">📱</div>
-                <h2 class="category-title">폰 넘기기</h2>
-                <p class="category-desc">한 폰을 넘겨가며 즐기는 릴레이</p>
-                <div class="game-badge">Pass the Phone</div>
-            </div>
-
-            <div class="category-card" data-category="utility">
-                <div class="category-icon">🛠️</div>
-                <h2 class="category-title">유틸리티 & 도구</h2>
-                <p class="category-desc">중간 지점 찾기, 룰렛, 사다리, 메뉴 추천 등 모임 도구</p>
-                <div class="game-badge">Utility & Tools</div>
-            </div>
+            <nav class="shortcuts" aria-label="자주 쓰는 모임 도구">
+                <a class="shortcut" href="games/ladder.html"><span class="shortcut-icon" style="--tint: #eef0ff">🪜</span><span class="shortcut-name">사다리</span></a>
+                <a class="shortcut" href="games/finger-roulette.html"><span class="shortcut-icon" style="--tint: #fdeaf3">👆</span><span class="shortcut-name">손가락 룰렛</span></a>
+                <a class="shortcut" href="games/split-bill.html"><span class="shortcut-icon" style="--tint: #e8f7ef">🧾</span><span class="shortcut-name">더치페이</span></a>
+                <a class="shortcut" href="games/meetup-planner.html"><span class="shortcut-icon" style="--tint: #e7f3ff">📅</span><span class="shortcut-name">날짜 맞추기</span></a>
+                <a class="shortcut" href="games/roulette.html"><span class="shortcut-icon" style="--tint: #fff3e2">🎰</span><span class="shortcut-name">룰렛</span></a>
+                <a class="shortcut" href="games/team-splitter.html"><span class="shortcut-icon" style="--tint: #f1ecff">👥</span><span class="shortcut-name">팀 나누기</span></a>
+                <a class="shortcut" href="games/menu.html"><span class="shortcut-icon" style="--tint: #fdeee2">🍽️</span><span class="shortcut-name">메뉴 추천</span></a>
+                <a class="shortcut" href="games/random-order.html"><span class="shortcut-icon" style="--tint: #e6f6f8">🔢</span><span class="shortcut-name">순서 정하기</span></a>
+            </nav>
         </div>
 
-        <!-- 2단계: 게임 앱 리스트 뷰 (초기 숨김) -->
-        <div id="game-view" class="view-hidden">
-            <div class="view-header">
-                <button class="back-btn" id="back-to-categories">
-                    <span>←</span> 카테고리로 돌아가기
-                </button>
-                <h2 id="current-category-title" style="font-size: 2rem; font-weight: 800;">카테고리 제목</h2>
+        <section class="pick-banner" aria-label="게임 추천">
+            <div class="pick-text">
+                <p class="pick-eyebrow">뭐 할지 모르겠다면</p>
+                <p class="pick-title">인원과 시간만 고르면<br>딱 맞는 게임을 골라 드려요</p>
             </div>
+            <button class="pick-btn" type="button" data-open-sheet="pick">골라 줘</button>
+        </section>
+
+        <section class="list" aria-labelledby="list-heading">
+            <h2 id="list-heading" class="sr-only">게임 목록</h2>
+            <div class="tabs" role="tablist" aria-label="분류" id="category-tabs">
+                <button class="tab" role="tab" data-tab="all" aria-selected="true">전체</button>
+                <button class="tab" role="tab" data-tab="multi" aria-selected="false">파티</button>
+                <button class="tab" role="tab" data-tab="pass" aria-selected="false">폰 넘기기</button>
+                <button class="tab" role="tab" data-tab="duo" aria-selected="false">둘이서</button>
+                <button class="tab" role="tab" data-tab="classic" aria-selected="false">퍼즐</button>
+                <button class="tab" role="tab" data-tab="solo" aria-selected="false">혼자</button>
+                <button class="tab" role="tab" data-tab="sim" aria-selected="false">3D</button>
+                <button class="tab" role="tab" data-tab="utility" aria-selected="false">도구</button>
+            </div>
+
+            <div class="list-tools">
+                <button class="chip-btn" id="players-chip" type="button" data-open-sheet="filter"><span>인원</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+                <button class="chip-btn" id="time-chip" type="button" data-open-sheet="filter"><span>시간</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+                <button class="chip-reset" id="reset-filters" type="button" hidden>초기화</button>
+                <span class="list-count" id="list-count" aria-live="polite"></span>
+            </div>
+
+            <p class="list-title" id="list-title" hidden></p>
 
             <main class="games-grid" id="games-container">
-                <!-- 1인용 게임 -->
-                <a href="games/solitary-memory.html" class="game-card" data-min-players="1" data-max-players="1" data-time="15" data-category="solo">
-                    <div class="game-icon">🧠</div>
-                    <h2 class="game-title">고독한 기억</h2>
-                    <p class="game-description">폐쇄된 실험실에서의 기억 추적 방탈출</p>
-                    <div class="game-badge">추리/방탈출</div>
-                </a>
-
-                <a href="games/chrono-lock.html" class="game-card" data-min-players="1" data-max-players="1" data-time="15" data-category="solo">
-                    <div class="game-icon">⏳</div>
-                    <h2 class="game-title">크로노-락</h2>
-                    <p class="game-description">과거와 현재를 오가는 시간 조작 퍼즐</p>
-                    <div class="game-badge">논리/퍼즐</div>
-                </a>
-
-                <a href="games/nonogram.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="solo">
-                    <div class="game-icon">🔲</div>
-                    <h2 class="game-title">노노그램</h2>
-                    <p class="game-description">숨겨진 숫자의 힌트를 읽고 디지털 픽셀 아트를 완성하세요</p>
-                    <div class="game-badge">논리/퍼즐</div>
-                </a>
-
-                <a href="games/pitch-perfect.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="solo">
-                    <div class="game-icon">🎵</div>
-                    <h2 class="game-title">음정 맞히기</h2>
-                    <p class="game-description">기준 음을 듣고 슬라이더로 주파수를 완벽하게 맞추는 절대음감 테스트</p>
-                    <div class="game-badge">감각/청음</div>
-                </a>
-
-                <!-- 다수 인원용 -->
-                <a href="games/omok.html" class="game-card" data-min-players="2" data-max-players="2" data-time="10" data-category="duo">
-                    <div class="game-icon">⚫⚪</div>
-                    <h2 class="game-title">오목</h2>
-                    <p class="game-description">5개를 먼저 연결하세요</p>
-                    <div class="game-badge">전략</div>
-                </a>
-
-                <a href="games/reversi.html" class="game-card" data-min-players="1" data-max-players="2" data-time="15" data-category="duo classic">
-                    <div class="game-icon">⚫</div>
-                    <h2 class="game-title">리버시</h2>
-                    <p class="game-description">AI 3단계와 겨루는 뒤집기 전략 보드게임</p>
-                    <div class="game-badge">전략/보드</div>
-                </a>
-
-                <a href="games/ladder.html" class="game-card" data-min-players="2" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">🪜</div>
-                    <h2 class="game-title">사다리 타기</h2>
-                    <p class="game-description">랜덤 결정이 필요할 때</p>
-                    <div class="game-badge">랜덤</div>
-                </a>
-
-                <a href="games/roulette.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">🎰</div>
-                    <h2 class="game-title">룰렛</h2>
-                    <p class="game-description">행운의 룰렛을 돌려보세요</p>
-                    <div class="game-badge">랜덤</div>
-                </a>
-
-                <a href="games/finger-roulette.html" class="game-card" data-min-players="2" data-max-players="8" data-time="1" data-category="action utility multi party">
-                    <div class="game-icon">👆</div>
-                    <h2 class="game-title">손가락 룰렛</h2>
-                    <p class="game-description">화면에 손가락을 올려 당첨자와 벌칙을 뽑아보세요</p>
-                    <div class="game-badge">파티/터치</div>
-                </a>
-
-                <a href="games/menu.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">🍽️</div>
-                    <h2 class="game-title">메뉴 추천</h2>
-                    <p class="game-description">오늘 뭐 먹을지 고민될 때</p>
-                    <div class="game-badge">추천</div>
-                </a>
-
-                <a href="games/lucky-draw.html" class="game-card" data-min-players="2" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">🎰</div>
-                    <h2 class="game-title">네온 럭키 드로우</h2>
-                    <p class="game-description">화려한 연출과 함께 당첨자를 뽑아보세요</p>
-                    <div class="game-badge">추첨</div>
-                </a>
-
-                <a href="games/todo.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">✅</div>
-                    <h2 class="game-title">할일 추천</h2>
-                    <p class="game-description">무엇을 할지 결정해드려요</p>
-                    <div class="game-badge">추천</div>
-                </a>
-
-                <a href="games/meetup-planner.html" class="game-card" data-min-players="2" data-max-players="20" data-time="3" data-category="utility pass multi">
-                    <div class="game-icon">📅</div>
-                    <h2 class="game-title">모임 날짜 맞추기</h2>
-                    <p class="game-description">폰을 돌려가며 되는 날을 누르면 다 같이 되는 날을 찾아 드려요</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/midpoint-finder.html" class="game-card" data-min-players="2" data-max-players="10" data-time="3" data-category="utility multi">
-                    <div class="game-icon">📍</div>
-                    <h2 class="game-title">중간 지점 찾기</h2>
-                    <p class="game-description">참가자들의 지하철역 기준 중간 모임 장소 추천</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/photo-booth.html" class="game-card" data-min-players="1" data-max-players="10" data-time="5" data-category="utility multi">
-                    <div class="game-icon">📸</div>
-                    <h2 class="game-title">네온 4컷 사진관</h2>
-                    <p class="game-description">셀카/후면 10장 촬영 후 베스트 4장으로 만드는 기념 4컷 프레임</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/photo-book.html" class="game-card" data-min-players="1" data-max-players="10" data-time="3" data-category="utility multi">
-                    <div class="game-icon">📖</div>
-                    <h2 class="game-title">디지털 플립북 & 포토북</h2>
-                    <p class="game-description">사진들을 모아 실제 책처럼 넘겨보는 플립북과 다장 PDF 전자책 제작</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/photo-poster.html" class="game-card" data-min-players="1" data-max-players="10" data-time="2" data-category="utility multi">
-                    <div class="game-icon">🖼️</div>
-                    <h2 class="game-title">매거진 포스터 & 콜라주</h2>
-                    <p class="game-description">수십 장의 사진을 감성적인 대형 매거진 포스터와 무드보드 한 장으로 합성</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/photo-travel-map.html" class="game-card" data-min-players="1" data-max-players="10" data-time="2" data-category="utility multi">
-                    <div class="game-icon">🧭</div>
-                    <h2 class="game-title">여행 동선 맵 & GIF</h2>
-                    <p class="game-description">사진 속 GPS와 시간 정보를 분석해 경로를 따라 움직이는 여행 타임랩스 GIF</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/photo-slideshow.html" class="game-card" data-min-players="1" data-max-players="10" data-time="2" data-category="utility multi">
-                    <div class="game-icon">🎬</div>
-                    <h2 class="game-title">켄 번스 무빙 슬라이드쇼</h2>
-                    <p class="game-description">영화 같은 줌인/줌아웃 모션과 레트로 필름 스탬프가 담긴 루핑 GIF 메이커</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/photo-inspector.html" class="game-card" data-min-players="1" data-max-players="1" data-time="2" data-category="utility solo">
-                    <div class="game-icon">🔍</div>
-                    <h2 class="game-title">사진 메타데이터 인스펙터</h2>
-                    <p class="game-description">EXIF 카메라 제원, 시간순 GPS 여행 동선, 컬러 팔레트 & 히스토그램 포렌식 분석</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/soundboard.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">🔊</div>
-                    <h2 class="game-title">이벤트 사운드보드</h2>
-                    <p class="game-description">드럼롤, 딩동댕, 땡, 박수갈채 등 모임 사회자 필수 효과음</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/qr-wifi.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">📶</div>
-                    <h2 class="game-title">Wi-Fi & QR 생성기</h2>
-                    <p class="game-description">스캔 한 번으로 암호 없이 즉시 연결되는 와이파이 QR 코드</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/preference-radar.html" class="game-card" data-min-players="2" data-max-players="6" data-time="5" data-category="utility multi">
-                    <div class="game-icon">🎯</div>
-                    <h2 class="game-title">그룹 성향 레이더</h2>
-                    <p class="game-description">우리 모임의 5가지 취향 방위도 차트와 꿀케미 조합 분석</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/mission-cards.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="utility multi">
-                    <div class="game-icon">🃏</div>
-                    <h2 class="game-title">파티 미션 & 진실게임</h2>
-                    <p class="game-description">아이스브레이킹부터 무작위 3D 덱 뒤집기 미션 카드</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/d-day-card.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">⏳</div>
-                    <h2 class="game-title">D-Day & 카운트다운</h2>
-                    <p class="game-description">모임, 여행, 생일 실시간 D-Day 타이머 및 네온 카드 공유</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/dice-coin.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">🎲</div>
-                    <h2 class="game-title">3D 주사위 & 동전</h2>
-                    <p class="game-description">손맛 있는 3D 모션과 사운드로 빠른 결정을 돕는 주사위 & 동전 던지기</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/glow-stick.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
-                    <div class="game-icon">📱</div>
-                    <h2 class="game-title">네온 야광봉 & 응원 전광판</h2>
-                    <p class="game-description">화려한 네온 야광봉 효과와 흐르는 메시지 응원 전광판</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/pitch-match.html" class="game-card" data-min-players="1" data-max-players="10" data-time="5" data-category="utility multi">
-                    <div class="game-icon">🎤</div>
-                    <h2 class="game-title">실시간 음감 & Pitch 맞추기</h2>
-                    <p class="game-description">마이크로 입력받은 내 목소리 음정을 측정해 목표 노트에 맞추는 음감 게임</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/color-matcher.html" class="game-card" data-min-players="1" data-max-players="8" data-time="5" data-category="multi duo">
-                    <div class="game-icon">🎨</div>
-                    <h2 class="game-title">네온 색상 감각 대결</h2>
-                    <p class="game-description">목표 색을 RGB로 최대한 정확히 맞추세요</p>
-                    <div class="game-badge">감각</div>
-                </a>
-
-                <a href="games/pulse-tap.html" class="game-card" data-min-players="1" data-max-players="8" data-time="5" data-category="multi duo">
-                    <div class="game-icon">🥁</div>
-                    <h2 class="game-title">네온 리듬 배틀</h2>
-                    <p class="game-description">비트에 맞춰 탭하고 점수를 비교하세요</p>
-                    <div class="game-badge">리듬</div>
-                </a>
-
-                <a href="games/photo-hunter.html" class="game-card" data-min-players="2" data-max-players="12" data-time="5" data-category="multi">
-                    <div class="game-icon">📸</div>
-                    <h2 class="game-title">포토 헌터</h2>
-                    <p class="game-description">주변에서 미션 물건을 가장 먼저 찾아오세요</p>
-                    <div class="game-badge">탐색</div>
-                </a>
-
-                <a href="games/shake-it.html" class="game-card" data-min-players="1" data-max-players="8" data-time="1" data-category="multi duo">
-                    <div class="game-icon">📱</div>
-                    <h2 class="game-title">네온 흔들기 대결</h2>
-                    <p class="game-description">30초간 폰을 가장 많이 흔들어 기록 경쟁</p>
-                    <div class="game-badge">체력</div>
-                </a>
-
-                <a href="games/bingo-host.html" class="game-card" data-min-players="2" data-max-players="30" data-time="10" data-category="multi">
-                    <div class="game-icon">🎱</div>
-                    <h2 class="game-title">빙고 넘버 마스터</h2>
-                    <p class="game-description">번호를 뽑고 빙고판을 채우세요</p>
-                    <div class="game-badge">빙고</div>
-                </a>
-
-                <a href="games/card-battle.html" class="game-card" data-min-players="2" data-max-players="2" data-time="5" data-category="duo">
-                    <div class="game-icon">🃏</div>
-                    <h2 class="game-title">네온 카드 배틀</h2>
-                    <p class="game-description">카드를 뒤집어 파워를 겨루세요</p>
-                    <div class="game-badge">운</div>
-                </a>
-
-                <a href="games/orchestra.html" class="game-card" data-min-players="1" data-max-players="6" data-time="5" data-category="multi">
-                    <div class="game-icon">🎵</div>
-                    <h2 class="game-title">사운드 오케스트라</h2>
-                    <p class="game-description">각자 악기를 골라 합주하세요</p>
-                    <div class="game-badge">음악</div>
-                </a>
-
-                <a href="games/qr-garden.html" class="game-card" data-min-players="1" data-max-players="8" data-time="5" data-category="multi">
-                    <div class="game-icon">🌸</div>
-                    <h2 class="game-title">씨앗 코드 가든</h2>
-                    <p class="game-description">같은 씨앗 코드를 넣으면 같은 정원이 자랍니다</p>
-                    <div class="game-badge">아트</div>
-                </a>
-
-                <!-- 소수 인원용 -->
-                <a href="games/royal-secret-letter.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
-                    <div class="game-icon">✉️</div>
-                    <h2 class="game-title">왕궁의 밀서</h2>
-                    <p class="game-description">단 16장의 카드로 벌이는 심리 카드 게임</p>
-                    <div class="game-badge">심리/카드</div>
-                </a>
-
-                <a href="games/neon-dual.html" class="game-card" data-min-players="2" data-max-players="2" data-time="5" data-category="duo sim">
-                    <div class="game-icon">⚡</div>
-                    <h2 class="game-title">네온 듀얼</h2>
-                    <p class="game-description">실시간 에어하키 액션 대결</p>
-                    <div class="game-badge">순발력</div>
-                </a>
-
-                <a href="games/critical-flight.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
-                    <div class="game-icon">✈️</div>
-                    <h2 class="game-title">크리티컬 플라이트</h2>
-                    <p class="game-description">비행기 조종실 비대칭 방탈출</p>
-                    <div class="game-badge">협동/탈출</div>
-                </a>
-
-                <a href="games/control-room.html" class="game-card" data-min-players="3" data-max-players="5" data-time="20" data-category="pass multi">
-                    <div class="game-icon">🛰️</div>
-                    <h2 class="game-title">관제실 탈출</h2>
-                    <p class="game-description">각자 다른 매뉴얼을 말로만 맞추는 협동 탈출</p>
-                    <div class="game-badge">협동/탈출</div>
-                </a>
-
-                <a href="games/luminous-lines.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
-                    <div class="game-icon">💎</div>
-                    <h2 class="game-title">루미너스 라인</h2>
-                    <p class="game-description">전략 땅따먹기 & 콤보 대결</p>
-                    <div class="game-badge">전략/논리</div>
-                </a>
-
-                <a href="games/pocket-quilt.html" class="game-card" data-min-players="2" data-max-players="2" data-time="20" data-category="duo">
-                    <div class="game-icon">🧵</div>
-                    <h2 class="game-title">포켓 퀼트</h2>
-                    <p class="game-description">모바일 최적화 타일 배치 전략</p>
-                    <div class="game-badge">퍼즐/전략</div>
-                </a>
-
-                <a href="games/bomb-defusal.html" class="game-card" data-min-players="2" data-max-players="2" data-time="10" data-category="duo">
-                    <div class="game-icon">💣</div>
-                    <h2 class="game-title">폭탄 해체반</h2>
-                    <p class="game-description">비대칭 정보 협동 퍼즐</p>
-                    <div class="game-badge">협동/추리</div>
-                </a>
-
-                <a href="games/arena-of-legends.html" class="game-card" data-min-players="2" data-max-players="2" data-time="20" data-category="duo">
-                    <div class="game-icon">⚔️</div>
-                    <h2 class="game-title">아레나 오브 레전드</h2>
-                    <p class="game-description">도미니언 스타일의 라이트 덱 빌딩 대결</p>
-                    <div class="game-badge">덱빌딩/전략</div>
-                </a>
-
-                <a href="games/tower-of-gods.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
-                    <div class="game-icon">🏛️</div>
-                    <h2 class="game-title">신들의 탑</h2>
-                    <p class="game-description">3D 추상 전략 핫시트 게임</p>
-                    <div class="game-badge">전략/건설</div>
-                </a>
-
-                <a href="games/agent-codebreaker.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
-                    <div class="game-icon">🕵️‍♂️</div>
-                    <h2 class="game-title">첩보원: 암호 해독</h2>
-                    <p class="game-description">단어 연상 협동 추리 게임</p>
-                    <div class="game-badge">추리/협동</div>
-                </a>
-
-                <a href="games/project-lethe.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
-                    <div class="game-icon">🧠</div>
-                    <h2 class="game-title">프로젝트 레테</h2>
-                    <p class="game-description">사이버펑크 비대칭 해킹 협동전</p>
-                    <div class="game-badge">협동/퍼즐</div>
-                </a>
-
-                <a href="games/shadow-syndicate.html" class="game-card" data-min-players="2" data-max-players="2" data-time="20" data-category="duo">
-                    <div class="game-icon">🎩</div>
-                    <h2 class="game-title">그림자 상단</h2>
-                    <p class="game-description">느와르 마피아 카드 세력전</p>
-                    <div class="game-badge">전략/대결</div>
-                </a>
-
-                <a href="games/starlight-tuners.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
-                    <div class="game-icon">✨</div>
-                    <h2 class="game-title">별빛 조율사</h2>
-                    <p class="game-description">우주 감성 폴리오미노 퍼즐</p>
-                    <div class="game-badge">퍼즐/경쟁</div>
-                </a>
-
-                <a href="games/blackjack-duel.html" class="game-card" data-min-players="2" data-max-players="2" data-time="10" data-category="duo">
-                    <div class="game-icon">🃏</div>
-                    <h2 class="game-title">블랙잭 듀얼</h2>
-                    <p class="game-description">카지노 펠트 테이블 위에서 칩을 베팅하고 21의 한계에 도전하는 1v1 심리 카드 대결</p>
-                    <div class="game-badge">대결/카드</div>
-                </a>
-
-                <a href="games/yacht-dice.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
-                    <div class="game-icon">🎲</div>
-                    <h2 class="game-title">요트 다이스 2인용</h2>
-                    <p class="game-description">5개의 주사위를 굴려 12가지 족보를 채우는 2인 핫시트 전략 주사위 대결</p>
-                    <div class="game-badge">주사위/전략</div>
-                </a>
-
-                <a href="games/sky-dogfight.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
-                    <div class="game-icon">✈️</div>
-                    <h2 class="game-title">스카이 도그파이트</h2>
-                    <p class="game-description">기기를 번갈아 넘기며 궤적을 예측해 격추하는 1v1 공중전</p>
-                    <div class="game-badge">전술/대결</div>
-                </a>
-
-                <a href="games/reaction.html" class="game-card" data-min-players="1" data-max-players="1" data-time="1" data-category="classic">
-                    <div class="game-icon">⚡</div>
-                    <h2 class="game-title">반응 속도</h2>
-                    <p class="game-description">초록색이 되면 빨리 클릭하세요</p>
-                    <div class="game-badge">순발력</div>
-                </a>
-
-                <a href="games/whack.html" class="game-card" data-min-players="1" data-max-players="1" data-time="3" data-category="classic">
-                    <div class="game-icon">🔨</div>
-                    <h2 class="game-title">두더지 잡기</h2>
-                    <p class="game-description">튀어나오는 두더지를 빠르게 잡아보세요</p>
-                    <div class="game-badge">아케이드</div>
-                </a>
-
-                <a href="games/duo-reaction.html" class="game-card" data-min-players="2" data-max-players="2" data-time="3" data-category="duo">
-                    <div class="game-icon">⚡</div>
-                    <h2 class="game-title">듀오 반응속도 대결</h2>
-                    <p class="game-description">한 화면에서 마주 보고 즐기는 순발력 대결</p>
-                    <div class="game-badge">2인 대결</div>
-                </a>
-
-                <a href="games/air-hockey.html" class="game-card" data-min-players="1" data-max-players="2" data-time="5" data-category="duo">
-                    <div class="game-icon">🏒</div>
-                    <h2 class="game-title">네온 에어하키</h2>
-                    <p class="game-description">한 화면에서 동시에 조작하는 실시간 1대1</p>
-                    <div class="game-badge">실시간/대결</div>
-                </a>
-
-                <a href="games/gyro-balance.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
-                    <div class="game-icon">⚖️</div>
-                    <h2 class="game-title">네온 밸런스 볼</h2>
-                    <p class="game-description">폰을 기울여 미로 속 공을 구멍에 넣으세요</p>
-                    <div class="game-badge">밸런스</div>
-                </a>
-
-                <a href="games/breakout.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
-                    <div class="game-icon">🧱</div>
-                    <h2 class="game-title">벽돌 깨기</h2>
-                    <p class="game-description">패들로 공을 튕겨 벽돌을 부수세요</p>
-                    <div class="game-badge">액션</div>
-                </a>
-
-                <!-- 클래식 & 퍼즐 -->
-                <a href="games/2048.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="classic">
-                    <div class="game-icon">🔢</div>
-                    <h2 class="game-title">2048</h2>
-                    <p class="game-description">타일을 합쳐 2048을 만드세요</p>
-                    <div class="game-badge">퍼즐</div>
-                </a>
-
-                <a href="games/minesweeper.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="classic">
-                    <div class="game-icon">💣</div>
-                    <h2 class="game-title">지뢰찾기</h2>
-                    <p class="game-description">지뢰를 피해 모든 칸을 열어보세요</p>
-                    <div class="game-badge">논리</div>
-                </a>
-
-                <a href="games/sudoku.html" class="game-card" data-min-players="1" data-max-players="1" data-time="15" data-category="classic">
-                    <div class="game-icon">🔢</div>
-                    <h2 class="game-title">스도쿠</h2>
-                    <p class="game-description">숫자 퍼즐의 정석</p>
-                    <div class="game-badge">퍼즐</div>
-                </a>
-
-                <a href="games/hangul-wordle.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
-                    <div class="game-icon">🟩</div>
-                    <h2 class="game-title">두 글자 추리</h2>
-                    <p class="game-description">매일 바뀌는 두 글자 단어를 여섯 번 안에</p>
-                    <div class="game-badge">단어/추론</div>
-                </a>
-
-                <a href="games/daily-challenge.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="classic solo">
-                    <div class="game-icon">🗓️</div>
-                    <h2 class="game-title">오늘의 도전</h2>
-                    <p class="game-description">매일 바뀌는 3종을 끝내고 연속 기록 쌓기</p>
-                    <div class="game-badge">데일리/기록</div>
-                </a>
-
-                <a href="games/cafe-tycoon.html" class="game-card" data-min-players="1" data-max-players="1" data-time="30" data-category="solo sim">
-                    <div class="game-icon">☕</div>
-                    <h2 class="game-title">골목 카페 운영기</h2>
-                    <p class="game-description">상권을 고르고 메뉴·가격·투자를 정하는 30일 경영 시뮬레이션</p>
-                    <div class="game-badge">NEW</div>
-                </a>
-
-                <a href="games/night-shift.html" class="game-card" data-min-players="1" data-max-players="1" data-time="15" data-category="solo sim">
-                    <div class="game-icon">🌙</div>
-                    <h2 class="game-title">편의점 야간 알바</h2>
-                    <p class="game-description">점장 눈치 보며 발주와 시간을 배분하는 14일 근무 시뮬레이션</p>
-                    <div class="game-meta">1인 · 15분 · 시뮬레이션</div>
-                </a>
-
-                <a href="games/daily-fortune.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="multi classic">
-                    <div class="game-icon">🔮</div>
-                    <h2 class="game-title">오늘의 운세</h2>
-                    <p class="game-description">이름과 날짜로 정해지는 오늘의 운세</p>
-                    <div class="game-badge">데일리/재미</div>
-                </a>
-
-                <a href="games/sokoban.html" class="game-card" data-min-players="1" data-max-players="1" data-time="20" data-category="classic">
-                    <div class="game-icon">📦</div>
-                    <h2 class="game-title">창고지기</h2>
-                    <p class="game-description">상자를 밀어 목표에 넣는 12단계 퍼즐</p>
-                    <div class="game-badge">논리/퍼즐</div>
-                </a>
-
-                <a href="games/memory.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
-                    <div class="game-icon">🃏</div>
-                    <h2 class="game-title">카드 뒤집기</h2>
-                    <p class="game-description">숨겨진 카드의 짝을 찾아보세요</p>
-                    <div class="game-badge">기억력</div>
-                </a>
-
-                <a href="games/snake.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
-                    <div class="game-icon">🐍</div>
-                    <h2 class="game-title">스네이크</h2>
-                    <p class="game-description">먹이를 먹으며 몸집을 키워보세요</p>
-                    <div class="game-badge">클래식</div>
-                </a>
-
-                <a href="games/stroop.html" class="game-card" data-min-players="1" data-max-players="1" data-time="3" data-category="classic">
-                    <div class="game-icon">🎨</div>
-                    <h2 class="game-title">색상 혼란 테스트</h2>
-                    <p class="game-description">단어 뜻 말고 글자 색을 골라보세요</p>
-                    <div class="game-badge">집중력</div>
-                </a>
-
-                <a href="games/sequence.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
-                    <div class="game-icon">🧠</div>
-                    <h2 class="game-title">순서 기억</h2>
-                    <p class="game-description">빛나는 순서를 그대로 따라 누르세요</p>
-                    <div class="game-badge">기억력</div>
-                </a>
-
-                <a href="games/math.html" class="game-card" data-min-players="1" data-max-players="1" data-time="1" data-category="classic">
-                    <div class="game-icon">➗</div>
-                    <h2 class="game-title">1분 산수</h2>
-                    <p class="game-description">60초 안에 최대한 많이 계산하세요</p>
-                    <div class="game-badge">두뇌</div>
-                </a>
-
-                <a href="games/typing-racer.html" class="game-card" data-min-players="1" data-max-players="4" data-time="5" data-category="classic pass">
-                    <div class="game-icon">⌨️</div>
-                    <h2 class="game-title">타이핑 레이서</h2>
-                    <p class="game-description">내 최고 기록 유령과 겨루는 한글 타자 경주</p>
-                    <div class="game-badge">속도/기록</div>
-                </a>
-
-                <a href="games/sliding-puzzle.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
-                    <div class="game-icon">🧩</div>
-                    <h2 class="game-title">슬라이딩 퍼즐</h2>
-                    <p class="game-description">빈칸을 이용해 숫자를 순서대로 맞춰보세요</p>
-                    <div class="game-badge">정렬</div>
-                </a>
-
-                <a href="games/neon-circuit.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
-                    <div class="game-icon">⚡</div>
-                    <h2 class="game-title">네온 서킷 커넥트</h2>
-                    <p class="game-description">끊어진 회로를 회전시켜 전원과 단자를 네온 전류로 연결하는 논리 퍼즐</p>
-                    <div class="game-badge">논리/퍼즐</div>
-                </a>
-
-                <!-- 시뮬레이션 & 3D -->
-                <a href="games/solar.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
-                    <div class="game-icon">🪐</div>
-                    <h2 class="game-title">태양계 3D</h2>
-                    <p class="game-description">3D로 보는 태양계의 신비</p>
-                    <div class="game-badge">시뮬레이션</div>
-                </a>
-
-                <a href="games/neon.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
-                    <div class="game-icon">🌌</div>
-                    <h2 class="game-title">네온 터널 러너</h2>
-                    <p class="game-description">3차원 터널 속 차선을 바꿔 질주하세요</p>
-                    <div class="game-badge">3D 러너</div>
-                </a>
-
-                <a href="games/plasma.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
-                    <div class="game-icon">⚛️</div>
-                    <h2 class="game-title">플라즈마 드리프트</h2>
-                    <p class="game-description">우주 파편을 피하며 에너지를 모으세요</p>
-                    <div class="game-badge">생존</div>
-                </a>
-
-                <a href="games/stack3d.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
-                    <div class="game-icon">🧊</div>
-                    <h2 class="game-title">큐브 스택 3D</h2>
-                    <p class="game-description">움직이는 블록을 맞춰 입체 탑을 쌓으세요</p>
-                    <div class="game-badge">타이밍</div>
-                </a>
-
-                <a href="games/particle-sim.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
-                    <div class="game-icon">✨</div>
-                    <h2 class="game-title">3D 키네틱 파티클</h2>
-                    <p class="game-description">손끝을 따라 움직이는 수만 개의 빛무리</p>
-                    <div class="game-badge">시뮬레이션</div>
-                </a>
-
-                <a href="games/fluid-art.html" class="game-card" data-min-players="1" data-max-players="8" data-time="5" data-category="sim multi">
-                    <div class="game-icon">🎨</div>
-                    <h2 class="game-title">네온 마블링 캔버스</h2>
-                    <p class="game-description">폰을 돌려가며 한 캔버스를 함께 채워보세요</p>
-                    <div class="game-badge">아트</div>
-                </a>
-
-                <a href="games/fireworks.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
-                    <div class="game-icon">🎆</div>
-                    <h2 class="game-title">불꽃놀이 메이커</h2>
-                    <p class="game-description">밤하늘을 화려하게 장식하는 3D 물리 기반 입자 불꽃놀이 시뮬레이터</p>
-                    <div class="game-badge">시뮬레이션</div>
-                </a>
-
-                <a href="games/ecosystem-sim.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="sim">
-                    <div class="game-icon">🌿</div>
-                    <h2 class="game-title">미니 생태계</h2>
-                    <p class="game-description">풀, 토끼, 여우로 구성된 가상의 그리드 생태계 개체수 변화 시뮬레이션</p>
-                    <div class="game-badge">시뮬레이션</div>
-                </a>
-
-                <a href="games/tower-defense.html" class="game-card" data-min-players="1" data-max-players="1" data-time="20" data-category="sim">
-                    <div class="game-icon">🗼</div>
-                    <h2 class="game-title">네온 타워 디펜스</h2>
-                    <p class="game-description">포탑을 세워 끝없는 웨이브를 막아내세요</p>
-                    <div class="game-badge">전략/방어</div>
-                </a>
-
-                <!-- 폰 넘기기 -->
-                <a href="games/relics-of-greed.html" class="game-card" data-min-players="3" data-max-players="3" data-time="15" data-category="pass multi">
-                    <div class="game-icon">👑</div>
-                    <h2 class="game-title">탐욕의 유적</h2>
-                    <p class="game-description">한정된 자원을 두고 벌이는 3인 심리 블러핑 보드게임</p>
-                    <div class="game-badge">심리/대결</div>
-                </a>
-                
-                <a href="games/sketch-relay.html" class="game-card" data-min-players="3" data-max-players="10" data-time="10" data-category="pass multi">
-                    <div class="game-icon">🎨</div>
-                    <h2 class="game-title">텔레파시 스케치 릴레이</h2>
-                    <p class="game-description">단어를 보고 번갈아가며 그림을 그려 마지막 사람이 정답을 맞히는 파티 게임!</p>
-                    <div class="game-badge">드로잉/파티</div>
-                </a>
-
-                <a href="games/two-truths.html" class="game-card" data-min-players="2" data-max-players="12" data-time="15" data-category="pass multi">
-                    <div class="game-icon">🚨</div>
-                    <h2 class="game-title">두 개의 진실, 하나의 거짓</h2>
-                    <p class="game-description">세 가지 이야기 중 진짜 거짓을 골라내는 고품격 심리 핫시트 게임</p>
-                    <div class="game-badge">심리전</div>
-                </a>
-
-                <a href="games/fermi-estimation.html" class="game-card" data-min-players="2" data-max-players="12" data-time="15" data-category="pass multi">
-                    <div class="game-icon">🧮</div>
-                    <h2 class="game-title">페르미 추정</h2>
-                    <p class="game-description">정답을 알 수 없는 기상천외한 질문들에 대해 과학적 어림짐작으로 승부하세요</p>
-                    <div class="game-badge">추정/상식</div>
-                </a>
-
-                <a href="games/initial-quiz.html" class="game-card" data-min-players="2" data-max-players="12" data-time="15" data-category="pass multi">
-                    <div class="game-icon">🔠</div>
-                    <h2 class="game-title">초성 퀴즈</h2>
-                    <p class="game-description">영화, K-Pop, 속담, 음식까지! 초성만 보고 순발력 있게 단어를 맞히는 실시간 파티 퀴즈</p>
-                    <div class="game-badge">퀴즈/파티</div>
-                </a>
-
-                <a href="games/balance-game.html" class="game-card" data-min-players="2" data-max-players="12" data-time="15" data-category="pass multi">
-                    <div class="game-icon">⚖️</div>
-                    <h2 class="game-title">밸런스 게임</h2>
-                    <p class="game-description">가벼운 취향 선택부터 꿀잼 보장 과몰입 토론, 달달한 커플 전용 모드까지 아우르는 극강의 밸런스</p>
-                    <div class="game-badge">심리/토론</div>
-                </a>
-
-                <a href="games/team-splitter.html" class="game-card" data-min-players="2" data-max-players="60" data-time="5" data-category="utility pass multi">
-                    <div class="game-icon">👥</div>
-                    <h2 class="game-title">무작위 팀 나누기</h2>
-                    <p class="game-description">이름 목록을 엔터나 쉼표로 대충 넣으면 원하는 팀 개수나 조당 인원수에 따라 무작위로 팀을 짜주는 편의 도구</p>
-                    <div class="game-badge">유틸리티/파티</div>
-                </a>
-
-                <a href="games/secret-santa.html" class="game-card" data-min-players="3" data-max-players="30" data-time="3" data-category="utility pass multi">
-                    <div class="game-icon">🎁</div>
-                    <h2 class="game-title">마니또 뽑기</h2>
-                    <p class="game-description">자기 자신 없이 배정하고 자기 것만 확인</p>
-                    <div class="game-badge">유틸리티/파티</div>
-                </a>
-
-                <a href="games/random-order.html" class="game-card" data-min-players="2" data-max-players="100" data-time="5" data-category="utility pass multi">
-                    <div class="game-icon">🔢</div>
-                    <h2 class="game-title">무작위 순서 정하기</h2>
-                    <p class="game-description">이름 명단을 넣거나 참가자 숫자만 입력하면 발표 순서나 밥값 내기 등 완벽한 무작위 순위를 만들어 줍니다</p>
-                    <div class="game-badge">유틸리티/파티</div>
-                </a>
-
-                <a href="games/split-bill.html" class="game-card" data-min-players="2" data-max-players="20" data-time="3" data-category="utility multi">
-                    <div class="game-icon">🧾</div>
-                    <h2 class="game-title">더치페이 정산기</h2>
-                    <p class="game-description">누가 누구에게 얼마 보내면 되는지 계산</p>
-                    <div class="game-badge">유틸리티/파티</div>
-                </a>
-
-                <a href="games/crime-scene.html" class="game-card" data-min-players="4" data-max-players="7" data-time="60" data-category="pass multi">
-                    <div class="game-icon">🔎</div>
-                    <h2 class="game-title">네온 추리극장</h2>
-                    <p class="game-description">GM 없이도 되는 8편 롤플레잉 추리. 4인 전용 시나리오 포함</p>
-                    <div class="game-badge">추리/역할극</div>
-                </a>
-
-                <a href="games/relay-drawing.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="pass">
-                    <div class="game-icon">✏️</div>
-                    <h2 class="game-title">5초 릴레이 드로잉</h2>
-                    <p class="game-description">5초씩 그리고 넘겨 완성하세요</p>
-                    <div class="game-badge">드로잉</div>
-                </a>
-
-                <a href="games/fake-taste.html" class="game-card" data-min-players="3" data-max-players="10" data-time="15" data-category="pass multi">
-                    <div class="game-icon">🎭</div>
-                    <h2 class="game-title">가짜 취향 감별기</h2>
-                    <p class="game-description">한 명만 가짜 미션을 받고 취향 답변을 연기하세요</p>
-                    <div class="game-badge">심리전</div>
-                </a>
-
-                <a href="games/silent-auction.html" class="game-card" data-min-players="3" data-max-players="10" data-time="15" data-category="pass multi">
-                    <div class="game-icon">🤫</div>
-                    <h2 class="game-title">침묵 경매</h2>
-                    <p class="game-description">몇 단어 안에 설명할지 비밀 입찰하고 최저가가 도전하세요</p>
-                    <div class="game-badge">블러프</div>
-                </a>
-
-                <a href="games/letter-glitch.html" class="game-card" data-min-players="3" data-max-players="10" data-time="10" data-category="pass multi">
-                    <div class="game-icon">🧬</div>
-                    <h2 class="game-title">한 글자씩 망가뜨리기</h2>
-                    <p class="game-description">문장을 한 글자씩만 바꿔 가장 이상하게 뒤틀어보세요</p>
-                    <div class="game-badge">언어유희</div>
-                </a>
-
-                <a href="games/liar-amplifier.html" class="game-card" data-min-players="3" data-max-players="10" data-time="10" data-category="pass multi">
-                    <div class="game-icon">📣</div>
-                    <h2 class="game-title">거짓말 증폭기</h2>
-                    <p class="game-description">한 줄씩 덧붙여 점점 더 그럴듯한 헛소리를 만드세요</p>
-                    <div class="game-badge">스토리</div>
-                </a>
-
-                <a href="games/betrayal.html" class="game-card" data-min-players="3" data-max-players="8" data-time="15" data-category="pass multi">
-                    <div class="game-icon">🕶️</div>
-                    <h2 class="game-title">동시 배신 게임</h2>
-                    <p class="game-description">매 라운드 바뀌는 규칙을 읽고 협력, 배신, 은신을 고르세요</p>
-                    <div class="game-badge">심리전</div>
-                </a>
-
-                <a href="games/hundred.html" class="game-card" data-min-players="2" data-max-players="8" data-time="10" data-category="pass multi">
-                    <div class="game-icon">💯</div>
-                    <h2 class="game-title">합계 100 만들기</h2>
-                    <p class="game-description">비밀 숫자 손패를 운영해 100을 넘기지 않고 가장 가까이 가세요</p>
-                    <div class="game-badge">숫자 심리전</div>
-                </a>
-
-                <a href="games/bluff-hunt.html" class="game-card" data-min-players="3" data-max-players="8" data-time="15" data-category="pass multi">
-                    <div class="game-icon">🗺️</div>
-                    <h2 class="game-title">블러프 좌표 사냥</h2>
-                    <p class="game-description">가짜와 진짜 힌트 속에서 보물 좌표와 정보원을 함께 추리하세요</p>
-                    <div class="game-badge">좌표 추리</div>
-                </a>
-
-                <a href="games/memory-contam.html" class="game-card" data-min-players="3" data-max-players="8" data-time="10" data-category="pass multi">
-                    <div class="game-icon">🧠</div>
-                    <h2 class="game-title">기억 오염 실험</h2>
-                    <p class="game-description">첫 장면이 사람을 거치며 얼마나 왜곡되는지 비교해보세요</p>
-                    <div class="game-badge">기억 왜곡</div>
-                </a>
-
-                <a href="games/imposter.html" class="game-card" data-min-players="3" data-max-players="30" data-time="10" data-category="pass multi">
-                    <div class="game-icon">👻</div>
-                    <h2 class="game-title">네온 고스트</h2>
-                    <p class="game-description">단어를 모르는 고스트를 찾아내세요</p>
-                    <div class="game-badge">심리전</div>
-                </a>
-
-                <a href="games/werewolf.html" class="game-card" data-min-players="5" data-max-players="10" data-time="15" data-category="pass multi">
-                    <div class="game-icon">🌙</div>
-                    <h2 class="game-title">늑대가 사는 마을</h2>
-                    <p class="game-description">사회자 없이 단 한 밤으로 끝내는 마피아</p>
-                    <div class="game-badge">추리/심리전</div>
-                </a>
-
-                <a href="games/tongue-twister.html" class="game-card" data-min-players="2" data-max-players="10" data-time="10" data-category="pass multi">
-                    <div class="game-icon">👅</div>
-                    <h2 class="game-title">네온 잰말놀이</h2>
-                    <p class="game-description">정확하고 빠르게 200여 개의 한국어 잰말 발음에 도전하세요</p>
-                    <div class="game-badge">순발력/파티</div>
-                </a>
-
-                <a href="games/numeric-baseball.html" class="game-card" data-min-players="1" data-max-players="2" data-time="10" data-category="solo pass">
-                    <div class="game-icon">⚾</div>
-                    <h2 class="game-title">네온 숫자 야구</h2>
-                    <p class="game-description">숨겨진 숫자의 스트라이크와 볼 힌트를 추론하고 승리하세요</p>
-                    <div class="game-badge">논리/추리</div>
-                </a>
-
-                <a href="games/blind-sketch.html" class="game-card" data-min-players="2" data-max-players="8" data-time="5" data-category="pass">
-                    <div class="game-icon">🙈</div>
-                    <h2 class="game-title">블라인드 메모리</h2>
-                    <p class="game-description">화면 안보고 설명만 듣고 그리세요</p>
-                    <div class="game-badge">감각</div>
-                </a>
-
-                <a href="games/tick-tock.html" class="game-card" data-min-players="2" data-max-players="30" data-time="10" data-category="pass">
-                    <div class="game-icon">💣</div>
-                    <h2 class="game-title">네온 폭탄 돌리기</h2>
-                    <p class="game-description">퀴즈 풀고 폭탄 터지기 전에 넘기세요</p>
-                    <div class="game-badge">긴장감</div>
-                </a>
-
-                <a href="games/memory-block.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="pass">
-                    <div class="game-icon">🧱</div>
-                    <h2 class="game-title">기억의 블록 쌓기</h2>
-                    <p class="game-description">블록 위치를 기억하고 하나씩 추가하세요</p>
-                    <div class="game-badge">기억력</div>
-                </a>
-
-                <a href="games/champagne-pop.html" class="game-card" data-min-players="1" data-max-players="30" data-time="5" data-category="pass">
-                    <div class="game-icon">🍾</div>
-                    <h2 class="game-title">네온 샴페인</h2>
-                    <p class="game-description">흔들어 탄산 채우고 터지기 전에 넘기세요</p>
-                    <div class="game-badge">복불복</div>
-                </a>
-
-                <a href="games/word-chain.html" class="game-card" data-min-players="2" data-max-players="12" data-time="5" data-category="pass">
-                    <div class="game-icon">💬</div>
-                    <h2 class="game-title">단어 연상 릴레이</h2>
-                    <p class="game-description">연상 단어를 입력하고 흐름을 감상하세요</p>
-                    <div class="game-badge">연상</div>
-                </a>
-
-                <a href="games/face-mimic.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="pass">
-                    <div class="game-icon">🤪</div>
-                    <h2 class="game-title">네온 표정 따라하기</h2>
-                    <p class="game-description">이모지 표정을 따라하고 넘기세요</p>
-                    <div class="game-badge">표정</div>
-                </a>
-
-                <a href="games/maze-weaver.html" class="game-card" data-min-players="1" data-max-players="30" data-time="10" data-category="pass">
-                    <div class="game-icon">🏰</div>
-                    <h2 class="game-title">미스터리 미로</h2>
-                    <p class="game-description">함께 미로를 만들고 탈출하세요</p>
-                    <div class="game-badge">협동</div>
-                </a>
-
-                <a href="games/lucky-box.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="pass">
-                    <div class="game-icon">🎁</div>
-                    <h2 class="game-title">네온 럭키 박스</h2>
-                    <p class="game-description">상자를 열어 꽝을 피하세요</p>
-                    <div class="game-badge">복불복</div>
-                </a>
-
-                <!-- No Results Placeholder -->
-                <div id="no-results" class="view-hidden" style="text-align: center; padding: 4rem 2rem; width: 100%; grid-column: 1 / -1; background: rgba(30, 35, 60, 0.2); border-radius: 24px; border: 1px dashed rgba(255, 255, 255, 0.1);">
-                    <div style="font-size: 3.5rem; margin-bottom: 1rem; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4));">🔍</div>
-                    <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem; font-weight: 700; color: #fff;">일치하는 게임이 없습니다</h3>
-                    <p style="color: var(--text-muted); font-size: 0.95rem;">다른 검색어로 입력해 보세요.</p>
+            <!-- 1인용 게임 -->
+            <a href="games/solitary-memory.html" class="game-card" data-min-players="1" data-max-players="1" data-time="15" data-category="solo">
+                <div class="game-icon">🧠</div>
+                <h2 class="game-title">고독한 기억</h2>
+                <p class="game-description">폐쇄된 실험실에서의 기억 추적 방탈출</p>
+                <div class="game-badge">추리/방탈출</div>
+            </a>
+
+            <a href="games/chrono-lock.html" class="game-card" data-min-players="1" data-max-players="1" data-time="15" data-category="solo">
+                <div class="game-icon">⏳</div>
+                <h2 class="game-title">크로노-락</h2>
+                <p class="game-description">과거와 현재를 오가는 시간 조작 퍼즐</p>
+                <div class="game-badge">논리/퍼즐</div>
+            </a>
+
+            <a href="games/nonogram.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="solo">
+                <div class="game-icon">🔲</div>
+                <h2 class="game-title">노노그램</h2>
+                <p class="game-description">숨겨진 숫자의 힌트를 읽고 디지털 픽셀 아트를 완성하세요</p>
+                <div class="game-badge">논리/퍼즐</div>
+            </a>
+
+            <a href="games/pitch-perfect.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="solo">
+                <div class="game-icon">🎵</div>
+                <h2 class="game-title">음정 맞히기</h2>
+                <p class="game-description">기준 음을 듣고 슬라이더로 주파수를 완벽하게 맞추는 절대음감 테스트</p>
+                <div class="game-badge">감각/청음</div>
+            </a>
+
+            <!-- 다수 인원용 -->
+            <a href="games/omok.html" class="game-card" data-min-players="2" data-max-players="2" data-time="10" data-category="duo">
+                <div class="game-icon">⚫⚪</div>
+                <h2 class="game-title">오목</h2>
+                <p class="game-description">5개를 먼저 연결하세요</p>
+                <div class="game-badge">전략</div>
+            </a>
+
+            <a href="games/reversi.html" class="game-card" data-min-players="1" data-max-players="2" data-time="15" data-category="duo classic">
+                <div class="game-icon">⚫</div>
+                <h2 class="game-title">리버시</h2>
+                <p class="game-description">AI 3단계와 겨루는 뒤집기 전략 보드게임</p>
+                <div class="game-badge">전략/보드</div>
+            </a>
+
+            <a href="games/ladder.html" class="game-card" data-min-players="2" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">🪜</div>
+                <h2 class="game-title">사다리 타기</h2>
+                <p class="game-description">랜덤 결정이 필요할 때</p>
+                <div class="game-badge">랜덤</div>
+            </a>
+
+            <a href="games/roulette.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">🎰</div>
+                <h2 class="game-title">룰렛</h2>
+                <p class="game-description">행운의 룰렛을 돌려보세요</p>
+                <div class="game-badge">랜덤</div>
+            </a>
+
+            <a href="games/finger-roulette.html" class="game-card" data-min-players="2" data-max-players="8" data-time="1" data-category="action utility multi party">
+                <div class="game-icon">👆</div>
+                <h2 class="game-title">손가락 룰렛</h2>
+                <p class="game-description">화면에 손가락을 올려 당첨자와 벌칙을 뽑아보세요</p>
+                <div class="game-badge">파티/터치</div>
+            </a>
+
+            <a href="games/menu.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">🍽️</div>
+                <h2 class="game-title">메뉴 추천</h2>
+                <p class="game-description">오늘 뭐 먹을지 고민될 때</p>
+                <div class="game-badge">추천</div>
+            </a>
+
+            <a href="games/lucky-draw.html" class="game-card" data-min-players="2" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">🎰</div>
+                <h2 class="game-title">네온 럭키 드로우</h2>
+                <p class="game-description">화려한 연출과 함께 당첨자를 뽑아보세요</p>
+                <div class="game-badge">추첨</div>
+            </a>
+
+            <a href="games/todo.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">✅</div>
+                <h2 class="game-title">할일 추천</h2>
+                <p class="game-description">무엇을 할지 결정해드려요</p>
+                <div class="game-badge">추천</div>
+            </a>
+
+            <a href="games/meetup-planner.html" class="game-card" data-min-players="2" data-max-players="20" data-time="3" data-category="utility pass multi">
+                <div class="game-icon">📅</div>
+                <h2 class="game-title">모임 날짜 맞추기</h2>
+                <p class="game-description">폰을 돌려가며 되는 날을 누르면 다 같이 되는 날을 찾아 드려요</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/midpoint-finder.html" class="game-card" data-min-players="2" data-max-players="10" data-time="3" data-category="utility multi">
+                <div class="game-icon">📍</div>
+                <h2 class="game-title">중간 지점 찾기</h2>
+                <p class="game-description">참가자들의 지하철역 기준 중간 모임 장소 추천</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/photo-booth.html" class="game-card" data-min-players="1" data-max-players="10" data-time="5" data-category="utility multi">
+                <div class="game-icon">📸</div>
+                <h2 class="game-title">네온 4컷 사진관</h2>
+                <p class="game-description">셀카/후면 10장 촬영 후 베스트 4장으로 만드는 기념 4컷 프레임</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/photo-book.html" class="game-card" data-min-players="1" data-max-players="10" data-time="3" data-category="utility multi">
+                <div class="game-icon">📖</div>
+                <h2 class="game-title">디지털 플립북 & 포토북</h2>
+                <p class="game-description">사진들을 모아 실제 책처럼 넘겨보는 플립북과 다장 PDF 전자책 제작</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/photo-poster.html" class="game-card" data-min-players="1" data-max-players="10" data-time="2" data-category="utility multi">
+                <div class="game-icon">🖼️</div>
+                <h2 class="game-title">매거진 포스터 & 콜라주</h2>
+                <p class="game-description">수십 장의 사진을 감성적인 대형 매거진 포스터와 무드보드 한 장으로 합성</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/photo-travel-map.html" class="game-card" data-min-players="1" data-max-players="10" data-time="2" data-category="utility multi">
+                <div class="game-icon">🧭</div>
+                <h2 class="game-title">여행 동선 맵 & GIF</h2>
+                <p class="game-description">사진 속 GPS와 시간 정보를 분석해 경로를 따라 움직이는 여행 타임랩스 GIF</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/photo-slideshow.html" class="game-card" data-min-players="1" data-max-players="10" data-time="2" data-category="utility multi">
+                <div class="game-icon">🎬</div>
+                <h2 class="game-title">켄 번스 무빙 슬라이드쇼</h2>
+                <p class="game-description">영화 같은 줌인/줌아웃 모션과 레트로 필름 스탬프가 담긴 루핑 GIF 메이커</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/photo-inspector.html" class="game-card" data-min-players="1" data-max-players="1" data-time="2" data-category="utility solo">
+                <div class="game-icon">🔍</div>
+                <h2 class="game-title">사진 메타데이터 인스펙터</h2>
+                <p class="game-description">EXIF 카메라 제원, 시간순 GPS 여행 동선, 컬러 팔레트 & 히스토그램 포렌식 분석</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/soundboard.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">🔊</div>
+                <h2 class="game-title">이벤트 사운드보드</h2>
+                <p class="game-description">드럼롤, 딩동댕, 땡, 박수갈채 등 모임 사회자 필수 효과음</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/qr-wifi.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">📶</div>
+                <h2 class="game-title">Wi-Fi & QR 생성기</h2>
+                <p class="game-description">스캔 한 번으로 암호 없이 즉시 연결되는 와이파이 QR 코드</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/preference-radar.html" class="game-card" data-min-players="2" data-max-players="6" data-time="5" data-category="utility multi">
+                <div class="game-icon">🎯</div>
+                <h2 class="game-title">그룹 성향 레이더</h2>
+                <p class="game-description">우리 모임의 5가지 취향 방위도 차트와 꿀케미 조합 분석</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/mission-cards.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="utility multi">
+                <div class="game-icon">🃏</div>
+                <h2 class="game-title">파티 미션 & 진실게임</h2>
+                <p class="game-description">아이스브레이킹부터 무작위 3D 덱 뒤집기 미션 카드</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/d-day-card.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">⏳</div>
+                <h2 class="game-title">D-Day & 카운트다운</h2>
+                <p class="game-description">모임, 여행, 생일 실시간 D-Day 타이머 및 네온 카드 공유</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/dice-coin.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">🎲</div>
+                <h2 class="game-title">3D 주사위 & 동전</h2>
+                <p class="game-description">손맛 있는 3D 모션과 사운드로 빠른 결정을 돕는 주사위 & 동전 던지기</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/glow-stick.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="utility multi">
+                <div class="game-icon">📱</div>
+                <h2 class="game-title">네온 야광봉 & 응원 전광판</h2>
+                <p class="game-description">화려한 네온 야광봉 효과와 흐르는 메시지 응원 전광판</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/pitch-match.html" class="game-card" data-min-players="1" data-max-players="10" data-time="5" data-category="utility multi">
+                <div class="game-icon">🎤</div>
+                <h2 class="game-title">실시간 음감 & Pitch 맞추기</h2>
+                <p class="game-description">마이크로 입력받은 내 목소리 음정을 측정해 목표 노트에 맞추는 음감 게임</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/color-matcher.html" class="game-card" data-min-players="1" data-max-players="8" data-time="5" data-category="multi duo">
+                <div class="game-icon">🎨</div>
+                <h2 class="game-title">네온 색상 감각 대결</h2>
+                <p class="game-description">목표 색을 RGB로 최대한 정확히 맞추세요</p>
+                <div class="game-badge">감각</div>
+            </a>
+
+            <a href="games/pulse-tap.html" class="game-card" data-min-players="1" data-max-players="8" data-time="5" data-category="multi duo">
+                <div class="game-icon">🥁</div>
+                <h2 class="game-title">네온 리듬 배틀</h2>
+                <p class="game-description">비트에 맞춰 탭하고 점수를 비교하세요</p>
+                <div class="game-badge">리듬</div>
+            </a>
+
+            <a href="games/photo-hunter.html" class="game-card" data-min-players="2" data-max-players="12" data-time="5" data-category="multi">
+                <div class="game-icon">📸</div>
+                <h2 class="game-title">포토 헌터</h2>
+                <p class="game-description">주변에서 미션 물건을 가장 먼저 찾아오세요</p>
+                <div class="game-badge">탐색</div>
+            </a>
+
+            <a href="games/shake-it.html" class="game-card" data-min-players="1" data-max-players="8" data-time="1" data-category="multi duo">
+                <div class="game-icon">📱</div>
+                <h2 class="game-title">네온 흔들기 대결</h2>
+                <p class="game-description">30초간 폰을 가장 많이 흔들어 기록 경쟁</p>
+                <div class="game-badge">체력</div>
+            </a>
+
+            <a href="games/bingo-host.html" class="game-card" data-min-players="2" data-max-players="30" data-time="10" data-category="multi">
+                <div class="game-icon">🎱</div>
+                <h2 class="game-title">빙고 넘버 마스터</h2>
+                <p class="game-description">번호를 뽑고 빙고판을 채우세요</p>
+                <div class="game-badge">빙고</div>
+            </a>
+
+            <a href="games/card-battle.html" class="game-card" data-min-players="2" data-max-players="2" data-time="5" data-category="duo">
+                <div class="game-icon">🃏</div>
+                <h2 class="game-title">네온 카드 배틀</h2>
+                <p class="game-description">카드를 뒤집어 파워를 겨루세요</p>
+                <div class="game-badge">운</div>
+            </a>
+
+            <a href="games/orchestra.html" class="game-card" data-min-players="1" data-max-players="6" data-time="5" data-category="multi">
+                <div class="game-icon">🎵</div>
+                <h2 class="game-title">사운드 오케스트라</h2>
+                <p class="game-description">각자 악기를 골라 합주하세요</p>
+                <div class="game-badge">음악</div>
+            </a>
+
+            <a href="games/qr-garden.html" class="game-card" data-min-players="1" data-max-players="8" data-time="5" data-category="multi">
+                <div class="game-icon">🌸</div>
+                <h2 class="game-title">씨앗 코드 가든</h2>
+                <p class="game-description">같은 씨앗 코드를 넣으면 같은 정원이 자랍니다</p>
+                <div class="game-badge">아트</div>
+            </a>
+
+            <!-- 소수 인원용 -->
+            <a href="games/royal-secret-letter.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
+                <div class="game-icon">✉️</div>
+                <h2 class="game-title">왕궁의 밀서</h2>
+                <p class="game-description">단 16장의 카드로 벌이는 심리 카드 게임</p>
+                <div class="game-badge">심리/카드</div>
+            </a>
+
+            <a href="games/neon-dual.html" class="game-card" data-min-players="2" data-max-players="2" data-time="5" data-category="duo sim">
+                <div class="game-icon">⚡</div>
+                <h2 class="game-title">네온 듀얼</h2>
+                <p class="game-description">실시간 에어하키 액션 대결</p>
+                <div class="game-badge">순발력</div>
+            </a>
+
+            <a href="games/critical-flight.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
+                <div class="game-icon">✈️</div>
+                <h2 class="game-title">크리티컬 플라이트</h2>
+                <p class="game-description">비행기 조종실 비대칭 방탈출</p>
+                <div class="game-badge">협동/탈출</div>
+            </a>
+
+            <a href="games/control-room.html" class="game-card" data-min-players="3" data-max-players="5" data-time="20" data-category="pass multi">
+                <div class="game-icon">🛰️</div>
+                <h2 class="game-title">관제실 탈출</h2>
+                <p class="game-description">각자 다른 매뉴얼을 말로만 맞추는 협동 탈출</p>
+                <div class="game-badge">협동/탈출</div>
+            </a>
+
+            <a href="games/luminous-lines.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
+                <div class="game-icon">💎</div>
+                <h2 class="game-title">루미너스 라인</h2>
+                <p class="game-description">전략 땅따먹기 & 콤보 대결</p>
+                <div class="game-badge">전략/논리</div>
+            </a>
+
+            <a href="games/pocket-quilt.html" class="game-card" data-min-players="2" data-max-players="2" data-time="20" data-category="duo">
+                <div class="game-icon">🧵</div>
+                <h2 class="game-title">포켓 퀼트</h2>
+                <p class="game-description">모바일 최적화 타일 배치 전략</p>
+                <div class="game-badge">퍼즐/전략</div>
+            </a>
+
+            <a href="games/bomb-defusal.html" class="game-card" data-min-players="2" data-max-players="2" data-time="10" data-category="duo">
+                <div class="game-icon">💣</div>
+                <h2 class="game-title">폭탄 해체반</h2>
+                <p class="game-description">비대칭 정보 협동 퍼즐</p>
+                <div class="game-badge">협동/추리</div>
+            </a>
+
+            <a href="games/arena-of-legends.html" class="game-card" data-min-players="2" data-max-players="2" data-time="20" data-category="duo">
+                <div class="game-icon">⚔️</div>
+                <h2 class="game-title">아레나 오브 레전드</h2>
+                <p class="game-description">도미니언 스타일의 라이트 덱 빌딩 대결</p>
+                <div class="game-badge">덱빌딩/전략</div>
+            </a>
+
+            <a href="games/tower-of-gods.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
+                <div class="game-icon">🏛️</div>
+                <h2 class="game-title">신들의 탑</h2>
+                <p class="game-description">3D 추상 전략 핫시트 게임</p>
+                <div class="game-badge">전략/건설</div>
+            </a>
+
+            <a href="games/agent-codebreaker.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
+                <div class="game-icon">🕵️‍♂️</div>
+                <h2 class="game-title">첩보원: 암호 해독</h2>
+                <p class="game-description">단어 연상 협동 추리 게임</p>
+                <div class="game-badge">추리/협동</div>
+            </a>
+
+            <a href="games/project-lethe.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
+                <div class="game-icon">🧠</div>
+                <h2 class="game-title">프로젝트 레테</h2>
+                <p class="game-description">사이버펑크 비대칭 해킹 협동전</p>
+                <div class="game-badge">협동/퍼즐</div>
+            </a>
+
+            <a href="games/shadow-syndicate.html" class="game-card" data-min-players="2" data-max-players="2" data-time="20" data-category="duo">
+                <div class="game-icon">🎩</div>
+                <h2 class="game-title">그림자 상단</h2>
+                <p class="game-description">느와르 마피아 카드 세력전</p>
+                <div class="game-badge">전략/대결</div>
+            </a>
+
+            <a href="games/starlight-tuners.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
+                <div class="game-icon">✨</div>
+                <h2 class="game-title">별빛 조율사</h2>
+                <p class="game-description">우주 감성 폴리오미노 퍼즐</p>
+                <div class="game-badge">퍼즐/경쟁</div>
+            </a>
+
+            <a href="games/blackjack-duel.html" class="game-card" data-min-players="2" data-max-players="2" data-time="10" data-category="duo">
+                <div class="game-icon">🃏</div>
+                <h2 class="game-title">블랙잭 듀얼</h2>
+                <p class="game-description">카지노 펠트 테이블 위에서 칩을 베팅하고 21의 한계에 도전하는 1v1 심리 카드 대결</p>
+                <div class="game-badge">대결/카드</div>
+            </a>
+
+            <a href="games/yacht-dice.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
+                <div class="game-icon">🎲</div>
+                <h2 class="game-title">요트 다이스 2인용</h2>
+                <p class="game-description">5개의 주사위를 굴려 12가지 족보를 채우는 2인 핫시트 전략 주사위 대결</p>
+                <div class="game-badge">주사위/전략</div>
+            </a>
+
+            <a href="games/sky-dogfight.html" class="game-card" data-min-players="2" data-max-players="2" data-time="15" data-category="duo">
+                <div class="game-icon">✈️</div>
+                <h2 class="game-title">스카이 도그파이트</h2>
+                <p class="game-description">기기를 번갈아 넘기며 궤적을 예측해 격추하는 1v1 공중전</p>
+                <div class="game-badge">전술/대결</div>
+            </a>
+
+            <a href="games/reaction.html" class="game-card" data-min-players="1" data-max-players="1" data-time="1" data-category="classic">
+                <div class="game-icon">⚡</div>
+                <h2 class="game-title">반응 속도</h2>
+                <p class="game-description">초록색이 되면 빨리 클릭하세요</p>
+                <div class="game-badge">순발력</div>
+            </a>
+
+            <a href="games/whack.html" class="game-card" data-min-players="1" data-max-players="1" data-time="3" data-category="classic">
+                <div class="game-icon">🔨</div>
+                <h2 class="game-title">두더지 잡기</h2>
+                <p class="game-description">튀어나오는 두더지를 빠르게 잡아보세요</p>
+                <div class="game-badge">아케이드</div>
+            </a>
+
+            <a href="games/duo-reaction.html" class="game-card" data-min-players="2" data-max-players="2" data-time="3" data-category="duo">
+                <div class="game-icon">⚡</div>
+                <h2 class="game-title">듀오 반응속도 대결</h2>
+                <p class="game-description">한 화면에서 마주 보고 즐기는 순발력 대결</p>
+                <div class="game-badge">2인 대결</div>
+            </a>
+
+            <a href="games/air-hockey.html" class="game-card" data-min-players="1" data-max-players="2" data-time="5" data-category="duo">
+                <div class="game-icon">🏒</div>
+                <h2 class="game-title">네온 에어하키</h2>
+                <p class="game-description">한 화면에서 동시에 조작하는 실시간 1대1</p>
+                <div class="game-badge">실시간/대결</div>
+            </a>
+
+            <a href="games/gyro-balance.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
+                <div class="game-icon">⚖️</div>
+                <h2 class="game-title">네온 밸런스 볼</h2>
+                <p class="game-description">폰을 기울여 미로 속 공을 구멍에 넣으세요</p>
+                <div class="game-badge">밸런스</div>
+            </a>
+
+            <a href="games/breakout.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
+                <div class="game-icon">🧱</div>
+                <h2 class="game-title">벽돌 깨기</h2>
+                <p class="game-description">패들로 공을 튕겨 벽돌을 부수세요</p>
+                <div class="game-badge">액션</div>
+            </a>
+
+            <!-- 클래식 & 퍼즐 -->
+            <a href="games/2048.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="classic">
+                <div class="game-icon">🔢</div>
+                <h2 class="game-title">2048</h2>
+                <p class="game-description">타일을 합쳐 2048을 만드세요</p>
+                <div class="game-badge">퍼즐</div>
+            </a>
+
+            <a href="games/minesweeper.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="classic">
+                <div class="game-icon">💣</div>
+                <h2 class="game-title">지뢰찾기</h2>
+                <p class="game-description">지뢰를 피해 모든 칸을 열어보세요</p>
+                <div class="game-badge">논리</div>
+            </a>
+
+            <a href="games/sudoku.html" class="game-card" data-min-players="1" data-max-players="1" data-time="15" data-category="classic">
+                <div class="game-icon">🔢</div>
+                <h2 class="game-title">스도쿠</h2>
+                <p class="game-description">숫자 퍼즐의 정석</p>
+                <div class="game-badge">퍼즐</div>
+            </a>
+
+            <a href="games/hangul-wordle.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
+                <div class="game-icon">🟩</div>
+                <h2 class="game-title">두 글자 추리</h2>
+                <p class="game-description">매일 바뀌는 두 글자 단어를 여섯 번 안에</p>
+                <div class="game-badge">단어/추론</div>
+            </a>
+
+            <a href="games/daily-challenge.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="classic solo">
+                <div class="game-icon">🗓️</div>
+                <h2 class="game-title">오늘의 도전</h2>
+                <p class="game-description">매일 바뀌는 3종을 끝내고 연속 기록 쌓기</p>
+                <div class="game-badge">데일리/기록</div>
+            </a>
+
+            <a href="games/cafe-tycoon.html" class="game-card" data-min-players="1" data-max-players="1" data-time="30" data-category="solo sim">
+                <div class="game-icon">☕</div>
+                <h2 class="game-title">골목 카페 운영기</h2>
+                <p class="game-description">상권을 고르고 메뉴·가격·투자를 정하는 30일 경영 시뮬레이션</p>
+                <div class="game-badge">NEW</div>
+            </a>
+
+            <a href="games/night-shift.html" class="game-card" data-min-players="1" data-max-players="1" data-time="15" data-category="solo sim">
+                <div class="game-icon">🌙</div>
+                <h2 class="game-title">편의점 야간 알바</h2>
+                <p class="game-description">점장 눈치 보며 발주와 시간을 배분하는 14일 근무 시뮬레이션</p>
+                <div class="game-meta">1인 · 15분 · 시뮬레이션</div>
+            </a>
+
+            <a href="games/daily-fortune.html" class="game-card" data-min-players="1" data-max-players="30" data-time="1" data-category="multi classic">
+                <div class="game-icon">🔮</div>
+                <h2 class="game-title">오늘의 운세</h2>
+                <p class="game-description">이름과 날짜로 정해지는 오늘의 운세</p>
+                <div class="game-badge">데일리/재미</div>
+            </a>
+
+            <a href="games/sokoban.html" class="game-card" data-min-players="1" data-max-players="1" data-time="20" data-category="classic">
+                <div class="game-icon">📦</div>
+                <h2 class="game-title">창고지기</h2>
+                <p class="game-description">상자를 밀어 목표에 넣는 12단계 퍼즐</p>
+                <div class="game-badge">논리/퍼즐</div>
+            </a>
+
+            <a href="games/memory.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
+                <div class="game-icon">🃏</div>
+                <h2 class="game-title">카드 뒤집기</h2>
+                <p class="game-description">숨겨진 카드의 짝을 찾아보세요</p>
+                <div class="game-badge">기억력</div>
+            </a>
+
+            <a href="games/snake.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
+                <div class="game-icon">🐍</div>
+                <h2 class="game-title">스네이크</h2>
+                <p class="game-description">먹이를 먹으며 몸집을 키워보세요</p>
+                <div class="game-badge">클래식</div>
+            </a>
+
+            <a href="games/stroop.html" class="game-card" data-min-players="1" data-max-players="1" data-time="3" data-category="classic">
+                <div class="game-icon">🎨</div>
+                <h2 class="game-title">색상 혼란 테스트</h2>
+                <p class="game-description">단어 뜻 말고 글자 색을 골라보세요</p>
+                <div class="game-badge">집중력</div>
+            </a>
+
+            <a href="games/sequence.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
+                <div class="game-icon">🧠</div>
+                <h2 class="game-title">순서 기억</h2>
+                <p class="game-description">빛나는 순서를 그대로 따라 누르세요</p>
+                <div class="game-badge">기억력</div>
+            </a>
+
+            <a href="games/math.html" class="game-card" data-min-players="1" data-max-players="1" data-time="1" data-category="classic">
+                <div class="game-icon">➗</div>
+                <h2 class="game-title">1분 산수</h2>
+                <p class="game-description">60초 안에 최대한 많이 계산하세요</p>
+                <div class="game-badge">두뇌</div>
+            </a>
+
+            <a href="games/typing-racer.html" class="game-card" data-min-players="1" data-max-players="4" data-time="5" data-category="classic pass">
+                <div class="game-icon">⌨️</div>
+                <h2 class="game-title">타이핑 레이서</h2>
+                <p class="game-description">내 최고 기록 유령과 겨루는 한글 타자 경주</p>
+                <div class="game-badge">속도/기록</div>
+            </a>
+
+            <a href="games/sliding-puzzle.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
+                <div class="game-icon">🧩</div>
+                <h2 class="game-title">슬라이딩 퍼즐</h2>
+                <p class="game-description">빈칸을 이용해 숫자를 순서대로 맞춰보세요</p>
+                <div class="game-badge">정렬</div>
+            </a>
+
+            <a href="games/neon-circuit.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="classic">
+                <div class="game-icon">⚡</div>
+                <h2 class="game-title">네온 서킷 커넥트</h2>
+                <p class="game-description">끊어진 회로를 회전시켜 전원과 단자를 네온 전류로 연결하는 논리 퍼즐</p>
+                <div class="game-badge">논리/퍼즐</div>
+            </a>
+
+            <!-- 시뮬레이션 & 3D -->
+            <a href="games/solar.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
+                <div class="game-icon">🪐</div>
+                <h2 class="game-title">태양계 3D</h2>
+                <p class="game-description">3D로 보는 태양계의 신비</p>
+                <div class="game-badge">시뮬레이션</div>
+            </a>
+
+            <a href="games/neon.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
+                <div class="game-icon">🌌</div>
+                <h2 class="game-title">네온 터널 러너</h2>
+                <p class="game-description">3차원 터널 속 차선을 바꿔 질주하세요</p>
+                <div class="game-badge">3D 러너</div>
+            </a>
+
+            <a href="games/plasma.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
+                <div class="game-icon">⚛️</div>
+                <h2 class="game-title">플라즈마 드리프트</h2>
+                <p class="game-description">우주 파편을 피하며 에너지를 모으세요</p>
+                <div class="game-badge">생존</div>
+            </a>
+
+            <a href="games/stack3d.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
+                <div class="game-icon">🧊</div>
+                <h2 class="game-title">큐브 스택 3D</h2>
+                <p class="game-description">움직이는 블록을 맞춰 입체 탑을 쌓으세요</p>
+                <div class="game-badge">타이밍</div>
+            </a>
+
+            <a href="games/particle-sim.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
+                <div class="game-icon">✨</div>
+                <h2 class="game-title">3D 키네틱 파티클</h2>
+                <p class="game-description">손끝을 따라 움직이는 수만 개의 빛무리</p>
+                <div class="game-badge">시뮬레이션</div>
+            </a>
+
+            <a href="games/fluid-art.html" class="game-card" data-min-players="1" data-max-players="8" data-time="5" data-category="sim multi">
+                <div class="game-icon">🎨</div>
+                <h2 class="game-title">네온 마블링 캔버스</h2>
+                <p class="game-description">폰을 돌려가며 한 캔버스를 함께 채워보세요</p>
+                <div class="game-badge">아트</div>
+            </a>
+
+            <a href="games/fireworks.html" class="game-card" data-min-players="1" data-max-players="1" data-time="5" data-category="sim">
+                <div class="game-icon">🎆</div>
+                <h2 class="game-title">불꽃놀이 메이커</h2>
+                <p class="game-description">밤하늘을 화려하게 장식하는 3D 물리 기반 입자 불꽃놀이 시뮬레이터</p>
+                <div class="game-badge">시뮬레이션</div>
+            </a>
+
+            <a href="games/ecosystem-sim.html" class="game-card" data-min-players="1" data-max-players="1" data-time="10" data-category="sim">
+                <div class="game-icon">🌿</div>
+                <h2 class="game-title">미니 생태계</h2>
+                <p class="game-description">풀, 토끼, 여우로 구성된 가상의 그리드 생태계 개체수 변화 시뮬레이션</p>
+                <div class="game-badge">시뮬레이션</div>
+            </a>
+
+            <a href="games/tower-defense.html" class="game-card" data-min-players="1" data-max-players="1" data-time="20" data-category="sim">
+                <div class="game-icon">🗼</div>
+                <h2 class="game-title">네온 타워 디펜스</h2>
+                <p class="game-description">포탑을 세워 끝없는 웨이브를 막아내세요</p>
+                <div class="game-badge">전략/방어</div>
+            </a>
+
+            <!-- 폰 넘기기 -->
+            <a href="games/relics-of-greed.html" class="game-card" data-min-players="3" data-max-players="3" data-time="15" data-category="pass multi">
+                <div class="game-icon">👑</div>
+                <h2 class="game-title">탐욕의 유적</h2>
+                <p class="game-description">한정된 자원을 두고 벌이는 3인 심리 블러핑 보드게임</p>
+                <div class="game-badge">심리/대결</div>
+            </a>
+            
+            <a href="games/sketch-relay.html" class="game-card" data-min-players="3" data-max-players="10" data-time="10" data-category="pass multi">
+                <div class="game-icon">🎨</div>
+                <h2 class="game-title">텔레파시 스케치 릴레이</h2>
+                <p class="game-description">단어를 보고 번갈아가며 그림을 그려 마지막 사람이 정답을 맞히는 파티 게임!</p>
+                <div class="game-badge">드로잉/파티</div>
+            </a>
+
+            <a href="games/two-truths.html" class="game-card" data-min-players="2" data-max-players="12" data-time="15" data-category="pass multi">
+                <div class="game-icon">🚨</div>
+                <h2 class="game-title">두 개의 진실, 하나의 거짓</h2>
+                <p class="game-description">세 가지 이야기 중 진짜 거짓을 골라내는 고품격 심리 핫시트 게임</p>
+                <div class="game-badge">심리전</div>
+            </a>
+
+            <a href="games/fermi-estimation.html" class="game-card" data-min-players="2" data-max-players="12" data-time="15" data-category="pass multi">
+                <div class="game-icon">🧮</div>
+                <h2 class="game-title">페르미 추정</h2>
+                <p class="game-description">정답을 알 수 없는 기상천외한 질문들에 대해 과학적 어림짐작으로 승부하세요</p>
+                <div class="game-badge">추정/상식</div>
+            </a>
+
+            <a href="games/initial-quiz.html" class="game-card" data-min-players="2" data-max-players="12" data-time="15" data-category="pass multi">
+                <div class="game-icon">🔠</div>
+                <h2 class="game-title">초성 퀴즈</h2>
+                <p class="game-description">영화, K-Pop, 속담, 음식까지! 초성만 보고 순발력 있게 단어를 맞히는 실시간 파티 퀴즈</p>
+                <div class="game-badge">퀴즈/파티</div>
+            </a>
+
+            <a href="games/balance-game.html" class="game-card" data-min-players="2" data-max-players="12" data-time="15" data-category="pass multi">
+                <div class="game-icon">⚖️</div>
+                <h2 class="game-title">밸런스 게임</h2>
+                <p class="game-description">가벼운 취향 선택부터 꿀잼 보장 과몰입 토론, 달달한 커플 전용 모드까지 아우르는 극강의 밸런스</p>
+                <div class="game-badge">심리/토론</div>
+            </a>
+
+            <a href="games/team-splitter.html" class="game-card" data-min-players="2" data-max-players="60" data-time="5" data-category="utility pass multi">
+                <div class="game-icon">👥</div>
+                <h2 class="game-title">무작위 팀 나누기</h2>
+                <p class="game-description">이름 목록을 엔터나 쉼표로 대충 넣으면 원하는 팀 개수나 조당 인원수에 따라 무작위로 팀을 짜주는 편의 도구</p>
+                <div class="game-badge">유틸리티/파티</div>
+            </a>
+
+            <a href="games/secret-santa.html" class="game-card" data-min-players="3" data-max-players="30" data-time="3" data-category="utility pass multi">
+                <div class="game-icon">🎁</div>
+                <h2 class="game-title">마니또 뽑기</h2>
+                <p class="game-description">자기 자신 없이 배정하고 자기 것만 확인</p>
+                <div class="game-badge">유틸리티/파티</div>
+            </a>
+
+            <a href="games/random-order.html" class="game-card" data-min-players="2" data-max-players="100" data-time="5" data-category="utility pass multi">
+                <div class="game-icon">🔢</div>
+                <h2 class="game-title">무작위 순서 정하기</h2>
+                <p class="game-description">이름 명단을 넣거나 참가자 숫자만 입력하면 발표 순서나 밥값 내기 등 완벽한 무작위 순위를 만들어 줍니다</p>
+                <div class="game-badge">유틸리티/파티</div>
+            </a>
+
+            <a href="games/split-bill.html" class="game-card" data-min-players="2" data-max-players="20" data-time="3" data-category="utility multi">
+                <div class="game-icon">🧾</div>
+                <h2 class="game-title">더치페이 정산기</h2>
+                <p class="game-description">누가 누구에게 얼마 보내면 되는지 계산</p>
+                <div class="game-badge">유틸리티/파티</div>
+            </a>
+
+            <a href="games/crime-scene.html" class="game-card" data-min-players="4" data-max-players="7" data-time="60" data-category="pass multi">
+                <div class="game-icon">🔎</div>
+                <h2 class="game-title">네온 추리극장</h2>
+                <p class="game-description">GM 없이도 되는 8편 롤플레잉 추리. 4인 전용 시나리오 포함</p>
+                <div class="game-badge">추리/역할극</div>
+            </a>
+
+            <a href="games/relay-drawing.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="pass">
+                <div class="game-icon">✏️</div>
+                <h2 class="game-title">5초 릴레이 드로잉</h2>
+                <p class="game-description">5초씩 그리고 넘겨 완성하세요</p>
+                <div class="game-badge">드로잉</div>
+            </a>
+
+            <a href="games/fake-taste.html" class="game-card" data-min-players="3" data-max-players="10" data-time="15" data-category="pass multi">
+                <div class="game-icon">🎭</div>
+                <h2 class="game-title">가짜 취향 감별기</h2>
+                <p class="game-description">한 명만 가짜 미션을 받고 취향 답변을 연기하세요</p>
+                <div class="game-badge">심리전</div>
+            </a>
+
+            <a href="games/silent-auction.html" class="game-card" data-min-players="3" data-max-players="10" data-time="15" data-category="pass multi">
+                <div class="game-icon">🤫</div>
+                <h2 class="game-title">침묵 경매</h2>
+                <p class="game-description">몇 단어 안에 설명할지 비밀 입찰하고 최저가가 도전하세요</p>
+                <div class="game-badge">블러프</div>
+            </a>
+
+            <a href="games/letter-glitch.html" class="game-card" data-min-players="3" data-max-players="10" data-time="10" data-category="pass multi">
+                <div class="game-icon">🧬</div>
+                <h2 class="game-title">한 글자씩 망가뜨리기</h2>
+                <p class="game-description">문장을 한 글자씩만 바꿔 가장 이상하게 뒤틀어보세요</p>
+                <div class="game-badge">언어유희</div>
+            </a>
+
+            <a href="games/liar-amplifier.html" class="game-card" data-min-players="3" data-max-players="10" data-time="10" data-category="pass multi">
+                <div class="game-icon">📣</div>
+                <h2 class="game-title">거짓말 증폭기</h2>
+                <p class="game-description">한 줄씩 덧붙여 점점 더 그럴듯한 헛소리를 만드세요</p>
+                <div class="game-badge">스토리</div>
+            </a>
+
+            <a href="games/betrayal.html" class="game-card" data-min-players="3" data-max-players="8" data-time="15" data-category="pass multi">
+                <div class="game-icon">🕶️</div>
+                <h2 class="game-title">동시 배신 게임</h2>
+                <p class="game-description">매 라운드 바뀌는 규칙을 읽고 협력, 배신, 은신을 고르세요</p>
+                <div class="game-badge">심리전</div>
+            </a>
+
+            <a href="games/hundred.html" class="game-card" data-min-players="2" data-max-players="8" data-time="10" data-category="pass multi">
+                <div class="game-icon">💯</div>
+                <h2 class="game-title">합계 100 만들기</h2>
+                <p class="game-description">비밀 숫자 손패를 운영해 100을 넘기지 않고 가장 가까이 가세요</p>
+                <div class="game-badge">숫자 심리전</div>
+            </a>
+
+            <a href="games/bluff-hunt.html" class="game-card" data-min-players="3" data-max-players="8" data-time="15" data-category="pass multi">
+                <div class="game-icon">🗺️</div>
+                <h2 class="game-title">블러프 좌표 사냥</h2>
+                <p class="game-description">가짜와 진짜 힌트 속에서 보물 좌표와 정보원을 함께 추리하세요</p>
+                <div class="game-badge">좌표 추리</div>
+            </a>
+
+            <a href="games/memory-contam.html" class="game-card" data-min-players="3" data-max-players="8" data-time="10" data-category="pass multi">
+                <div class="game-icon">🧠</div>
+                <h2 class="game-title">기억 오염 실험</h2>
+                <p class="game-description">첫 장면이 사람을 거치며 얼마나 왜곡되는지 비교해보세요</p>
+                <div class="game-badge">기억 왜곡</div>
+            </a>
+
+            <a href="games/imposter.html" class="game-card" data-min-players="3" data-max-players="30" data-time="10" data-category="pass multi">
+                <div class="game-icon">👻</div>
+                <h2 class="game-title">네온 고스트</h2>
+                <p class="game-description">단어를 모르는 고스트를 찾아내세요</p>
+                <div class="game-badge">심리전</div>
+            </a>
+
+            <a href="games/werewolf.html" class="game-card" data-min-players="5" data-max-players="10" data-time="15" data-category="pass multi">
+                <div class="game-icon">🌙</div>
+                <h2 class="game-title">늑대가 사는 마을</h2>
+                <p class="game-description">사회자 없이 단 한 밤으로 끝내는 마피아</p>
+                <div class="game-badge">추리/심리전</div>
+            </a>
+
+            <a href="games/tongue-twister.html" class="game-card" data-min-players="2" data-max-players="10" data-time="10" data-category="pass multi">
+                <div class="game-icon">👅</div>
+                <h2 class="game-title">네온 잰말놀이</h2>
+                <p class="game-description">정확하고 빠르게 200여 개의 한국어 잰말 발음에 도전하세요</p>
+                <div class="game-badge">순발력/파티</div>
+            </a>
+
+            <a href="games/numeric-baseball.html" class="game-card" data-min-players="1" data-max-players="2" data-time="10" data-category="solo pass">
+                <div class="game-icon">⚾</div>
+                <h2 class="game-title">네온 숫자 야구</h2>
+                <p class="game-description">숨겨진 숫자의 스트라이크와 볼 힌트를 추론하고 승리하세요</p>
+                <div class="game-badge">논리/추리</div>
+            </a>
+
+            <a href="games/blind-sketch.html" class="game-card" data-min-players="2" data-max-players="8" data-time="5" data-category="pass">
+                <div class="game-icon">🙈</div>
+                <h2 class="game-title">블라인드 메모리</h2>
+                <p class="game-description">화면 안보고 설명만 듣고 그리세요</p>
+                <div class="game-badge">감각</div>
+            </a>
+
+            <a href="games/tick-tock.html" class="game-card" data-min-players="2" data-max-players="30" data-time="10" data-category="pass">
+                <div class="game-icon">💣</div>
+                <h2 class="game-title">네온 폭탄 돌리기</h2>
+                <p class="game-description">퀴즈 풀고 폭탄 터지기 전에 넘기세요</p>
+                <div class="game-badge">긴장감</div>
+            </a>
+
+            <a href="games/memory-block.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="pass">
+                <div class="game-icon">🧱</div>
+                <h2 class="game-title">기억의 블록 쌓기</h2>
+                <p class="game-description">블록 위치를 기억하고 하나씩 추가하세요</p>
+                <div class="game-badge">기억력</div>
+            </a>
+
+            <a href="games/champagne-pop.html" class="game-card" data-min-players="1" data-max-players="30" data-time="5" data-category="pass">
+                <div class="game-icon">🍾</div>
+                <h2 class="game-title">네온 샴페인</h2>
+                <p class="game-description">흔들어 탄산 채우고 터지기 전에 넘기세요</p>
+                <div class="game-badge">복불복</div>
+            </a>
+
+            <a href="games/word-chain.html" class="game-card" data-min-players="2" data-max-players="12" data-time="5" data-category="pass">
+                <div class="game-icon">💬</div>
+                <h2 class="game-title">단어 연상 릴레이</h2>
+                <p class="game-description">연상 단어를 입력하고 흐름을 감상하세요</p>
+                <div class="game-badge">연상</div>
+            </a>
+
+            <a href="games/face-mimic.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="pass">
+                <div class="game-icon">🤪</div>
+                <h2 class="game-title">네온 표정 따라하기</h2>
+                <p class="game-description">이모지 표정을 따라하고 넘기세요</p>
+                <div class="game-badge">표정</div>
+            </a>
+
+            <a href="games/maze-weaver.html" class="game-card" data-min-players="1" data-max-players="30" data-time="10" data-category="pass">
+                <div class="game-icon">🏰</div>
+                <h2 class="game-title">미스터리 미로</h2>
+                <p class="game-description">함께 미로를 만들고 탈출하세요</p>
+                <div class="game-badge">협동</div>
+            </a>
+
+            <a href="games/lucky-box.html" class="game-card" data-min-players="2" data-max-players="30" data-time="5" data-category="pass">
+                <div class="game-icon">🎁</div>
+                <h2 class="game-title">네온 럭키 박스</h2>
+                <p class="game-description">상자를 열어 꽝을 피하세요</p>
+                <div class="game-badge">복불복</div>
+            </a>
+
+                <div id="no-results" class="empty" hidden>
+                    <p class="empty-title" id="empty-title">찾는 게임이 없어요</p>
+                    <p class="empty-desc" id="empty-desc">다른 검색어나 조건으로 찾아 보세요.</p>
                 </div>
             </main>
-        </div>
+        </section>
 
         <footer class="footer">
-            <p>Made with ❤️ for fun | © 2024 Mini Game Paradise</p>
+            <p>Made with ❤️ for fun · 미니게임 천국</p>
         </footer>
     </div>
 
+    <nav class="bottom-nav" aria-label="메뉴">
+        <button class="nav-btn" type="button" data-view="home" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>홈</span></button>
+        <button class="nav-btn" type="button" data-open-sheet="pick"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/><circle cx="8.5" cy="15.5" r="1"/></svg><span>랜덤</span></button>
+        <button class="nav-btn" type="button" data-view="favorites"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><span>즐겨찾기</span></button>
+        <button class="nav-btn" type="button" data-view="recent"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></svg><span>최근</span></button>
+    </nav>
+
+    <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+
+    <div class="sheet" id="filter-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-head">
+            <h2 id="sheet-title">어떤 게임을 찾나요?</h2>
+            <button class="icon-btn" type="button" data-close-sheet aria-label="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        <div class="sheet-group">
+            <p class="sheet-label" id="players-label">인원</p>
+            <div class="seg seg-5" role="group" aria-labelledby="players-label">
+                    <button class="seg-btn" type="button" data-players="all" aria-pressed="true">전체</button>
+                    <button class="seg-btn" type="button" data-players="1" aria-pressed="false">혼자</button>
+                    <button class="seg-btn" type="button" data-players="2" aria-pressed="false">2명</button>
+                    <button class="seg-btn" type="button" data-players="3-5" aria-pressed="false">3~5명</button>
+                    <button class="seg-btn" type="button" data-players="6+" aria-pressed="false">6명+</button>
+            </div>
+        </div>
+        <div class="sheet-group">
+            <p class="sheet-label" id="time-label">시간</p>
+            <div class="seg seg-4" role="group" aria-labelledby="time-label">
+                    <button class="seg-btn" type="button" data-time="all" aria-pressed="true">전체</button>
+                    <button class="seg-btn" type="button" data-time="5" aria-pressed="false">5분 이하</button>
+                    <button class="seg-btn" type="button" data-time="15" aria-pressed="false">15분 이하</button>
+                    <button class="seg-btn" type="button" data-time="15+" aria-pressed="false">길게</button>
+            </div>
+        </div>
+        <div class="sheet-actions">
+            <button class="btn-soft" type="button" id="sheet-reset">초기화</button>
+            <button class="btn-primary" type="button" id="sheet-apply">게임 보기</button>
+        </div>
+    </div>
+
+    <div class="sheet" id="pick-result" role="dialog" aria-modal="true" aria-labelledby="pick-name" hidden>
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-head">
+            <p class="pick-result-eyebrow">오늘은 이거 어때요?</p>
+            <button class="icon-btn" type="button" data-close-sheet aria-label="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        <div class="pick-card">
+            <span class="pick-icon" id="pick-icon"></span>
+            <div>
+                <h2 class="pick-name" id="pick-name"></h2>
+                <p class="pick-desc" id="pick-desc"></p>
+                <p class="pick-meta" id="pick-meta"></p>
+            </div>
+        </div>
+        <div class="sheet-actions">
+            <button class="btn-soft" type="button" id="pick-again">다시 뽑기</button>
+            <a class="btn-primary" id="pick-go" href="#">시작하기</a>
+        </div>
+    </div>
+
     <script src="scripts/game-common.js?v=3a12429a"></script>
-    <script src="scripts/main.js?v=2372351b"></script>
+    <script src="scripts/main.js?v=ed7e0e19"></script>
 </body>
 
 </html>
