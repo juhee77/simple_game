@@ -6,14 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>타이핑 레이서 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
-            --ok: #4ade80;
-            --bad: #f87171;
             --ghost: #a78bfa;
             --accent: #38bdf8;
+            --accent-ink: #106991;
+            --accent-soft: #e4f4fb;
+            --on-accent: #141a2a;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -34,7 +36,7 @@
         h1 {
             font-size: 1.7rem;
             margin: 44px 0 4px;
-            background: linear-gradient(135deg, #38bdf8, #a78bfa);
+            background: linear-gradient(135deg, #1691c8, #9272ef);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -62,7 +64,7 @@
             padding: 14px;
             border-radius: 14px;
             border: 1px solid var(--border);
-            background: rgba(255, 255, 255, .05);
+            background: var(--tint-1);
             color: var(--text);
             font-family: inherit;
             font-size: 1.1rem;
@@ -104,7 +106,7 @@
             position: relative;
             height: 54px;
             border-radius: 14px;
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             border: 1px solid var(--border);
             margin-bottom: 14px;
             overflow: hidden;
@@ -127,7 +129,7 @@
             top: 0;
             bottom: 0;
             width: 3px;
-            background: repeating-linear-gradient(180deg, #fff 0 6px, #334155 6px 12px);
+            background: repeating-linear-gradient(180deg, #fff 0 6px, var(--surface-3) 6px 12px);
         }
 
         .passage {
@@ -135,7 +137,7 @@
             line-height: 2;
             padding: 18px;
             border-radius: 16px;
-            background: rgba(0, 0, 0, .28);
+            background: var(--tint-2);
             border: 1px solid var(--border);
             margin-bottom: 12px;
             word-break: keep-all;
@@ -151,7 +153,7 @@
             padding: 15px 18px;
             border-radius: 14px;
             border: 2px solid var(--border);
-            background: rgba(255, 255, 255, .05);
+            background: var(--tint-1);
             color: var(--text);
             font-family: inherit;
             font-size: 1.1rem;
@@ -169,7 +171,7 @@
             align-items: center;
             padding: 12px 16px;
             border-radius: 12px;
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             font-size: .95rem;
         }
 

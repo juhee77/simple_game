@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>지뢰찾기 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         #minesweeper-board {
             display: grid;
@@ -21,7 +22,7 @@
 
         .mine-cell {
             aspect-ratio: 1;
-            background: linear-gradient(135deg, #2a3150, #1f2540);
+            background: linear-gradient(135deg, var(--surface-2), var(--surface-2));
             border: 2px solid rgba(99, 102, 241, 0.3);
             border-radius: 6px;
             cursor: pointer;
@@ -36,7 +37,7 @@
         }
 
         .mine-cell:hover:not(.revealed):not(.flagged) {
-            background: linear-gradient(135deg, #3a4160, #2f3550);
+            background: linear-gradient(135deg, var(--surface-3), var(--surface-3));
             border-color: var(--accent-primary);
             transform: scale(1.05);
         }
@@ -49,42 +50,44 @@
 
         .mine-cell.flagged {
             background: linear-gradient(135deg, #ec4899, #f43f5e);
+            color: var(--text);
         }
 
         .mine-cell.mine {
             background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
         }
 
         .mine-cell[data-count="1"] {
-            color: #3b82f6;
+            color: #175cce;
         }
 
         .mine-cell[data-count="2"] {
-            color: #10b981;
+            color: #0c704f;
         }
 
         .mine-cell[data-count="3"] {
-            color: #f59e0b;
+            color: #865a0f;
         }
 
         .mine-cell[data-count="4"] {
-            color: #8b5cf6;
+            color: #703be9;
         }
 
         .mine-cell[data-count="5"] {
-            color: #ec4899;
+            color: #be1569;
         }
 
         .mine-cell[data-count="6"] {
-            color: #06b6d4;
+            color: #0e6b7b;
         }
 
         .mine-cell[data-count="7"] {
-            color: #f97316;
+            color: #9d4a11;
         }
 
         .mine-cell[data-count="8"] {
-            color: #ef4444;
+            color: #c21616;
         }
 
         .difficulty-selector {
@@ -107,6 +110,7 @@
         .difficulty-btn.active {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             border-color: var(--accent-primary);
+            color: #fff;
         }
 
         .difficulty-btn:hover {
@@ -116,10 +120,10 @@
         .mine-cell.long-pressing {
             transform: scale(0.92);
             border-color: #f43f5e;
-            box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
+            box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.09);
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>

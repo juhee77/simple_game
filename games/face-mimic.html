@@ -4,46 +4,47 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>네온 표정 따라하기 - 미니게임 천국</title>
 <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-<link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+<link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+<link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Pretendard',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);font-family:'Pretendard',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
 .back{position:absolute;top:20px;left:20px;z-index:10}
-h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#f472b6,#ec4899);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#eb489d,#ec4899);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 @keyframes pop {
     0% { transform: scale(0.5); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
-.face-card{width:90%;max-width:400px;min-height:300px;background:rgba(255,255,255,.08);border-radius:30px;border:3px solid #ec4899;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:20px auto;font-size:8rem;color:#fff;box-shadow:0 0 30px rgba(236,72,153,.2)}
-.expr-btn{font-size:3rem;padding:20px;border-radius:20px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);cursor:pointer;transition:all .3s;text-align:center}
+.face-card{width:90%;max-width:400px;min-height:300px;background:var(--tint-2);border-radius:30px;border:3px solid #ec4899;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:20px auto;font-size:8rem;color:var(--text);box-shadow:0 0 30px rgba(236, 72, 153, 0.09)}
+.expr-btn{font-size:3rem;padding:20px;border-radius:20px;background:var(--tint-1);border:2px solid var(--line);cursor:pointer;transition:all .3s;text-align:center; color: var(--text)}
 .expr-btn:hover{border-color:#ec4899;transform:scale(1.05)}
-.btn{background:linear-gradient(135deg,#f472b6,#ec4899);border:none;color:#fff;padding:14px 40px;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;margin:15px;box-shadow:0 0 20px rgba(236,72,153,.3);transition:all .3s}
-.btn:hover{transform:translateY(-2px);box-shadow:0 5px 25px rgba(236,72,153,.5)}
+.btn{background:linear-gradient(135deg,#f472b6,#ec4899);border:none;color:var(--text);padding:14px 40px;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;margin:15px;box-shadow:0 0 20px rgba(236, 72, 153, 0.14);transition:all .3s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 5px 25px rgba(236, 72, 153, 0.23)}
 .gallery{display:none}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
 <h1>🤪 네온 표정 따라하기</h1>
 <div id="setup" style="text-align:center;width:90%;max-width:400px;margin-top:40px">
     <div style="font-size:4rem;margin-bottom:20px">🎭</div>
-    <p style="color:#94a3b8;margin:15px 0">상대의 표정을 보고 어떤 이모지였는지 맞히세요!</p>
+    <p style="color:var(--muted);margin:15px 0">상대의 표정을 보고 어떤 이모지였는지 맞히세요!</p>
     <div style="margin-bottom:20px">
-        <label style="display:block;color:#64748b;font-size:0.8rem;margin-bottom:5px">참가자 수 (2~30명)</label>
-        <input id="player-count" type="number" value="4" min="2" max="30" style="padding:15px;border-radius:15px;border:2px solid #ec4899;background:rgba(255,255,255,0.05);color:white;width:100%;text-align:center;font-size:1.2rem;outline:none">
+        <label style="display:block;color:var(--muted);font-size:0.8rem;margin-bottom:5px">참가자 수 (2~30명)</label>
+        <input id="player-count" type="number" value="4" min="2" max="30" style="padding:15px;border-radius:15px;border:2px solid #ec4899;background:var(--tint-1);color:var(--text);width:100%;text-align:center;font-size:1.2rem;outline:none">
     </div>
     <button class="btn" onclick="startGame()">도전 시작!</button>
 </div>
 
 <div id="game" style="display:none;width:100%;max-width:400px;text-align:center;margin-top:20px;padding:10px">
-    <div id="player-label" style="font-size:1.5rem;font-weight:700;color:#f472b6;margin-bottom:10px">플레이어 1의 차례</div>
+    <div id="player-label" style="font-size:1.5rem;font-weight:700;color:#bd156d;margin-bottom:10px">플레이어 1의 차례</div>
     <div id="phase-container"></div>
 </div>
 
-<div id="game-over" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.95);flex-direction:column;align-items:center;justify-content:center;z-index:100;text-align:center">
+<div id="game-over" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--veil);flex-direction:column;align-items:center;justify-content:center;z-index:100;text-align:center">
     <div style="font-size:5rem;margin-bottom:20px">❌😵</div>
-    <h2 style="font-size:2.5rem;color:#ef4444;margin-bottom:10px">오답입니다!</h2>
-    <p style="font-size:1.2rem;color:#94a3b8;margin-bottom:30px" id="loser-msg"></p>
+    <h2 style="font-size:2.5rem;color:#c21616;margin-bottom:10px">오답입니다!</h2>
+    <p style="font-size:1.2rem;color:var(--muted);margin-bottom:30px" id="loser-msg"></p>
     <button class="btn" onclick="location.reload()" style="background:white;color:black">다시 도전</button>
 </div>
 
@@ -78,7 +79,7 @@ function render(){
         label.textContent = `플레이어 ${currentPlayer}의 차례 (표정 짓기)`;
         container.innerHTML = `
             <div class="face-card" style="font-size:8rem;margin:20px auto;animation:pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)">${targetEmoji}</div>
-            <p class="info" style="color:#94a3b8;margin-bottom:15px">위 표정을 지은 채로 다음 사람에게 폰을 넘기세요!</p>
+            <p class="info" style="color:var(--muted);margin-bottom:15px">위 표정을 지은 채로 다음 사람에게 폰을 넘기세요!</p>
             <button class="btn" onclick="goToPass()">흉내 완료 & 넘기기</button>
         `;
     } else if(phase === 'pass') {
@@ -86,7 +87,7 @@ function render(){
         label.textContent = `다음 플레이어에게 전달하세요`;
         container.innerHTML = `
             <div style="font-size:5rem;margin:40px 0">📱➡👤</div>
-            <p class="info" style="color:#94a3b8;margin-bottom:15px">플레이어 ${nextP}님이 폰을 받으면 확인을 눌러주세요.</p>
+            <p class="info" style="color:var(--muted);margin-bottom:15px">플레이어 ${nextP}님이 폰을 받으면 확인을 눌러주세요.</p>
             <button class="btn" onclick="goToGuess()">받았습니다!</button>
         `;
     } else if(phase === 'guess') {
@@ -101,7 +102,7 @@ function render(){
         options = shuffleArray(options);
         
         container.innerHTML = `
-            <p class="info" style="color:#94a3b8;margin-bottom:15px">이전 플레이어가 지었던 표정은 무엇일까요?</p>
+            <p class="info" style="color:var(--muted);margin-bottom:15px">이전 플레이어가 지었던 표정은 무엇일까요?</p>
             <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin-top:10px">
                 ${options.map(opt => `<div class="expr-btn" onclick="checkAnswer('${opt}')" style="font-size:3rem;padding:20px">${opt}</div>`).join('')}
             </div>

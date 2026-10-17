@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>스도쿠 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         #sudoku-board {
             display: grid;
@@ -23,7 +24,7 @@
 
         .sudoku-cell {
             aspect-ratio: 1;
-            background: linear-gradient(135deg, #2a3150, #1f2540);
+            background: linear-gradient(135deg, var(--surface-2), var(--surface-2));
             border: 1px solid rgba(99, 102, 241, 0.2);
             display: flex;
             align-items: center;
@@ -45,7 +46,7 @@
         }
 
         .sudoku-cell.fixed {
-            background: linear-gradient(135deg, #3a4160, #2f3550);
+            background: linear-gradient(135deg, var(--surface-3), var(--surface-3));
             color: var(--accent-secondary);
             cursor: not-allowed;
             font-weight: 800;
@@ -54,11 +55,13 @@
         .sudoku-cell.selected {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             transform: scale(0.95);
+            color: #fff;
         }
 
         .sudoku-cell.error {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             animation: shake 0.3s ease;
+            color: #fff;
         }
 
         .sudoku-cell.same-number {
@@ -105,6 +108,7 @@
             background: var(--accent-primary);
             border-color: var(--accent-primary);
             transform: scale(1.05);
+            color: #fff;
         }
 
         .number-btn:active {
@@ -133,13 +137,14 @@
         .difficulty-btn.active {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             border-color: var(--accent-primary);
+            color: #fff;
         }
 
         .difficulty-btn:hover {
             border-color: var(--accent-primary);
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>

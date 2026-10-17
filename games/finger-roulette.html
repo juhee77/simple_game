@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html data-stage lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>멀티터치 손가락 룰렛 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
-            --bg-color: #060913;
+            --bg-color: var(--bg);
             --accent-gold: #f59e0b;
             --accent-cyan: #06b6d4;
             --accent-pink: #ec4899;
@@ -30,7 +31,7 @@
             height: 100%;
             overflow: hidden;
             background-color: var(--bg-color);
-            color: #ffffff;
+            color: var(--text);
             font-family: 'Pretendard', sans-serif;
             touch-action: none;
             position: fixed;
@@ -40,7 +41,7 @@
         .ambient-bg {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.5) 0%, rgba(6, 9, 19, 0.95) 100%);
+            background: radial-gradient(circle at 50% 50%, var(--scrim) 0%, var(--veil) 100%);
             z-index: 1;
             pointer-events: none;
         }
@@ -85,9 +86,9 @@
         }
 
         .hud-back-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #fff;
+            background: var(--tint-2);
+            border: 1px solid var(--line);
+            color: var(--text);
             width: 36px;
             height: 36px;
             border-radius: 10px;
@@ -103,14 +104,15 @@
 
         .hud-back-btn:active {
             transform: scale(0.92);
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--tint-3);
+            color: var(--text);
         }
 
         .hud-title {
             font-size: 1.15rem;
             font-weight: 900;
             letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #fff 40%, #94a3b8);
+            background: linear-gradient(135deg, var(--text) 40%, var(--text));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -123,9 +125,9 @@
         }
 
         .hud-btn {
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #cbd5e1;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            color: var(--text-2);
             padding: 7px 12px;
             border-radius: 10px;
             font-size: 0.82rem;
@@ -161,9 +163,9 @@
 
         .mode-pill {
             flex-shrink: 0;
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #94a3b8;
+            background: var(--surface-2);
+            border: 1px solid var(--line);
+            color: var(--muted);
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 0.78rem;
@@ -176,7 +178,7 @@
         .mode-pill.active {
             background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(139, 92, 246, 0.3));
             border-color: #38bdf8;
-            color: #ffffff;
+            color: var(--text);
             box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
         }
 
@@ -215,21 +217,21 @@
             font-size: 1.4rem;
             font-weight: 900;
             margin-bottom: 6px;
-            color: #f8fafc;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            color: var(--text);
+            text-shadow: 0 2px 10px rgba(20, 26, 42, 0.16);
         }
 
         .instruction-desc {
             font-size: 0.9rem;
-            color: #94a3b8;
+            color: var(--muted);
             line-height: 1.4;
         }
 
         .desktop-notice {
             display: inline-block;
             margin-top: 14px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px dashed rgba(255, 255, 255, 0.2);
+            background: var(--tint-2);
+            border: 1px dashed var(--line);
             padding: 6px 14px;
             border-radius: 20px;
             font-size: 0.75rem;
@@ -247,7 +249,7 @@
             z-index: 15;
             font-size: 7rem;
             font-weight: 900;
-            color: #ffffff;
+            color: var(--text);
             text-shadow: 0 0 40px rgba(245, 158, 11, 0.8), 0 0 80px rgba(236, 72, 153, 0.5);
             pointer-events: none;
             display: none;
@@ -262,9 +264,9 @@
             transform: translateX(-50%) translateY(160%);
             width: calc(100% - 32px);
             max-width: 440px;
-            background: rgba(15, 23, 42, 0.94);
+            background: var(--surface);
             border: 1px solid rgba(245, 158, 11, 0.4);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(245, 158, 11, 0.2);
+            box-shadow: 0 10px 40px rgba(20, 26, 42, 0.16), 0 0 25px rgba(245, 158, 11, 0.2);
             border-radius: 20px;
             padding: 16px;
             z-index: 35;
@@ -289,7 +291,7 @@
         .result-dock-title {
             font-size: 1.05rem;
             font-weight: 900;
-            color: #f8fafc;
+            color: var(--text);
             display: flex;
             align-items: center;
             gap: 6px;
@@ -346,14 +348,15 @@
         }
 
         .result-btn-restart {
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #ffffff;
+            background: var(--tint-2);
+            border: 1px solid var(--line);
+            color: var(--text);
         }
 
         .result-btn-restart:active {
-            background: rgba(255, 255, 255, 0.25);
+            background: var(--tint-3);
             transform: scale(0.96);
+            color: var(--text);
         }
 
         /* Penalty Roulette Modal (Bottom Sheet) */
@@ -362,7 +365,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(15, 23, 42, 0.96);
+            background: var(--surface);
             border-top: 2px solid rgba(245, 158, 11, 0.5);
             border-radius: 24px 24px 0 0;
             padding: 22px 20px calc(env(safe-area-inset-bottom, 16px) + 16px);
@@ -370,7 +373,7 @@
             backdrop-filter: blur(20px);
             transform: translateY(105%);
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 -10px 40px rgba(20, 26, 42, 0.16);
             pointer-events: auto;
         }
 
@@ -400,8 +403,8 @@
         }
 
         .penalty-roulette-box {
-            background: rgba(0, 0, 0, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--surface);
+            border: 1px solid var(--line);
             border-radius: 16px;
             padding: 18px;
             text-align: center;
@@ -453,9 +456,9 @@
 
         .btn-close-modal {
             flex: 0.7;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #fff;
+            background: var(--tint-2);
+            border: 1px solid var(--line);
+            color: var(--text);
             padding: 12px;
             border-radius: 12px;
             font-size: 0.92rem;
@@ -469,9 +472,9 @@
             bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            color: var(--text);
             padding: 10px 22px;
             border-radius: 25px;
             font-size: 0.85rem;
@@ -480,7 +483,7 @@
             opacity: 0;
             pointer-events: none;
             transition: all 0.25s ease;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 4px 20px rgba(20, 26, 42, 0.16);
             white-space: nowrap;
         }
 
@@ -498,7 +501,7 @@
 </head>
 <body>
     <div class="ambient-bg"></div>
-    <canvas id="gameCanvas"></canvas>
+    <canvas class="stage" id="gameCanvas"></canvas>
 
     <!-- Top HUD Navigation & Settings -->
     <div class="hud-container">
@@ -588,7 +591,7 @@
     </div>
 
     <!-- Common Game Scripts -->
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 
     <script>
         (function() {

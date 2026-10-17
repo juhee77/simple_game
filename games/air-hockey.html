@@ -6,15 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>네온 에어하키 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
-            --bg: #0b1020;
-            --panel: rgba(255, 255, 255, .05);
-            --border: rgba(255, 255, 255, .14);
-            --text: #f8fafc;
-            --muted: #94a3b8;
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --p1-ink: #bd156d;
+            --p2-ink: #106991;
             --p1: #f472b6;
             --p2: #38bdf8;
         }
@@ -39,7 +38,7 @@
         h1 {
             font-size: 1.5rem;
             margin: 40px 0 2px;
-            background: linear-gradient(135deg, #f472b6, #38bdf8);
+            background: linear-gradient(135deg, #eb489d, #1691c8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -76,8 +75,8 @@
         .score .side { text-align: center; }
         .score .who { display: block; font-size: .66rem; color: var(--muted); }
         .score .pts { font-size: 1.5rem; font-weight: 800; }
-        .score .p1 .pts { color: var(--p1); }
-        .score .p2 .pts { color: var(--p2); }
+        .score .p1 .pts { color: var(--p1-ink); }
+        .score .p2 .pts { color: var(--p2-ink); }
 
         .rink-wrap { position: relative; }
 
@@ -99,7 +98,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            background: rgba(11, 16, 32, .82);
+            background: var(--veil);
             border-radius: 18px;
             text-align: center;
             padding: 20px;
@@ -144,7 +143,7 @@
     </div>
 
     <div class="rink-wrap">
-        <canvas id="rink" width="360" height="560"></canvas>
+        <canvas class="stage" id="rink" width="360" height="560"></canvas>
         <div class="overlay" id="overlay">
             <h2 id="ov-title">준비되셨나요?</h2>
             <p id="ov-desc">폰을 두 사람 사이에 놓고, 각자 자기 진영의 채를 손가락으로 끌어 움직이세요. 5점 먼저 내면 승리합니다.</p>

@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>순서 기억 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .sequence-layout {
             display: grid;
@@ -36,17 +37,17 @@
             border: none;
             border-radius: 22px;
             cursor: pointer;
-            color: #fff;
+            color: var(--text);
             font-size: clamp(2rem, 7vw, 3rem);
             font-weight: 700;
             transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
-            box-shadow: inset 0 -10px 0 rgba(0, 0, 0, 0.15);
+            box-shadow: inset 0 -10px 0 rgba(20, 26, 42, 0.05);
         }
 
         .pad.active {
             transform: scale(1.05);
             filter: brightness(1.24);
-            box-shadow: 0 0 0 4px rgba(248, 250, 252, 0.14), 0 18px 30px rgba(0, 0, 0, 0.28);
+            box-shadow: 0 0 0 4px rgba(20, 26, 42, 0.05), 0 18px 30px rgba(20, 26, 42, 0.1);
         }
 
         .pad:disabled {
@@ -61,7 +62,7 @@
             font-weight: 700;
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>
@@ -140,7 +141,7 @@
                 button.className = 'pad';
                 button.type = 'button';
                 button.textContent = pad.emoji;
-                button.style.background = `linear-gradient(135deg, ${pad.color}, rgba(15, 23, 42, 0.9))`;
+                button.style.background = `linear-gradient(135deg, ${pad.color}, var(--surface))`;
                 button.addEventListener('click', () => handlePadClick(index));
                 gridElement.appendChild(button);
             });

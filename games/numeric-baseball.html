@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>네온 숫자 야구 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         body {
             background:
                 radial-gradient(circle at top left, rgba(99, 102, 241, 0.15), transparent 30%),
                 radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.15), transparent 35%),
-                #0a0e27;
+                var(--bg);
             min-height: 100vh;
         }
 
@@ -53,7 +54,7 @@
         }
 
         .select-card {
-            background: rgba(25, 29, 58, 0.75);
+            background: var(--surface-2);
             border: 2px solid var(--border-color);
             border-radius: 16px;
             padding: 1.5rem 1rem;
@@ -69,13 +70,13 @@
         .select-card:hover {
             transform: translateY(-3px);
             border-color: var(--accent-primary);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.07);
         }
 
         .select-card.active {
             background: rgba(99, 102, 241, 0.12);
             border-color: var(--accent-primary);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.14);
         }
 
         .select-card-icon {
@@ -99,7 +100,7 @@
             display: flex;
             flex-direction: column;
             gap: 0.8rem;
-            background: rgba(21, 25, 50, 0.5);
+            background: var(--surface);
             border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 1.25rem;
@@ -123,7 +124,7 @@
             padding: 0.75rem 1rem;
             border-radius: 10px;
             border: 1px solid var(--border-color);
-            background: rgba(10, 14, 39, 0.8);
+            background: var(--surface);
             color: var(--text-primary);
             font: inherit;
         }
@@ -139,7 +140,7 @@
             font-weight: 800;
             color: var(--accent-secondary);
             margin: 1.5rem 0;
-            text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.23);
         }
 
         /* Secret Input Screen */
@@ -155,14 +156,14 @@
             height: 70px;
             border: 2px solid var(--border-color);
             border-radius: 12px;
-            background: rgba(10, 14, 39, 0.6);
+            background: var(--surface);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2.2rem;
             font-weight: 800;
             color: var(--accent-primary);
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 10px rgba(20, 26, 42, 0.16);
         }
 
         /* Main Game Layout */
@@ -181,7 +182,7 @@
 
         /* Left Side: Game Controller & Display */
         .display-board {
-            background: rgba(21, 25, 50, 0.85);
+            background: var(--surface);
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 1.5rem;
@@ -210,20 +211,20 @@
             height: 65px;
             border: 2px solid var(--border-color);
             border-radius: 12px;
-            background: rgba(10, 14, 39, 0.8);
+            background: var(--surface);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2rem;
             font-weight: 800;
             color: var(--text-primary);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 10px rgba(20, 26, 42, 0.14);
             transition: all 0.2s ease;
         }
 
         .guess-digit.filled {
             border-color: var(--accent-primary);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.14);
         }
 
         /* Interactive Keypad */
@@ -237,7 +238,7 @@
 
         .key {
             padding: 1rem 0;
-            background: rgba(30, 35, 60, 0.8);
+            background: var(--surface-2);
             border: 1.5px solid var(--border-color);
             border-radius: 12px;
             color: var(--text-primary);
@@ -261,7 +262,7 @@
         .key:disabled {
             opacity: 0.25;
             cursor: not-allowed;
-            background: rgba(10, 14, 39, 0.4);
+            background: var(--surface);
             border-color: rgba(99, 102, 241, 0.05);
         }
 
@@ -272,24 +273,24 @@
 
         .key-action:hover:not(:disabled) {
             background: var(--accent-primary);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.23);
         }
 
         .key-confirm {
             background: rgba(236, 72, 153, 0.25);
             border-color: var(--accent-tertiary);
-            color: #fbcfe8;
+            color: #bb1573;
         }
 
         .key-confirm:hover:not(:disabled) {
             background: var(--accent-tertiary);
-            box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
-            color: white;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.23);
+            color: var(--text);
         }
 
         /* Right Side: Scrollable Match History Table */
         .history-card {
-            background: rgba(21, 25, 50, 0.7);
+            background: var(--surface);
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 1.25rem;
@@ -318,7 +319,7 @@
             width: 6px;
         }
         .history-list-wrapper::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1);
+            background: var(--tint-1);
         }
         .history-list-wrapper::-webkit-scrollbar-thumb {
             background: var(--border-color);
@@ -331,8 +332,8 @@
             align-items: center;
             padding: 0.75rem 1rem;
             border-radius: 10px;
-            background: rgba(10, 14, 39, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: var(--surface);
+            border: 1px solid var(--line);
             margin-bottom: 0.5rem;
             font-size: 0.95rem;
         }
@@ -359,25 +360,25 @@
         .badge-strike {
             background: rgba(16, 185, 129, 0.2);
             border: 1px solid var(--success);
-            color: #a7f3d0;
+            color: #0f6d42;
         }
 
         .badge-ball {
             background: rgba(245, 158, 11, 0.2);
             border: 1px solid var(--warning);
-            color: #fde68a;
+            color: #76610d;
         }
 
         .badge-out {
             background: rgba(239, 68, 68, 0.25);
             border: 1px solid var(--danger);
-            color: #fecaca;
+            color: #c31616;
         }
 
         .badge-hr {
             background: rgba(139, 92, 246, 0.3);
             border: 1px solid #8b5cf6;
-            color: #ddd6fe;
+            color: var(--text);
             animation: pulse 1s infinite alternate;
         }
 
@@ -427,7 +428,7 @@
             width: 100%;
             border-collapse: collapse;
             margin: 1rem 0;
-            background: rgba(15, 23, 42, 0.4);
+            background: var(--surface);
             border-radius: 12px;
             overflow: hidden;
         }
@@ -436,11 +437,11 @@
         .leaderboard-table td {
             padding: 0.9rem 1.2rem;
             text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--line);
         }
 
         .leaderboard-table th {
-            background: rgba(30, 35, 60, 0.8);
+            background: var(--surface-2);
             font-weight: 700;
             color: var(--text-muted);
             font-size: 0.9rem;
@@ -466,7 +467,7 @@
             100% { transform: scale(1.05); }
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>
@@ -741,7 +742,7 @@
                     <div class="input-group">
                         <div class="player-input-row">
                             <label>인원 수</label>
-                            <select id="select-coop-count" onchange="adjustCoopNameInputs()" style="flex: 1; padding: 0.75rem; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(10, 14, 39, 0.8); color: white; font: inherit;">
+                            <select id="select-coop-count" onchange="adjustCoopNameInputs()" style="flex: 1; padding: 0.75rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--surface); color: var(--text); font: inherit;">
                                 <option value="2">2명</option>
                                 <option value="3" selected>3명</option>
                                 <option value="4">4명</option>

@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>큐브 스택 3D - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .stack-layout {
             display: grid;
@@ -19,7 +20,7 @@
             padding: 1.5rem;
             border-radius: 30px;
             border: 1px solid rgba(139, 92, 246, 0.4);
-            background: linear-gradient(135deg, rgba(30, 27, 75, 0.5), rgba(2, 6, 23, 0.8));
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.5), var(--stage-bg));
             box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(139, 92, 246, 0.2);
         }
 
@@ -33,16 +34,16 @@
         }
 
         .status-bar {
-            background: rgba(30, 27, 75, 0.4) !important;
+            background: #e9e8f7 !important;
             backdrop-filter: blur(12px);
             border: 1px solid rgba(139, 92, 246, 0.3) !important;
             border-radius: 20px !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+            box-shadow: 0 10px 30px rgba(20, 26, 42, 0.16) !important;
         }
 
         .status-value {
-            color: #c4b5fd !important;
-            text-shadow: 0 0 10px rgba(196, 181, 253, 0.5);
+            color: #623fea !important;
+            text-shadow: 0 0 10px rgba(196, 181, 253, 0.23);
             font-size: 1.4rem !important;
         }
 
@@ -52,7 +53,7 @@
             line-height: 1.6;
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>
@@ -85,7 +86,7 @@
         <div class="game-board">
             <div class="stack-layout">
                 <div class="canvas-shell">
-                    <canvas id="stack-canvas" width="720" height="460"></canvas>
+                    <canvas class="stage" id="stack-canvas" width="720" height="460"></canvas>
                 </div>
                 <div class="help-text" id="status-text">스페이스, 엔터, 클릭 또는 터치로 블록을 떨어뜨리세요.</div>
             </div>

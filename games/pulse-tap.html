@@ -4,26 +4,27 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>네온 리듬 배틀 - 미니게임 천국</title>
 <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-<link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+<link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+<link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Pretendard',sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;height:100vh;overflow:hidden;touch-action:none}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);font-family:'Pretendard',sans-serif;color:var(--text);display:flex;flex-direction:column;align-items:center;height:100vh;overflow:hidden;touch-action:none}
 .back{position:absolute;top:20px;left:20px;z-index:10}
-h1{font-size:1.8rem;margin-top:50px;background:linear-gradient(135deg,#f97316,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h1{font-size:1.8rem;margin-top:50px;background:linear-gradient(135deg,#d86718,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .score-bar{display:flex;gap:30px;margin:20px 0;font-size:1.5rem;font-weight:800}
 .beat-track{flex:1;width:100%;display:flex;align-items:center;justify-content:center;position:relative}
-.ring{width:200px;height:200px;border-radius:50%;border:6px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;position:relative;transition:border-color .1s}
-.ring.hit{border-color:#2ed573;box-shadow:0 0 40px rgba(46,213,115,.5)}
-.ring.miss{border-color:#ff4757;box-shadow:0 0 40px rgba(255,71,87,.5)}
-.beat-dot{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ec4899);position:absolute;transform:scale(0);transition:transform .15s}
+.ring{width:200px;height:200px;border-radius:50%;border:6px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;transition:border-color .1s}
+.ring.hit{border-color:#2ed573;box-shadow:0 0 40px rgba(46, 213, 115, 0.23)}
+.ring.miss{border-color:#ff4757;box-shadow:0 0 40px rgba(255, 71, 87, 0.23)}
+.beat-dot{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ec4899);position:absolute;transform:scale(0);transition:transform .15s; color: var(--text)}
 .beat-dot.active{transform:scale(1)}
-.tap-zone{width:100%;padding:60px 0;text-align:center;cursor:pointer;font-size:1.5rem;color:#94a3b8;font-weight:600}
-.progress{width:80%;height:6px;background:rgba(255,255,255,.1);border-radius:3px;margin:10px 0}
-.progress-fill{height:100%;background:linear-gradient(90deg,#f97316,#ec4899);border-radius:3px;transition:width .1s}
+.tap-zone{width:100%;padding:60px 0;text-align:center;cursor:pointer;font-size:1.5rem;color:var(--muted);font-weight:600}
+.progress{width:80%;height:6px;background:var(--tint-2);border-radius:3px;margin:10px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,#f97316,#ec4899);border-radius:3px;transition:width .1s; color: var(--text)}
 .result-screen{display:none;text-align:center;padding:40px}
 .result-screen .big{font-size:5rem;font-weight:900}
-.btn{background:linear-gradient(135deg,#f97316,#ec4899);border:none;color:#fff;padding:16px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:20px 0}
+.btn{background:linear-gradient(135deg,#f97316,#ec4899);border:none;color:var(--text);padding:16px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:20px 0}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
@@ -35,10 +36,10 @@ h1{font-size:1.8rem;margin-top:50px;background:linear-gradient(135deg,#f97316,#e
 </div>
 <div class="tap-zone" id="tap">화면을 탭하세요!</div>
 <div class="result-screen" id="result">
-<p style="color:#94a3b8;margin-bottom:10px">최종 점수</p>
+<p style="color:var(--muted);margin-bottom:10px">최종 점수</p>
 <div class="big" id="final-score">0</div>
 <p id="grade" style="font-size:2rem;margin:10px 0"></p>
-<p id="stats" style="color:#94a3b8"></p>
+<p id="stats" style="color:var(--muted)"></p>
 <button class="btn" onclick="startGame()">다시 도전</button>
 </div>
 <script>

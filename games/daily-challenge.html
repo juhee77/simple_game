@@ -6,12 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>오늘의 도전 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --done-ink: #147036;
             --done: #4ade80;
             --accent: #fbbf24;
+            --accent-ink: #7d5e0e;
+            --accent-soft: #fbf5e4;
+            --on-accent: #141a2a;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -32,7 +38,7 @@
         h1 {
             font-size: 1.8rem;
             margin: 44px 0 2px;
-            background: linear-gradient(135deg, #fbbf24, #4ade80);
+            background: linear-gradient(135deg, #ab8113, #1c9b4b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -54,7 +60,7 @@
         .streak-box div { flex: 1; text-align: center; }
         .streak-box .label { display: block; font-size: .68rem; color: var(--muted); }
         .streak-box .value { font-size: 1.5rem; font-weight: 800; }
-        #streak-now { color: var(--accent); }
+        #streak-now { color: var(--accent-ink); }
 
         .progress-row {
             display: flex;
@@ -67,7 +73,7 @@
             flex: 1;
             height: 10px;
             border-radius: 5px;
-            background: rgba(255, 255, 255, .1);
+            background: var(--tint-2);
             overflow: hidden;
         }
 
@@ -77,6 +83,7 @@
             border-radius: 5px;
             background: linear-gradient(90deg, #fbbf24, #4ade80);
             transition: width .4s ease;
+            color: var(--text);
         }
 
         .progress-row .count { font-size: .9rem; font-weight: 800; color: var(--muted); white-space: nowrap; }
@@ -110,7 +117,7 @@
             color: var(--muted);
         }
 
-        .card.done .state { color: var(--done); }
+        .card.done .state { color: var(--done-ink); }
 
         .celebrate {
             display: none;
@@ -124,7 +131,7 @@
 
         .celebrate.show { display: block; }
         .celebrate .stamp { font-size: 2.6rem; }
-        .celebrate h2 { font-size: 1.2rem; margin: 6px 0 4px; color: var(--done); }
+        .celebrate h2 { font-size: 1.2rem; margin: 6px 0 4px; color: var(--done-ink); }
         .celebrate p { color: var(--muted); font-size: .88rem; line-height: 1.6; }
 
         .history { margin-top: 20px; }
@@ -136,20 +143,20 @@
             text-align: center;
             padding: 10px 0;
             border-radius: 12px;
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             border: 1px solid var(--border);
             font-size: .68rem;
             color: var(--muted);
         }
 
-        .dot.done { background: rgba(74, 222, 128, .16); border-color: rgba(74, 222, 128, .4); color: var(--done); }
+        .dot.done { background: rgba(74, 222, 128, .16); border-color: rgba(74, 222, 128, .4); color: var(--done-ink); }
         .dot .day { display: block; font-size: 1.05rem; margin-bottom: 2px; }
 
         .note {
             margin-top: 20px;
             padding: 14px 16px;
             border-radius: 14px;
-            background: rgba(255, 255, 255, .03);
+            background: var(--tint-1);
             border: 1px solid var(--border);
             color: var(--muted);
             font-size: .8rem;

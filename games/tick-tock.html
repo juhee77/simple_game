@@ -4,9 +4,10 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>네온 폭탄 돌리기 - 미니게임 천국</title>
 <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-<link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+<link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+<link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Pretendard',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);font-family:'Pretendard',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
 .back{position:absolute;top:20px;left:20px;z-index:10}
 .bomb{font-size:8rem;animation:pulse 0.5s infinite alternate;transition:all .3s}
 @keyframes pulse{0%{transform:scale(1)}100%{transform:scale(1.1)}}
@@ -14,28 +15,28 @@
 .bomb.exploded{font-size:12rem;animation:explode .5s forwards}
 @keyframes explode{0%{transform:scale(1)}50%{transform:scale(2)}100%{transform:scale(3);opacity:0}}
 .quiz{font-size:1.8rem;font-weight:800;margin:20px 0;min-height:60px;text-align:center}
-input{padding:14px 20px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.15);border-radius:16px;color:#fff;font-size:1.3rem;font-family:inherit;text-align:center;width:200px;outline:none}
+input{padding:14px 20px;background:var(--tint-1);border:2px solid var(--line);border-radius:16px;color:var(--text);font-size:1.3rem;font-family:inherit;text-align:center;width:200px;outline:none}
 input:focus{border-color:#ef4444}
-.btn{background:linear-gradient(135deg,#ef4444,#f97316);border:none;color:#fff;padding:14px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
-.hint{color:#64748b;font-size:.85rem;margin-top:15px}
+.btn{background:linear-gradient(135deg,#ef4444,#f97316);border:none;color:var(--text);padding:14px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
+.hint{color:var(--muted);font-size:.85rem;margin-top:15px}
 .exploded-screen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(239,68,68,.9);flex-direction:column;align-items:center;justify-content:center;z-index:50}
 .exploded-screen h2{font-size:3rem;font-weight:900}
-.timer-text{color:#fbbf24;font-size:1rem;font-weight:600;margin:5px 0}
+.timer-text{color:#7d5e0e;font-size:1rem;font-weight:600;margin:5px 0}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
 <div class="setup" id="setup" style="text-align:center">
 <div class="bomb">💣</div>
-<p style="color:#94a3b8;margin:15px 0">게임 설정을 선택하세요</p>
+<p style="color:var(--muted);margin:15px 0">게임 설정을 선택하세요</p>
 <div style="margin-bottom:15px">
-    <label style="display:block;color:#64748b;font-size:0.8rem;margin-bottom:5px">참가자 수 (2~30명)</label>
+    <label style="display:block;color:var(--muted);font-size:0.8rem;margin-bottom:5px">참가자 수 (2~30명)</label>
     <input id="player-count" type="number" placeholder="참가자 수" min="2" max="30" value="4" style="width:80%">
 </div>
 <div style="margin-bottom:20px">
-    <label style="display:block;color:#64748b;font-size:0.8rem;margin-bottom:5px">폭발 타이머 난이도</label>
-    <select id="timer-mode" style="width:80%;padding:14px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.15);border-radius:16px;color:#fff;font-size:1.1rem;font-family:inherit;outline:none;appearance:none;text-align:center">
+    <label style="display:block;color:var(--muted);font-size:0.8rem;margin-bottom:5px">폭발 타이머 난이도</label>
+    <select id="timer-mode" style="width:80%;padding:14px;background:var(--tint-1);border:2px solid var(--line);border-radius:16px;color:var(--text);font-size:1.1rem;font-family:inherit;outline:none;appearance:none;text-align:center">
         <option value="short">짧게 (10~20초)</option>
         <option value="normal" selected>보통 (20~40초)</option>
         <option value="long">길게 (40~80초)</option>
@@ -44,7 +45,7 @@ input:focus{border-color:#ef4444}
 <button class="btn" onclick="startGame()">폭탄 가동!</button>
 </div>
 <div id="game" style="text-align:center;display:none">
-<div class="player-label" id="player-label" style="font-size:1.5rem;font-weight:800;color:#ef4444;margin-bottom:10px">플레이어 1</div>
+<div class="player-label" id="player-label" style="font-size:1.5rem;font-weight:800;color:#c21616;margin-bottom:10px">플레이어 1</div>
 <div class="bomb" id="bomb">💣</div>
 <div class="timer-text" id="timer-text">틱... 탁...</div>
 <div class="quiz" id="quiz"></div>

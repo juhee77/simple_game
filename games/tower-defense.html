@@ -6,15 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>네온 타워 디펜스 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
-            --bg: #0b1120;
-            --panel: rgba(255, 255, 255, .05);
-            --border: rgba(255, 255, 255, .14);
-            --text: #f8fafc;
-            --muted: #94a3b8;
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --gold-ink: #7d5e0e;
+            --hp-ink: #c41616;
             --path: #1e293b;
             --grass: #0f1a2e;
             --gold: #fbbf24;
@@ -40,7 +39,7 @@
         h1 {
             font-size: 1.7rem;
             margin: 44px 0 4px;
-            background: linear-gradient(135deg, #38bdf8, #a78bfa);
+            background: linear-gradient(135deg, #1691c8, #9272ef);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -60,8 +59,8 @@
         .hud div { text-align: center; min-width: 52px; }
         .hud .label { display: block; font-size: .66rem; color: var(--muted); }
         .hud .value { font-size: 1.1rem; font-weight: 800; }
-        #hud-gold { color: var(--gold); }
-        #hud-life { color: var(--hp); }
+        #hud-gold { color: var(--gold-ink); }
+        #hud-life { color: var(--hp-ink); }
 
         canvas {
             border: 1px solid var(--border);
@@ -91,7 +90,7 @@
 
         .tower-btn.active { border-color: #38bdf8; background: rgba(56, 189, 248, .16); }
         .tower-btn:disabled { opacity: .38; cursor: default; }
-        .tower-btn .cost { display: block; font-size: .72rem; color: var(--gold); }
+        .tower-btn .cost { display: block; font-size: .72rem; color: var(--gold-ink); }
 
         .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
 
@@ -111,9 +110,9 @@
         .btn:disabled { opacity: .4; cursor: default; }
 
         .msg { margin-top: 12px; min-height: 24px; font-weight: 700; text-align: center; }
-        .msg.good { color: #4ade80; }
-        .msg.warn { color: var(--gold); }
-        .msg.bad { color: var(--hp); }
+        .msg.good { color: #147036; }
+        .msg.warn { color: var(--gold-ink); }
+        .msg.bad { color: var(--hp-ink); }
 
         .hint { color: var(--muted); font-size: .78rem; margin-top: 8px; text-align: center; max-width: 420px; }
     </style>
@@ -131,7 +130,7 @@
         <div><span class="label">최고 웨이브</span><span class="value" id="hud-best">-</span></div>
     </div>
 
-    <canvas id="board" width="480" height="400"></canvas>
+    <canvas class="stage" id="board" width="480" height="400"></canvas>
 
     <div class="shop" id="shop"></div>
 

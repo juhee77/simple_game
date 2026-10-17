@@ -5,26 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>음정 맞히기 - Pitch Perfect</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <!-- Fonts & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #050b14;
-            --panel-bg: rgba(15, 23, 42, 0.6);
-            --border-color: rgba(56, 189, 248, 0.2);
-            --text-main: #f8fafc;
-            --text-muted: #64748b;
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --neon-match-ink: #0c704f;
+            --neon-pitch-ink: #106991;
+            --bg-color: var(--bg);
+            --panel-bg: var(--surface);
+            --text-main: var(--text);
             --neon-pitch: #38bdf8;
             --neon-match: #10b981;
-            --glass-glow: 0 0 15px rgba(56, 189, 248, 0.3);
+            --glass-glow: 0 0 15px rgba(56, 189, 248, 0.14);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; user-select: none; }
         body {
             background-color: var(--bg-color);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.3) 0, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(30, 27, 75, 0.4) 0, transparent 50%);
+                radial-gradient(at 0% 0%, var(--bg) 0, transparent 50%),
+                radial-gradient(at 100% 100%, var(--bg) 0, transparent 50%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -39,10 +41,10 @@
             display: flex; justify-content: space-between; align-items: center;
             z-index: 100;
         }
-        h1 { font-family: 'Pretendard', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--neon-pitch); text-shadow: var(--glass-glow); }
+        h1 { font-family: 'Pretendard', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--neon-pitch-ink); text-shadow: var(--glass-glow); }
 
         .btn-icon {
-            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text);
             width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
             transition: all 0.2s;
@@ -54,18 +56,18 @@
             background: var(--panel-bg); backdrop-filter: blur(15px);
             border: 1px solid var(--border-color); border-radius: 20px;
             padding: 25px; margin: 15px 0;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 15px 35px rgba(20, 26, 42, 0.16);
             display: flex; flex-direction: column; gap: 20px;
             text-align: center;
         }
 
-        .stage-title { font-size: 1.2rem; font-weight: 800; color: var(--neon-pitch); text-shadow: var(--glass-glow); }
+        .stage-title { font-size: 1.2rem; font-weight: 800; color: var(--neon-pitch-ink); text-shadow: var(--glass-glow); }
         .score-display { font-size: 1.1rem; color: var(--text-muted); }
 
         /* Soundwave animation screen */
         .wave-container {
             height: 120px; width: 100%;
-            background: rgba(0,0,0,0.4);
+            background: var(--surface);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             overflow: hidden;
@@ -77,18 +79,18 @@
         /* Control Panel Buttons */
         .btn-play {
             background: linear-gradient(135deg, #0ea5e9, #0284c7);
-            color: white; border: none; padding: 16px 20px; border-radius: 14px;
+            color: var(--text); border: none; padding: 16px 20px; border-radius: 14px;
             font-size: 1.1rem; font-weight: 800; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: all 0.2s; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+            transition: all 0.2s; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.14);
         }
-        .btn-play:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4); }
+        .btn-play:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(14, 165, 233, 0.18); }
 
         .action-row { display: flex; gap: 10px; }
         .btn-secondary {
             flex: 1; padding: 12px;
-            background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);
-            color: white; border-radius: 10px; font-weight: 600; cursor: pointer;
+            background: var(--tint-1); border: 1px solid var(--border-color);
+            color: var(--text); border-radius: 10px; font-weight: 600; cursor: pointer;
             transition: all 0.2s;
         }
         .btn-secondary:hover { background: rgba(56, 189, 248, 0.1); }
@@ -101,13 +103,13 @@
         .slider-label { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); }
         .pitch-slider {
             -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px;
-            background: rgba(255,255,255,0.1); outline: none; transition: all 0.2s;
+            background: var(--tint-2); outline: none; transition: all 0.2s;
         }
         .pitch-slider::-webkit-slider-thumb {
             -webkit-appearance: none; appearance: none;
             width: 24px; height: 24px; border-radius: 50%;
             background: var(--neon-pitch); cursor: pointer;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.36);
             transition: transform 0.1s;
         }
         .pitch-slider::-webkit-slider-thumb:active { transform: scale(1.2); }
@@ -115,15 +117,15 @@
         /* Modal Overlay */
         .overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(5, 8, 16, 0.85); backdrop-filter: blur(12px);
+            background: var(--veil); backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             display: none; align-items: center; justify-content: center; z-index: 1000;
         }
         .overlay.active { display: flex; }
         .modal {
-            background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3);
+            background: var(--surface); border: 1px solid rgba(56, 189, 248, 0.3);
             padding: 40px 30px; border-radius: 28px; width: 85%; max-width: 420px;
-            text-align: center; box-shadow: 0 30px 70px rgba(0,0,0,0.8), 0 0 40px rgba(56, 189, 248, 0.15);
+            text-align: center; box-shadow: 0 30px 70px rgba(20, 26, 42, 0.16), 0 0 40px rgba(56, 189, 248, 0.07);
             animation: modal-zoom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             display: flex; flex-direction: column; gap: 15px;
         }
@@ -131,24 +133,24 @@
             0% { transform: scale(0.9); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-        .modal h2 { font-size: 2.2rem; color: var(--neon-match); text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
-        .modal p.accuracy { font-size: 2.8rem; font-weight: 800; margin: 10px 0; color: #fff; }
+        .modal h2 { font-size: 2.2rem; color: var(--neon-match-ink); text-shadow: 0 0 10px rgba(16, 185, 129, 0.18); }
+        .modal p.accuracy { font-size: 2.8rem; font-weight: 800; margin: 10px 0; color: var(--text); }
         .modal .info-text { font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
         .btn-main {
             background: linear-gradient(135deg, #38bdf8, #0ea5e9); color: #040815; border: none;
             padding: 14px 45px; border-radius: 50px; font-weight: 800;
             font-size: 1.1rem; cursor: pointer; transition: all 0.25s ease;
-            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.14);
             margin-top: 10px;
         }
         .btn-main:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.23);
         }
 
     canvas{touch-action:manipulation}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -167,7 +169,7 @@
         </button>
 
         <div class="wave-container">
-            <canvas class="wave-canvas" id="canvas"></canvas>
+            <canvas class="stage wave-canvas" id="canvas"></canvas>
             <div id="no-audio-hint" style="position: absolute; font-size: 0.9rem; color: var(--text-muted);">
                 기준음을 듣고 슬라이더를 맞추세요
             </div>
@@ -176,7 +178,7 @@
         <div class="slider-container">
             <div class="slider-label">
                 <span>낮은 음 (C4: 261.63Hz)</span>
-                <span id="hz-indicator" style="color: var(--neon-pitch); font-weight: bold;">튜닝 중...</span>
+                <span id="hz-indicator" style="color: var(--neon-pitch-ink); font-weight: bold;">튜닝 중...</span>
                 <span>높은 음 (C5: 523.25Hz)</span>
             </div>
             <input type="range" class="pitch-slider" id="pitch-control" min="261.63" max="523.25" step="0.1" value="392.00" oninput="onSliderMove()">
@@ -194,7 +196,7 @@
             </button>
         </div>
 
-        <button class="btn-play" style="background: linear-gradient(135deg, var(--neon-match), #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);" onclick="submitPitch()">
+        <button class="btn-play" style="background: linear-gradient(135deg, var(--neon-match), #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.14); color: var(--text);" onclick="submitPitch()">
             정답 제출하기 🎯
         </button>
     </div>
@@ -375,10 +377,10 @@
             // Style overlay
             if (accuracy >= 97) {
                 document.getElementById('result-title').innerText = "🎵 환상적인 음감!";
-                document.getElementById('result-title').style.color = "var(--neon-match)";
+                document.getElementById('result-title').style.color = "var(--neon-match-ink)";
             } else if (accuracy >= 90) {
                 document.getElementById('result-title').innerText = "👍 훌륭합니다!";
-                document.getElementById('result-title').style.color = "var(--neon-pitch)";
+                document.getElementById('result-title').style.color = "var(--neon-pitch-ink)";
             } else {
                 document.getElementById('result-title').innerText = "😅 조금 아쉽네요";
                 document.getElementById('result-title').style.color = "var(--text-muted)";

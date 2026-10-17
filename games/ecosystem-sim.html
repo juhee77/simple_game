@@ -5,20 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>미니 생태계 - Ecosystem Sim</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #060913;
-            --panel-bg: rgba(15, 23, 42, 0.6);
-            --border-color: rgba(56, 189, 248, 0.2);
-            --text-main: #f8fafc;
-            --text-muted: #64748b;
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --color-fox-ink: #c21633;
+            --color-grass-ink: #0c704f;
+            --color-rabbit-ink: #106991;
+            --bg-color: var(--bg);
+            --panel-bg: var(--surface);
+            --text-main: var(--text);
             --color-grass: #10b981;
             --color-rabbit: #38bdf8;
             --color-fox: #f43f5e;
-            --glass-glow: 0 0 15px rgba(56, 189, 248, 0.2);
+            --glass-glow: 0 0 15px rgba(56, 189, 248, 0.09);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
@@ -41,10 +44,10 @@
             display: flex; justify-content: space-between; align-items: center;
             z-index: 100;
         }
-        h1 { font-family: 'Pretendard', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--color-rabbit); text-shadow: var(--glass-glow); }
+        h1 { font-family: 'Pretendard', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--color-rabbit-ink); text-shadow: var(--glass-glow); }
 
         .btn-icon {
-            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text);
             width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
             transition: all 0.2s;
@@ -57,11 +60,11 @@
             background: var(--panel-bg); backdrop-filter: blur(15px);
             border: 1px solid var(--border-color); border-radius: 20px;
             padding: 15px; display: flex; flex-direction: column; gap: 15px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 15px 35px rgba(20, 26, 42, 0.16);
         }
 
         .grid-canvas {
-            width: 100%; height: 320px; background: rgba(0,0,0,0.5);
+            width: 100%; height: 320px; background: var(--stage-bg);
             border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;
         }
 
@@ -70,8 +73,8 @@
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;
         }
         .stat-card {
-            background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.03);
+            background: var(--tint-2); padding: 12px; border-radius: 12px;
+            border: 1px solid var(--line);
         }
         .stat-card.grass { border-color: var(--color-grass); }
         .stat-card.rabbit { border-color: var(--color-rabbit); }
@@ -83,8 +86,8 @@
         /* Realtime population chart mini-canvas */
         .chart-container {
             height: 80px; width: 100%;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.05);
+            background: var(--surface);
+            border: 1px solid var(--line);
             border-radius: 10px;
             overflow: hidden;
         }
@@ -95,7 +98,7 @@
         }
         .btn-control {
             flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);
-            background: rgba(255,255,255,0.05); color: white; font-weight: 800;
+            background: var(--tint-1); color: var(--text); font-weight: 800;
             display: flex; align-items: center; justify-content: center; gap: 8px;
             cursor: pointer; transition: all 0.2s;
         }
@@ -108,7 +111,7 @@
 
     canvas{touch-action:manipulation}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -120,24 +123,24 @@
 
     <div class="simulation-container">
         <!-- Grid Canvas -->
-        <canvas class="grid-canvas" id="grid-canvas"></canvas>
+        <canvas class="stage grid-canvas" id="grid-canvas"></canvas>
 
         <!-- Stats -->
         <div class="ecosystem-stats">
             <div class="stat-card grass">
-                <div class="stat-num" id="count-grass" style="color: var(--color-grass);">0</div>
+                <div class="stat-num" id="count-grass" style="color: var(--color-grass-ink);">0</div>
                 <div class="stat-lbl">풀 (Grass)</div>
-                <button class="btn-add" style="background: var(--color-grass); margin-top:5px;" onclick="spawnEntity('grass', 30)">+30</button>
+                <button class="btn-add" style="background: var(--color-grass); margin-top:5px; color: var(--text);" onclick="spawnEntity('grass', 30)">+30</button>
             </div>
             <div class="stat-card rabbit">
-                <div class="stat-num" id="count-rabbit" style="color: var(--color-rabbit);">0</div>
+                <div class="stat-num" id="count-rabbit" style="color: var(--color-rabbit-ink);">0</div>
                 <div class="stat-lbl">토끼 (Rabbit)</div>
-                <button class="btn-add" style="background: var(--color-rabbit); margin-top:5px;" onclick="spawnEntity('rabbit', 10)">+10</button>
+                <button class="btn-add" style="background: var(--color-rabbit); margin-top:5px; color: var(--text);" onclick="spawnEntity('rabbit', 10)">+10</button>
             </div>
             <div class="stat-card fox">
-                <div class="stat-num" id="count-fox" style="color: var(--color-fox);">0</div>
+                <div class="stat-num" id="count-fox" style="color: var(--color-fox-ink);">0</div>
                 <div class="stat-lbl">여우 (Fox)</div>
-                <button class="btn-add" style="background: var(--color-fox); margin-top:5px;" onclick="spawnEntity('fox', 5)">+5</button>
+                <button class="btn-add" style="background: var(--color-fox); margin-top:5px; color: var(--text);" onclick="spawnEntity('fox', 5)">+5</button>
             </div>
         </div>
 
@@ -147,7 +150,7 @@
             <span id="gen-count">세대: 0</span>
         </div>
         <div class="chart-container">
-            <canvas id="chart-canvas" style="width:100%; height:100%;"></canvas>
+            <canvas class="stage" id="chart-canvas" style="width:100%; height:100%;"></canvas>
         </div>
 
         <!-- Actions -->

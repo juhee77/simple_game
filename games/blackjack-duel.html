@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html data-stage lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>블랙잭 듀얼 - Blackjack Duel</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #072013; /* Deep Green Casino Felt */
-            --panel-bg: rgba(6, 36, 21, 0.6);
-            --border-color: rgba(16, 185, 129, 0.3);
-            --text-main: #ecfdf5;
-            --text-muted: #a7f3d0;
+            --bg-color: var(--bg); /* Deep Green Casino Felt */
+            --panel-bg: var(--surface);
+            --text-main: var(--text);
             --neon-gold: #f59e0b;
             --neon-red: #ef4444;
             --glass-glow: 0 0 15px rgba(16, 185, 129, 0.3);
@@ -43,7 +42,7 @@
         h1 { font-family: 'Pretendard', sans-serif; font-size: 1.6rem; letter-spacing: 1px; color: var(--neon-gold); text-shadow: 0 0 10px rgba(245, 158, 11, 0.4); }
 
         .btn-icon {
-            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text);
             width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
             transition: all 0.2s;
@@ -56,14 +55,14 @@
             background: var(--panel-bg); backdrop-filter: blur(15px);
             border: 2px solid var(--border-color); border-radius: 24px;
             padding: 20px; display: flex; flex-direction: column; gap: 20px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 0 40px rgba(16, 185, 129, 0.1);
+            box-shadow: 0 25px 50px rgba(20, 26, 42, 0.16), inset 0 0 40px rgba(16, 185, 129, 0.1);
             position: relative;
         }
 
         /* Player Areas */
         .player-row {
-            border: 1px solid rgba(255,255,255,0.05);
-            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--line);
+            background: var(--tint-2);
             border-radius: 16px;
             padding: 15px;
             display: flex; flex-direction: column; gap: 10px;
@@ -77,10 +76,10 @@
         .player-info {
             display: flex; justify-content: space-between; align-items: center;
         }
-        .player-name { font-weight: 800; font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .player-name { font-weight: 800; font-size: 1.1rem; color: var(--text); display: flex; align-items: center; gap: 8px; }
         .player-chips { font-weight: 600; color: var(--neon-gold); }
         .score-badge {
-            background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;
+            background: var(--tint-1); padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;
         }
 
         /* Cards list container */
@@ -93,11 +92,11 @@
         .card-view {
             width: 70px; height: 100px;
             background: white; border-radius: 8px;
-            border: 2px solid #fff;
+            border: 2px solid var(--line-strong);
             color: #000;
             display: flex; flex-direction: column; justify-content: space-between;
             padding: 8px; font-family: 'Pretendard', sans-serif; font-weight: 800;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(20, 26, 42, 0.1);
             position: relative;
             flex-shrink: 0;
             transition: transform 0.2s;
@@ -105,12 +104,12 @@
         .card-view.red { color: var(--neon-red); }
         .card-view.face-down {
             background: radial-gradient(circle, #ef4444 0%, #7f1d1d 100%);
-            border: 2px solid white;
+            border: 2px solid var(--line-strong);
             color: transparent;
         }
         .card-view.face-down::after {
             content: "♣";
-            font-size: 2rem; color: rgba(255,255,255,0.15);
+            font-size: 2rem; color: var(--text);
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
         .card-suit { font-size: 1.3rem; align-self: flex-end; }
@@ -118,8 +117,8 @@
         /* Betting / Round indicator */
         .center-pot {
             display: flex; justify-content: space-around; align-items: center;
-            background: rgba(0,0,0,0.4); border-radius: 12px; padding: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
+            background: var(--surface); border-radius: 12px; padding: 12px;
+            border: 1px solid var(--line);
         }
         .pot-label { text-align: center; }
         .pot-val { font-size: 1.3rem; font-weight: 800; color: var(--neon-gold); }
@@ -134,8 +133,8 @@
             transition: all 0.2s; text-align: center;
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn-casino.hit { background: linear-gradient(135deg, #10b981, #047857); color: white; }
-        .btn-casino.stand { background: linear-gradient(135deg, #6b7280, #374151); color: white; }
+        .btn-casino.hit { background: linear-gradient(135deg, #10b981, #047857); color: var(--text); }
+        .btn-casino.stand { background: linear-gradient(135deg, var(--surface-3), var(--surface-3)); color: var(--text); }
         .btn-casino:hover { transform: translateY(-2px); }
         .btn-casino:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
 
@@ -147,25 +146,25 @@
             background: var(--panel-bg); border: 2px dashed var(--neon-gold);
             border-radius: 50%; width: 70px; height: 70px; margin: 0 auto;
             color: var(--neon-gold); font-weight: 800; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(20, 26, 42, 0.1);
         }
         .btn-chip:hover { transform: scale(1.1) rotate(15deg); }
 
         /* Overlay */
         .overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(7, 32, 19, 0.95); backdrop-filter: blur(10px);
+            background: var(--veil); backdrop-filter: blur(10px);
             display: none; align-items: center; justify-content: center; z-index: 1000;
         }
         .overlay.active { display: flex; }
         .modal {
             background: var(--panel-bg); border: 2px solid var(--border-color);
             padding: 30px; border-radius: 20px; width: 85%; max-width: 400px;
-            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            text-align: center; box-shadow: 0 20px 50px rgba(20, 26, 42, 0.16);
             display: flex; flex-direction: column; gap: 15px;
         }
         .modal h2 { font-size: 2rem; color: var(--neon-gold); text-shadow: 0 0 10px rgba(245,158,11,0.4); }
-        .modal p.winner-desc { font-size: 1.2rem; font-weight: bold; margin: 10px 0; color: #fff; }
+        .modal p.winner-desc { font-size: 1.2rem; font-weight: bold; margin: 10px 0; color: var(--text); }
         .btn-main {
             background: var(--neon-gold); color: #000; border: none;
             padding: 12px 35px; border-radius: 50px; font-weight: 800;
@@ -174,7 +173,7 @@
         .btn-main:hover { transform: scale(1.05); }
 
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -193,7 +192,7 @@
             </div>
             <div class="pot-label">
                 <span style="font-size: 0.8rem; color: var(--text-muted);">라운드</span><br>
-                <span class="pot-val" id="round-indicator" style="color:#fff;">ROUND 1</span>
+                <span class="pot-val" id="round-indicator" style="color:var(--text);">ROUND 1</span>
             </div>
         </div>
 

@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>사진 메타데이터 & 포렌식 인스펙터 | 미니게임 천국</title>
   <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-  <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+  <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+  <script src="../scripts/game-common.js?v=efdc1560"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
   <!-- Leaflet for Real GPS Map -->
@@ -18,18 +19,19 @@
 
   <style>
     :root {
-      --bg: #07090e;
-      --card-bg: rgba(15, 23, 42, 0.8);
-      --card-border: rgba(255, 255, 255, 0.08);
+      /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+      --cyan-ink: #0e6b7b;
+      --card-bg: var(--surface);
+      --card-border: var(--tint-2);
       --card-border-focus: rgba(6, 182, 212, 0.4);
       --cyan: #06b6d4;
-      --cyan-glow: rgba(6, 182, 212, 0.25);
+      --cyan-glow: rgba(6, 182, 212, 0.11);
       --green: #10b981;
       --purple: #6366f1;
-      --pink: #ec4899;
+      --pink: #be1569;
       --yellow: #f59e0b;
-      --text-main: #f8fafc;
-      --text-dim: #94a3b8;
+      --text-main: var(--text);
+      --text-dim: var(--muted);
       --radius-xl: 20px;
       --radius-lg: 14px;
       --radius-md: 10px;
@@ -38,7 +40,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: radial-gradient(circle at 50% 0%, #111a2e 0%, #07090e 100%);
+      background: radial-gradient(circle at 50% 0%, var(--bg) 0%, var(--bg) 100%);
       color: var(--text-main);
       font-family: 'Pretendard', sans-serif;
       min-height: 100vh;
@@ -73,9 +75,9 @@
     }
 
     .back-btn {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--tint-1);
       border: 1px solid var(--card-border);
-      color: var(--cyan);
+      color: var(--cyan-ink);
       font-size: 20px;
       cursor: pointer;
       text-decoration: none;
@@ -98,7 +100,7 @@
       font-size: 22px;
       font-weight: 800;
       letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 50%, #10b981 100%);
+      background: linear-gradient(135deg, #1691c8 0%, #1393a9 50%, #11996c 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -116,7 +118,7 @@
       -webkit-backdrop-filter: blur(24px);
       border-radius: var(--radius-xl);
       padding: 24px;
-      box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 20px 45px -12px rgba(20, 26, 42, 0.16);
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -141,7 +143,7 @@
       border-color: var(--cyan);
       background: rgba(6, 182, 212, 0.08);
       transform: translateY(-2px);
-      box-shadow: 0 12px 28px -10px rgba(6, 182, 212, 0.3);
+      box-shadow: 0 12px 28px -10px rgba(6, 182, 212, 0.14);
     }
 
     .drop-icon-wrapper {
@@ -156,7 +158,7 @@
       border: 1px solid rgba(6, 182, 212, 0.35);
     }
 
-    .drop-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+    .drop-title { font-size: 16px; font-weight: 700; color: var(--text); }
     .drop-sub { font-size: 13px; color: var(--text-dim); }
 
     .demo-pill-btn {
@@ -168,7 +170,7 @@
       background: rgba(6, 182, 212, 0.1);
       border: 1px solid rgba(6, 182, 212, 0.35);
       border-radius: 20px;
-      color: #38bdf8;
+      color: #106991;
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
@@ -189,7 +191,7 @@
       flex-wrap: wrap;
       gap: 12px;
       padding: 12px 16px;
-      background: rgba(0, 0, 0, 0.35);
+      background: var(--surface);
       border: 1px solid var(--card-border);
       border-radius: var(--radius-lg);
     }
@@ -215,19 +217,19 @@
       border-radius: 8px;
       font-size: 12px;
       font-weight: 600;
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--tint-1);
       border: 1px solid var(--card-border);
       color: var(--text-dim);
       cursor: pointer;
       transition: all 0.2s;
     }
 
-    .sort-pill:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .sort-pill:hover { background: var(--tint-2); color: var(--text); }
 
     .sort-pill.active {
       background: rgba(6, 182, 212, 0.2);
       border-color: var(--cyan);
-      color: #38bdf8;
+      color: #106991;
       font-weight: 700;
     }
 
@@ -248,7 +250,7 @@
     .thumb-card {
       min-width: 130px;
       max-width: 130px;
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--tint-1);
       border: 1.5px solid var(--card-border);
       border-radius: var(--radius-md);
       padding: 8px;
@@ -285,7 +287,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      color: #f1f5f9;
+      color: var(--text);
     }
 
     .thumb-time-badge {
@@ -317,7 +319,7 @@
     #inspectorMap {
       width: 100%;
       height: 100%;
-      background: #090e17;
+      background: var(--surface);
     }
 
     /* Main Inspection Split Grid */
@@ -343,13 +345,13 @@
       width: 100%;
       border-radius: var(--radius-lg);
       overflow: hidden;
-      background: #000;
+      background: var(--surface);
       border: 1px solid var(--card-border);
       display: flex;
       align-items: center;
       justify-content: center;
       max-height: 420px;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 15px 35px rgba(20, 26, 42, 0.16);
     }
 
     .photo-display-frame img {
@@ -372,13 +374,13 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.5);
+      box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.23);
       transition: all 0.2s;
     }
 
     .btn-clean-download:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 25px -6px rgba(6, 182, 212, 0.6);
+      box-shadow: 0 12px 25px -6px rgba(6, 182, 212, 0.27);
     }
 
     /* Right Metadata Details Panels */
@@ -389,7 +391,7 @@
     }
 
     .meta-group-box {
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--tint-2);
       border: 1px solid var(--card-border);
       border-radius: var(--radius-lg);
       padding: 18px;
@@ -401,7 +403,7 @@
     .group-title {
       font-size: 14px;
       font-weight: 800;
-      color: #e2e8f0;
+      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -418,9 +420,9 @@
       flex-direction: column;
       gap: 3px;
       padding: 8px 10px;
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--tint-1);
       border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line);
     }
 
     .meta-label {
@@ -434,7 +436,7 @@
     .meta-val {
       font-size: 13.5px;
       font-weight: 700;
-      color: #f1f5f9;
+      color: var(--text);
       font-family: 'JetBrains Mono', monospace;
       word-break: break-all;
     }
@@ -442,7 +444,7 @@
     .copy-pill-btn {
       background: rgba(6, 182, 212, 0.1);
       border: 1px solid rgba(6, 182, 212, 0.3);
-      color: var(--cyan);
+      color: var(--cyan-ink);
       font-size: 10px;
       font-weight: 700;
       padding: 3px 8px;
@@ -515,15 +517,15 @@
       border: 2.5px solid #06b6d4;
       background-size: cover;
       background-position: center;
-      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.5);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.23);
     }
 
     .inspector-pin-badge {
       position: absolute;
       bottom: -6px;
-      background: #0f172a;
+      background: var(--surface);
       border: 1px solid #06b6d4;
-      color: #fff;
+      color: var(--text);
       font-size: 10px;
       font-weight: 800;
       padding: 0 5px;
@@ -531,12 +533,12 @@
     }
     /* 지도 출처 표기: 어두운 화면에 맞추고 작게 */
     .leaflet-container .leaflet-control-attribution {
-      background: rgba(8, 12, 24, 0.65);
-      color: #cbd5e1;
+      background: var(--surface);
+      color: var(--text-2);
       font-size: 10px;
       line-height: 1.4;
     }
-    .leaflet-container .leaflet-control-attribution a { color: #7dd3fc; }
+    .leaflet-container .leaflet-control-attribution a { color: #106893; }
     @media (max-width: 520px) {
       .leaflet-container .leaflet-control-attribution { font-size: 9px; }
     }
@@ -578,7 +580,7 @@
           <button class="sort-pill" onclick="sortPhotos('gps-first', this)">📍 GPS 있는 사진 우선</button>
           <button class="sort-pill" onclick="sortPhotos('name', this)">🏷️ 파일명순</button>
         </div>
-        <div style="font-size: 12px; color: var(--cyan); font-weight: 700;" id="photoTotalCount">
+        <div style="font-size: 12px; color: var(--cyan-ink); font-weight: 700;" id="photoTotalCount">
           총 0장의 사진 분석됨
         </div>
       </div>

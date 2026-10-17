@@ -4,33 +4,34 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>단어 연상 릴레이 - 미니게임 천국</title>
 <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-<link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+<link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+<link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Pretendard',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);font-family:'Pretendard',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
 .back{position:absolute;top:20px;left:20px;z-index:10}
-h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#11996c,#1393a9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .chain{width:90%;max-width:500px;margin:20px 0;display:flex;flex-direction:column;gap:12px;max-height:50vh;overflow-y:auto;padding:10px}
 .word-bubble{padding:12px 24px;border-radius:20px;font-size:1.2rem;font-weight:700;display:inline-block;max-width:80%;animation:fadeIn .3s}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .input-area{display:flex;gap:10px;width:90%;max-width:500px;margin:15px 0}
-.input-area input{flex:1;padding:14px 20px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.15);border-radius:50px;color:#fff;font-size:1.1rem;font-family:inherit;outline:none}
+.input-area input{flex:1;padding:14px 20px;background:var(--tint-1);border:2px solid var(--line);border-radius:50px;color:var(--text);font-size:1.1rem;font-family:inherit;outline:none}
 .input-area input:focus{border-color:#10b981}
-.input-area button{background:linear-gradient(135deg,#10b981,#06b6d4);border:none;color:#fff;padding:14px 24px;border-radius:50px;font-weight:700;cursor:pointer;font-family:inherit;font-size:1rem}
-.player-label{font-size:1.3rem;font-weight:700;color:#2dd4bf}
-.btn{background:linear-gradient(135deg,#10b981,#06b6d4);border:none;color:#fff;padding:14px 40px;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
+.input-area button{background:linear-gradient(135deg,#10b981,#06b6d4);border:none;color:var(--text);padding:14px 24px;border-radius:50px;font-weight:700;cursor:pointer;font-family:inherit;font-size:1rem}
+.player-label{font-size:1.3rem;font-weight:700;color:#166b61}
+.btn{background:linear-gradient(135deg,#10b981,#06b6d4);border:none;color:var(--text);padding:14px 40px;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
 .result{display:none;width:90%;max-width:500px;text-align:center}
 .result h2{font-size:2rem;margin:20px 0}
 .full-chain{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px 0}
-.full-chain span{padding:8px 16px;border-radius:16px;background:rgba(255,255,255,.05);font-weight:600}
+.full-chain span{padding:8px 16px;border-radius:16px;background:var(--tint-1);font-weight:600}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
 <h1>💬 단어 연상 릴레이</h1>
 <div class="setup" id="setup">
-<p style="color:#94a3b8;margin:20px 0">몇 명이서 하나요? 순서대로 폰을 넘기며 진행합니다.</p>
-<input id="player-count" type="number" min="2" max="12" value="4" style="width:120px;padding:14px;text-align:center;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.15);border-radius:16px;color:#fff;font-size:1.2rem;font-family:inherit;outline:none">
+<p style="color:var(--muted);margin:20px 0">몇 명이서 하나요? 순서대로 폰을 넘기며 진행합니다.</p>
+<input id="player-count" type="number" min="2" max="12" value="4" style="width:120px;padding:14px;text-align:center;background:var(--tint-1);border:2px solid var(--line);border-radius:16px;color:var(--text);font-size:1.2rem;font-family:inherit;outline:none">
 <div><button class="btn" onclick="startGame()">시작하기</button></div>
 </div>
 <div class="player-label" id="player-label" style="display:none">플레이어 1</div>
@@ -43,7 +44,7 @@ h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#10b981,
 <div class="result" id="result">
 <h2>📝 전체 연상 흐름</h2>
 <div class="full-chain" id="full-chain"></div>
-<p style="color:#94a3b8;margin:15px 0" id="stats"></p>
+<p style="color:var(--muted);margin:15px 0" id="stats"></p>
 <button class="btn" onclick="location.reload()">다시 하기</button>
 </div>
 <script>

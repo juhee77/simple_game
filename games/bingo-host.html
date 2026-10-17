@@ -4,29 +4,30 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>빙고 넘버 마스터 - 미니게임 천국</title>
 <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-<link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+<link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+<link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Pretendard',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);font-family:'Pretendard',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
 .back{position:absolute;top:20px;left:20px;z-index:10}
-h1{font-size:1.8rem;margin:40px 0 10px;background:linear-gradient(135deg,#f97316,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h1{font-size:1.8rem;margin:40px 0 10px;background:linear-gradient(135deg,#d86718,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .tabs{display:flex;gap:10px;margin:15px 0}
-.tab{padding:10px 24px;border-radius:30px;cursor:pointer;font-weight:600;border:2px solid rgba(255,255,255,.1);background:none;color:#94a3b8;transition:all .3s}
-.tab.active{background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;border-color:transparent}
+.tab{padding:10px 24px;border-radius:30px;cursor:pointer;font-weight:600;border:2px solid var(--line);background:none;color:var(--muted);transition:all .3s}
+.tab.active{background:linear-gradient(135deg,#f97316,#ef4444);color:var(--text);border-color:transparent}
 .panel{display:none;width:90%;max-width:500px}
 .panel.active{display:block}
-.called-num{font-size:6rem;font-weight:900;text-align:center;text-shadow:0 0 40px rgba(249,115,22,.5);margin:20px 0}
+.called-num{font-size:6rem;font-weight:900;text-align:center;text-shadow:0 0 40px rgba(249, 115, 22, 0.23);margin:20px 0}
 .called-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:15px 0}
 .called-tag{padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:600}
-.called-tag.active{background:rgba(249,115,22,.3);color:#f97316}
-.called-tag.used{background:rgba(255,255,255,.05);color:#64748b}
-.btn{background:linear-gradient(135deg,#f97316,#ef4444);border:none;color:#fff;padding:16px 50px;font-size:1.3rem;font-weight:700;border-radius:50px;cursor:pointer;margin:15px;display:block;margin-left:auto;margin-right:auto}
+.called-tag.active{background:rgba(249,115,22,.3);color:#9d4a11}
+.called-tag.used{background:var(--tint-1);color:var(--muted)}
+.btn{background:linear-gradient(135deg,#f97316,#ef4444);border:none;color:var(--text);padding:16px 50px;font-size:1.3rem;font-weight:700;border-radius:50px;cursor:pointer;margin:15px;display:block;margin-left:auto;margin-right:auto}
 .bingo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:20px 0}
-.bingo-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:12px;font-size:1.4rem;font-weight:700;cursor:pointer;transition:all .3s}
+.bingo-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--tint-1);border:2px solid var(--line);border-radius:12px;font-size:1.4rem;font-weight:700;cursor:pointer;transition:all .3s}
 .bingo-cell.marked{background:linear-gradient(135deg,rgba(249,115,22,.4),rgba(239,68,68,.4));border-color:#f97316}
-.bingo-cell.free{background:rgba(249,115,22,.2);border-color:#f97316;color:#f97316}
-.bingo-count{text-align:center;font-size:1.5rem;font-weight:800;color:#f97316;margin:10px 0}
+.bingo-cell.free{background:rgba(249,115,22,.2);border-color:#f97316;color:#9d4a11}
+.bingo-count{text-align:center;font-size:1.5rem;font-weight:800;color:#9d4a11;margin:10px 0}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
@@ -38,13 +39,13 @@ h1{font-size:1.8rem;margin:40px 0 10px;background:linear-gradient(135deg,#f97316
 <div class="panel active" id="host-panel">
 <div class="called-num" id="called-num">?</div>
 <button class="btn" id="draw-btn" onclick="drawNumber()">번호 뽑기!</button>
-<p style="text-align:center;color:#94a3b8;margin:10px 0">뽑힌 번호 목록</p>
+<p style="text-align:center;color:var(--muted);margin:10px 0">뽑힌 번호 목록</p>
 <div class="called-list" id="called-list"></div>
 </div>
 <div class="panel" id="player-panel">
 <div class="bingo-count">빙고: <span id="bingo-count">0</span>줄</div>
 <div class="bingo-grid" id="bingo-grid"></div>
-<button class="btn" onclick="generateBoard()" style="background:rgba(255,255,255,.1)">새 빙고판</button>
+<button class="btn" onclick="generateBoard()" style="background:var(--tint-2); color: var(--text)">새 빙고판</button>
 </div>
 <script>
 // sort(()=>Math.random()-.5)는 균등 분포가 아니므로 Fisher-Yates로 섞는다

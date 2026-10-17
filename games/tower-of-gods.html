@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>신들의 탑 - Tower of Gods</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <!-- Fonts -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Marked.js for Markdown parsing -->
@@ -12,10 +13,11 @@
 
     <style>
         :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --p1-color-ink: #c21616;
+            --bg-color: var(--bg);
+            --panel-bg: var(--surface-2);
+            --text-main: var(--text);
             --p1-color: #ef4444; /* Red */
             --p2-color: #eab308; /* Yellow */
             --highlight-move: rgba(74, 222, 128, 0.5);
@@ -29,7 +31,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
 
         body {
-            background: linear-gradient(135deg, #0f172a, #1e1b4b, #312e81, #0f172a);
+            background: linear-gradient(135deg, var(--bg), #1e1b4b, #312e81, var(--bg));
             background-size: 300% 300%;
             animation: bgShift 15s ease infinite;
             color: var(--text-main);
@@ -51,31 +53,31 @@
         header {
             width: 100%; max-width: 800px; padding: 20px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+            border-bottom: 1px solid var(--line); margin-bottom: 20px;
             z-index: 100; /* Above 3D scene */
         }
         h1 { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
 
         .header-actions { display: flex; gap: 15px; }
         .icon-btn {
-            background: rgba(255, 255, 255, 0.1); border: none; color: white;
+            background: var(--tint-2); border: none; color: var(--text);
             width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
             font-size: 1.2rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
         }
-        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+        .icon-btn:hover { background: var(--tint-3); transform: scale(1.05); color: var(--text); }
 
         /* Status Bar */
         .status-bar {
             width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center;
             background: var(--panel-bg); padding: 15px 20px; border-radius: var(--border-radius);
-            margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); z-index: 100;
+            margin-bottom: 20px; box-shadow: 0 4px 6px rgba(20, 26, 42, 0.1); z-index: 100;
         }
 
         .status-badge {
             padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 1.1rem;
             display: flex; align-items: center; gap: 8px;
         }
-        .status-badge.p1 { background: rgba(239, 68, 68, 0.2); color: var(--p1-color); border: 1px solid var(--p1-color); }
+        .status-badge.p1 { background: rgba(239, 68, 68, 0.2); color: var(--p1-color-ink); border: 1px solid var(--p1-color); }
         .status-badge.p2 { background: rgba(234, 179, 8, 0.2); color: var(--p2-color); border: 1px solid var(--p2-color); }
 
         .game-phase { font-size: 1.2rem; font-weight: 600; color: var(--text-muted); }
@@ -101,24 +103,24 @@
             gap: 4px;
             transition: transform 0.5s ease;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--tint-1);
             backdrop-filter: blur(15px);
-            border: 2px solid rgba(255, 255, 255, 0.15);
+            border: 2px solid var(--line);
             border-radius: 16px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,255,255,0.05);
+            box-shadow: 0 30px 60px rgba(20, 26, 42, 0.16), inset 0 0 30px rgba(20, 26, 42, 0.02);
         }
 
         .cell {
             width: 70px; height: 70px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--tint-2);
             backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--line);
             border-radius: 6px;
             position: relative;
             transform-style: preserve-3d;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1), 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 10px rgba(20, 26, 42, 0.03), 0 2px 5px rgba(20, 26, 42, 0.07);
         }
 
         /* Hover / Highlight effects */
@@ -146,8 +148,8 @@
             position: absolute;
             background: rgba(241, 245, 249, 0.85);
             backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.2), inset 2px 2px 6px rgba(255,255,255,0.8), 0 5px 15px rgba(0,0,0,0.4);
+            border: 1px solid var(--line-strong);
+            box-shadow: inset -2px -2px 6px rgba(20, 26, 42, 0.07), inset 2px 2px 6px rgba(20, 26, 42, 0.1), 0 5px 15px rgba(20, 26, 42, 0.14);
             transform-style: preserve-3d;
             pointer-events: none; /* Let clicks pass to the cell */
         }
@@ -162,7 +164,8 @@
             transform: translateZ(80px);
             border-radius: 50%;
             pointer-events: none;
-            box-shadow: 0 5px 15px rgba(56, 189, 248, 0.5), inset -2px -2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 15px rgba(56, 189, 248, 0.23), inset -2px -2px 6px rgba(20, 26, 42, 0.1);
+            color: var(--text);
         }
 
         /* Workers */
@@ -175,20 +178,20 @@
             transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg);
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
             pointer-events: none;
-            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.5), inset 2px 2px 5px rgba(255,255,255,0.4);
+            box-shadow: inset -2px -2px 5px rgba(20, 26, 42, 0.16), inset 2px 2px 5px rgba(20, 26, 42, 0.1);
             z-index: 10;
         }
 
-        .worker.p1 { background: linear-gradient(135deg, #fca5a5, #dc2626); border: 1px solid #991b1b; }
-        .worker.p2 { background: linear-gradient(135deg, #fef08a, #ca8a04); border: 1px solid #854d0e; }
+        .worker.p1 { background: linear-gradient(135deg, #fca5a5, #dc2626); border: 1px solid #991b1b; color: var(--text); }
+        .worker.p2 { background: linear-gradient(135deg, #fef08a, #ca8a04); border: 1px solid #854d0e; color: var(--text); }
         .worker.selected {
-            box-shadow: 0 0 20px 8px rgba(255, 255, 255, 0.6), inset -2px -2px 5px rgba(0,0,0,0.5);
+            box-shadow: 0 0 20px 8px rgba(20, 26, 42, 0.1), inset -2px -2px 5px rgba(20, 26, 42, 0.16);
         }
 
         /* Modal */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+            background: var(--veil); backdrop-filter: blur(4px);
             display: flex; align-items: center; justify-content: center;
             z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
@@ -200,29 +203,29 @@
         }
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .close-modal {
-            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1);
-            border: none; color: white; width: 32px; height: 32px; border-radius: 50%;
+            position: absolute; top: 20px; right: 20px; background: var(--tint-2);
+            border: none; color: var(--text); width: 32px; height: 32px; border-radius: 50%;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .close-modal:hover { background: rgba(255,255,255,0.2); }
+        .close-modal:hover { background: var(--tint-3); }
 
         /* Markdown Styles */
         .markdown-body { color: var(--text-main); line-height: 1.6; }
-        .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 24px; margin-bottom: 16px; }
+        .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-top: 24px; margin-bottom: 16px; }
         .markdown-body p { margin-bottom: 16px; }
         .markdown-body ul { margin-bottom: 16px; padding-left: 20px; }
 
         /* Game Over Msg */
         .game-over-msg {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
-            background: rgba(15, 23, 42, 0.95); padding: 40px; border-radius: 20px;
+            background: var(--surface); padding: 40px; border-radius: 20px;
             text-align: center; border: 2px solid; z-index: 100; opacity: 0; pointer-events: none;
             transition: all 0.3s ease;
         }
         .game-over-msg.active { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
         .game-over-msg h2 { font-size: 2.5rem; margin-bottom: 15px; }
-        .game-over-msg.win { border-color: var(--accent-green); color: #4ade80; }
-        .btn-primary { background: var(--accent-blue); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; }
+        .game-over-msg.win { border-color: var(--accent-green); color: #147036; }
+        .btn-primary { background: var(--accent-blue); color: var(--text); padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; }
 
         /* Help Text */
         .help-text {
@@ -230,7 +233,7 @@
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
+            background: var(--surface);
             padding: 10px 20px;
             border-radius: 30px;
             font-size: 1rem;
@@ -251,7 +254,7 @@
             .board { transform: scale(0.5) rotateX(60deg) rotateZ(-45deg); }
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -292,7 +295,7 @@
     <!-- Game Over Overlay -->
     <div class="game-over-msg" id="game-over-msg">
         <h2 id="go-title">승리!</h2>
-        <p id="go-desc" style="color: white; margin-bottom: 20px;">신계의 지배자가 되었습니다.</p>
+        <p id="go-desc" style="color: var(--text); margin-bottom: 20px;">신계의 지배자가 되었습니다.</p>
         <button class="btn-primary" onclick="initGame()">다시 플레이</button>
     </div>
 

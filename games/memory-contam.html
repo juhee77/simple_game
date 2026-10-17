@@ -6,22 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>기억 오염 실험 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         * { box-sizing: border-box; }
         body {
             background:
                 radial-gradient(circle at top left, rgba(168, 85, 247, 0.18), transparent 28%),
                 radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.18), transparent 32%),
-                #0f172a;
+                var(--bg);
             min-height: 100vh;
         }
         .game-container { max-width: 960px; padding-top: 1.5rem; }
         .screen { display: none; }
         .screen.active { display: block; }
         .panel {
-            background: rgba(15, 23, 42, 0.78);
-            border: 1px solid rgba(148, 163, 184, 0.16);
+            background: var(--surface);
+            border: 1px solid var(--line);
             border-radius: 26px;
             padding: 1.4rem;
             backdrop-filter: blur(16px);
@@ -43,8 +44,8 @@
             width: 100%;
             padding: 0.95rem 1rem;
             border-radius: 14px;
-            border: 1px solid rgba(148, 163, 184, 0.22);
-            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--line);
+            background: var(--surface);
             color: var(--text-primary);
             font: inherit;
         }
@@ -65,7 +66,7 @@
             border-radius: 999px;
             font-weight: 800;
             background: rgba(168, 85, 247, 0.14);
-            color: #ddd6fe;
+            color: var(--text);
         }
         .pass-card, .memory-card, .peek-card, .rewrite-card, .result-card, .final-card { text-align: center; }
         .player-name {
@@ -77,8 +78,8 @@
             margin-top: 1rem;
             padding: 1rem 1.1rem;
             border-radius: 20px;
-            background: rgba(15, 23, 42, 0.84);
-            border: 1px solid rgba(148, 163, 184, 0.16);
+            background: var(--surface);
+            border: 1px solid var(--line);
         }
         .scene-title, .history-title, .result-subtitle {
             color: var(--text-secondary);
@@ -99,12 +100,13 @@
             display: grid;
             place-items: center;
             background:
-                radial-gradient(circle, rgba(15, 23, 42, 0.95) 55%, transparent 56%),
-                conic-gradient(#a855f7 calc(var(--progress) * 1%), rgba(148, 163, 184, 0.16) 0);
-            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
+                radial-gradient(circle, var(--surface) 55%, transparent 56%),
+                conic-gradient(#a855f7 calc(var(--progress) * 1%), var(--tint-3) 0);
+            box-shadow: inset 0 0 0 1px rgba(20, 26, 42, 0.04);
+            color: var(--text);
         }
         .timer-seconds { font-size: clamp(2rem, 9vw, 3.4rem); font-weight: 900; line-height: 1; }
-        .timer-caption { color: var(--text-secondary); margin-top: 0.45rem; }
+        .timer-caption { color: var(--text); margin-top: 0.45rem; }
         .split-grid, .score-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -114,8 +116,8 @@
         .score-box {
             padding: 1rem;
             border-radius: 18px;
-            background: rgba(15, 23, 42, 0.82);
-            border: 1px solid rgba(148, 163, 184, 0.14);
+            background: var(--surface);
+            border: 1px solid var(--line);
         }
         .score-label { color: var(--text-secondary); margin-bottom: 0.35rem; }
         .score-value { font-size: 1.5rem; font-weight: 900; }
@@ -128,8 +130,8 @@
         .history-row {
             padding: 0.95rem 1rem;
             border-radius: 16px;
-            background: rgba(15, 23, 42, 0.76);
-            border: 1px solid rgba(148, 163, 184, 0.12);
+            background: var(--surface);
+            border: 1px solid var(--line);
         }
         .history-top {
             display: flex;
@@ -145,7 +147,7 @@
             .panel { padding: 1.1rem; }
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>

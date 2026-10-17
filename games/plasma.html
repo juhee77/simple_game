@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>플라즈마 드리프트 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .plasma-layout {
             display: grid;
@@ -53,7 +54,7 @@
             visibility: hidden;
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>
@@ -86,7 +87,7 @@
         <div class="game-board">
             <div class="plasma-layout">
                 <div class="canvas-shell">
-                    <canvas id="plasma-canvas" width="720" height="420"></canvas>
+                    <canvas class="stage" id="plasma-canvas" width="720" height="420"></canvas>
                 </div>
                 <div class="help-text" id="status-text">방향키, WASD, 터치 패드로 이동할 수 있습니다.</div>
                 <div class="direction-pad">

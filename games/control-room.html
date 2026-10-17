@@ -6,26 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관제실 탈출 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #060d16;
-            --panel: rgba(255, 255, 255, .05);
-            --border: rgba(56, 189, 248, .22);
-            --text: #e2f2ff;
-            --muted: #7d99b4;
-            --ok: #4ade80;
-            --warn: #fbbf24;
-            --bad: #f87171;
             --accent: #38bdf8;
+            --accent-ink: #106991;
+            --accent-soft: #e4f4fb;
+            --on-accent: #141a2a;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: radial-gradient(circle at 50% 0%, #0d1f33 0%, var(--bg) 65%);
+            background: radial-gradient(circle at 50% 0%, var(--bg) 0%, var(--bg) 65%);
             font-family: 'Pretendard', system-ui, sans-serif;
             color: var(--text);
             min-height: 100vh;
@@ -40,7 +36,7 @@
         h1 {
             font-size: 1.7rem;
             margin: 44px 0 4px;
-            background: linear-gradient(135deg, #38bdf8, #4ade80);
+            background: linear-gradient(135deg, #1691c8, #1c9b4b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -68,7 +64,7 @@
             padding: 14px;
             border-radius: 14px;
             border: 1px solid var(--border);
-            background: rgba(255, 255, 255, .05);
+            background: var(--tint-1);
             color: var(--text);
             font-family: inherit;
             font-size: 1.1rem;
@@ -117,7 +113,7 @@
         .station-name {
             font-size: 1.35rem;
             font-weight: 800;
-            color: var(--accent);
+            color: var(--accent-ink);
             text-align: center;
             margin-bottom: 4px;
         }
@@ -134,7 +130,7 @@
             line-height: 1.75;
         }
 
-        .manual strong { color: var(--accent); }
+        .manual strong { color: var(--accent-ink); }
         .manual ul { margin: 8px 0 0 18px; }
         .manual li { margin-bottom: 4px; }
 
@@ -145,7 +141,7 @@
             letter-spacing: .12em;
             padding: 16px;
             border-radius: 14px;
-            background: #04121d;
+            background: var(--surface);
             border: 1px solid var(--border);
             margin-bottom: 14px;
             word-break: break-all;
@@ -157,7 +153,7 @@
             padding: 16px;
             border-radius: 14px;
             border: 1px solid var(--border);
-            background: rgba(255, 255, 255, .05);
+            background: var(--tint-1);
             color: var(--text);
             font-family: 'Share Tech Mono', monospace;
             font-size: 1.25rem;
@@ -173,7 +169,7 @@
             padding: 14px 16px;
             border-radius: 14px;
             border: 1px solid var(--border);
-            background: rgba(255, 255, 255, .05);
+            background: var(--tint-1);
             color: var(--text);
             font-family: inherit;
             font-size: 1rem;
@@ -194,7 +190,7 @@
             width: 42px;
             height: 6px;
             border-radius: 3px;
-            background: rgba(255, 255, 255, .12);
+            background: var(--tint-2);
         }
 
         .pip.done { background: var(--ok); }

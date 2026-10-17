@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>할일 추천 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .mood-section {
             margin-bottom: 2rem;
@@ -44,6 +45,7 @@
         .mood-card.selected {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             border-color: var(--accent-primary);
+            color: #fff;
         }
 
         .mood-icon {
@@ -85,6 +87,7 @@
         .time-btn.selected {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             border-color: var(--accent-primary);
+            color: #fff;
         }
 
         .recommendation-card {
@@ -94,6 +97,7 @@
             text-align: center;
             margin: 2rem 0;
             display: none;
+            color: #fff;
         }
 
         .recommendation-card.show {
@@ -132,7 +136,7 @@
         }
 
         .rec-tips {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--tint-2);
             padding: 1.5rem;
             border-radius: 12px;
             margin-top: 1.5rem;
@@ -163,7 +167,7 @@
             font-weight: bold;
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>

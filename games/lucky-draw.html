@@ -6,18 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>네온 럭키 드로우 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --neon-secondary-ink: #be1569;
             --neon-primary: #8b5cf6;
             --neon-secondary: #ec4899;
-            --bg-dark: #0f172a;
+            --bg-dark: var(--bg);
         }
 
         body {
             margin: 0;
             background-color: var(--bg-dark);
-            color: white;
+            color: var(--text);
             font-family: 'Pretendard', sans-serif;
             overflow: hidden;
             display: flex;
@@ -41,14 +44,14 @@
             background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.14);
         }
 
         .input-area {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--tint-1);
             padding: 2rem;
             border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--line);
             backdrop-filter: blur(10px);
             margin-bottom: 2rem;
         }
@@ -56,10 +59,10 @@
         textarea {
             width: 100%;
             height: 150px;
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--tint-2);
             border: 1px solid rgba(139, 92, 246, 0.3);
             border-radius: 12px;
-            color: white;
+            color: var(--text);
             padding: 15px;
             font-family: inherit;
             font-size: 1rem;
@@ -75,21 +78,21 @@
         .draw-btn {
             background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
             border: none;
-            color: white;
+            color: var(--text);
             padding: 1rem 3rem;
             font-size: 1.25rem;
             font-weight: 700;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 20px rgba(20, 26, 42, 0.1);
             width: 100%;
             margin-bottom: 1rem;
         }
 
         .draw-btn:hover {
             transform: scale(1.05) translateY(-5px);
-            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.23);
         }
 
         .draw-btn:disabled {
@@ -101,7 +104,7 @@
         .slot-machine {
             height: 120px;
             overflow: hidden;
-            background: rgba(0, 0, 0, 0.5);
+            background: var(--surface);
             border-radius: 16px;
             border: 2px solid var(--neon-primary);
             display: none;
@@ -121,7 +124,7 @@
             font-weight: 800;
             height: 120px;
             line-height: 120px;
-            color: white;
+            color: var(--text);
             text-shadow: 0 0 10px var(--neon-primary);
         }
 
@@ -131,7 +134,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.95);
+            background: var(--veil);
             backdrop-filter: blur(20px);
             display: none;
             flex-direction: column;
@@ -142,7 +145,7 @@
 
         .result-title {
             font-size: 1.5rem;
-            color: var(--neon-secondary);
+            color: var(--neon-secondary-ink);
             margin-bottom: 1rem;
             letter-spacing: 2px;
         }
@@ -179,7 +182,7 @@
         }
     canvas{touch-action:manipulation}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>
@@ -190,7 +193,7 @@
         <h1 class="title">네온 럭키 드로우</h1>
         
         <div class="input-area" id="input-area">
-            <p style="margin-bottom: 10px; color: #94a3b8;">추첨할 명단을 입력하세요 (줄바꿈 구분)</p>
+            <p style="margin-bottom: 10px; color: var(--muted);">추첨할 명단을 입력하세요 (줄바꿈 구분)</p>
             <textarea id="name-input" placeholder="김철수&#10;이영희&#10;홍길동..."></textarea>
         </div>
 

@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>오목 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         #omok-board {
             display: grid;
@@ -22,7 +23,7 @@
 
         .cell {
             aspect-ratio: 1;
-            background: linear-gradient(135deg, #2a3150, #1f2540);
+            background: linear-gradient(135deg, var(--surface-2), var(--surface-2));
             border: 1px solid rgba(99, 102, 241, 0.3);
             border-radius: 4px;
             cursor: pointer;
@@ -35,7 +36,7 @@
         }
 
         .cell:hover:not(.occupied) {
-            background: linear-gradient(135deg, #3a4160, #2f3550);
+            background: linear-gradient(135deg, var(--surface-3), var(--surface-3));
             border-color: var(--accent-primary);
             transform: scale(1.05);
         }
@@ -51,7 +52,7 @@
 
         .cell.white {
             background: radial-gradient(circle, #ffffff, #e0e0e0);
-            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(20, 26, 42, 0.1);
         }
 
         .cell.winning {
@@ -95,7 +96,7 @@
             background: radial-gradient(circle, #ffffff, #e0e0e0);
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>

@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>사다리 타기 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .input-section {
             margin-bottom: 2rem;
@@ -59,6 +60,7 @@
         .add-btn:hover {
             border-color: var(--accent-primary);
             background: var(--bg-secondary);
+            color: var(--text);
         }
 
         .tags-container {
@@ -83,7 +85,7 @@
         #ladder-canvas {
             width: 100%;
             flex: 1;
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--stage-bg);
             border-radius: 12px;
         }
 
@@ -109,13 +111,15 @@
         .position-btn:hover {
             background: var(--bg-card);
             border-color: var(--accent-primary);
+            color: var(--text);
         }
 
         .position-btn.selected {
             background: var(--accent-primary);
             border-color: var(--accent-primary);
             transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.23);
+            color: #fff;
         }
 
         .result-display {
@@ -170,7 +174,7 @@
         }
     canvas{touch-action:manipulation}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>
@@ -208,7 +212,7 @@
 
             <div class="ladder-container" id="ladder-container">
                 <div class="start-positions" id="start-positions"></div>
-                <canvas id="ladder-canvas"></canvas>
+                <canvas class="stage" id="ladder-canvas"></canvas>
                 <div class="end-positions" id="end-positions"></div>
 
                 <div class="result-display" id="result-display">
@@ -626,7 +630,7 @@
             let summaryHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; text-align: left;">';
             completedPaths.sort((a, b) => a.startIndex - b.startIndex).forEach(p => {
                 summaryHtml += `
-                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.25rem;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 0.25rem;">
                         <span style="color: ${p.color}">${participants[p.startIndex]}</span>
                         <span>→</span>
                         <span style="font-weight: bold;">${results[p.finalIndex]}</span>

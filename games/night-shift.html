@@ -6,26 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>편의점 야간 알바 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
-            --bg: #0b1020;
-            --panel: rgba(255, 255, 255, .06);
-            --border: rgba(255, 255, 255, .14);
-            --text: #eef2ff;
-            --muted: #95a3c4;
             --accent: #5eead4;
-            --warn: #fbbf24;
-            --ok: #4ade80;
-            --bad: #f87171;
+            --accent-ink: #0e6e5f;
+            --accent-soft: #e4fbf8;
+            --on-accent: #141a2a;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             padding: 0;
-            background: radial-gradient(circle at 50% -10%, #16224a 0%, var(--bg) 60%);
+            background: radial-gradient(circle at 50% -10%, var(--bg) 0%, var(--bg) 60%);
             font-family: 'Pretendard', system-ui, sans-serif;
             color: var(--text);
             min-height: 100vh;
@@ -41,7 +37,7 @@
         h1 { font-size: 1.6rem; margin: 52px 0 2px; text-align: center; }
 
         h1 .grad {
-            background: linear-gradient(135deg, #5eead4, #818cf8);
+            background: linear-gradient(135deg, #149682, #707cef);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -62,7 +58,7 @@
         .hud div { flex: 1; text-align: center; min-width: 0; }
         .hud .label { display: block; font-size: .62rem; color: var(--muted); }
         .hud .value { font-size: .98rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        #hud-pay { color: var(--accent); }
+        #hud-pay { color: var(--accent-ink); }
         #hud-strike.hot { color: var(--bad); }
 
         .boss-bar {
@@ -76,7 +72,7 @@
             border: 1px solid rgba(129, 140, 248, .32);
             font-size: .76rem;
             font-weight: 700;
-            color: #c7d2fe;
+            color: #2b51e7;
         }
 
         .card {
@@ -118,7 +114,7 @@
             padding: 13px 15px;
             margin-bottom: 8px;
             border-radius: 14px;
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             border: 1px solid var(--border);
             color: var(--text);
             font-family: inherit;
@@ -139,7 +135,7 @@
             font-size: 2.3rem;
             font-weight: 800;
             letter-spacing: 1px;
-            background: linear-gradient(135deg, #5eead4, #818cf8);
+            background: linear-gradient(135deg, #149682, #707cef);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -150,12 +146,12 @@
         .bar {
             height: 6px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, .09);
+            background: var(--tint-2);
             overflow: hidden;
             margin-top: 8px;
         }
 
-        .bar i { display: block; height: 100%; background: linear-gradient(90deg, #5eead4, #818cf8); }
+        .bar i { display: block; height: 100%; background: linear-gradient(90deg, #5eead4, #818cf8); color: var(--text); }
 
         /* 상태 게이지 */
         .gauges { display: flex; gap: 8px; margin-bottom: 11px; }
@@ -164,7 +160,7 @@
             flex: 1;
             padding: 9px 10px;
             border-radius: 13px;
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             border: 1px solid var(--border);
             text-align: center;
         }
@@ -184,7 +180,7 @@
             padding: 11px 12px;
             margin-bottom: 7px;
             border-radius: 13px;
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             border: 1px solid var(--border);
         }
 
@@ -197,7 +193,7 @@
             width: 27px; height: 27px;
             border-radius: 8px;
             border: 1px solid var(--border);
-            background: rgba(255, 255, 255, .06);
+            background: var(--tint-1);
             color: var(--text);
             font-family: inherit; font-size: .9rem; font-weight: 700;
             cursor: pointer;
@@ -205,8 +201,8 @@
 
         .item-row .qty .v { width: 30px; text-align: center; font-weight: 800; font-size: .9rem; }
         .item-row .tag { font-size: .62rem; padding: 1px 6px; border-radius: 999px; margin-left: 5px; }
-        .tag-fresh { background: rgba(248, 113, 113, .2); color: #fca5a5; }
-        .tag-keep { background: rgba(94, 234, 212, .16); color: #5eead4; }
+        .tag-fresh { background: rgba(248, 113, 113, .2); color: #c41616; }
+        .tag-keep { background: rgba(94, 234, 212, .16); color: #0e6e5f; }
 
         /* 로그 */
         .log { max-height: 250px; overflow-y: auto; }
@@ -217,7 +213,7 @@
             padding: 8px 11px;
             margin-bottom: 5px;
             border-radius: 10px;
-            background: rgba(255, 255, 255, .035);
+            background: var(--tint-1);
             font-size: .82rem;
             line-height: 1.5;
         }
@@ -231,7 +227,7 @@
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, .07);
+            border-bottom: 1px solid var(--line);
             font-size: .9rem;
         }
 
@@ -241,7 +237,7 @@
         .stat-line .v.minus { color: var(--bad); }
 
         .ending { text-align: center; padding: 24px 18px; }
-        .ending .grade { font-size: 2.1rem; font-weight: 900; color: var(--accent); margin: 8px 0; }
+        .ending .grade { font-size: 2.1rem; font-weight: 900; color: var(--accent-ink); margin: 8px 0; }
 
         .boss-pick {
             display: block;
@@ -250,7 +246,7 @@
             padding: 15px;
             margin-bottom: 9px;
             border-radius: 15px;
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             border: 1px solid var(--border);
             color: var(--text);
             font-family: inherit;
@@ -259,7 +255,7 @@
 
         .boss-pick .bn { font-weight: 800; font-size: 1rem; margin-bottom: 3px; }
         .boss-pick .bd { font-size: .78rem; color: var(--muted); line-height: 1.6; }
-        .boss-pick .bw { font-size: .71rem; color: var(--accent); margin-top: 7px; }
+        .boss-pick .bw { font-size: .71rem; color: var(--accent-ink); margin-top: 7px; }
     </style>
 </head>
 
@@ -971,8 +967,7 @@
         function renderSlot() {
             const idx = state.slot;
             const H = HOURS[idx];
-            document.body.style.background =
-                `radial-gradient(circle at 50% -10%, ${NIGHT_TINT[idx]} 0%, var(--bg) 60%)`;
+            document.body.style.background = `radial-gradient(circle at 50% -10%, ${NIGHT_TINT[idx]} 0%, var(--bg) 60%)`;
             document.getElementById('clock-time').textContent = `${String(H.h).padStart(2, '0')}:00`;
             document.getElementById('clock-slot').textContent = `${idx + 1} / ${SLOTS}`;
             document.getElementById('clock-bar').style.width = `${(idx / SLOTS) * 100}%`;

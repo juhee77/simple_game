@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>색상 혼란 테스트 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .stroop-layout {
             display: grid;
@@ -28,7 +29,7 @@
         }
 
         .word-card {
-            background: radial-gradient(circle at top, rgba(244, 63, 94, 0.14), rgba(15, 23, 42, 0.96));
+            background: radial-gradient(circle at top, rgba(244, 63, 94, 0.14), var(--surface));
             min-height: 240px;
             display: grid;
             place-items: center;
@@ -55,7 +56,7 @@
             padding: 1.2rem 1rem;
             border-radius: 18px;
             border: 1px solid transparent;
-            color: #fff;
+            color: var(--text);
             font-size: 1.05rem;
             font-weight: 700;
             cursor: pointer;
@@ -73,7 +74,7 @@
             color: var(--accent-primary);
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>
@@ -161,7 +162,7 @@
                 button.className = 'answer-button';
                 button.type = 'button';
                 button.textContent = color.label;
-                button.style.background = `linear-gradient(135deg, ${color.value}, rgba(15, 23, 42, 0.92))`;
+                button.style.background = `linear-gradient(135deg, ${color.value}, var(--surface))`;
                 button.addEventListener('click', () => submitAnswer(color.key));
                 answerGrid.appendChild(button);
             });
@@ -235,7 +236,7 @@
             streak = 0;
             timeLeft = 45;
             stroopWord.textContent = '준비';
-            stroopWord.style.color = '#f8fafc';
+            stroopWord.style.color = 'var(--text)';
             if (showMessage) {
                 feedbackElement.textContent = '준비 완료. 시작 버튼을 누르세요.';
             }

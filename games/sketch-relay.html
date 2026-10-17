@@ -5,25 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>텔레파시 스케치 릴레이</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --primary-ink: #c02020;
             --primary: #e14b4b;     /* 헤더 흰 글자 대비 확보 (기존 #FF6B6B는 2.78:1) */
-            --secondary: #2f8f88;   /* 흰 글자 대비 확보 (기존 #4ECDC4는 1.93:1) */
-            --bg: #F7FFF7;
-            --text: #2D3142;
+            --secondary: #2f8f88;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Jua', sans-serif; user-select: none; }
         body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        header { background: var(--primary); color: white; padding: 15px; text-align: center; font-size: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; }
+        header { background: var(--primary); color: var(--text); padding: 15px; text-align: center; font-size: 1.5rem; box-shadow: 0 4px 6px rgba(20, 26, 42, 0.03); z-index: 10; }
         
         .container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
 
         .screen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; text-align: center; }
         .screen.active { display: flex; }
 
-        h1 { font-size: 2.5rem; margin-bottom: 20px; color: var(--primary); }
+        h1 { font-size: 2.5rem; margin-bottom: 20px; color: var(--primary-ink); }
         h2 { font-size: 2rem; margin-bottom: 15px; }
         p { font-size: 1.2rem; margin-bottom: 20px; color: #555; }
 
@@ -32,7 +33,7 @@
         input[type="number"], input[type="text"] { font-size: 1.5rem; padding: 10px; width: 150px; text-align: center; border: 2px solid var(--secondary); border-radius: 10px; outline: none; }
         input[type="text"] { width: 250px; }
 
-        button { background: var(--secondary); color: white; border: none; padding: 15px 30px; font-size: 1.5rem; border-radius: 50px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        button { background: var(--secondary); color: var(--text); border: none; padding: 15px 30px; font-size: 1.5rem; border-radius: 50px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(20, 26, 42, 0.07); }
         button:hover { transform: scale(1.05); }
         button:active { transform: scale(0.95); }
 
@@ -40,9 +41,9 @@
         .canvas-container { position: relative; width: 100%; max-width: 400px; aspect-ratio: 1; background: white; border: 4px solid var(--primary); border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         canvas { width: 100%; height: 100%; touch-action: none; }
         
-        #timer { font-size: 3rem; color: var(--primary); margin-bottom: 10px; font-weight: bold; }
+        #timer { font-size: 3rem; color: var(--primary-ink); margin-bottom: 10px; font-weight: bold; }
         
-        .word-display { font-size: 4rem; color: var(--primary); margin: 30px 0; animation: pop 0.5s ease-out; }
+        .word-display { font-size: 4rem; color: var(--primary-ink); margin: 30px 0; animation: pop 0.5s ease-out; }
 
         @keyframes pop {
             0% { transform: scale(0.5); opacity: 0; }
@@ -51,10 +52,10 @@
         }
 
         #result-text { font-size: 2rem; margin-bottom: 20px; }
-        .correct { color: #4ECDC4; }
-        .wrong { color: #FF6B6B; }
+        .correct { color: #1f6d68; }
+        .wrong { color: #c11515; }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -76,7 +77,7 @@
             </div>
             
             <button onclick="startGame()">게임 시작</button>
-            <button onclick="location.href='../index.html'" style="background:#6b7280; margin-top:15px; font-size:1rem; padding:10px 20px;">로비로 돌아가기</button>
+            <button onclick="location.href='../index.html'" style="background:var(--surface-3); margin-top:15px; font-size:1rem; padding:10px 20px; color: var(--text);">로비로 돌아가기</button>
         </div>
 
         <!-- Screen 1: Pass to Player 1 -->
@@ -105,7 +106,7 @@
             <h2 id="draw-player-name">Player X</h2>
             <div id="timer">5</div>
             <div class="canvas-container">
-                <canvas id="game-canvas"></canvas>
+                <canvas class="stage" id="game-canvas"></canvas>
             </div>
         </div>
 
@@ -127,7 +128,7 @@
             </div>
             <div style="display:flex; gap:10px;">
                 <button onclick="checkGuess()">정답 확인</button>
-                <button onclick="giveUp()" style="background:var(--primary);">포기</button>
+                <button onclick="giveUp()" style="background:var(--primary); color: var(--text);">포기</button>
             </div>
         </div>
 
@@ -135,14 +136,14 @@
         <div class="screen" id="screen-result">
             <h2 id="result-title">결과</h2>
             <div id="result-text"></div>
-            <p>원래 제시어: <strong id="result-word" style="color:var(--primary); font-size:1.5rem;"></strong></p>
+            <p>원래 제시어: <strong id="result-word" style="color: var(--primary-ink); font-size:1.5rem;"></strong></p>
             
             <div class="canvas-container" style="max-width: 250px; margin-bottom: 20px;">
                 <img id="result-image" style="width:100%; height:100%;">
             </div>
 
             <button onclick="resetGame()">다시 하기</button>
-            <button onclick="location.href='../index.html'" style="background:#6b7280; margin-top:15px; font-size:1rem; padding:10px 20px;">나가기</button>
+            <button onclick="location.href='../index.html'" style="background:var(--surface-3); margin-top:15px; font-size:1rem; padding:10px 20px; color: var(--text);">나가기</button>
         </div>
     </div>
 

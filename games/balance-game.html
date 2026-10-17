@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>밸런스 게임 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .mode-select-container {
             display: flex;
@@ -40,13 +41,13 @@
         .mode-card:hover {
             transform: translateY(-5px);
             border-color: var(--accent-primary);
-            box-shadow: 0 10px 20px rgba(168, 85, 247, 0.2);
+            box-shadow: 0 10px 20px rgba(168, 85, 247, 0.09);
         }
 
         .mode-card.active {
             background: rgba(168, 85, 247, 0.1);
             border-color: var(--accent-primary);
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.14);
         }
 
         .mode-icon {
@@ -85,8 +86,8 @@
         }
 
         .balance-title-tag {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--tint-2);
+            border: 1px solid var(--line);
             padding: 0.5rem 1.5rem;
             border-radius: 50px;
             font-size: 0.95rem;
@@ -120,7 +121,7 @@
         }
 
         .option-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            background: linear-gradient(135deg, var(--tint-1), var(--tint-1));
             border: 2px solid var(--border-color);
             border-radius: 24px;
             padding: 3rem 2rem;
@@ -134,7 +135,7 @@
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(20, 26, 42, 0.07);
         }
 
         .option-card::before {
@@ -148,6 +149,7 @@
             opacity: 0;
             transition: opacity 0.4s;
             z-index: 0;
+            color: #fff;
         }
 
         .option-card-content {
@@ -162,7 +164,7 @@
         .option-letter {
             font-size: 2rem;
             font-weight: 900;
-            color: rgba(255, 255, 255, 0.2);
+            color: var(--text);
             transition: color 0.4s;
         }
 
@@ -177,7 +179,7 @@
         /* Hover States */
         .option-card:hover {
             transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(168, 85, 247, 0.15);
+            box-shadow: 0 15px 30px rgba(168, 85, 247, 0.07);
         }
 
         .option-card.option-a:hover {
@@ -194,18 +196,18 @@
 
         .option-card.option-a.selected {
             border-color: #3b82f6;
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.18);
             background: rgba(59, 130, 246, 0.1);
         }
 
         .option-card.option-b.selected {
             border-color: #ec4899;
-            box-shadow: 0 0 30px rgba(236, 72, 153, 0.4);
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.18);
             background: rgba(236, 72, 153, 0.1);
         }
 
         .option-card.selected .option-letter {
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text);
         }
 
         /* Action Buttons */
@@ -235,7 +237,7 @@
             font-size: 1.1rem;
             z-index: 10;
             color: var(--text-secondary);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 10px rgba(20, 26, 42, 0.16);
             pointer-events: none;
         }
 
@@ -252,7 +254,7 @@
             margin-top: 0.5rem;
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>
@@ -316,8 +318,8 @@
 
                 <div class="game-controls">
                     <button class="button" onclick="goHome()">돌아가기</button>
-                    <button class="button" onclick="shareQuestion()" style="background: var(--bg-secondary); border: 1px solid var(--border-color);">🔗 질문 공유하기</button>
-                    <button class="button" onclick="nextQuestion()" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));">다음 질문 ➡️</button>
+                    <button class="button" onclick="shareQuestion()" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text);">🔗 질문 공유하기</button>
+                    <button class="button" onclick="nextQuestion()" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: #fff;">다음 질문 ➡️</button>
                 </div>
             </div>
         </div>

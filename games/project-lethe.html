@@ -5,17 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Project Lethe</title>
 <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+<link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 <style>
   :root {
-    --bg: #0a0a0c;
-    --fg: #00ffcc;
-    --fg-dim: #008866;
-    --danger: #ff3366;
-    --warning: #ffcc00;
-    --panel-bg: #111;
-    --border: #333;
+    --fg: #0c6e5b;
+    --fg-dim: #0c6d54;
+    --panel-bg: var(--surface);
   }
   * { box-sizing: border-box; }
   body {
@@ -71,7 +68,7 @@
   .val-disp { width: 30px; text-align: right; }
   
   /* Mod 2 */
-  .symbol-display { font-size: 2.5rem; display: flex; justify-content: space-around; margin-bottom: 20px; background: #000; padding: 10px; }
+  .symbol-display { font-size: 2.5rem; display: flex; justify-content: space-around; margin-bottom: 20px; background: var(--surface); padding: 10px; }
   .symbol-btn-group { display: flex; justify-content: space-around; }
   .sym-btn { font-size: 1.5rem; width: 60px; height: 60px; }
   .stage-dots { text-align: center; margin-top: 10px; }
@@ -82,12 +79,12 @@
   .big-btn-wrap { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px 0; }
   .big-btn {
     width: 150px; height: 150px; border-radius: 50%;
-    font-size: 1.5rem; font-weight: bold; border: 4px solid #fff;
+    font-size: 1.5rem; font-weight: bold; border: 4px solid var(--line-strong);
     cursor: pointer; user-select: none;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-    color: #fff;
+    box-shadow: inset 0 0 20px rgba(20, 26, 42, 0.16);
+    color: var(--text);
   }
-  .indicator-light { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #555; background: #222; }
+  .indicator-light { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); }
   
   /* Operator Manual */
   .manual-content { line-height: 1.6; font-size: 1.1rem; }
@@ -96,20 +93,20 @@
   .manual-content li { margin-bottom: 10px; }
   
   /* GDD Modal */
-  #gdd-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; border-radius: 20px; background: var(--bg); }
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto; }
+  #gdd-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; border-radius: 20px; background: var(--bg); color: var(--text); }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--veil); z-index: 1000; overflow-y: auto; }
   .modal.open { display: block; }
-  .modal-content { background: #1a1a1a; margin: 5% auto; padding: 30px; width: 90%; max-width: 800px; border: 1px solid var(--fg); position: relative; }
+  .modal-content { background: var(--surface); margin: 5% auto; padding: 30px; width: 90%; max-width: 800px; border: 1px solid var(--fg); position: relative; }
   .close { position: absolute; right: 20px; top: 15px; font-size: 2rem; cursor: pointer; color: var(--danger); }
 
   /* End Screen */
   #screen-end { text-align: center; padding-top: 20vh; }
   .end-msg { font-size: 3rem; margin-bottom: 20px; }
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
-<a href="../index.html" class="back-btn" style="position:fixed;top:14px;left:14px;z-index:9999;display:inline-block;padding:8px 14px;border-radius:999px;font-size:0.85rem;font-weight:700;text-decoration:none;background:rgba(0,0,0,0.65);color:#fff;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(4px);">← 메인</a>
+<a href="../index.html" class="back-btn" style="position:fixed;top:14px;left:14px;z-index:9999;display:inline-block;padding:8px 14px;border-radius:999px;font-size:0.85rem;font-weight:700;text-decoration:none;background:var(--surface);color:var(--text);border:1px solid var(--line);backdrop-filter:blur(4px);">← 메인</a>
 
 
   <!-- GDD Button & Modal -->
@@ -192,7 +189,7 @@
         <li>그렇지 않고 ⚙️(톱니) 심볼이 2개 이상 있다면: <strong>두 번째 버튼</strong>을 누르시오.</li>
         <li>해당하는 조건이 없다면: <strong>네 번째(마지막) 버튼</strong>을 누르시오.</li>
       </ul>
-      <p style="font-size: 0.9rem; color: #888;">* 3번 연속으로 올바른 버튼을 눌러야 모듈이 완전 해제된다. 실수하면 처음부터 다시.</p>
+      <p style="font-size: 0.9rem; color: var(--muted);">* 3번 연속으로 올바른 버튼을 눌러야 모듈이 완전 해제된다. 실수하면 처음부터 다시.</p>
 
       <h3>모듈 3: 코어 오버라이드</h3>
       <p>다이버에게 거대한 버튼의 <strong>색상</strong>과 <strong>적힌 글자</strong>를 확인하라.</p>
@@ -319,7 +316,7 @@ function addStrike() {
   strikes++;
   document.getElementById('strike-display').textContent = `충격: ${strikes} / 3`;
   // Flash screen
-  document.body.style.backgroundColor = '#500';
+  document.body.style.backgroundColor = '#fbe4e4';
   setTimeout(() => document.body.style.backgroundColor = 'var(--bg)', 200);
   
   if (strikes >= 3) gameOver(false, "과부하 누적. 시냅스 완전 붕괴.");
@@ -421,7 +418,7 @@ function handleBtnDown() {
 function handleBtnUp() {
   if (!isHolding) return;
   isHolding = false;
-  document.getElementById('core-light').style.backgroundColor = '#222';
+  document.getElementById('core-light').style.backgroundColor = 'var(--surface)';
   
   const holdDuration = Date.now() - holdStartTime;
   const wasClick = holdDuration < 500;

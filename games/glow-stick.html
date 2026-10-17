@@ -5,20 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>네온 야광봉 & 응원 전광판 | 미니게임 천국</title>
   <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-  <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+  <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+  <script src="../scripts/game-common.js?v=efdc1560"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
   <style>
     :root {
-      --bg: #0b0b1a;
-      --card-bg: rgba(22, 22, 45, 0.7);
-      --card-border: rgba(255, 255, 255, 0.1);
+      /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+      --cyan-ink: #0e697c;
+      --card-bg: var(--surface);
+      --card-border: var(--tint-2);
       --cyan: #00d4ff;
       --purple: #7c3aed;
-      --pink: #ff006e;
+      --pink: #bc155d;
       --yellow: #ffd166;
       --green: #06d6a0;
-      --text-main: #ffffff;
-      --text-dim: #94a3b8;
+      --text-main: var(--text);
+      --text-dim: var(--muted);
       --radius-card: 16px;
       --radius-btn: 12px;
     }
@@ -60,7 +62,7 @@
       left: 0;
       background: none;
       border: none;
-      color: var(--cyan);
+      color: var(--cyan-ink);
       font-size: 24px;
       cursor: pointer;
       text-decoration: none;
@@ -102,7 +104,7 @@
       overflow: hidden;
       cursor: pointer;
       border: 2px solid var(--pink);
-      box-shadow: 0 0 25px rgba(255, 0, 110, 0.4);
+      box-shadow: 0 0 25px rgba(255, 0, 110, 0.18);
       transition: box-shadow 0.3s;
     }
 
@@ -121,8 +123,8 @@
       white-space: nowrap;
       font-size: 32px;
       font-weight: 800;
-      color: white;
-      text-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+      color: var(--text);
+      text-shadow: 0 0 15px rgba(20, 26, 42, 0.1);
       pointer-events: none;
       animation: marquee 8s linear infinite;
     }
@@ -148,9 +150,9 @@
     .color-dot.active { border-color: white; transform: scale(1.15); }
 
     input[type="text"] {
-      background: rgba(0,0,0,0.3);
+      background: var(--tint-2);
       border: 1px solid var(--card-border);
-      color: white;
+      color: var(--text);
       padding: 12px 16px;
       border-radius: var(--radius-btn);
       font-family: inherit;
@@ -167,7 +169,7 @@
       font-size: 16px;
       background: linear-gradient(135deg, var(--cyan), var(--purple));
       border: none;
-      color: white;
+      color: var(--text);
       border-radius: var(--radius-btn);
       cursor: pointer;
     }
@@ -179,7 +181,7 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.1);
+      background: var(--tint-2);
       backdrop-filter: blur(5px);
       display: flex;
       align-items: center;
@@ -188,13 +190,14 @@
       cursor: pointer;
       border: 1px solid var(--card-border);
       z-index: 100;
+      color: var(--text);
     }
 
     .modal {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
+      background: var(--veil);
       z-index: 1000;
       align-items: center;
       justify-content: center;
@@ -210,7 +213,7 @@
       width: 100%;
     }
 
-    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal h2 { margin-bottom: 16px; color: var(--cyan-ink); }
     .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
     .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
   </style>
@@ -224,7 +227,7 @@
 
     <div class="card">
       <div class="glow-viewport" id="viewport" onclick="triggerGlowBurst(event)">
-        <canvas id="glowCanvas"></canvas>
+        <canvas class="stage" id="glowCanvas"></canvas>
         <div class="banner-overlay" id="bannerOverlay">🎉 NEON PARTY NIGHT 🎉</div>
       </div>
 

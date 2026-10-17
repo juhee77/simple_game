@@ -5,18 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Shadow Syndicate</title>
 <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+<link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 <style>
   :root {
-    --bg: #1a1512;
-    --fg: #d4c4a8;
+    /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+    --p0-ink: #a84141;
+    --yellow-ink: #6f6023;
+    --fg: #725d39;
     --brown: #5c4033;
     --yellow: #b89f3b;
     --blue: #2c4c6e;
     --red: #a04c4c;   /* 검정 배경에서 1.98:1 → 3.01:1 */
     --green: #2d5a2d;
-    --border: #8a7351;
     --p0: #c36363;    /* 턴 표시 글자 3.07:1 → 4.54:1 */
     --p1: #227093;
   }
@@ -30,7 +32,7 @@
   }
   h1, h2, h3 { font-family: 'Cinzel', serif; text-transform: uppercase; letter-spacing: 2px; }
   button {
-    background: #2a201a; color: var(--fg);
+    background: var(--surface); color: var(--fg);
     border: 1px solid var(--border); padding: 10px 20px;
     font-family: inherit; font-size: 1.1rem;
     cursor: pointer; transition: all 0.2s;
@@ -40,12 +42,12 @@
 
   /* Layout */
   .game-container { display: flex; height: 100vh; }
-  .side-panel { width: 300px; padding: 20px; background: rgba(0,0,0,0.5); border-left: 2px solid var(--border); border-right: 2px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
+  .side-panel { width: 300px; padding: 20px; background: var(--surface); border-left: 2px solid var(--border); border-right: 2px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
   .center-board { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow: hidden; }
 
   /* Player Stats */
-  .player-card { padding: 15px; margin-bottom: 20px; border: 2px solid #444; border-radius: 8px; background: #222; transition: all 0.3s; }
-  .player-card.active { border-color: var(--yellow); box-shadow: 0 0 15px rgba(184, 159, 59, 0.3); transform: scale(1.02); }
+  .player-card { padding: 15px; margin-bottom: 20px; border: 2px solid var(--line); border-radius: 8px; background: var(--surface); transition: all 0.3s; }
+  .player-card.active { border-color: var(--yellow); box-shadow: 0 0 15px rgba(184, 159, 59, 0.14); transform: scale(1.02); }
   .p0-card { border-top: 5px solid var(--p0); }
   .p1-card { border-top: 5px solid var(--p1); }
   .p-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; }
@@ -53,39 +55,39 @@
   .resource-icon { display: inline-block; width: 20px; text-align: center; }
 
   /* Threat Track */
-  .threat-track { width: 100%; height: 60px; background: #111; border: 2px solid var(--border); border-radius: 30px; position: relative; margin-bottom: 30px; display: flex; align-items: center; }
-  .threat-zone { flex: 1; height: 100%; border-right: 1px dashed #444; display: flex; justify-content: center; align-items: center; opacity: 0.3; }
-  .threat-marker { position: absolute; width: 40px; height: 40px; background: radial-gradient(circle, #fff, #aaa); border-radius: 50%; top: 8px; left: 50%; transform: translateX(-50%); transition: left 0.5s ease; box-shadow: 0 0 10px #000; z-index: 10; border: 3px solid #333; }
+  .threat-track { width: 100%; height: 60px; background: var(--surface); border: 2px solid var(--border); border-radius: 30px; position: relative; margin-bottom: 30px; display: flex; align-items: center; }
+  .threat-zone { flex: 1; height: 100%; border-right: 1px dashed var(--line); display: flex; justify-content: center; align-items: center; opacity: 0.3; }
+  .threat-marker { position: absolute; width: 40px; height: 40px; background: radial-gradient(circle, #fff, #aaa); border-radius: 50%; top: 8px; left: 50%; transform: translateX(-50%); transition: left 0.5s ease; box-shadow: 0 0 10px rgba(20, 26, 42, 0.16); z-index: 10; border: 3px solid var(--line); }
 
   /* Card Pyramid */
   .pyramid-container { position: relative; width: 600px; height: 600px; }
   .card {
     position: absolute; width: 80px; height: 120px;
     border-radius: 8px; border: 2px solid var(--border);
-    background: #333; color: #fff;
+    background: var(--surface-2); color: var(--text);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    box-shadow: 2px 5px 10px rgba(0,0,0,0.5);
+    box-shadow: 2px 5px 10px rgba(20, 26, 42, 0.16);
     transition: all 0.3s; cursor: pointer; user-select: none;
     transform-origin: center;
   }
-  .card.face-down { background: repeating-linear-gradient(45deg, #222, #222 10px, #111 10px, #111 20px); border-color: #444; }
+  .card.face-down { background: repeating-linear-gradient(45deg, var(--surface), var(--surface) 10px, var(--surface) 10px, var(--surface) 20px); border-color: var(--line); }
   .card.covered { filter: brightness(0.5); cursor: not-allowed; }
-  .card:not(.covered):not(.face-down):hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(184, 159, 59, 0.4); border-color: var(--yellow); }
+  .card:not(.covered):not(.face-down):hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(184, 159, 59, 0.18); border-color: var(--yellow); }
   
   .card-cost { position: absolute; top: 5px; left: 5px; font-size: 0.8rem; display: flex; flex-direction: column; gap: 2px; }
-  .card-cost div { background: rgba(0,0,0,0.8); padding: 2px 4px; border-radius: 4px; }
-  .card-effect { font-size: 1.5rem; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+  .card-cost div { background: var(--surface); padding: 2px 4px; border-radius: 4px; }
+  .card-effect { font-size: 1.5rem; font-weight: bold; text-shadow: 1px 1px 2px rgba(20, 26, 42, 0.16); }
   .card-name { position: absolute; bottom: 5px; font-size: 0.7rem; text-align: center; width: 100%; }
 
   /* Action Modal */
-  #action-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 30px; border: 2px solid var(--yellow); box-shadow: 0 0 30px #000; z-index: 2000; text-align: center; border-radius: 10px; }
+  #action-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 30px; border: 2px solid var(--yellow); box-shadow: 0 0 30px rgba(20, 26, 42, 0.16); z-index: 2000; text-align: center; border-radius: 10px; }
   .action-btns { display: flex; gap: 15px; margin-top: 20px; justify-content: center; }
 
   /* GDD Modal */
-  #gdd-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; border-radius: 20px; background: var(--bg); }
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto; }
+  #gdd-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; border-radius: 20px; background: var(--bg); color: var(--text); }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--veil); z-index: 1000; overflow-y: auto; }
   .modal.open { display: block; }
-  .modal-content { background: #1a1a1a; margin: 5% auto; padding: 30px; width: 90%; max-width: 800px; border: 1px solid var(--border); position: relative; line-height: 1.6; }
+  .modal-content { background: var(--surface); margin: 5% auto; padding: 30px; width: 90%; max-width: 800px; border: 1px solid var(--border); position: relative; line-height: 1.6; }
   .close { position: absolute; right: 20px; top: 15px; font-size: 2rem; cursor: pointer; color: var(--red); }
 
   /* Intro / End Screens */
@@ -108,19 +110,19 @@
     .player-card { min-width: 100%; }
   }
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
-<a href="../index.html" class="back-btn" style="position:fixed;top:14px;left:14px;z-index:9999;display:inline-block;padding:8px 14px;border-radius:999px;font-size:0.85rem;font-weight:700;text-decoration:none;background:rgba(0,0,0,0.65);color:#fff;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(4px);">← 메인</a>
+<a href="../index.html" class="back-btn" style="position:fixed;top:14px;left:14px;z-index:9999;display:inline-block;padding:8px 14px;border-radius:999px;font-size:0.85rem;font-weight:700;text-decoration:none;background:var(--surface);color:var(--text);border:1px solid var(--line);backdrop-filter:blur(4px);">← 메인</a>
 
 
   <!-- Overlay Screens -->
   <div id="screen-intro" class="overlay-screen">
-    <h1 style="font-size: 4rem; margin-bottom: 0; color: var(--yellow);">THE SHADOW SYNDICATE</h1>
+    <h1 style="font-size: 4rem; margin-bottom: 0; color: var(--yellow-ink);">THE SHADOW SYNDICATE</h1>
     <p style="font-size: 1.5rem; color: var(--border); margin-bottom: 20px;">에덴 시티 암흑가 장악전</p>
     
-    <div style="background: rgba(0,0,0,0.8); border: 1px solid var(--border); padding: 20px; border-radius: 10px; max-width: 650px; text-align: left; margin-bottom: 30px; line-height: 1.6; font-size: 1.1rem;">
-      <h3 style="color: var(--yellow); text-align: center; margin-top: 0;">📜 게임 방법 (How to play)</h3>
+    <div style="background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: 10px; max-width: 650px; text-align: left; margin-bottom: 30px; line-height: 1.6; font-size: 1.1rem;">
+      <h3 style="color: var(--yellow-ink); text-align: center; margin-top: 0;">📜 게임 방법 (How to play)</h3>
       1. <b>카드 드래프팅:</b> 중앙 피라미드에서 <b>앞면이 보이고 덮여있지 않은 카드</b>만 클릭할 수 있습니다.<br>
       2. <b>비용 지불:</b> 카드를 고용(구매)하려면 자원(📦밀수품, 🕵️정보)이 필요합니다. 자원이 부족하면 <b>'💵검은돈 2개'로 자원 1개를 대체</b>할 수 있습니다.<br>
       3. <b>카드 처분:</b> 당장 카드를 살 수 없거나 돈이 필요하다면, 카드를 <b>처분</b>하여 은행에서 💵검은돈 2개를 받을 수 있습니다.<br>
@@ -150,9 +152,9 @@
 
   <!-- Action Modal -->
   <div id="action-modal">
-    <h3 id="am-title" style="color: var(--yellow); margin-bottom: 10px;">선택한 카드 액션</h3>
+    <h3 id="am-title" style="color: var(--yellow-ink); margin-bottom: 10px;">선택한 카드 액션</h3>
     <div id="am-cost" style="margin-bottom: 10px; color: var(--border); font-size: 1.1rem; font-weight: bold;"></div>
-    <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 15px;">
+    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 15px;">
       💡 카드를 고용(구매)하여 세력을 확장하거나,<br>자원이 모자라면 <b>[처분]</b>을 눌러 💵검은돈 +2를 버세요!
     </p>
     <div class="action-btns">
@@ -171,20 +173,20 @@
         <div class="stat-row"><span><span class="resource-icon">💵</span> 검은돈</span> <span id="p0-money">5</span></div>
         <div class="stat-row"><span><span class="resource-icon">📦</span> 밀수품</span> <span id="p0-box">0</span></div>
         <div class="stat-row"><span><span class="resource-icon">🕵️</span> 정보</span> <span id="p0-intel">0</span></div>
-        <hr style="border-color: #444;">
+        <hr style="border-color: var(--line);">
         <div class="stat-row"><span><span class="resource-icon">★</span> 영향력</span> <span id="p0-vp">0</span></div>
         <div class="stat-row"><span><span class="resource-icon">💎</span> 독점권</span> <span id="p0-mono">-</span></div>
       </div>
       <div style="text-align: center; color: var(--border);">
         <h2 id="era-display" style="margin: 0;">ERA 1</h2>
-        <p id="turn-indicator" style="color: var(--p0); font-weight: bold;">붉은 장미파 턴</p>
+        <p id="turn-indicator" style="color: var(--p0-ink); font-weight: bold;">붉은 장미파 턴</p>
       </div>
     </div>
 
     <!-- Center Board -->
     <div class="center-board">
       <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <span style="font-size: 0.85rem; color: var(--yellow); background: rgba(184,159,59,0.1); border: 1px solid rgba(184,159,59,0.3); border-radius: 8px; padding: 6px 14px;">
+        <span style="font-size: 0.85rem; color: var(--yellow-ink); background: rgba(184,159,59,0.1); border: 1px solid rgba(184,159,59,0.3); border-radius: 8px; padding: 6px 14px;">
           💡 <b>노란 테두리로 빛나는 카드</b>(다른 카드에 안 덮인 카드)만 선택 가능합니다! 선택 후 <b>[고용]</b> 또는 <b>[처분]</b> 하세요!
         </span>
         <button class="guide-btn" onclick="openGDD()" style="border-radius: 20px; background: linear-gradient(135deg, #b89f3b, #8a7351); color: #000; font-weight: bold; padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px;">
@@ -209,7 +211,7 @@
         <div class="stat-row"><span><span class="resource-icon">💵</span> 검은돈</span> <span id="p1-money">5</span></div>
         <div class="stat-row"><span><span class="resource-icon">📦</span> 밀수품</span> <span id="p1-box">0</span></div>
         <div class="stat-row"><span><span class="resource-icon">🕵️</span> 정보</span> <span id="p1-intel">0</span></div>
-        <hr style="border-color: #444;">
+        <hr style="border-color: var(--line);">
         <div class="stat-row"><span><span class="resource-icon">★</span> 영향력</span> <span id="p1-vp">0</span></div>
         <div class="stat-row"><span><span class="resource-icon">💎</span> 독점권</span> <span id="p1-mono">-</span></div>
       </div>
@@ -531,7 +533,7 @@ function endGameByVP() {
 function endGame(winnerId, reason) {
   document.getElementById('screen-end').classList.remove('hidden');
   document.getElementById('end-title').textContent = winnerId === -1 ? "무승부" : `${players[winnerId].name} 승리!`;
-  document.getElementById('end-title').style.color = winnerId === -1 ? "#fff" : players[winnerId].color;
+  document.getElementById('end-title').style.color = winnerId === -1 ? "var(--text)" : players[winnerId].color;
   document.getElementById('end-desc').textContent = reason;
 }
 

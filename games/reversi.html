@@ -6,13 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>리버시 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
             --felt: #14532d;
             --felt-line: rgba(255, 255, 255, .1);
             --accent: #4ade80;
+            --accent-ink: #147036;
+            --accent-soft: #e5faed;
+            --on-accent: #141a2a;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -34,7 +38,7 @@
         h1 {
             font-size: 1.7rem;
             margin: 44px 0 4px;
-            background: linear-gradient(135deg, #4ade80, #38bdf8);
+            background: linear-gradient(135deg, #1c9b4b, #1691c8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -149,8 +153,8 @@
         .btn:disabled { opacity: .4; cursor: default; }
 
         .msg { margin-top: 14px; min-height: 26px; font-weight: 700; text-align: center; }
-        .msg.good { color: var(--accent); }
-        .msg.warn { color: #fbbf24; }
+        .msg.good { color: var(--accent-ink); }
+        .msg.warn { color: #7d5e0e; }
 
         @media (max-width: 420px) { :root { --cell: 36px; } }
     </style>

@@ -5,20 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>D-Day & 모임 카운트다운 | 미니게임 천국</title>
   <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-  <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+  <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+  <script src="../scripts/game-common.js?v=efdc1560"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
   <style>
     :root {
-      --bg: #0b0b1a;
-      --card-bg: rgba(22, 22, 45, 0.7);
-      --card-border: rgba(255, 255, 255, 0.1);
+      /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+      --cyan-ink: #0e697c;
+      --yellow-ink: #7c5b0e;
+      --card-bg: var(--surface);
+      --card-border: var(--tint-2);
       --cyan: #00d4ff;
       --purple: #7c3aed;
-      --pink: #ff006e;
+      --pink: #bc155d;
       --yellow: #ffd166;
       --green: #06d6a0;
-      --text-main: #ffffff;
-      --text-dim: #94a3b8;
+      --text-main: var(--text);
+      --text-dim: var(--muted);
       --radius-card: 16px;
       --radius-btn: 12px;
     }
@@ -60,7 +63,7 @@
       left: 0;
       background: none;
       border: none;
-      color: var(--cyan);
+      color: var(--cyan-ink);
       font-size: 24px;
       cursor: pointer;
       text-decoration: none;
@@ -115,7 +118,7 @@
     }
 
     .preset-btn {
-      background: rgba(255,255,255,0.05);
+      background: var(--tint-1);
       border: 1px solid var(--card-border);
       color: var(--text-dim);
       padding: 8px 12px;
@@ -129,13 +132,13 @@
     .preset-btn.active {
       background: rgba(0, 212, 255, 0.15);
       border-color: var(--cyan);
-      color: var(--cyan);
+      color: var(--cyan-ink);
     }
 
     input, select {
-      background: rgba(0,0,0,0.3);
+      background: var(--tint-2);
       border: 1px solid var(--card-border);
-      color: white;
+      color: var(--text);
       padding: 12px 16px;
       border-radius: var(--radius-btn);
       font-family: inherit;
@@ -160,7 +163,7 @@
     .color-dot.active { border-color: white; transform: scale(1.1); }
 
     .bg-upload-btn {
-      background: rgba(255,255,255,0.08);
+      background: var(--tint-2);
       border: 1px dashed var(--card-border);
       color: var(--text-dim);
       padding: 10px;
@@ -181,7 +184,7 @@
       justify-content: center;
       gap: 14px;
       text-align: center;
-      box-shadow: 0 0 30px rgba(255, 0, 110, 0.3);
+      box-shadow: 0 0 30px rgba(255, 0, 110, 0.14);
       position: relative;
       overflow: hidden;
     }
@@ -191,7 +194,7 @@
       padding: 4px 14px;
       border-radius: 20px;
       background: rgba(0, 212, 255, 0.2);
-      color: var(--cyan);
+      color: var(--cyan-ink);
       font-weight: 700;
       border: 1px solid var(--cyan);
     }
@@ -199,14 +202,14 @@
     .dday-title {
       font-size: 24px;
       font-weight: 800;
-      color: white;
+      color: var(--text);
     }
 
     .dday-count-display {
       font-size: 46px;
       font-weight: 800;
-      color: var(--yellow);
-      text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);
+      color: var(--yellow-ink);
+      text-shadow: 0 0 20px rgba(255, 209, 102, 0.36);
       letter-spacing: 2px;
     }
 
@@ -219,10 +222,10 @@
     }
 
     .timer-box {
-      background: rgba(0, 0, 0, 0.5);
+      background: var(--surface);
       padding: 10px 4px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--line);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -231,7 +234,7 @@
     .timer-num {
       font-size: 22px;
       font-weight: 800;
-      color: var(--cyan);
+      color: var(--cyan-ink);
     }
 
     .timer-unit {
@@ -242,7 +245,7 @@
     .action-btn {
       background: linear-gradient(135deg, var(--cyan), var(--purple));
       border: none;
-      color: white;
+      color: var(--text);
       padding: 14px;
       border-radius: var(--radius-btn);
       font-weight: 700;
@@ -271,7 +274,7 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.1);
+      background: var(--tint-2);
       backdrop-filter: blur(5px);
       display: flex;
       align-items: center;
@@ -280,13 +283,14 @@
       cursor: pointer;
       border: 1px solid var(--card-border);
       z-index: 100;
+      color: var(--text);
     }
 
     .modal {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
+      background: var(--veil);
       z-index: 1000;
       align-items: center;
       justify-content: center;
@@ -302,7 +306,7 @@
       width: 100%;
     }
 
-    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal h2 { margin-bottom: 16px; color: var(--cyan-ink); }
     .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
     .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
   </style>

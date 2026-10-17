@@ -1,20 +1,10 @@
 /* 메인 화면 — 밝고 깔끔한 앱 스타일 (D+F 시안)
- * 게임 페이지는 이 파일을 쓰지 않는다 (game-common.css). */
+ * 색·글꼴·모서리 토큰은 design-system.css에 있다. 게임 페이지는 이 파일을 쓰지 않는다. */
 
 :root {
-    --bg: #f2f4f8;
-    --surface: #ffffff;
-    --surface-2: #f2f4f8;
-    --line: #e3e7ef;
-    --text: #141a2a;
-    --text-2: #4b5565;
-    --muted: #5f6b7a;          /* 흰 바탕 위 4.5:1 이상 */
-    --accent: #4f46e5;
-    --accent-ink: #3730a3;
-    --accent-soft: #eef0ff;
-    --new-bg: #e8f7ef;
-    --new-ink: #11734b;
-    --star: #f5a524;
+    /* 색·글꼴은 design-system.css 토큰을 쓴다. 여기는 메인 화면 배치 값만 둔다. */
+    --new-bg: var(--ok-soft);
+    --new-ink: var(--ok);
     --radius: 18px;
     --page-max: 1080px;
     --nav-h: 68px;
@@ -25,7 +15,7 @@
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font);
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -44,7 +34,7 @@ button { cursor: pointer; }
     clip: rect(0 0 0 0); white-space: nowrap;
 }
 
-:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 .app {
     max-width: var(--page-max);
@@ -81,7 +71,7 @@ button { cursor: pointer; }
 
 .search { position: relative; }
 
-.search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #6b7484; pointer-events: none; }
+.search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
 
 #game-search {
     width: 100%; height: 50px;
@@ -92,13 +82,13 @@ button { cursor: pointer; }
     -webkit-appearance: none; appearance: none;
 }
 
-#game-search::placeholder { color: #7b8494; }
+#game-search::placeholder { color: var(--muted); }
 #game-search::-webkit-search-cancel-button { -webkit-appearance: none; }
 
 .clear-btn {
     position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
     width: 40px; height: 40px; border: none; border-radius: 12px;
-    background: transparent; color: #6b7484;
+    background: transparent; color: var(--muted);
     display: inline-flex; align-items: center; justify-content: center;
 }
 
@@ -114,7 +104,7 @@ button { cursor: pointer; }
 .shortcut {
     flex: 0 0 auto; width: 64px;
     display: flex; flex-direction: column; align-items: center; gap: 7px;
-    text-decoration: none; color: #2b3240;
+    text-decoration: none; color: var(--text);
     scroll-snap-align: start;
 }
 
@@ -135,18 +125,18 @@ button { cursor: pointer; }
     padding: 18px 18px 18px 20px;
     border-radius: 22px;
     background: var(--accent);
-    color: #ffffff;
+    color: var(--on-accent);
     display: flex; align-items: center; gap: 14px;
 }
 
 .pick-text { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.pick-eyebrow { font-size: 13px; font-weight: 600; color: #e0e0ff; }
+.pick-eyebrow { font-size: 13px; font-weight: 600; color: var(--accent-soft); }
 .pick-title { font-size: 18px; font-weight: 800; line-height: 1.35; }
 
 .pick-btn {
     flex-shrink: 0; height: 46px; padding: 0 18px;
     border: none; border-radius: 14px;
-    background: #ffffff; color: var(--accent-ink);
+    background: var(--surface); color: var(--accent-ink);
     font-size: 15px; font-weight: 800;
 }
 
@@ -166,7 +156,7 @@ button { cursor: pointer; }
     flex: 0 0 auto; height: 46px;
     border: none; border-bottom: 3px solid transparent;
     background: transparent;
-    color: #6b7484; font-size: 15px; font-weight: 700;
+    color: var(--muted); font-size: 15px; font-weight: 700;
 }
 
 .tab[aria-selected="true"] { color: var(--text); font-weight: 800; border-bottom-color: var(--text); }
@@ -175,8 +165,8 @@ button { cursor: pointer; }
 
 .chip-btn {
     height: 38px; padding: 0 12px;
-    border: 1px solid #dfe3ea; border-radius: 999px;
-    background: var(--surface); color: #2b3240;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface); color: var(--text);
     font-size: 13.5px; font-weight: 700;
     display: inline-flex; align-items: center; gap: 4px;
 }
@@ -213,7 +203,7 @@ button { cursor: pointer; }
     transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
 
-.game-card:hover { border-color: #d8dcf8; box-shadow: 0 6px 20px rgba(20, 26, 42, 0.06); }
+.game-card:hover { border-color: var(--accent-soft); box-shadow: var(--shadow-md); }
 .game-card:active { transform: scale(0.98); }
 
 .game-icon {
@@ -248,7 +238,7 @@ button { cursor: pointer; }
 .fav-btn {
     position: absolute; top: 8px; right: 8px;
     width: 36px; height: 36px; border: none; border-radius: 12px;
-    background: transparent; color: #b4bac6;
+    background: transparent; color: var(--muted);
     display: inline-flex; align-items: center; justify-content: center;
 }
 
@@ -271,7 +261,7 @@ button { cursor: pointer; }
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
     height: calc(var(--nav-h) + env(safe-area-inset-bottom));
     padding: 6px max(12px, calc((100% - 560px) / 2)) env(safe-area-inset-bottom);
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--surface);
     border-top: 1px solid var(--line);
     display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -279,7 +269,7 @@ button { cursor: pointer; }
 .nav-btn {
     border: none; background: transparent;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    color: #6b7484; font-size: 11px; font-weight: 700;
+    color: var(--muted); font-size: 11px; font-weight: 700;
 }
 
 .nav-btn[aria-current="page"] { color: var(--text); font-weight: 800; }
@@ -287,7 +277,7 @@ button { cursor: pointer; }
 /* ── 바텀 시트 ── */
 .sheet-backdrop {
     position: fixed; inset: 0; z-index: 30;
-    background: rgba(15, 20, 35, 0.45);
+    background: var(--scrim);
     opacity: 0; transition: opacity 0.2s;
 }
 
@@ -306,7 +296,7 @@ button { cursor: pointer; }
 
 .sheet.show { transform: translateY(0); }
 
-.sheet-handle { align-self: center; width: 40px; height: 5px; border-radius: 999px; background: #d5dae3; }
+.sheet-handle { align-self: center; width: 40px; height: 5px; border-radius: 999px; background: var(--line-strong); }
 
 .sheet-head { display: flex; align-items: center; gap: 8px; }
 .sheet-head h2 { flex: 1; font-size: 21px; font-weight: 800; }
@@ -336,7 +326,7 @@ button { cursor: pointer; }
 
 .seg-btn[aria-pressed="true"] {
     background: var(--surface); color: var(--text); font-weight: 800;
-    box-shadow: 0 1px 3px rgba(20, 26, 42, 0.12);
+    box-shadow: var(--shadow-sm);
 }
 
 .sheet-actions { display: flex; gap: 8px; padding-top: 4px; }
@@ -348,9 +338,9 @@ button { cursor: pointer; }
     text-decoration: none;
 }
 
-.btn-soft { width: 108px; background: var(--surface-2); color: #2b3240; }
-.btn-primary { flex: 1; background: var(--accent); color: #ffffff; }
-.btn-primary:disabled { background: #c7cbd6; cursor: default; }
+.btn-soft { width: 108px; background: var(--surface-2); color: var(--text); }
+.btn-primary { flex: 1; background: var(--accent); color: var(--on-accent); }
+.btn-primary:disabled { background: var(--line-strong); cursor: default; }
 
 /* 랜덤 결과 */
 .pick-result-eyebrow { flex: 1; font-size: 14px; font-weight: 800; color: var(--accent); }

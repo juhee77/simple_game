@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html data-stage lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>네온 듀얼 - Neon Dual</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <!-- Fonts -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Marked.js -->
@@ -12,11 +13,11 @@
 
     <style>
         :root {
-            --bg-color: #05070a;
+            --bg-color: var(--bg);
             --p1-color: #00f2ff;
             --p2-color: #ff007b;
-            --text-main: #f8fafc;
-            --panel-bg: rgba(30, 41, 59, 0.7);
+            --text-main: var(--text);
+            --panel-bg: var(--surface-2);
         }
 
         * {
@@ -54,12 +55,12 @@
         }
         .header-actions { display: flex; gap: 10px; pointer-events: auto; }
         .icon-btn {
-            background: rgba(255, 255, 255, 0.1); border: none; color: white;
+            background: var(--tint-2); border: none; color: var(--text);
             width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
             font-size: 1.1rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
             backdrop-filter: blur(5px);
         }
-        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
+        .icon-btn:hover { background: var(--tint-3); transform: scale(1.1); color: var(--text); }
 
         /* Game Canvas */
         #game-container {
@@ -94,7 +95,7 @@
         .score-p2 { color: var(--p2-color); text-shadow: 0 0 20px var(--p2-color); }
         
         .countdown {
-            font-size: 6rem; font-weight: 800; color: white;
+            font-size: 6rem; font-weight: 800; color: var(--text);
             text-shadow: 0 0 30px rgba(255,255,255,0.5);
             display: none;
         }
@@ -102,20 +103,20 @@
         /* Modals */
         .overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            background: var(--veil); backdrop-filter: blur(8px);
             display: flex; align-items: center; justify-content: center; flex-direction: column;
             z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
         .overlay.active { opacity: 1; pointer-events: all; }
         
         .modal-content {
-            background: #1e293b; width: 90%; max-width: 600px; max-height: 80vh;
+            background: var(--surface-2); width: 90%; max-width: 600px; max-height: 80vh;
             border-radius: 20px; padding: 30px; overflow-y: auto; position: relative;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--line);
         }
-        .close-modal { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
-        .markdown-body { color: #cbd5e1; line-height: 1.6; }
-        .markdown-body h1, .markdown-body h2 { color: white; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 20px; }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: var(--tint-2); border: none; color: var(--text); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+        .markdown-body { color: var(--text-2); line-height: 1.6; }
+        .markdown-body h1, .markdown-body h2 { color: var(--text); border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-top: 20px; }
 
         /* Game Over */
         .game-over { text-align: center; }
@@ -128,7 +129,7 @@
         }
 
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -149,7 +150,7 @@
             </div>
             <div class="countdown" id="countdown">3</div>
         </div>
-        <canvas id="canvas"></canvas>
+        <canvas class="stage" id="canvas"></canvas>
     </div>
 
     <!-- GDD Modal -->
@@ -164,7 +165,7 @@
     <div class="overlay" id="gameover-overlay">
         <div class="game-over">
             <h2 id="winner-text">PLAYER 1 WINS</h2>
-            <p style="color: #94a3b8;">압도적인 실력차입니다!</p>
+            <p style="color: var(--muted);">압도적인 실력차입니다!</p>
             <button class="btn-restart" onclick="resetGame()">한 판 더!</button>
         </div>
     </div>

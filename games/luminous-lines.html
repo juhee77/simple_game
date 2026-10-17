@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>루미너스 라인 - Luminous Lines</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <!-- Fonts -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Marked.js -->
@@ -12,10 +13,13 @@
 
     <style>
         :root {
-            --bg-color: #05070a;
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --p1-color-ink: #0d6e73;
+            --p2-color-ink: #bc1566;
+            --bg-color: var(--bg);
             --p1-color: #00f2ff;
             --p2-color: #ff007b;
-            --text-main: #f8fafc;
+            --text-main: var(--text);
             --grid-color: #1e293b;
         }
 
@@ -35,13 +39,13 @@
         header {
             padding: 15px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.5);
+            background: var(--surface);
             z-index: 100;
         }
-        h1 { font-size: 1.2rem; font-weight: 800; color: #fff; letter-spacing: 1px; }
+        h1 { font-size: 1.2rem; font-weight: 800; color: var(--text); letter-spacing: 1px; }
         .header-actions { display: flex; gap: 10px; }
         .icon-btn {
-            background: rgba(255, 255, 255, 0.1); border: none; color: white;
+            background: var(--tint-2); border: none; color: var(--text);
             width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
             font-size: 1.1rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
         }
@@ -49,16 +53,16 @@
         /* Scoreboard */
         .scoreboard {
             display: flex; justify-content: space-around; padding: 15px;
-            background: rgba(15, 23, 42, 0.5); border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: var(--surface); border-bottom: 1px solid var(--line);
         }
         .player-info { text-align: center; padding: 10px 20px; border-radius: 12px; transition: all 0.3s; }
-        .player-info.p1.active { background: rgba(0, 242, 255, 0.15); box-shadow: 0 0 15px rgba(0, 242, 255, 0.3); border: 1px solid var(--p1-color); }
-        .player-info.p2.active { background: rgba(255, 0, 123, 0.15); box-shadow: 0 0 15px rgba(255, 0, 123, 0.3); border: 1px solid var(--p2-color); }
+        .player-info.p1.active { background: rgba(0, 242, 255, 0.15); box-shadow: 0 0 15px rgba(0, 242, 255, 0.14); border: 1px solid var(--p1-color); }
+        .player-info.p2.active { background: rgba(255, 0, 123, 0.15); box-shadow: 0 0 15px rgba(255, 0, 123, 0.14); border: 1px solid var(--p2-color); }
         .p-name { font-size: 0.8rem; font-weight: 800; margin-bottom: 5px; opacity: 0.6; }
         .active .p-name { opacity: 1; }
         .p-score { font-size: 2rem; font-weight: 800; }
-        .p1 .p-score { color: var(--p1-color); }
-        .p2 .p-score { color: var(--p2-color); }
+        .p1 .p-score { color: var(--p1-color-ink); }
+        .p2 .p-score { color: var(--p2-color-ink); }
 
         /* Game Board Area */
         #board-container {
@@ -77,25 +81,25 @@
         /* Notifications */
         #turn-msg {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            padding: 8px 20px; border-radius: 20px; background: rgba(0,0,0,0.7);
+            padding: 8px 20px; border-radius: 20px; background: var(--surface);
             font-weight: 800; font-size: 0.9rem; pointer-events: none; opacity: 0; transition: opacity 0.3s;
         }
 
         /* Overlays */
         .overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            background: var(--veil); backdrop-filter: blur(8px);
             display: none; align-items: center; justify-content: center; flex-direction: column;
             z-index: 1000;
         }
         .overlay.active { display: flex; }
         .modal-content {
-            background: #1e293b; width: 90%; max-width: 500px;
-            border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.1);
-            color: #cbd5e1; line-height: 1.6; max-height: 80vh; overflow-y: auto;
+            background: var(--surface-2); width: 90%; max-width: 500px;
+            border-radius: 20px; padding: 25px; border: 1px solid var(--line);
+            color: var(--text-2); line-height: 1.6; max-height: 80vh; overflow-y: auto;
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -120,7 +124,7 @@
     </div>
 
     <div id="board-container">
-        <canvas id="canvas"></canvas>
+        <canvas class="stage" id="canvas"></canvas>
         <div id="turn-msg">BONUS TURN!</div>
     </div>
 
@@ -128,14 +132,14 @@
     <div class="overlay" id="gdd-modal">
         <div class="modal-content">
             <div class="markdown-body" id="gdd-content">불러오는 중...</div>
-            <button onclick="closeGDD()" style="margin-top:20px; width:100%; padding:10px; border-radius:10px; background:var(--p1-color); border:none; font-weight:800; cursor:pointer;">확인</button>
+            <button onclick="closeGDD()" style="margin-top:20px; width:100%; padding:10px; border-radius:10px; background:var(--p1-color); border:none; font-weight:800; cursor:pointer; color: var(--text);">확인</button>
         </div>
     </div>
 
     <div class="overlay" id="gameover-overlay">
         <div style="text-align:center;">
             <h2 id="winner-text" style="font-size:3rem; margin-bottom:10px;">P1 WINS!</h2>
-            <p style="color:#94a3b8; margin-bottom:20px;">영역 점유 대결이 끝났습니다.</p>
+            <p style="color:var(--muted); margin-bottom:20px;">영역 점유 대결이 끝났습니다.</p>
             <button onclick="initGame()" style="padding:15px 40px; border-radius:50px; background:#fff; color:#000; border:none; font-weight:800; cursor:pointer;">다시 한 판!</button>
         </div>
     </div>
@@ -332,13 +336,13 @@
                 overlay.classList.add('active');
                 if (scores[0] > scores[1]) {
                     text.innerText = "PLAYER 1 WINS!";
-                    text.style.color = 'var(--p1-color)';
+                    text.style.color = 'var(--p1-color-ink)';
                 } else if (scores[1] > scores[0]) {
                     text.innerText = "PLAYER 2 WINS!";
-                    text.style.color = 'var(--p2-color)';
+                    text.style.color = 'var(--p2-color-ink)';
                 } else {
                     text.innerText = "DRAW!";
-                    text.style.color = '#fff';
+                    text.style.color = 'var(--text)';
                 }
             }
         }

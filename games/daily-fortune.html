@@ -6,23 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>오늘의 운세 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
-            --bg: #14091f;
-            --panel: rgba(255, 255, 255, .06);
-            --border: rgba(255, 255, 255, .15);
-            --text: #f8fafc;
-            --muted: #a99bbd;
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --gold-ink: #7d5e0e;
             --gold: #fbbf24;
             --accent: #c084fc;
+            --accent-ink: #8524e7;
+            --accent-soft: #f0e4fb;
+            --on-accent: #141a2a;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: radial-gradient(circle at 50% 0%, #2a1445 0%, var(--bg) 60%);
+            background: radial-gradient(circle at 50% 0%, var(--bg) 0%, var(--bg) 60%);
             font-family: 'Pretendard', system-ui, sans-serif;
             color: var(--text);
             min-height: 100vh;
@@ -37,7 +38,7 @@
         h1 {
             font-size: 1.8rem;
             margin: 44px 0 2px;
-            background: linear-gradient(135deg, #fbbf24, #c084fc);
+            background: linear-gradient(135deg, #ab8113, #a964ee);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -63,7 +64,7 @@
             padding: 14px 18px;
             border-radius: 14px;
             border: 1px solid var(--border);
-            background: rgba(255, 255, 255, .05);
+            background: var(--tint-1);
             color: var(--text);
             font-family: inherit;
             font-size: 1.05rem;
@@ -97,7 +98,7 @@
             padding: 6px 12px;
             border-radius: 999px;
             border: 1px solid var(--border);
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             color: var(--muted);
             font-family: inherit;
             font-size: .82rem;
@@ -112,17 +113,17 @@
         .headline { text-align: center; padding: 24px 20px 20px; }
         .headline .who { font-size: .85rem; color: var(--muted); }
         .headline .emoji { font-size: 3.2rem; margin: 6px 0; }
-        .headline .grade { font-size: 2rem; font-weight: 800; color: var(--gold); }
+        .headline .grade { font-size: 2rem; font-weight: 800; color: var(--gold-ink); }
         .headline .score { font-size: .9rem; color: var(--muted); margin-top: 4px; }
 
-        .meter { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .1); overflow: hidden; margin-top: 14px; }
-        .meter span { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #fbbf24, #c084fc); }
+        .meter { height: 8px; border-radius: 4px; background: var(--tint-2); overflow: hidden; margin-top: 14px; }
+        .meter span { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #fbbf24, #c084fc); color: var(--text); }
 
         .lines { display: flex; flex-direction: column; gap: 10px; }
 
         .line { display: flex; align-items: center; gap: 12px; }
         .line .name { width: 66px; font-size: .88rem; color: var(--muted); flex-shrink: 0; }
-        .line .stars { font-size: 1rem; letter-spacing: .1em; color: var(--gold); }
+        .line .stars { font-size: 1rem; letter-spacing: .1em; color: var(--gold-ink); }
         .line .note { font-size: .82rem; color: var(--muted); flex: 1; text-align: right; }
 
         .lucky { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -131,7 +132,7 @@
             text-align: center;
             padding: 14px 8px;
             border-radius: 14px;
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             border: 1px solid var(--border);
         }
 
@@ -149,7 +150,7 @@
             line-height: 1.7;
         }
 
-        .saying strong { color: var(--accent); }
+        .saying strong { color: var(--accent-ink); }
 
         .actions { display: flex; gap: 8px; }
         .actions .btn { flex: 1; }

@@ -1,59 +1,6 @@
-/* ── 디자인 토큰 ──────────────────────────────────────────────
- * 게임 페이지가 공통으로 쓰는 값이다. 새 게임을 만들 때는 색을 새로 찍지 말고
- * 여기 있는 토큰을 var()로 참조할 것.
- *
- * 두 벌이 있는 이유:
- *  - 아래 '기존 토큰'(--bg-primary 등)은 이미 35개 게임이 참조 중이라 값을 바꾸지 않는다.
- *  - '표준 토큰'(--bg 등)은 그 뒤에 만들어진 게임들이 각자 :root에 반복 선언하던 값을
- *    한곳으로 모은 것이다. 지배적으로 쓰이던 값을 그대로 표준으로 삼았다.
- *
- * 게임 고유의 테마 색(강조색·플레이어 색 등)은 각 게임의 :root에서 덮어쓰면 된다.
- * 실제로 늑대인간·크라임씬처럼 분위기가 중요한 게임은 --bg를 따로 정의해 쓰고 있다.
- * ------------------------------------------------------------ */
-
-:root {
-    /* 기존 토큰 — 값 변경 금지 (참조 중인 게임이 많다) */
-    --bg-primary: #0a0e27;
-    --bg-secondary: #151932;
-    --bg-card: rgba(30, 35, 60, 0.8);
-    /* #6366f1은 어두운 배경에서 3.86~4.25:1이라 작은 글자에 쓰면 본문 기준(4.5)을 못 넘겼다.
-       색조는 그대로 두고 밝기만 올려 가장 불리한 배경에서도 4.57:1이 되게 한다. */
-    --accent-primary: #7375f2;
-    --accent-secondary: #8b5cf6;
-    --accent-tertiary: #ec4899;
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
-    --border-color: rgba(99, 102, 241, 0.2);
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-
-    /* 표준 토큰 — 새 게임은 이쪽을 쓸 것 */
-    --bg: #0f172a;                        /* 페이지 배경 */
-    --panel: rgba(255, 255, 255, .05);    /* 카드·패널 배경 */
-    --border: rgba(255, 255, 255, .14);   /* 테두리 */
-    --text: #f8fafc;                      /* 본문 글자 */
-    --muted: #94a3b8;                     /* 보조 설명 글자 */
-    --accent: #38bdf8;                    /* 강조 (게임마다 덮어쓰는 편) */
-
-    /* 상태 색 */
-    --ok: #4ade80;
-    --warn: #fbbf24;
-    --bad: #f87171;
-
-    /* 모서리 반경 — 지금 28가지가 흩어져 있어 네 단계로 정리했다 */
-    --r-sm: 8px;      /* 작은 버튼·태그 */
-    --r-md: 14px;     /* 입력창·타일 */
-    --r-lg: 20px;     /* 카드 */
-    --r-pill: 999px;  /* 알약 버튼 */
-
-    /* 간격 */
-    --gap-xs: 6px;
-    --gap-sm: 10px;
-    --gap-md: 14px;
-    --gap-lg: 20px;
-}
+/* 게임 페이지 공용 부품 — 뒤로가기·제목·판·버튼·상태줄.
+ * 색·모서리·그림자 값은 모두 design-system.css 토큰에서 온다. 여기서 색을 새로 찍지 말 것.
+ * 게임 고유의 테마 색(강조색·플레이어 색 등)은 각 게임의 :root에서 덮어쓰면 된다. */
 
 * {
     margin: 0;
@@ -62,9 +9,9 @@
 }
 
 body {
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
     min-height: 100vh;
     padding: 2rem;
 }
@@ -83,64 +30,63 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    color: var(--text-primary);
+    padding: 0.6rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    color: var(--text);
     text-decoration: none;
-    font-size: 1rem;
-    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+    transition: background 0.2s ease, transform 0.2s ease;
     margin-bottom: 1.5rem;
 }
 
 .back-button:hover {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    transform: translateX(-5px);
+    background: var(--accent-soft);
+    border-color: var(--accent-soft);
+    color: var(--accent-ink);
+    transform: translateX(-3px);
 }
 
 .game-title {
     font-size: 2.5rem;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    letter-spacing: -0.02em;
+    color: var(--text);
     margin-bottom: 0.5rem;
 }
 
 .game-description {
     font-size: 1.1rem;
-    color: var(--text-secondary);
+    color: var(--text-2);
 }
 
 .game-board {
-    background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
     padding: 2rem;
     margin-bottom: 1.5rem;
 }
 
 .button {
     padding: 0.875rem 2rem;
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    background: var(--accent);
     border: none;
-    border-radius: 12px;
-    color: var(--text-primary);
+    border-radius: var(--r-md);
+    color: var(--on-accent);
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    box-shadow: var(--shadow-md);
 }
 
 .button:active {
@@ -148,13 +94,14 @@ body {
 }
 
 .button-secondary {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text);
 }
 
 .button-secondary:hover {
-    background: var(--bg-card);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--surface-3);
+    box-shadow: none;
 }
 
 .controls {
@@ -170,8 +117,9 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
     margin-bottom: 1.5rem;
     flex-wrap: wrap;
     gap: 1rem;
@@ -185,15 +133,13 @@ body {
 
 .status-label {
     font-size: 0.875rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: var(--muted);
 }
 
 .status-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--text);
 }
 
 @media (max-width: 768px) {

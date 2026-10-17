@@ -5,20 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>이벤트 사운드보드 | 미니게임 천국</title>
   <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-  <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+  <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+  <script src="../scripts/game-common.js?v=efdc1560"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
   <style>
     :root {
-      --bg: #0b0b1a;
-      --card-bg: rgba(22, 22, 45, 0.7);
-      --card-border: rgba(255, 255, 255, 0.1);
+      /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+      --cyan-ink: #0e697c;
+      --card-bg: var(--surface);
+      --card-border: var(--tint-2);
       --cyan: #00d4ff;
       --purple: #7c3aed;
-      --pink: #ff006e;
+      --pink: #bc155d;
       --yellow: #ffd166;
       --green: #06d6a0;
-      --text-main: #ffffff;
-      --text-dim: #94a3b8;
+      --text-main: var(--text);
+      --text-dim: var(--muted);
       --radius-card: 16px;
       --radius-btn: 14px;
     }
@@ -60,7 +62,7 @@
       left: 0;
       background: none;
       border: none;
-      color: var(--cyan);
+      color: var(--cyan-ink);
       font-size: 24px;
       cursor: pointer;
       text-decoration: none;
@@ -94,7 +96,7 @@
     .section-title {
       font-size: 16px;
       font-weight: 700;
-      color: var(--cyan);
+      color: var(--cyan-ink);
       margin-bottom: 14px;
       display: flex;
       align-items: center;
@@ -108,7 +110,7 @@
     }
 
     .sound-btn {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--tint-1);
       border: 1px solid var(--card-border);
       border-radius: var(--radius-btn);
       padding: 16px 12px;
@@ -119,19 +121,20 @@
       gap: 8px;
       cursor: pointer;
       transition: all 0.15s ease;
-      color: white;
+      color: var(--text);
       user-select: none;
     }
 
     .sound-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--tint-2);
       transform: translateY(-2px);
+      color: var(--text);
     }
 
     .sound-btn:active, .sound-btn.playing {
       transform: scale(0.95);
       border-color: var(--cyan);
-      box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.18);
     }
 
     .sound-btn.btn-correct { border-color: rgba(6, 214, 160, 0.4); }
@@ -166,7 +169,7 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.1);
+      background: var(--tint-2);
       backdrop-filter: blur(5px);
       display: flex;
       align-items: center;
@@ -175,13 +178,14 @@
       cursor: pointer;
       border: 1px solid var(--card-border);
       z-index: 100;
+      color: var(--text);
     }
 
     .modal {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
+      background: var(--veil);
       z-index: 1000;
       align-items: center;
       justify-content: center;
@@ -197,7 +201,7 @@
       width: 100%;
     }
 
-    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal h2 { margin-bottom: 16px; color: var(--cyan-ink); }
     .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
     .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
   </style>

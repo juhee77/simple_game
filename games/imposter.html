@@ -4,37 +4,38 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>네온 고스트 - 미니게임 천국</title>
 <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-<link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+<link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+<link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;font-family:'Pretendard',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);font-family:'Pretendard',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
 .back{position:absolute;top:20px;left:20px;z-index:10}
 h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .setup{text-align:center;width:90%;max-width:400px}
-.setup input, .setup select{width:80%;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1rem;font-family:inherit;margin:8px 0}
+.setup input, .setup select{width:80%;padding:12px;background:var(--tint-1);border:1px solid var(--line);border-radius:12px;color:var(--text);font-size:1rem;font-family:inherit;margin:8px 0}
 .btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;padding:14px 50px;font-size:1.2rem;font-weight:700;border-radius:50px;cursor:pointer;margin:10px 0}
 .word-screen{display:none;text-align:center;width:90%;max-width:400px;margin-top:30px}
-.word-card{background:rgba(255,255,255,.05);padding:50px 30px;border-radius:30px;border:2px solid rgba(99,102,241,.3);margin:20px 0}
+.word-card{background:var(--tint-1);padding:50px 30px;border-radius:30px;border:2px solid rgba(99,102,241,.3);margin:20px 0}
 .word-text{font-size:3rem;font-weight:900}
-.ghost-text{font-size:2rem;color:#ff4757}
-.player-label{font-size:1.5rem;font-weight:700;color:#a78bfa;margin-bottom:10px}
-.pass-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.98);z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+.ghost-text{font-size:2rem;color:#c01524}
+.player-label{font-size:1.5rem;font-weight:700;color:#673be9;margin-bottom:10px}
+.pass-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
 .vote-screen{display:none;text-align:center;width:90%;max-width:400px}
 .vote-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
-.vote-btn{padding:16px;border-radius:16px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .3s}
+.vote-btn{padding:16px;border-radius:16px;background:var(--tint-1);border:2px solid var(--line);color:var(--text);font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .3s}
 .vote-btn:hover{border-color:#8b5cf6;background:rgba(139,92,246,.1)}
 .result-screen{display:none;text-align:center}
 .result-screen .big{font-size:2.5rem;font-weight:900;margin:20px 0}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 <a href="../index.html" class="back back-button">← 메인</a>
 <h1>👻 네온 고스트</h1>
 <div class="setup" id="setup">
-<p style="color:#94a3b8;margin:15px 0">참가자 수를 입력하세요 (3~30명)</p>
+<p style="color:var(--muted);margin:15px 0">참가자 수를 입력하세요 (3~30명)</p>
 <input id="count" type="number" placeholder="참가자 수" min="3" max="30" value="4" onchange="toggleGhostOption()">
 <div id="ghost-option-area" style="margin: 8px 0; display: none;">
-  <label style="color:#cbd5e1;font-size:0.9rem;margin-right:8px;">고스트 인원:</label>
+  <label style="color:var(--text-2);font-size:0.9rem;margin-right:8px;">고스트 인원:</label>
   <select id="ghost-count" style="width: auto; padding: 6px 12px; display: inline-block;">
     <option value="1">1명</option>
     <option value="2">2명</option>
@@ -44,7 +45,7 @@ h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#6366f1,
 </div>
 
 <div class="pass-overlay" id="pass-overlay">
-<p style="font-size:1.5rem;color:#94a3b8">📱 다음 사람에게 넘기세요</p>
+<p style="font-size:1.5rem;color:var(--muted)">📱 다음 사람에게 넘기세요</p>
 <p id="pass-label" style="font-size:2rem;font-weight:800;margin:15px 0"></p>
 <button class="btn" id="pass-confirm-btn" onclick="showWord()">확인하기 (혼자 보세요!)</button>
 </div>
@@ -52,19 +53,19 @@ h1{font-size:1.8rem;margin:40px 0 5px;background:linear-gradient(135deg,#6366f1,
 <div class="word-screen" id="word-screen">
 <div class="player-label" id="player-label"></div>
 <div class="word-card"><div class="word-text" id="word-text"></div></div>
-<p style="color:#94a3b8">기억했으면 다음으로 넘기세요!</p>
+<p style="color:var(--muted)">기억했으면 다음으로 넘기세요!</p>
 <button class="btn" onclick="nextPlayer()">확인 완료</button>
 </div>
 
 <div class="vote-screen" id="vote-screen">
 <h2 id="vote-title" style="font-size:2rem;margin:20px 0">🗳️ 고스트는 누구?</h2>
-<p style="color:#94a3b8;margin-bottom:15px">비밀 투표 단계입니다. 고스트라고 생각하는 사람을 선택하세요! (본인 불가)</p>
+<p style="color:var(--muted);margin-bottom:15px">비밀 투표 단계입니다. 고스트라고 생각하는 사람을 선택하세요! (본인 불가)</p>
 <div class="vote-grid" id="vote-grid"></div>
 </div>
 
 <div class="result-screen" id="result-screen">
 <div class="big" id="result-text"></div>
-<p id="answer-text" style="color:#94a3b8;font-size:1.2rem"></p>
+<p id="answer-text" style="color:var(--muted);font-size:1.2rem"></p>
 <button class="btn" onclick="location.reload()">다시 하기</button>
 </div>
 
@@ -191,11 +192,11 @@ const caughtGhosts = top.filter(idx => ghostIndices.includes(idx));
 const isGhostVictory = caughtGhosts.length === 0;
 
 if(!isGhostVictory && top.length === 1 && ghostIndices.includes(top[0])){
-document.getElementById('result-text').innerHTML='<span style="color:#2ed573">🎉 고스트를 찾았습니다!</span>';
+document.getElementById('result-text').innerHTML='<span style="color:#17723c">🎉 고스트를 찾았습니다!</span>';
 }else if(top.length > 1 && caughtGhosts.length > 0){
-document.getElementById('result-text').innerHTML='<span style="color:#ffa502">🤝 동표 발생! 고스트 생존</span>';
+document.getElementById('result-text').innerHTML='<span style="color:#82590e">🤝 동표 발생! 고스트 생존</span>';
 }else{
-document.getElementById('result-text').innerHTML='<span style="color:#ff4757">😈 고스트가 생존했습니다!</span>';
+document.getElementById('result-text').innerHTML='<span style="color:#c01524">😈 고스트가 생존했습니다!</span>';
 }
 
 const ghostLabel = ghostIndices.map(i => `플레이어 ${i+1}`).join(', ');

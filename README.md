@@ -153,7 +153,7 @@
 - 🔍 **검색 & 필터** — 인원수(1인~8인+), 소요시간별 필터링
 - ❓ **규칙 안내** — 모든 게임에 화면 우측 하단 ? 버튼
 - ⚡ **설치 불필요** — 순수 HTML/CSS/JS, 브라우저에서 바로 실행
-- 🎨 **네온 테마** — 일관된 프리미엄 네온 디자인 시스템
+- 🎨 **디자인 시스템** — 밝은 화면에 게임판만 어두운 무대로, 색·글꼴을 `styles/design-system.css` 한 곳에서 관리
 
 ---
 
@@ -221,6 +221,8 @@ simple_game/
 │       ├── future-games-ideas.md
 │       └── *-gdd.md
 ├── styles/
+│   ├── design-system.css       # 디자인 토큰 (색·글꼴·모서리·어두운 무대)
+│   ├── pretendard.css          # Pretendard 글꼴
 │   ├── main.css                # 메인 페이지 스타일
 │   └── game-common.css         # 공통 게임 스타일
 ├── scripts/

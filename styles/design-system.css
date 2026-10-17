@@ -1,0 +1,167 @@
+/* ── 디자인 시스템 ─────────────────────────────────────────────
+ * 메인 화면과 모든 게임 페이지가 함께 쓰는 단일 출처다.
+ * 색·글꼴·모서리·그림자를 바꾸고 싶으면 여기만 고치면 된다.
+ *
+ * 규칙
+ *  - 페이지는 색을 직접 찍지 말고 아래 토큰을 var()로 쓴다.
+ *    게임 고유의 강조색(플레이어 색·카드 색 등)만 예외로 둔다.
+ *  - 화면은 밝게, 게임이 돌아가는 판(캔버스·네온 보드)만 '어두운 무대'로 둔다.
+ *    무대가 될 요소에 class="stage"를 붙이면 그 안의 토큰이 어두운 값으로 바뀐다.
+ *    무대 안에서도 같은 토큰(var(--surface), var(--text) …)을 쓰면 된다.
+ *
+ * 모든 선택자는 :where()로 감싸 우선순위를 0으로 둔다. 페이지 CSS가 언제나 이긴다.
+ * ------------------------------------------------------------ */
+
+/* 밝은 값. 무대 위의 길잡이(아래 '무대' 절 참고)에도 같은 값을 다시 깐다. */
+:root,
+:where(.stage, [data-stage]) :where(.chrome, .rules-fab, .rules-overlay) {
+    /* 바탕 */
+    --bg: #f2f4f8;            /* 페이지 바탕 */
+    --surface: #ffffff;       /* 카드·패널 */
+    --surface-2: #f2f4f8;     /* 카드 안의 칸·입력창 */
+    --surface-3: #e3e7ef;     /* 눌린 칸·진한 칸 */
+
+    /* 선 */
+    --line: #e3e7ef;
+    --line-strong: #cfd5df;
+
+    /* 글자 — 흰 바탕 위에서 모두 4.5:1 이상 */
+    --text: #141a2a;
+    --text-2: #4b5565;
+    --muted: #566173;         /* 옅은 회색 칸 위에서도 4.5:1 */
+
+    /* 강조 */
+    --accent: #4f46e5;
+    --accent-ink: #3730a3;    /* 강조색 글자 */
+    --accent-soft: #eef0ff;   /* 강조색 옅은 바탕 */
+    --on-accent: #ffffff;     /* 강조색 위 글자 */
+
+    /* 상태 */
+    --ok: #15803d;
+    --ok-soft: #e8f7ef;
+    --warn: #b45309;
+    --warn-soft: #fff4e0;
+    --bad: #c81e1e;
+    --bad-soft: #fdecec;
+    --star: #f5a524;
+
+    /* 겹침용 반투명 — 무대 안에서는 흰색 반투명으로 뒤집힌다 */
+    --tint-1: rgba(20, 26, 42, .04);
+    --tint-2: rgba(20, 26, 42, .07);
+    --tint-3: rgba(20, 26, 42, .12);
+    --scrim: rgba(15, 20, 35, .55);   /* 모달 뒤 가림막 */
+    --veil: rgba(242, 244, 248, .96); /* 화면을 통째로 덮는 안내 화면 */
+
+    /* 그림자 */
+    --shadow-sm: 0 1px 3px rgba(20, 26, 42, .08);
+    --shadow-md: 0 6px 20px rgba(20, 26, 42, .10);
+    --shadow-lg: 0 18px 44px rgba(20, 26, 42, .16);
+
+    --focus: #a5b4fc;
+
+    /* 어두운 무대 — 값은 여기서만 정한다 */
+    --stage-bg: #0b1020;
+    --stage-surface: #151b2f;
+    --stage-surface-2: #1d2540;
+    --stage-surface-3: #2a3352;
+    --stage-line: rgba(255, 255, 255, .14);
+    --stage-text: #f8fafc;
+    --stage-text-2: #cbd5e1;
+    --stage-muted: #94a3b8;
+
+    /* 글꼴 */
+    --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    /* 모서리 */
+    --r-sm: 8px;      /* 작은 버튼·태그 */
+    --r-md: 14px;     /* 입력창·타일 */
+    --r-lg: 20px;     /* 카드 */
+    --r-pill: 999px;  /* 알약 버튼 */
+
+    /* 간격 */
+    --gap-xs: 6px;
+    --gap-sm: 10px;
+    --gap-md: 14px;
+    --gap-lg: 20px;
+}
+
+/* 어두운 무대: 같은 이름의 토큰을 어두운 값으로 덮는다.
+ * 화면 전체가 무대인 게임은 <html data-stage>로 표시한다. 페이지가 :root에 만든 변수도
+ * 무대 값으로 계산되게 하려면 루트 자체가 무대여야 하기 때문이다. */
+:where(.stage, [data-stage]),
+:root[data-stage] {
+    --bg: var(--stage-bg);
+    --surface: var(--stage-surface);
+    --surface-2: var(--stage-surface-2);
+    --surface-3: var(--stage-surface-3);
+    --line: var(--stage-line);
+    --line-strong: rgba(255, 255, 255, .28);
+    --text: var(--stage-text);
+    --text-2: var(--stage-text-2);
+    --muted: var(--stage-muted);
+    --accent: #818cf8;
+    --accent-ink: #c7d2fe;
+    --accent-soft: rgba(129, 140, 248, .18);
+    --ok: #4ade80;
+    --ok-soft: rgba(74, 222, 128, .16);
+    --warn: #fbbf24;
+    --warn-soft: rgba(251, 191, 36, .16);
+    --bad: #f87171;
+    --bad-soft: rgba(248, 113, 113, .16);
+    --tint-1: rgba(255, 255, 255, .05);
+    --tint-2: rgba(255, 255, 255, .09);
+    --tint-3: rgba(255, 255, 255, .15);
+    --veil: rgba(11, 16, 32, .92);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, .35);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, .40);
+    --shadow-lg: 0 18px 44px rgba(0, 0, 0, .50);
+    background-color: var(--stage-bg);
+    color: var(--text);
+}
+
+/* 무대 위에 떠 있는 규칙 버튼·규칙 창은 밝은 값으로 되돌린다. 어느 게임에서 열어도 같은 모양이다.
+ * 무대 안에서 밝은 카드가 필요하면 class="chrome"을 붙이면 된다. */
+:where(.stage, [data-stage]) :where(.chrome, .rules-fab, .rules-overlay) {
+    color: var(--text);
+}
+
+/* 옛 이름 — 예전 게임들이 쓰던 토큰을 위 토큰으로 이어 준다.
+ * 무대 안에서도 다시 계산되도록 무대 선택자에도 함께 선언한다. */
+:root,
+:where(.stage, [data-stage]),
+:root[data-stage],
+:where(.stage, [data-stage]) :where(.chrome, .rules-fab, .rules-overlay) {
+    --panel: var(--surface);
+    --border: var(--line);
+    --bg-primary: var(--bg);
+    --bg-secondary: var(--surface-2);
+    --bg-card: var(--surface);
+    --accent-primary: var(--accent);
+    --text-primary: var(--text);
+    --text-secondary: var(--text-2);
+    --text-muted: var(--muted);
+    --border-color: var(--line);
+    --success: var(--ok);
+    --warning: var(--warn);
+    --danger: var(--bad);
+}
+
+:root {
+    /* 무대와 상관없이 그대로인 옛 강조색 */
+    --accent-secondary: #7c3aed;
+    --accent-tertiary: #db2777;
+}
+
+/* ── 기본 바탕 ── */
+:where(html) { -webkit-text-size-adjust: 100%; }
+
+:where(body) {
+    font-family: var(--font);
+    background-color: var(--bg);
+    color: var(--text);
+    -webkit-tap-highlight-color: transparent;
+}
+
+:where(button, input, select, textarea) { font-family: inherit; }
+
+:where(:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }

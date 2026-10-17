@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>메뉴 추천 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .filter-section {
             display: grid;
@@ -46,7 +47,7 @@
             border-radius: 10px;
         }
 
-        .filter-option:hover { background: rgba(255, 255, 255, .05); }
+        .filter-option:hover { background: var(--tint-1); }
 
         .filter-option input[type="checkbox"],
         .filter-option input[type="radio"] {
@@ -72,6 +73,7 @@
             display: none;
             position: relative;
             overflow: hidden;
+            color: #fff;
         }
 
         .recommendation-card.show {
@@ -173,7 +175,7 @@
             background: linear-gradient(135deg, #f59e0b, #d97706);
             flex: 1;
             min-width: 150px;
-            color: white;
+            color: var(--text);
             border: none;
             border-radius: 50px;
             cursor: pointer;
@@ -182,11 +184,11 @@
         }
         .random-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.18);
         }
 
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>

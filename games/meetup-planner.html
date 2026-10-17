@@ -6,14 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>모임 날짜 맞추기 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         :root {
             --accent: #34d399;
             --yes: #4ade80;
             --maybe: #fbbf24;
             --no: #f87171;
+            --accent-ink: #186f50;
+            --accent-soft: #e6faf2;
+            --on-accent: #141a2a;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -34,7 +38,7 @@
         h1 {
             font-size: 1.8rem;
             margin: 44px 0 4px;
-            background: linear-gradient(135deg, #34d399, #38bdf8);
+            background: linear-gradient(135deg, #21996d, #1691c8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -68,7 +72,7 @@
             padding: 13px 15px;
             border-radius: 13px;
             border: 1px solid var(--border);
-            background: rgba(255, 255, 255, .05);
+            background: var(--tint-1);
             color: var(--text);
             font-family: inherit;
             font-size: 1rem;
@@ -104,7 +108,7 @@
             padding: 8px 14px;
             border-radius: 999px;
             border: 1px solid var(--border);
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             color: var(--muted);
             font-family: inherit;
             font-size: .86rem;
@@ -129,15 +133,15 @@
 
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .dow-head { font-size: .72rem; color: var(--muted); text-align: center; padding-bottom: 2px; }
-        .dow-head.sun, .num.sun { color: #fb7185; }
-        .dow-head.sat, .num.sat { color: #7dd3fc; }
+        .dow-head.sun, .num.sun { color: #c2162f; }
+        .dow-head.sat, .num.sat { color: #106893; }
 
         .cell {
             position: relative;
             min-height: 46px;
             border-radius: 10px;
-            background: rgba(255, 255, 255, .05);
-            border: 1px solid rgba(255, 255, 255, .06);
+            background: var(--tint-1);
+            border: 1px solid var(--line);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -147,7 +151,7 @@
         .cell.off { opacity: .28; }
 
         .num { font-size: .78rem; font-weight: 700; padding: 3px 0 0 5px; line-height: 1.2; pointer-events: none; }
-        .cell.holiday .num { color: #fb7185; }
+        .cell.holiday .num { color: #c2162f; }
 
         /* 탭·드래그 대상. 세로 스크롤은 살리고 가로 드래그로 여러 날을 칠한다 */
         .slot {
@@ -169,7 +173,7 @@
             flex: 1;
             font-size: .62rem;
             color: var(--muted);
-            border-top: 1px solid rgba(255, 255, 255, .06);
+            border-top: 1px solid var(--line);
             min-height: 22px;
         }
 
@@ -181,7 +185,7 @@
         .heat { cursor: pointer; }
         .heat .cnt { font-size: .66rem; font-weight: 800; text-align: right; padding: 0 5px 3px; margin-top: auto; pointer-events: none; }
         .heat .half { cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; }
-        .heat.sel, .half.sel { outline: 2px solid #fff; outline-offset: -2px; }
+        .heat.sel, .half.sel { outline: 2px solid var(--line-strong); outline-offset: -2px; }
 
         .quick { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
         .quick .chip { font-size: .78rem; padding: 7px 12px; }
@@ -200,7 +204,7 @@
             padding: 13px 14px;
             margin-top: 8px;
             border-radius: 14px;
-            background: rgba(255, 255, 255, .04);
+            background: var(--tint-1);
             border: 1px solid var(--border);
             cursor: pointer;
         }
@@ -227,7 +231,7 @@
         .detail b { color: var(--text); }
 
         .persuade { font-size: .86rem; line-height: 1.7; margin-top: 8px; }
-        .persuade div { padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, .06); }
+        .persuade div { padding: 8px 0; border-top: 1px solid var(--line); }
         .persuade div:first-child { border-top: none; }
 
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
@@ -288,7 +292,7 @@
                 <div class="legend">
                     <span><i style="background:var(--yes)"></i>가능</span>
                     <span><i style="background:var(--maybe)"></i>애매</span>
-                    <span><i style="background:rgba(255,255,255,.08)"></i>안 됨</span>
+                    <span><i style="background:var(--tint-2)"></i>안 됨</span>
                 </div>
                 <div class="quick">
                     <button class="chip" onclick="quickFill('weekend')">주말 전부 ✅</button>
@@ -789,7 +793,7 @@
                 el.style.background = `rgba(52, 211, 153, ${(0.12 + ratio * 0.78).toFixed(2)})`;
                 if (ratio > 0.6) el.style.color = '#04161a';
             }
-            if (st.tier === 0) el.style.boxShadow = 'inset 0 0 0 2px #fff';
+            if (st.tier === 0) el.style.boxShadow = 'inset 0 0 0 2px rgba(20, 26, 42, 0.1)';
             const avail = st.yes.length + st.maybe.length;
             const count = `${avail}/${n}`;
             // 아무도 안 되는 칸에 0/N을 찍으면 달력이 숫자로 지저분해진다

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>첩보원: 암호 해독</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <!-- Fonts -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Marked.js for Markdown parsing -->
@@ -12,16 +13,17 @@
 
     <style>
         :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --accent-green-ink: #0c704f;
+            --bg-color: var(--bg);
+            --panel-bg: var(--surface-2);
+            --text-main: var(--text);
             --accent-green: #10b981;
             --accent-tan: #d97706; /* civilian color */
             --accent-black: #111827; /* assassin */
             --accent-blue: #3b82f6;
-            --tile-bg: #334155;
-            --tile-hover: #475569;
+            --tile-bg: var(--surface-3);
+            --tile-hover: var(--surface-3);
             --border-radius: 12px;
         }
 
@@ -51,7 +53,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid var(--line);
             margin-bottom: 20px;
         }
 
@@ -70,9 +72,9 @@
 
         .icon-btn {
             min-width: 40px; min-height: 40px;   /* 터치 영역 확보 (기존 35×40) */
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--tint-2);
             border: none;
-            color: white;
+            color: var(--text);
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -87,7 +89,7 @@
         .guide-btn {
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             border: none;
-            color: white;
+            color: #fff;
             padding: 0 16px;
             height: 40px;
             border-radius: 20px;
@@ -98,17 +100,18 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.18);
         }
 
         .guide-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.6);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.27);
         }
 
         .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--tint-3);
             transform: scale(1.05);
+            color: var(--text);
         }
 
         /* Status Bar */
@@ -121,7 +124,7 @@
             padding: 15px 20px;
             border-radius: var(--border-radius);
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(20, 26, 42, 0.1);
         }
 
         .status-item {
@@ -143,7 +146,7 @@
             font-weight: 800;
         }
 
-        .status-value.green { color: var(--accent-green); }
+        .status-value.green { color: var(--accent-green-ink); }
         .status-value.blue { color: var(--accent-blue); }
 
         /* Board */
@@ -171,12 +174,12 @@
             position: relative;
             user-select: none;
             border: 2px solid transparent;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            box-shadow: 0 4px 0 rgba(20, 26, 42, 0.07);
         }
 
         .tile:active:not(.revealed-full) {
             transform: translateY(4px);
-            box-shadow: 0 0 0 rgba(0,0,0,0.2);
+            box-shadow: 0 0 0 rgba(20, 26, 42, 0.07);
         }
 
         .tile:hover:not(.revealed-full) {
@@ -186,15 +189,15 @@
         /* Tile States */
         .tile.found {
             background-color: var(--accent-green);
-            color: white;
+            color: var(--text);
             box-shadow: none;
             transform: translateY(4px);
             cursor: default;
         }
 
         .tile.assassin {
-            background-color: var(--accent-black);
-            color: #ef4444; /* Red text for assassin */
+            background-color: var(--accent-var(--surface));
+            color: #c21616; /* Red text for assassin */
             border: 2px solid #ef4444;
             box-shadow: none;
             transform: translateY(4px);
@@ -208,7 +211,7 @@
             height: 16px;
             border-radius: 50%;
             background-color: var(--accent-tan);
-            border: 2px solid white;
+            border: 2px solid var(--line-strong);
             display: none;
         }
 
@@ -265,7 +268,7 @@
 
         .hinter-btn.active {
             background: var(--accent-blue);
-            color: white;
+            color: var(--text);
         }
 
         .action-buttons {
@@ -291,19 +294,19 @@
             gap: 8px;
         }
 
-        .btn-primary { background: var(--accent-blue); color: white; }
-        .btn-primary:hover { background: #2563eb; }
+        .btn-primary { background: var(--accent-blue); color: var(--text); }
+        .btn-primary:hover { background: #2563eb; color: #fff; }
         
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
+        .btn-danger { background: #ef4444; color: var(--text); }
+        .btn-danger:hover { background: #dc2626; color: #fff; }
         
-        .btn-warning { background: var(--accent-tan); color: white; }
+        .btn-warning { background: var(--accent-tan); color: var(--text); }
 
         /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: var(--veil);
             backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
@@ -340,9 +343,9 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(255,255,255,0.1);
+            background: var(--tint-2);
             border: none;
-            color: white;
+            color: var(--text);
             width: 32px; height: 32px;
             border-radius: 50%;
             cursor: pointer;
@@ -351,7 +354,7 @@
             justify-content: center;
         }
 
-        .close-modal:hover { background: rgba(255,255,255,0.2); }
+        .close-modal:hover { background: var(--tint-3); }
 
         /* Markdown Styles */
         .markdown-body {
@@ -359,7 +362,7 @@
             line-height: 1.6;
         }
         .markdown-body h1, .markdown-body h2 {
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid var(--line);
             padding-bottom: 10px;
             margin-top: 24px;
             margin-bottom: 16px;
@@ -371,7 +374,7 @@
             border-left: 4px solid var(--accent-blue);
             padding-left: 16px;
             color: var(--text-muted);
-            background: rgba(255,255,255,0.05);
+            background: var(--tint-1);
             padding: 10px 16px;
             border-radius: 4px;
         }
@@ -381,7 +384,7 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
-            background: rgba(15, 23, 42, 0.95);
+            background: var(--surface);
             padding: 40px;
             border-radius: 20px;
             text-align: center;
@@ -399,8 +402,8 @@
         }
 
         .game-over-msg h2 { font-size: 2.5rem; margin-bottom: 15px; }
-        .game-over-msg.win { border-color: var(--accent-green); color: var(--accent-green); }
-        .game-over-msg.lose { border-color: #ef4444; color: #ef4444; }
+        .game-over-msg.win { border-color: var(--accent-green); color: var(--accent-green-ink); }
+        .game-over-msg.lose { border-color: #ef4444; color: #c21616; }
         
         @media (max-width: 600px) {
             header h1 { font-size: 1.1rem; }
@@ -416,7 +419,7 @@
             .game-over-msg h2 { font-size: 1.8rem; }
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -480,7 +483,7 @@
     <!-- Game Over Overlay -->
     <div class="game-over-msg" id="game-over-msg">
         <h2 id="go-title">임무 실패!</h2>
-        <p id="go-desc" style="color: white; margin-bottom: 20px;">암살자와 접선했습니다.</p>
+        <p id="go-desc" style="color: var(--text); margin-bottom: 20px;">암살자와 접선했습니다.</p>
         <button class="btn btn-primary" onclick="initGame()" style="width: 100%;">다시 도전하기</button>
     </div>
 

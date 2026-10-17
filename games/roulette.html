@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>룰렛 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .roulette-container {
             position: relative;
@@ -31,7 +32,7 @@
             border-left: 20px solid transparent;
             border-right: 20px solid transparent;
             border-top: 40px solid #ec4899;
-            filter: drop-shadow(0 4px 8px rgba(236, 72, 153, 0.5));
+            filter: drop-shadow(0 4px 8px rgba(236, 72, 153, 0.23));
             z-index: 10;
         }
 
@@ -81,6 +82,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            color: #fff;
         }
 
         .item-tag button {
@@ -105,7 +107,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: var(--veil);
             display: none;
             align-items: center;
             justify-content: center;
@@ -173,7 +175,7 @@
         }
     canvas{touch-action:manipulation}
 </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>

@@ -5,26 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>페르미 추정 - Fermi Estimation</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --panel-bg: rgba(22, 28, 45, 0.6);
-            --border-color: rgba(56, 189, 248, 0.2);
-            --text-main: #f8fafc;
-            --text-muted: #64748b;
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --neon-accent-ink: #106991;
+            --bg-color: var(--bg);
+            --panel-bg: var(--surface);
+            --text-main: var(--text);
             --neon-accent: #38bdf8;
-            --neon-pink: #f43f5e;
-            --glass-glow: 0 0 15px rgba(56, 189, 248, 0.3);
+            --neon-pink: #c21633;
+            --glass-glow: 0 0 15px rgba(56, 189, 248, 0.14);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
         body {
             background-color: var(--bg-color);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(30, 41, 59, 0.5) 0, transparent 50%),
+                radial-gradient(at 0% 0%, var(--bg) 0, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.2) 0, transparent 50%);
             color: var(--text-main);
             min-height: 100vh;
@@ -39,10 +40,10 @@
             width: 100%; max-width: 550px; padding: 15px;
             display: flex; justify-content: space-between; align-items: center;
         }
-        h1 { font-family: 'Pretendard', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--neon-accent); text-shadow: var(--glass-glow); }
+        h1 { font-family: 'Pretendard', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--neon-accent-ink); text-shadow: var(--glass-glow); }
 
         .btn-icon {
-            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text);
             width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
             transition: all 0.2s;
@@ -54,25 +55,25 @@
             background: var(--panel-bg); backdrop-filter: blur(15px);
             border: 1px solid var(--border-color); border-radius: 20px;
             padding: 25px; margin: 15px 0;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 15px 35px rgba(20, 26, 42, 0.16);
             display: none; flex-direction: column; gap: 20px;
         }
         .card.active { display: flex; }
 
-        .card h2 { font-size: 1.4rem; text-align: center; color: var(--neon-accent); margin-bottom: 5px; }
+        .card h2 { font-size: 1.4rem; text-align: center; color: var(--neon-accent-ink); margin-bottom: 5px; }
         .card p.desc { font-size: 0.9rem; color: var(--text-muted); text-align: center; line-height: 1.4; }
 
         .player-input-row { display: flex; gap: 10px; }
         .input-text {
-            flex: 1; padding: 12px 15px; background: rgba(0,0,0,0.3);
+            flex: 1; padding: 12px 15px; background: var(--tint-2);
             border: 1px solid var(--border-color); border-radius: 10px;
-            color: white; font-size: 1rem; outline: none; transition: all 0.2s;
+            color: var(--text); font-size: 1rem; outline: none; transition: all 0.2s;
         }
-        .input-text:focus { border-color: var(--neon-accent); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+        .input-text:focus { border-color: var(--neon-accent); box-shadow: 0 0 10px rgba(56, 189, 248, 0.09); }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--neon-accent), #0284c7);
-            color: white; border: none; padding: 14px; border-radius: 12px;
+            color: var(--text); border: none; padding: 14px; border-radius: 12px;
             font-size: 1.05rem; font-weight: 800; cursor: pointer;
             transition: all 0.2s; text-align: center;
         }
@@ -81,21 +82,21 @@
         /* Fermi estimation custom slider */
         .fermi-slider-container {
             display: flex; flex-direction: column; gap: 15px; margin: 15px 0;
-            background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
+            background: var(--tint-2); padding: 20px; border-radius: 12px; border: 1px solid var(--line);
         }
         .exponent-indicator {
             font-family: 'Share Tech Mono', monospace; font-size: 2.5rem; text-align: center;
-            color: var(--neon-accent); text-shadow: var(--glass-glow); margin: 10px 0;
+            color: var(--neon-accent-ink); text-shadow: var(--glass-glow); margin: 10px 0;
         }
         .fermi-slider {
             -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px;
-            background: rgba(255,255,255,0.1); outline: none;
+            background: var(--tint-2); outline: none;
         }
         .fermi-slider::-webkit-slider-thumb {
             -webkit-appearance: none; appearance: none;
             width: 24px; height: 24px; border-radius: 50%;
             background: var(--neon-accent); cursor: pointer;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.36);
         }
 
         /* Leaderboard and Result items */
@@ -104,10 +105,10 @@
         }
         .list-item {
             display: flex; justify-content: space-between; padding: 12px 20px;
-            background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);
+            background: var(--tint-1); border-radius: 10px; border: 1px solid var(--line);
             align-items: center;
         }
-        .value-display { font-family: 'Share Tech Mono', monospace; font-weight: bold; color: var(--neon-accent); }
+        .value-display { font-family: 'Share Tech Mono', monospace; font-weight: bold; color: var(--neon-accent-ink); }
 
         /* Pass Screen */
         .pass-container {
@@ -115,7 +116,7 @@
             padding: 30px 10px;
         }
         .phone-avatar {
-            font-size: 4rem; color: var(--neon-accent); animation: float 3s ease-in-out infinite;
+            font-size: 4rem; color: var(--neon-accent-ink); animation: float 3s ease-in-out infinite;
         }
         @keyframes float {
             0% { transform: translateY(0px) rotate(0deg); }
@@ -124,7 +125,7 @@
         }
 
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -182,9 +183,9 @@
         <h2>추정 결과 공개</h2>
         <p class="desc" style="color:var(--text-main); font-size:1.1rem; font-weight:800; margin:10px 0;" id="reveal-question"></p>
         
-        <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:12px; text-align:center; border: 1px solid var(--border-color); margin:15px 0;">
+        <div style="background:var(--tint-1); padding:20px; border-radius:12px; text-align:center; border: 1px solid var(--border-color); margin:15px 0;">
             <div style="font-size:0.9rem; color:var(--text-muted);">실제 과학적 추정값 (참값)</div>
-            <div class="exponent-indicator" id="actual-value-display" style="color:var(--neon-pink); text-shadow:0 0 10px rgba(244, 63, 94, 0.4);">10⁶ (1,000,000)</div>
+            <div class="exponent-indicator" id="actual-value-display" style="color:var(--neon-pink); text-shadow:0 0 10px rgba(244, 63, 94, 0.18);">10⁶ (1,000,000)</div>
             <div style="font-size:0.85rem; color:var(--text-muted);" id="actual-explanation">상세 설명이 나옵니다.</div>
         </div>
 
@@ -707,12 +708,12 @@
                 item.className = 'list-item';
                 item.innerHTML = `
                     <div>
-                        <strong style="color:#fff;">${escapeHtml(p.name)}</strong><br>
+                        <strong style="color:var(--text);">${escapeHtml(p.name)}</strong><br>
                         <span style="font-size:0.8rem; color:var(--text-muted);">오차: 10의 ${diff}제곱배</span>
                     </div>
                     <div style="text-align:right;">
                         <span class="value-display">${formatExponent(p.currentEstimate)}</span><br>
-                        <span style="font-size:0.9rem; color:var(--neon-accent); font-weight:bold;">+${pts}점</span>
+                        <span style="font-size:0.9rem; color: var(--neon-accent-ink); font-weight:bold;">+${pts}점</span>
                     </div>
                 `;
                 list.appendChild(item);
@@ -740,8 +741,8 @@
                 const item = document.createElement('div');
                 item.className = 'list-item';
                 item.innerHTML = `
-                    <span style="font-weight:bold; font-size:1.1rem; color:#fff;">${idx + 1}등. ${escapeHtml(p.name)}</span>
-                    <span style="font-size:1.2rem; font-weight:800; color:var(--neon-accent);">${p.score} 점</span>
+                    <span style="font-weight:bold; font-size:1.1rem; color:var(--text);">${idx + 1}등. ${escapeHtml(p.name)}</span>
+                    <span style="font-size:1.2rem; font-weight:800; color: var(--neon-accent-ink);">${p.score} 점</span>
                 `;
                 list.appendChild(item);
             });

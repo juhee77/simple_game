@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>스네이크 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-    <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <style>
         .snake-layout {
             display: grid;
@@ -16,7 +17,7 @@
 
         .snake-wrap {
             width: min(100%, 460px);
-            background: radial-gradient(circle at top, rgba(34, 197, 94, 0.16), rgba(15, 23, 42, 0.95));
+            background: radial-gradient(circle at top, rgba(34, 197, 94, 0.16), var(--surface));
             padding: 1rem;
             border-radius: 24px;
             border: 1px solid var(--border-color);
@@ -56,7 +57,7 @@
             visibility: hidden;
         }
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 
 <body>
@@ -85,7 +86,7 @@
         <div class="game-board">
             <div class="snake-layout">
                 <div class="snake-wrap">
-                    <canvas id="snake-canvas" width="432" height="432"></canvas>
+                    <canvas class="stage" id="snake-canvas" width="432" height="432"></canvas>
                 </div>
                 <div class="snake-help" id="status-text">방향키, WASD, 스와이프 또는 버튼으로 방향을 바꿀 수 있습니다.</div>
                 <div class="direction-pad">

@@ -5,20 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>파티 미션 & 진실게임 카드 | 미니게임 천국</title>
   <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
-  <script src="../scripts/game-common.js?v=3a12429a"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=158e3b07">
+  <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+  <script src="../scripts/game-common.js?v=efdc1560"></script>
+  <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
   <style>
     :root {
-      --bg: #0b0b1a;
-      --card-bg: rgba(22, 22, 45, 0.7);
-      --card-border: rgba(255, 255, 255, 0.1);
+      /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+      --cyan-ink: #0e697c;
+      --card-bg: var(--surface);
+      --card-border: var(--tint-2);
       --cyan: #00d4ff;
       --purple: #7c3aed;
-      --pink: #ff006e;
+      --pink: #bc155d;
       --yellow: #ffd166;
       --green: #06d6a0;
-      --text-main: #ffffff;
-      --text-dim: #94a3b8;
+      --text-main: var(--text);
+      --text-dim: var(--muted);
       --radius-card: 16px;
       --radius-btn: 12px;
     }
@@ -60,7 +62,7 @@
       left: 0;
       background: none;
       border: none;
-      color: var(--cyan);
+      color: var(--cyan-ink);
       font-size: 24px;
       cursor: pointer;
       text-decoration: none;
@@ -101,7 +103,7 @@
 
     .tab-btn {
       flex: 1;
-      background: rgba(255,255,255,0.05);
+      background: var(--tint-1);
       border: 1px solid var(--card-border);
       color: var(--text-dim);
       padding: 10px 6px;
@@ -116,7 +118,7 @@
     .tab-btn.active {
       background: rgba(0, 212, 255, 0.15);
       border-color: var(--cyan);
-      color: var(--cyan);
+      color: var(--cyan-ink);
     }
 
     .card-scene {
@@ -153,19 +155,19 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 30px rgba(20, 26, 42, 0.16);
       border: 2px solid var(--card-border);
     }
 
     .card-front {
-      background: linear-gradient(135deg, #161630, #251645);
+      background: linear-gradient(135deg, var(--surface), #ede8f8);
       border-color: var(--pink);
     }
 
     .card-front-icon {
       font-size: 56px;
       margin-bottom: 12px;
-      filter: drop-shadow(0 0 10px rgba(255, 0, 110, 0.6));
+      filter: drop-shadow(0 0 10px rgba(255, 0, 110, 0.27));
     }
 
     .card-front-text {
@@ -175,7 +177,7 @@
     }
 
     .card-back {
-      background: linear-gradient(135deg, #101026, #1c2645);
+      background: linear-gradient(135deg, var(--surface), #e9ecf6);
       border-color: var(--cyan);
       transform: rotateY(180deg);
       gap: 16px;
@@ -186,7 +188,7 @@
       padding: 4px 10px;
       border-radius: 12px;
       background: rgba(0, 212, 255, 0.2);
-      color: var(--cyan);
+      color: var(--cyan-ink);
       font-weight: 700;
     }
 
@@ -194,7 +196,7 @@
       font-size: 17px;
       font-weight: 700;
       line-height: 1.5;
-      color: white;
+      color: var(--text);
       word-break: keep-all;
     }
 
@@ -205,10 +207,10 @@
       font-weight: 800;
       background: linear-gradient(135deg, var(--cyan), var(--purple));
       border: none;
-      color: white;
+      color: var(--text);
       border-radius: var(--radius-btn);
       cursor: pointer;
-      box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.14);
     }
 
     .custom-input-row {
@@ -219,9 +221,9 @@
 
     input[type="text"] {
       flex: 1;
-      background: rgba(0,0,0,0.3);
+      background: var(--tint-2);
       border: 1px solid var(--card-border);
-      color: white;
+      color: var(--text);
       padding: 12px 14px;
       border-radius: var(--radius-btn);
       font-size: 14px;
@@ -237,7 +239,7 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.1);
+      background: var(--tint-2);
       backdrop-filter: blur(5px);
       display: flex;
       align-items: center;
@@ -246,13 +248,14 @@
       cursor: pointer;
       border: 1px solid var(--card-border);
       z-index: 100;
+      color: var(--text);
     }
 
     .modal {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
+      background: var(--veil);
       z-index: 1000;
       align-items: center;
       justify-content: center;
@@ -268,7 +271,7 @@
       width: 100%;
     }
 
-    .modal h2 { margin-bottom: 16px; color: var(--cyan); }
+    .modal h2 { margin-bottom: 16px; color: var(--cyan-ink); }
     .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
     .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
   </style>
@@ -303,7 +306,7 @@
 
       <button class="draw-btn" onclick="drawCard()">🃏 새로운 카드 뽑기</button>
 
-      <div style="font-size:13px; color:var(--cyan); font-weight:700; margin-top:10px;">➕ 직접 미션 카드 추가하기</div>
+      <div style="font-size:13px; color: var(--cyan-ink); font-weight:700; margin-top:10px;">➕ 직접 미션 카드 추가하기</div>
       <div class="custom-input-row">
         <input type="text" id="customMissionInput" placeholder="우리 모임 전용 미션을 입력하세요">
         <button onclick="addCustomMission()" style="background:var(--pink); border:none; padding:12px 16px; border-radius:12px; color:white; font-weight:700; cursor:pointer;">추가</button>

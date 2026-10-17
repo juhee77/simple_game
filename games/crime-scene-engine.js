@@ -210,7 +210,7 @@ function renderLobby() {
         <div class="s-desc" style="opacity:.75;">👥 ${s.players}명 (자동 진행) · GM을 두면 ${s.players + 1}명</div>
       </div>
       <div>
-        <span style="font-size: 0.8rem; background: ${s.status === 'done' ? 'var(--success)' : 'var(--text-sub)'}; color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
+        <span style="font-size: 0.8rem; background: ${s.status === 'done' ? 'var(--success)' : 'var(--text-sub)'}; color: #fff; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
           ${s.status === 'done' ? 'PLAY' : 'WIP'}
         </span>
       </div>
@@ -232,7 +232,7 @@ function openScenario(id) {
   
   if (s.meta) {
     document.getElementById('sv-meta').innerHTML = s.meta.map(m => `
-      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 5px 0;">
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding: 5px 0;">
         <span style="color: var(--text-sub);">${m.label}</span>
         <span>${m.value}</span>
       </div>
@@ -369,7 +369,7 @@ function buildPlayerContent(r, s) {
         <div class="rv-secret-star">${sc.type === 'info' ? '💡' : '★'}</div>
         <div>
           <strong>${sc.title}</strong><br>
-          <div style="margin-top: 5px; color: #ddd; white-space: pre-line;">${sc.text}</div>
+          <div style="margin-top: 5px; color: var(--text-2); white-space: pre-line;">${sc.text}</div>
         </div>
       </div>`;
     });

@@ -5,28 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>포토 헌터 - 미니게임 천국</title>
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <!-- Fonts & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --panel-bg: rgba(22, 28, 45, 0.6);
-            --border-color: rgba(99, 102, 241, 0.2);
+            /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
+            --neon-green-ink: #0c704f;
+            --neon-yellow-ink: #735f0d;
+            --bg-color: var(--bg);
+            --panel-bg: var(--surface);
             --neon-green: #10b981;
             --neon-blue: #3b82f6;
             --neon-purple: #8b5cf6;
-            --neon-pink: #ec4899;
+            --neon-pink: #be1569;
             --neon-yellow: #facc15;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --text-main: var(--text);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background-color: var(--bg-color);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(17, 24, 39, 0.8) 0, transparent 50%),
+                radial-gradient(at 0% 0%, var(--bg) 0, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.15) 0, transparent 50%);
             font-family: 'Pretendard', sans-serif;
             color: var(--text-main);
@@ -44,7 +46,7 @@
             position: relative;
         }
         .back-btn {
-            background: var(--panel-bg); border: 1px solid var(--border-color); color: white;
+            background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text);
             width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
             transition: all 0.2s; text-decoration: none;
@@ -55,7 +57,7 @@
             font-family: 'Pretendard', sans-serif; font-size: 1.8rem; font-weight: 800;
             background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.05);
         }
 
         .container {
@@ -63,7 +65,7 @@
             background: var(--panel-bg); backdrop-filter: blur(15px);
             border: 2px solid var(--border-color); border-radius: 30px;
             padding: 25px; display: flex; flex-direction: column; gap: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 30px rgba(99, 102, 241, 0.05);
+            box-shadow: 0 20px 40px rgba(20, 26, 42, 0.16), inset 0 0 30px rgba(99, 102, 241, 0.02);
             margin-top: 10px;
         }
 
@@ -78,20 +80,20 @@
             font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;
         }
         .setup input {
-            width: 100%; padding: 14px; background: rgba(15, 23, 42, 0.6);
+            width: 100%; padding: 14px; background: var(--surface);
             border: 1px solid var(--border-color); border-radius: 16px;
-            color: #fff; font-size: 1rem; transition: all 0.2s;
+            color: var(--text); font-size: 1rem; transition: all 0.2s;
         }
         .setup input:focus {
-            outline: none; border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+            outline: none; border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.11);
         }
 
         .players {
             display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-            min-height: 50px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 16px;
+            min-height: 50px; padding: 10px; background: var(--tint-2); border-radius: 16px;
         }
         .player-tag {
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.05);
+            background: var(--tint-1); border: 1px solid var(--line);
             padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; gap: 8px;
             animation: tagPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             font-size: 0.95rem; font-weight: 600;
@@ -107,12 +109,12 @@
 
         .btn {
             background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
-            border: none; color: #fff; padding: 14px 40px; font-size: 1.1rem;
+            border: none; color: var(--text); padding: 14px 40px; font-size: 1.1rem;
             font-weight: 800; border-radius: 50px; cursor: pointer;
             transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.09);
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.16); }
         .btn:active { transform: translateY(0); }
 
         /* Game Screen */
@@ -120,9 +122,9 @@
             display: none; text-align: center; flex-direction: column; gap: 20px;
         }
         .mission-card {
-            background: rgba(15, 23, 42, 0.6); padding: 35px 25px; border-radius: 24px;
+            background: var(--surface); padding: 35px 25px; border-radius: 24px;
             border: 2px solid rgba(59, 130, 246, 0.2);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px rgba(20, 26, 42, 0.1);
             animation: cardSwitch 0.4s ease;
         }
         @keyframes cardSwitch {
@@ -131,7 +133,7 @@
         }
         .mission-text {
             font-size: 1.8rem; font-weight: 800; margin: 15px 0 8px;
-            background: linear-gradient(135deg, #fff, var(--neon-blue));
+            background: linear-gradient(135deg, var(--text), var(--neon-blue));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         .mission-hint { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
@@ -142,10 +144,10 @@
         .claim-btn {
             padding: 16px; border: none; border-radius: 16px; font-size: 1rem;
             font-weight: 800; cursor: pointer; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            color: var(--text); text-shadow: 0 1px 3px rgba(20, 26, 42, 0.1);
+            box-shadow: 0 4px 10px rgba(20, 26, 42, 0.07);
         }
-        .claim-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(255,255,255,0.1); }
+        .claim-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(20, 26, 42, 0.03); }
         .claim-btn:active { transform: scale(0.95); }
 
         .action-row {
@@ -161,14 +163,14 @@
         }
         .scoreboard h2 {
             font-size: 1.8rem; font-family: 'Pretendard', sans-serif; font-weight: 800;
-            color: var(--neon-yellow); text-shadow: 0 0 15px rgba(250,204,21,0.2);
+            color: var(--neon-yellow-ink); text-shadow: 0 0 15px rgba(250, 204, 21, 0.09);
         }
         .score-list {
             display: flex; flex-direction: column; gap: 8px;
         }
         .score-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 14px 20px; background: rgba(15, 23, 42, 0.6);
+            padding: 14px 20px; background: var(--surface);
             border: 1px solid var(--border-color); border-radius: 16px;
             font-size: 1.05rem; font-weight: 600;
             animation: rowFade 0.3s ease forwards; opacity: 0;
@@ -176,15 +178,15 @@
         @keyframes rowFade {
             to { opacity: 1; }
         }
-        .score-row .pts { font-weight: 800; color: var(--neon-green); font-family: 'Pretendard', sans-serif; }
+        .score-row .pts { font-weight: 800; color: var(--neon-green-ink); font-family: 'Pretendard', sans-serif; }
         .score-row.winner {
             border-color: var(--neon-pink);
-            background: linear-gradient(90deg, rgba(236,72,153,0.1), rgba(15,23,42,0.6));
-            box-shadow: 0 0 15px rgba(236, 72, 153, 0.15);
+            background: linear-gradient(90deg, rgba(236,72,153,0.1), var(--surface));
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.07);
         }
 
     </style>
-    <script src="../scripts/game-common.js?v=3a12429a"></script>
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
 </head>
 <body>
 
@@ -208,7 +210,7 @@
         <!-- Mission Screen -->
         <div class="mission-screen" id="mission-screen">
             <div class="mission-card" id="mission-card">
-                <div style="font-size: 3rem; margin-bottom: 5px; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));">📸</div>
+                <div style="font-size: 3rem; margin-bottom: 5px; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.14));">📸</div>
                 <div class="mission-text" id="mission-text"></div>
                 <div class="mission-hint" id="mission-hint"></div>
             </div>
@@ -216,8 +218,8 @@
             <div class="btn-grid" id="btn-grid"></div>
             
             <div class="action-row">
-                <button class="btn btn-action" onclick="nextMission()" style="background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));"><i class="ri-skip-forward-line"></i> 다음 미션</button>
-                <button class="btn btn-action" onclick="endGame()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.1);"><i class="ri-trophy-line"></i> 결과 보기</button>
+                <button class="btn btn-action" onclick="nextMission()" style="background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple)); color: #fff;"><i class="ri-skip-forward-line"></i> 다음 미션</button>
+                <button class="btn btn-action" onclick="endGame()" style="background: var(--tint-2); border: 1px solid var(--line); color: var(--text);"><i class="ri-trophy-line"></i> 결과 보기</button>
             </div>
         </div>
 
