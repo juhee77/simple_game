@@ -985,6 +985,35 @@
     }
     .map-tool-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
 
+    /* ── 함께 만들기 ── */
+    .share-card { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; }
+    .share-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .share-title { font-size: 13px; font-weight: 800; color: #f8fafc; margin-right: auto; }
+    .share-export { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .share-export[hidden] { display: none; }
+    .share-export input {
+      flex: 1; min-width: 120px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--card-border);
+      background: rgba(0, 0, 0, 0.3); color: #f8fafc; font-size: 13px;
+    }
+    .share-go { flex: 0 0 auto; min-width: 0; padding: 10px 16px; font-size: 13px; }
+    @media (max-width: 560px) {
+      .share-title { width: 100%; }
+      .share-row .sort-btn { flex: 1; white-space: nowrap; }
+      .share-row .sort-btn:last-of-type { flex: 0 0 auto; }
+    }
+    .author-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .author-chips:empty { display: none; }
+    .author-chip {
+      display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px;
+      border: 1px solid var(--c, #64748b); background: color-mix(in srgb, var(--c, #64748b) 18%, transparent);
+      color: #f8fafc; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .author-chip.off { opacity: 0.4; background: transparent; text-decoration: line-through; }
+    .badge-author {
+      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+      color: #f8fafc; border: 1px solid var(--c, #64748b); background: color-mix(in srgb, var(--c, #64748b) 22%, transparent);
+    }
+
     /* ── 투어 줄 ── */
     .tour-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .tour-bar .btn-gradient-primary { flex: 1; min-width: 110px; padding: 11px 16px; }
@@ -1133,6 +1162,26 @@
           ✨ 제주 샘플로 해 보기
         </button>
       </div>
+    </div>
+
+    <!-- 함께 만들기: 각자 만든 동선을 파일로 주고받아 합친다 (#37) -->
+    <div class="glass-card share-card" id="shareCard">
+      <div class="share-row">
+        <span class="share-title">👥 함께 만들기</span>
+        <button class="sort-btn" onclick="document.getElementById('tripFileInput').click()" title="친구가 보낸 여행 조각 파일(.json)을 불러와 합치기">📥 불러오기</button>
+        <button class="sort-btn" id="btnShareToggle" onclick="toggleShareExport()" title="내 동선을 파일로 만들어 보내기">📤 보내기</button>
+        <button class="sort-btn" onclick="showShareHelp()" title="어떻게 쓰나요?">❓</button>
+        <input type="file" id="tripFileInput" accept=".json,application/json" multiple hidden onchange="importTripFiles(event)">
+      </div>
+      <div class="share-export" id="shareExport" hidden>
+        <input type="text" id="shareName" maxlength="12" placeholder="내 이름 (예: 지훈)" oninput="resetShareBlob()">
+        <div class="gif-pill-group" id="shareQuality">
+          <button class="dock-pill-btn active" data-q="light" onclick="setShareQuality('light', this)" title="썸네일만 · 가벼움 (GIF 큰 사진은 흐릴 수 있어요)">가볍게</button>
+          <button class="dock-pill-btn" data-q="hq" onclick="setShareQuality('hq', this)" title="GIF·영상용 사진까지 · 선명함">고화질</button>
+        </div>
+        <button class="btn-gradient-amber share-go" id="btnShareGo" onclick="shareTripStep()">📦 파일 만들기</button>
+      </div>
+      <div class="author-chips" id="authorChips"></div>
     </div>
 
     <!-- 요약 -->
@@ -1318,7 +1367,8 @@
   "📍 위치 없는 사진이 있으면 위치를 넣습니다: 🗺️ 지도에서 눌러 놓기, 🔍 장소 검색, ◀▶ 앞뒤 사진과 같은 곳, ⏱️ 촬영 시각으로 자동 추정. 여러 장을 골라 한 번에 넣을 수 있습니다.",
   "▶ 투어로 지도 위에서 동선을 따라가 봅니다 (✈️ 🚗 🥾 이동 수단, 1x·2x·4x 속도).",
   "🎬 타임랩스 저장에서 ⬜ 정사각 · 🖥️ 가로(지도+사진) · 📱 세로(스토리) 중 하나를 누르면 만들어집니다. 버튼에 예상 용량과 길이가 나옵니다.",
-  "완성되면 📲 사진첩에 저장 / 공유로 갤러리에 넣거나 카톡으로 보냅니다."
+  "완성되면 📲 사진첩에 저장 / 공유로 갤러리에 넣거나 카톡으로 보냅니다.",
+  "👥 함께 만들기: 친구가 자기 폰에서 📤 보내기로 만든 '여행 조각' 파일을 받아 📥 불러오기로 합칩니다. 위치를 각자 원본에서 읽어서 메신저가 사진 정보를 지워도 괜찮습니다."
  ],
  "tips": [
   "⚙️ 옵션 — 형식: GIF(움짤) 또는 영상(MP4, 더 부드럽고 가벼움) / 길이: 가볍게·보통·부드럽게 / 카메라: 🔍 따라가기(도착지마다 줌인) 또는 🗺️ 전체 / 줌: 동네(약 5km)·거리(2km)·골목(700m)·건물(350m) / 사진: 꽉 채우기(가장자리 잘림) 또는 전체 보이기(여백).",
@@ -1327,6 +1377,7 @@
   "카카오톡 등 메신저로 받은 사진은 위치·촬영 시각이 지워져 있을 수 있습니다. 카톡 '파일'로 보내기, 아이폰 공유 시 '옵션 → 위치 포함', AirDrop을 쓰면 원본 정보가 남는 경우가 많습니다.",
   "배지 뜻: 📍 GPS(사진 원본 위치) · ✋ 지정(직접 넣음) · ⏱️ 추정(촬영 시각으로 계산) · (파일) = 촬영 시각이 없어 파일 시각을 씀.",
   "위치가 없는 사진은 지도·동선·타임랩스·지도 사진에서 빠집니다.",
+  "여러 사람 사진을 합치면 👤 이름 배지가 붙고, 이름 칩을 눌러 그 사람 사진을 빼거나 다시 넣을 수 있습니다. 같은 사진은 한 번만 들어갑니다.",
   "지도: 위성·지형 © Esri, 일반 지도·장소 검색 © OpenStreetMap contributors."
  ]
 }
@@ -1446,7 +1497,7 @@
       event.target.value = '';
       if (!images.length) return;
 
-      const room = MAX_SPOTS - travelSpots.length - unplacedSpots.length;
+      const room = MAX_SPOTS - allSpots().length;
       if (room <= 0) {
         alert(`사진은 최대 ${MAX_SPOTS}장까지 넣을 수 있어요. 필요 없는 사진을 지운 뒤 다시 추가해 주세요.`);
         return;
@@ -1460,7 +1511,9 @@
       for (const file of images) {
         try {
           const { dataUrl, thumbUrl, accent } = await loadPhotoFile(file, 1600, 0.9, THUMB_EDGE);
-          await new Promise(res => parseExifAndAdd(file, dataUrl, res, thumbUrl, accent));
+          const id = await photoHashId(file);
+          if (allSpots().some(sp => sp.id === id)) continue;   // 이미 올린 같은 사진
+          await new Promise(res => parseExifAndAdd(file, dataUrl, res, thumbUrl, accent, id));
         } catch (err) {
           alert(err.message);
         }
@@ -1469,7 +1522,7 @@
     }
 
     // EXIF는 축소본에서 사라지므로 원본 File에서 바로 읽는다
-    function parseExifAndAdd(file, dataUrl, callback, thumbUrl = null, accent = null) {
+    function parseExifAndAdd(file, dataUrl, callback, thumbUrl = null, accent = null, id = null) {
       EXIF.getData(file, function() {
         const lat = EXIF.getTag(this, "GPSLatitude");
         const latRef = EXIF.getTag(this, "GPSLatitudeRef");
@@ -1497,6 +1550,7 @@
 
         const spot = {
           uid: newSpotUid(),
+          id: id,
           dataUrl: dataUrl,
           thumbUrl: thumbUrl,
           accent: accent,
@@ -1662,7 +1716,9 @@
     // ==========================================
     function refreshTripUI() {
       renderUnplaced();
+      renderAuthorChips();
       if (travelSpots.length === 0 && unplacedSpots.length === 0) {
+        if (hiddenSpots.length) renderMapElements();   // 모두 숨긴 경우: 지도만 비우고 칩은 남긴다
         clearTripUI();
         return;
       }
@@ -1735,7 +1791,7 @@
           <div class="popup-content-box">
             <img src="${spot.thumbUrl || spot.dataUrl}" class="popup-img">
             <div class="popup-title">${idx + 1}. ${escapeHtml(spot.name)}</div>
-            <div class="popup-meta">📅 ${spotWhen(spot)} • ${locLabel(spot.loc)}</div>
+            <div class="popup-meta">📅 ${spotWhen(spot)} • ${locLabel(spot.loc)}${multiAuthor() ? ' • 👤 ' + escapeHtml(authorOf(spot)) : ''}</div>
           </div>
         `);
         marker.on('dragend', () => {
@@ -1831,6 +1887,7 @@
             <div class="item-meta">
               ${timeChip(spot)}
               ${locBadge(spot.loc)}
+              ${authorBadge(spot)}
               ${intervalHtml}
             </div>
           </div>
@@ -1912,7 +1969,7 @@
           <img src="${spot.thumbUrl || spot.dataUrl}" alt="">
           <div class="unplaced-info">
             <div class="unplaced-name">${escapeHtml(spot.name)}</div>
-            <div class="item-meta">${timeChip(spot)}</div>
+            <div class="item-meta">${timeChip(spot)} ${authorBadge(spot)}</div>
           </div>
           <div class="unplaced-btns">
             <button class="btn-focus" ${prev ? '' : 'disabled'} onclick="copyNeighborLocation('${spot.uid}', 'prev')" title="${prev ? '앞 사진(' + escapeHtml(prev.name) + ')과 같은 곳' : '앞 시각에 위치 있는 사진이 없어요'}">◀ 앞</button>
@@ -2159,6 +2216,273 @@
       };
       input.addEventListener('change', finish);
       input.addEventListener('blur', finish);
+    }
+
+    // ==========================================
+    // 함께 만들기: 여행 조각 파일 내보내기·합치기 (#37)
+    // ==========================================
+    // 친구가 자기 폰의 원본 사진으로 만든 동선을 작은 파일(썸네일·위치·시각)로 보내면,
+    // 받은 쪽에서 합친다. 메신저가 사진의 위치 정보를 지워도 상관없고, 서버가 필요 없다.
+    const TRIP_APP = 'simple_game/photo-travel-map';
+    const MY_NAME = '나';
+    const AUTHOR_PALETTE = ['#38bdf8', '#f472b6', '#34d399', '#fbbf24', '#a78bfa', '#fb923c', '#f87171', '#2dd4bf'];
+    let hiddenSpots = [];            // 사람별로 끈 스팟 (지도·동선·내보내기에서 빠짐)
+    let hiddenAuthors = new Set();
+    let shareQuality = 'light';
+    let shareBlob = null;            // 공유 창은 클릭 직후에만 열 수 있어 파일을 먼저 만들어 둔다
+    let shareFileName = '';
+
+    function allSpots() { return [...travelSpots, ...unplacedSpots, ...hiddenSpots]; }
+    function authorOf(spot) { return spot.author || MY_NAME; }
+    function authorList() {
+      const seen = [];
+      allSpots().forEach(sp => { const a = authorOf(sp); if (!seen.includes(a)) seen.push(a); });
+      return seen;
+    }
+    function multiAuthor() { return authorList().length > 1; }
+    function authorColor(name) {
+      const i = authorList().indexOf(name);
+      return AUTHOR_PALETTE[(i < 0 ? 0 : i) % AUTHOR_PALETTE.length];
+    }
+    function authorBadge(spot) {
+      if (!multiAuthor()) return '';
+      const a = authorOf(spot);
+      return `<span class="badge-author" style="--c:${authorColor(a)}">👤 ${escapeHtml(a)}</span>`;
+    }
+
+    // 원본 파일의 SHA-256 앞 16자리. 같은 사진을 두 사람이 다 가지고 있어도 한 번만 들어가게 한다.
+    async function photoHashId(file) {
+      try {
+        const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+        return Array.from(new Uint8Array(digest).slice(0, 8), b => b.toString(16).padStart(2, '0')).join('');
+      } catch {
+        return `f-${file.name}-${file.size}-${file.lastModified}`;   // https가 아니면 crypto.subtle이 없다
+      }
+    }
+
+    function renderAuthorChips() {
+      const box = document.getElementById('authorChips');
+      if (!box) return;
+      const authors = authorList();
+      box.innerHTML = '';
+      if (authors.length < 2) return;
+      authors.forEach(a => {
+        const n = allSpots().filter(sp => authorOf(sp) === a).length;
+        const chip = document.createElement('button');
+        chip.className = 'author-chip' + (hiddenAuthors.has(a) ? ' off' : '');
+        chip.style.setProperty('--c', authorColor(a));
+        chip.title = hiddenAuthors.has(a) ? '눌러서 다시 보이기' : '눌러서 이 사람 사진 빼기';
+        chip.textContent = `👤 ${a} ${n}`;
+        chip.onclick = () => toggleAuthor(a);
+        box.appendChild(chip);
+      });
+    }
+
+    function toggleAuthor(name) {
+      if (hiddenAuthors.has(name)) {
+        hiddenAuthors.delete(name);
+        const back = hiddenSpots.filter(sp => authorOf(sp) === name);
+        hiddenSpots = hiddenSpots.filter(sp => authorOf(sp) !== name);
+        back.forEach(sp => (sp.loc === 'none' ? unplacedSpots : travelSpots).push(sp));
+      } else {
+        hiddenAuthors.add(name);
+        hiddenSpots.push(...travelSpots.filter(sp => authorOf(sp) === name), ...unplacedSpots.filter(sp => authorOf(sp) === name));
+        travelSpots = travelSpots.filter(sp => authorOf(sp) !== name);
+        unplacedSpots = unplacedSpots.filter(sp => authorOf(sp) !== name);
+      }
+      stopTourAnimation();
+      applySortMode(currentSortMode === 'custom' ? 'time-asc' : currentSortMode);
+    }
+
+    function showShareHelp() {
+      (typeof gameAlert === 'function' ? gameAlert : alert)(
+        '각자 자기 폰의 원본 사진으로 동선을 만든 뒤 파일로 주고받아 합쳐요.\n\n' +
+        '보내는 사람: 사진 올리기 → 📤 보내기 → 이름 쓰고 파일 만들기 → 카톡 등으로 보내기\n' +
+        '받는 사람: 📥 불러오기 → 받은 파일 고르기 (여러 개 가능)\n\n' +
+        '• 위치는 각자 원본에서 읽어서, 메신저가 사진 정보를 지워도 괜찮아요.\n' +
+        '• 파일에는 사진(줄인 것)·위치·시각·이름만 들어가요. 기기 정보 같은 다른 메타데이터는 넣지 않아요.\n' +
+        '• 같은 사진은 한 번만 들어가요. 👤 이름을 누르면 그 사람 사진을 빼거나 다시 넣을 수 있어요.\n' +
+        '• 가볍게: 썸네일만 (50장 약 3MB) / 고화질: GIF·영상용 사진 포함 (50장 약 10~15MB)');
+    }
+
+    function toggleShareExport() {
+      const box = document.getElementById('shareExport');
+      box.hidden = !box.hidden;
+      if (!box.hidden) {
+        const input = document.getElementById('shareName');
+        if (!input.value) { try { input.value = localStorage.getItem('travel-map:author') || ''; } catch { /* 무시 */ } }
+        resetShareBlob();
+        input.focus();
+      }
+    }
+
+    function setShareQuality(q, el) {
+      shareQuality = q;
+      el.parentElement.querySelectorAll('.dock-pill-btn').forEach(b => b.classList.toggle('active', b === el));
+      resetShareBlob();
+    }
+
+    function resetShareBlob() {
+      shareBlob = null;
+      const btn = document.getElementById('btnShareGo');
+      if (btn) btn.textContent = '📦 파일 만들기';
+    }
+
+    // 사진을 긴 변 edge px JPEG로 다시 줄인다 (고화질 내보내기용)
+    function shrinkDataUrl(dataUrl, edge, quality = 0.85) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          const k = Math.min(1, edge / Math.max(img.width, img.height));
+          if (k === 1 && dataUrl.startsWith('data:image/jpeg')) { resolve(dataUrl); return; }
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          const ctx = c.getContext('2d');
+          ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/jpeg', quality));
+          c.width = c.height = 0;
+        };
+        img.onerror = () => resolve(null);
+        img.src = dataUrl;
+      });
+    }
+
+    // 1단계: 파일 만들기 → 2단계: 보내기 (공유 창은 클릭 직후에만 열 수 있어 단계를 나눈다)
+    async function shareTripStep() {
+      if (shareBlob) { saveToGallery(shareBlob, shareFileName); return; }
+      const spots = [...travelSpots, ...unplacedSpots];
+      if (!spots.length) { alert('보낼 사진이 없어요. 먼저 사진을 올려 주세요.'); return; }
+      const input = document.getElementById('shareName');
+      const name = input.value.trim().slice(0, 12) || MY_NAME;
+      try { localStorage.setItem('travel-map:author', name); } catch { /* 무시 */ }
+      const btn = document.getElementById('btnShareGo');
+      btn.disabled = true;
+      try {
+        const out = [];
+        for (let i = 0; i < spots.length; i++) {
+          const sp = spots[i];
+          btn.textContent = `⏳ ${i + 1}/${spots.length}`;
+          const item = {
+            id: sp.id || `t-${(sp.thumbUrl || '').length}-${sp.timeVal}`,
+            name: sp.name,
+            lat: sp.loc === 'none' ? null : sp.lat,
+            lng: sp.loc === 'none' ? null : sp.lng,
+            location: sp.loc,
+            takenAt: new Date(sp.timeVal).toISOString(),
+            timeSource: sp.timeFromFile ? 'file' : 'exif',
+            thumb: sp.thumbUrl || sp.dataUrl,
+            accent: sp.accent || null,
+            author: sp.author && sp.author !== MY_NAME ? sp.author : name
+          };
+          if (shareQuality === 'hq') item.photo = await shrinkDataUrl(sp.dataUrl, 1080);
+          out.push(item);
+        }
+        const json = JSON.stringify({ app: TRIP_APP, version: 1, author: name, exportedAt: new Date().toISOString(), spots: out });
+        shareBlob = new Blob([json], { type: 'application/json' });
+        shareFileName = `${name}_여행조각_${todayKey()}.trip.json`;
+        btn.textContent = `📤 보내기 (${(shareBlob.size / 1048576).toFixed(1)}MB)`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // 받은 파일 검증. 화면에 그대로 넣는 값(이미지 주소·색)은 형식을 엄격히 확인한다.
+    const DATA_IMAGE_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+    function parseTripFile(text) {
+      const data = JSON.parse(text);
+      if (!data || data.app !== TRIP_APP || data.version !== 1 || !Array.isArray(data.spots)) return null;
+      const author = String(data.author || '친구').slice(0, 12);
+      const spots = [];
+      data.spots.forEach(raw => {
+        if (!raw || typeof raw.thumb !== 'string' || !DATA_IMAGE_RE.test(raw.thumb)) return;
+        const t = Date.parse(raw.takenAt);
+        const hasPos = Number.isFinite(raw.lat) && Number.isFinite(raw.lng) && Math.abs(raw.lat) <= 90 && Math.abs(raw.lng) <= 180;
+        const loc = hasPos ? (['gps', 'manual', 'estimated'].includes(raw.location) ? raw.location : 'manual') : 'none';
+        spots.push({
+          uid: newSpotUid(),
+          id: String(raw.id || '').slice(0, 64) || `i-${raw.thumb.length}-${t}`,
+          dataUrl: typeof raw.photo === 'string' && DATA_IMAGE_RE.test(raw.photo) ? raw.photo : raw.thumb,
+          thumbUrl: raw.thumb,
+          accent: /^#[0-9a-f]{6}$/i.test(raw.accent || '') ? raw.accent : null,
+          name: String(raw.name || '스팟').slice(0, 40),
+          lat: hasPos ? raw.lat : null,
+          lng: hasPos ? raw.lng : null,
+          loc,
+          timeVal: Number.isFinite(t) ? t : Date.now(),
+          date: todayKey(new Date(Number.isFinite(t) ? t : Date.now())),
+          timeFromFile: raw.timeSource === 'file' || !Number.isFinite(t),
+          author: String(raw.author || author).slice(0, 12)
+        });
+      });
+      return { author, spots };
+    }
+
+    async function importTripFiles(event) {
+      const files = Array.from(event.target.files || []);
+      event.target.value = '';
+      if (!files.length) return;
+
+      const parcels = [];
+      const bad = [];
+      for (const f of files) {
+        try {
+          const parsed = parseTripFile(await f.text());
+          if (parsed && parsed.spots.length) parcels.push(parsed); else bad.push(f.name);
+        } catch {
+          bad.push(f.name);
+        }
+      }
+      if (!parcels.length) {
+        alert('여행 동선 지도에서 내보낸 파일이 아니에요.' + (bad.length ? `\n(${bad.join(', ')})` : ''));
+        return;
+      }
+
+      // 중복(같은 사진) 빼기
+      const have = new Set(allSpots().map(sp => sp.id).filter(Boolean));
+      let dup = 0;
+      parcels.forEach(p => {
+        p.spots = p.spots.filter(sp => {
+          if (have.has(sp.id)) { dup++; return false; }
+          have.add(sp.id);
+          return true;
+        });
+      });
+
+      const lines = parcels.map(p => {
+        const ts = p.spots.map(sp => sp.timeVal).sort((a, b) => a - b);
+        const period = ts.length ? `${todayKey(new Date(ts[0])).slice(5)} ~ ${todayKey(new Date(ts[ts.length - 1])).slice(5)}` : '';
+        return `👤 ${p.author} · ${p.spots.length}장 ${period}`;
+      });
+      const incoming = parcels.reduce((n, p) => n + p.spots.length, 0);
+      if (!incoming) { alert(`새로 합칠 사진이 없어요. (이미 있는 사진 ${dup}장)`); return; }
+
+      // 50장 제한: 넘으면 사람마다 비율대로, 각자 시간 순서에서 고르게 고른다
+      const room = MAX_SPOTS - allSpots().length;
+      if (room <= 0) { alert(`이미 ${MAX_SPOTS}장이 차 있어요. 목록에서 사진을 지운 뒤 다시 불러와 주세요. (👤 이름으로 끈 사진도 장수에 포함돼요)`); return; }
+      let note = '';
+      if (incoming > room) {
+        let left = room;
+        parcels.forEach((p, i) => {
+          const share = i === parcels.length - 1 ? left : Math.min(left, Math.round(room * p.spots.length / incoming));
+          const sorted = p.spots.sort((a, b) => a.timeVal - b.timeVal);
+          p.spots = share >= sorted.length ? sorted
+            : Array.from({ length: share }, (_, k) => sorted[Math.floor(k * sorted.length / share)]);
+          left -= p.spots.length;
+        });
+        note = `\n\n최대 ${MAX_SPOTS}장이라 ${incoming}장 중 ${room}장만 사람별로 고르게 골라 넣어요.`;
+      }
+      if (!confirm(`이 조각을 합칠까요?\n\n${lines.join('\n')}` + (dup ? `\n\n같은 사진 ${dup}장은 빼요.` : '') + note + (bad.length ? `\n\n읽을 수 없는 파일: ${bad.join(', ')}` : ''))) return;
+
+      let added = 0;
+      parcels.forEach(p => p.spots.forEach(sp => {
+        if (hiddenAuthors.has(sp.author)) hiddenSpots.push(sp);
+        else (sp.loc === 'none' ? unplacedSpots : travelSpots).push(sp);
+        added++;
+      }));
+      stopTourAnimation();
+      applySortMode(currentSortMode === 'custom' ? 'time-asc' : currentSortMode);
+      alert(`${added}장을 합쳤어요.` + (unplacedSpots.length ? ` 위치 없는 사진 ${unplacedSpots.length}장은 위치를 넣어 주세요.` : ''));
     }
 
     // 마지막 사진까지 지우면 예전 지도·목록이 그대로 남아 있지 않게 화면을 처음 상태로 돌린다
@@ -3362,6 +3686,7 @@
           lat: s.lat,
           lng: s.lng,
           uid: newSpotUid(),
+          id: `demo-${idx}`,
           loc: 'gps',
           timeVal: 1791700000000 + idx * 7200000 // 2-hour intervals
         };
@@ -3371,6 +3696,8 @@
     function loadDemoSamples() {
       travelSpots = getSampleSpots();
       unplacedSpots = [];
+      hiddenSpots = [];
+      hiddenAuthors = new Set();
       currentSortMode = 'time-asc';
       updateSortBadges('⏱️ 과거순');
       document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
