@@ -12,9 +12,9 @@ every library, font and map tile is loaded at runtime from the public CDN or ser
 | Leaflet | 1.9.4 | `photo-travel-map.html`, `photo-inspector.html` | BSD-2-Clause | https://github.com/Leaflet/Leaflet |
 | Exif.js | 2.3.0 | `photo-travel-map.html`, `photo-inspector.html` | MIT | https://github.com/exif-js/exif-js |
 | gifshot | 0.3.2 | `photo-slideshow.html` | MIT | https://github.com/yahoo/gifshot |
-| gifenc | 1.0.3 | `photo-travel-map.html` (loaded on demand when making a GIF) | MIT | https://github.com/mattdesl/gifenc |
-| mp4-muxer | 5.2.1 | `photo-travel-map.html`, `photo-slideshow.html` (loaded on demand when making an MP4 video) | MIT | https://github.com/Vanilagy/mp4-muxer |
-| jsPDF | 2.5.1 | `photo-book.html` | MIT | https://github.com/parallax/jsPDF |
+| gifenc | 1.0.3 | `photo-travel-map.html`, `photo-booth.html` (loaded on demand when making a GIF) | MIT | https://github.com/mattdesl/gifenc |
+| mp4-muxer | 5.2.1 | `photo-travel-map.html`, `photo-slideshow.html`, `photo-booth.html` (loaded on demand when making an MP4 video) | MIT | https://github.com/Vanilagy/mp4-muxer |
+| jsPDF | 2.5.1 | `photo-book.html`, `photo-booth.html` (loaded on demand when making an A4 print PDF) | MIT | https://github.com/parallax/jsPDF |
 | QRCode.js | 1.0.0 | `qr-wifi.html` | MIT | https://github.com/davidshimjs/qrcodejs |
 | marked | 11.1.1 | Rules/guide text in 16 games (e.g. `bomb-defusal.html`, `project-lethe.html`) | MIT | https://github.com/markedjs/marked |
 | Remix Icon | 3.5.0 | Icons in 24 games (e.g. `two-truths.html`, `yacht-dice.html`) | Apache-2.0 | https://github.com/Remix-Design/RemixIcon |

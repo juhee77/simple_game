@@ -39,6 +39,8 @@
       overflow-x: hidden;
     }
 
+    [hidden] { display: none !important; }
+
     .container {
       max-width: 600px;
       margin: 0 auto;
@@ -47,7 +49,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
 
     header {
@@ -81,7 +83,7 @@
     h1 {
       font-size: 24px;
       font-weight: 800;
-      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      background: linear-gradient(90deg, #0891b2, var(--purple));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -89,7 +91,6 @@
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      backdrop-filter: blur(10px);
       border-radius: var(--radius-card);
       padding: 20px;
       display: flex;
@@ -97,40 +98,25 @@
       gap: 16px;
     }
 
-    .video-container {
-      width: 100%;
-      height: 280px;
-      background: #000;
-      border-radius: var(--radius-card);
-      overflow: hidden;
-      position: relative;
-      border: 2px solid var(--cyan);
+    .card.drag-over {
+      border-color: var(--cyan);
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.18);
     }
 
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .countdown-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.4);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-size: 80px;
+    .step-title {
+      font-size: 16px;
       font-weight: 800;
-      color: var(--yellow);
-      text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);
-    }
-
-    .cam-controls {
       display: flex;
-      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
     }
 
+    .step-title small { font-size: 13px; font-weight: 700; color: var(--cyan-ink); }
+
+    .hint { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+
+    /* ── 버튼 ── */
     button {
       flex: 1;
       background: linear-gradient(135deg, var(--purple), var(--pink));
@@ -148,78 +134,57 @@
       gap: 6px;
     }
 
+    button:disabled { opacity: 0.45; cursor: default; }
+
     .btn-secondary {
       background: var(--tint-2);
       border: 1px solid var(--card-border);
       color: var(--text);
     }
 
-    .section-label {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--cyan-ink);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    .btn-row { display: flex; gap: 8px; }
 
-    .photo-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-    }
+    /* 작은 선택 버튼 묶음 */
+    .seg { display: flex; gap: 6px; flex-wrap: wrap; }
 
-    .photo-thumb-wrap {
-      position: relative;
-    }
-
-    .photo-thumb {
-      width: 100%;
-      aspect-ratio: 1;
-      border-radius: 8px;
-      object-fit: cover;
-      border: 2px solid transparent;
-      cursor: pointer;
-      background: var(--surface);
-    }
-
-    .photo-thumb.selected {
-      border-color: var(--cyan);
-      box-shadow: 0 0 10px rgba(0, 212, 255, 0.27);
-    }
-
-    .badge-num {
-      position: absolute;
-      top: 4px; right: 4px;
-      background: var(--cyan);
-      color: black;
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      font-size: 11px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .frame-customizer {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      margin-top: 10px;
-    }
-
-    .option-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .option-sub-title {
-      font-size: 13px;
+    .seg-btn,
+    .ratio-btn,
+    .layout-btn,
+    .filter-btn {
+      flex: 0 0 auto;
+      background: var(--tint-1);
+      border: 1px solid var(--card-border);
       color: var(--text-dim);
+      padding: 8px 12px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
       font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.2s ease;
     }
+
+    .seg.fill .seg-btn { flex: 1 1 0; }
+
+    .seg-btn.active,
+    .ratio-btn.active,
+    .layout-btn.active {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan-ink);
+    }
+
+    .filter-btn.active {
+      background: rgba(255, 209, 102, 0.15);
+      border-color: var(--yellow);
+      color: var(--yellow-ink);
+    }
+
+    .option-group { display: flex; flex-direction: column; gap: 8px; }
+
+    .option-sub-title { font-size: 13px; color: var(--text-dim); font-weight: 700; }
+
+    .shoot-options { display: flex; flex-direction: column; gap: 12px; transition: opacity 0.2s; }
+    .shoot-options.locked { opacity: 0.45; pointer-events: none; }
 
     .layout-options,
     .ratio-options {
@@ -235,168 +200,32 @@
     }
 
     .layout-options:active,
-    .ratio-options:active {
-      cursor: grabbing;
-    }
+    .ratio-options:active { cursor: grabbing; }
 
     .layout-options::-webkit-scrollbar,
-    .ratio-options::-webkit-scrollbar {
-      height: 6px;
-    }
+    .ratio-options::-webkit-scrollbar { height: 6px; }
 
     .layout-options::-webkit-scrollbar-track,
-    .ratio-options::-webkit-scrollbar-track {
-      background: var(--tint-1);
-      border-radius: 999px;
-    }
+    .ratio-options::-webkit-scrollbar-track { background: var(--tint-1); border-radius: 999px; }
 
     .layout-options::-webkit-scrollbar-thumb,
-    .ratio-options::-webkit-scrollbar-thumb {
-      background: rgba(0, 212, 255, 0.35);
-      border-radius: 999px;
-      transition: background 0.2s ease, box-shadow 0.2s ease;
+    .ratio-options::-webkit-scrollbar-thumb { background: rgba(0, 212, 255, 0.35); border-radius: 999px; }
+
+    /* ── 촬영 화면 ── */
+    .video-container {
+      width: 100%;
+      height: 300px;
+      background: #000;
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      position: relative;
+      border: 2px solid var(--cyan);
     }
 
-    .layout-options::-webkit-scrollbar-thumb:hover,
-    .ratio-options::-webkit-scrollbar-thumb:hover {
-      background: var(--cyan);
-      box-shadow: 0 0 10px rgba(0, 212, 255, 0.32);
-    }
-
-    .layout-btn {
-      background: var(--tint-1);
-      border: 1px solid var(--card-border);
-      color: var(--text-dim);
-      padding: 10px 14px;
-      border-radius: var(--radius-btn);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .layout-btn.active {
-      background: rgba(0, 212, 255, 0.15);
-      border-color: var(--cyan);
-      color: var(--cyan-ink);
-    }
-
-    .color-options {
-      display: flex;
-      gap: 10px;
-    }
-
-    .color-dot {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid transparent;
-    }
-
-    .color-dot.active { border-color: white; transform: scale(1.1); }
-
-    .filter-options {
-      display: flex;
-      gap: 8px;
-    }
-
-    .filter-btn {
-      flex: 1;
-      background: var(--tint-1);
-      border: 1px solid var(--card-border);
-      color: var(--text-dim);
-      padding: 8px;
-      border-radius: var(--radius-btn);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .filter-btn.active {
-      background: rgba(255, 209, 102, 0.15);
-      border-color: var(--yellow);
-      color: var(--yellow-ink);
-    }
-
-    input[type="text"] {
-      background: var(--tint-2);
-      border: 1px solid var(--card-border);
-      color: var(--text);
-      padding: 12px 16px;
-      border-radius: var(--radius-btn);
-      font-family: inherit;
-      font-size: 14px;
-      outline: none;
-    }
-
-    .preview-container {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      margin-top: 10px;
-    }
-
-    canvas {
-      max-width: 100%;
-      height: auto;
-      max-height: 520px;
-      /* 저장되는 4컷처럼 미리보기도 각진 사각형으로 보여 준다 */
-      border-radius: 0;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-
-    .card.drag-over {
-      border-color: var(--cyan);
-      box-shadow: 0 0 25px rgba(0, 212, 255, 0.18);
-    }
-
-
-    .ratio-btn {
-      background: var(--tint-1);
-      border: 1px solid var(--card-border);
-      color: var(--text-dim);
-      padding: 8px 12px;
-      border-radius: var(--radius-btn);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s ease;
-    }
-
-    .ratio-btn.active {
-      background: rgba(0, 212, 255, 0.15);
-      border-color: var(--cyan);
-      color: var(--cyan-ink);
-    }
-
-    .btn-delete-photo {
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      background: var(--surface);
-      color: #bc155d;
-      border: 1px solid rgba(255, 0, 110, 0.4);
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      font-size: 12px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-      z-index: 2;
-      transition: transform 0.15s, background 0.15s;
-    }
-
-    .btn-delete-photo:hover {
-      background: #ff006e;
-      color: var(--text);
-      transform: scale(1.15);
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .viewfinder-guide {
@@ -411,48 +240,279 @@
       transition: width 0.25s ease, height 0.25s ease;
     }
 
-    .help-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: var(--tint-2);
-      backdrop-filter: blur(5px);
+    .pose-card {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 14px;
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow-md);
+      pointer-events: none;
+    }
+
+    .pose-emoji { font-size: 30px; line-height: 1; }
+    .pose-text { display: flex; flex-direction: column; min-width: 0; }
+    .pose-text small { font-size: 11px; color: var(--muted); font-weight: 700; }
+    .pose-text b { font-size: 16px; font-weight: 800; }
+
+    .shot-chip {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countdown-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 120px;
+      font-weight: 900;
+      color: #ffd166;
+      text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+    }
+
+    .countdown-overlay.far { font-size: 56px; color: rgba(255, 255, 255, 0.85); }
+    .countdown-overlay.pop { animation: pop 0.35s ease-out; }
+    @keyframes pop { from { transform: scale(1.5); opacity: 0.2; } to { transform: scale(1); opacity: 1; } }
+
+    .rec-bar {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      height: 30px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      cursor: pointer;
-      border: 1px solid var(--card-border);
-      z-index: 100;
-      color: var(--text);
     }
 
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: var(--veil);
-      z-index: 1000;
+    .rec-bar span { position: relative; z-index: 1; }
+    .rec-bar span::first-letter { color: #ff4d6d; }
+    .rec-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(255, 77, 109, 0.45); }
+
+    .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+    .flash.on { animation: flash 0.45s ease-out; }
+    @keyframes flash { from { opacity: 1; } to { opacity: 0; } }
+
+    /* ── 사진 고르기 ── */
+    .pick-hint {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .photo-thumb-wrap { position: relative; }
+
+    .photo-thumb {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 3px solid transparent;
+      cursor: pointer;
+      background: var(--surface-2);
+      display: block;
+    }
+
+    .photo-thumb.selected { border-color: var(--cyan); }
+
+    .badge-num {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: var(--cyan);
+      color: #000;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      pointer-events: none;
     }
 
-    .modal-content {
-      background: var(--bg);
+    .badge-motion {
+      position: absolute;
+      bottom: 6px; right: 6px;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .btn-delete-photo,
+    .btn-retake {
+      position: absolute;
+      left: 4px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 0;
+      line-height: 1;
+      z-index: 2;
+      flex: none;
+    }
+
+    .btn-delete-photo { top: 4px; color: #bc155d; }
+    .btn-retake { bottom: 4px; color: var(--cyan-ink); }
+
+    .empty { font-size: 14px; color: var(--text-dim); text-align: center; padding: 12px 0; }
+
+    /* ── 꾸미기 ── */
+    .color-options { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    .color-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid var(--line);
+      flex: none;
+      padding: 0;
+    }
+
+    .color-dot.active { outline: 3px solid var(--cyan); outline-offset: 2px; }
+
+    .suggest-label { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+
+    input[type="text"],
+    input[type="number"] {
+      background: var(--tint-2);
       border: 1px solid var(--card-border);
-      padding: 24px;
-      border-radius: var(--radius-card);
-      max-width: 400px;
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
       width: 100%;
     }
 
-    .modal h2 { margin-bottom: 16px; color: var(--cyan-ink); }
-    .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
-    .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
+    .text-fields { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── 완성·편집 ── */
+    .canvas-wrap { display: flex; justify-content: center; }
+
+    #fourCutCanvas {
+      max-width: 100%;
+      height: auto;
+      max-height: 560px;
+      /* 저장되는 4컷처럼 미리보기도 각진 사각형으로 보여 준다 */
+      border-radius: 0;
+      box-shadow: 0 10px 30px rgba(20, 26, 42, 0.25);
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #fourCutCanvas[data-tool="pen"] { cursor: crosshair; }
+
+    .tool-tabs { display: flex; gap: 6px; }
+    .tool-tabs .seg-btn { flex: 1 1 0; padding: 10px 8px; }
+
+    .tool-panel { display: flex; flex-direction: column; gap: 10px; }
+
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 4px;
+    }
+
+    .sticker-grid button {
+      background: var(--tint-1);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 6px 0;
+      font-size: 22px;
+      flex: none;
+    }
+
+    .sticker-ctrl { display: flex; gap: 6px; }
+    .sticker-ctrl button { padding: 10px 0; font-size: 14px; }
+
+    .pen-dot {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 2px solid var(--line);
+      flex: none;
+      padding: 0;
+    }
+
+    .pen-dot.active { outline: 3px solid var(--cyan); outline-offset: 2px; }
+
+    .save-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .save-block h3 { font-size: 15px; font-weight: 800; }
+
+    .status { font-size: 13px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+    .status.error { color: var(--bad); font-weight: 700; }
+
+    .result-media {
+      max-width: 100%;
+      max-height: 420px;
+      align-self: center;
+      box-shadow: 0 6px 20px rgba(20, 26, 42, 0.18);
+    }
+
+    .check-row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .check-row input { width: 18px; height: 18px; accent-color: var(--cyan-ink); }
+
+    .copies-row { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+    .copies-row input { width: 90px; padding: 10px 12px; }
+
+    .print-guide { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+    .print-guide summary { cursor: pointer; font-weight: 700; color: var(--text); }
+    .print-guide ul { margin: 8px 0 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; }
+
+    @media (max-width: 420px) {
+      .container { padding: 16px; }
+      .card { padding: 16px; }
+      .sticker-grid { grid-template-columns: repeat(7, 1fr); }
+      .cam-controls button { font-size: 14px; padding: 12px 6px; }
+    }
   </style>
 </head>
 <body>
@@ -462,10 +522,107 @@
       <h1>네온 4컷 사진관</h1>
     </header>
 
-    <div class="card">
-      <div class="option-group" style="gap: 6px;">
-        <div class="option-sub-title">📐 사진 비율 지정</div>
-        <div class="ratio-options" id="shootRatioOptions">
+    <!-- 1. 찍기 -->
+    <section class="card" id="shootCard">
+      <div class="step-title">1. 찍기</div>
+
+      <div class="shoot-options" id="shootOptions">
+        <div class="option-group">
+          <div class="option-sub-title">찍을 것</div>
+          <div class="seg fill" id="kindSeg">
+            <button type="button" class="seg-btn active" data-v="photo">📸 사진</button>
+            <button type="button" class="seg-btn" data-v="motion">🎞️ 움직이는 사진 (2초)</button>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-sub-title">찍는 방식</div>
+          <div class="seg fill" id="modeSeg">
+            <button type="button" class="seg-btn active" data-v="single">한 장씩 (3초)</button>
+            <button type="button" class="seg-btn" data-v="burst">연속 8컷</button>
+          </div>
+          <div class="seg" id="intervalSeg" hidden>
+            <button type="button" class="seg-btn active" data-v="5">컷 사이 5초</button>
+            <button type="button" class="seg-btn" data-v="7">7초</button>
+            <button type="button" class="seg-btn" data-v="10">10초</button>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-sub-title">포즈 가이드</div>
+          <div class="seg" id="peopleSeg">
+            <button type="button" class="seg-btn active" data-v="1">🙋 1명</button>
+            <button type="button" class="seg-btn" data-v="2">👫 2명</button>
+            <button type="button" class="seg-btn" data-v="3">👨‍👩‍👧 3명 이상</button>
+            <button type="button" class="seg-btn" data-v="0">끄기</button>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-sub-title">사진 비율</div>
+          <div class="ratio-options" id="shootRatioOptions">
+            <button class="ratio-btn active" data-ratio="4:3" onclick="setPhotoRatio('4:3', this)">↔️ 가로 (4:3)</button>
+            <button class="ratio-btn" data-ratio="3:4" onclick="setPhotoRatio('3:4', this)">↕️ 세로 (3:4)</button>
+            <button class="ratio-btn" data-ratio="16:9" onclick="setPhotoRatio('16:9', this)">🖥️ 와이드 (16:9)</button>
+            <button class="ratio-btn" data-ratio="9:16" onclick="setPhotoRatio('9:16', this)">📱 숏폼 (9:16)</button>
+            <button class="ratio-btn" data-ratio="1:1" onclick="setPhotoRatio('1:1', this)">⏹️ 정방형 (1:1)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="video-container stage" id="videoContainer">
+        <video id="webcam" autoplay playsinline muted></video>
+        <div class="viewfinder-guide" id="viewfinderGuide"></div>
+        <div class="pose-card chrome" id="poseCard" hidden>
+          <span class="pose-emoji" id="poseEmoji"></span>
+          <span class="pose-text"><small>이번 포즈</small><b id="poseText"></b></span>
+        </div>
+        <div class="countdown-overlay" id="countdownOverlay">3</div>
+        <div class="rec-bar" id="recBar" hidden><i id="recFill"></i><span>● 움직이세요!</span></div>
+        <div class="shot-chip" id="shotChip" hidden></div>
+        <div class="flash" id="flash"></div>
+      </div>
+
+      <div class="btn-row cam-controls" id="idleControls">
+        <button class="btn-secondary" onclick="toggleCamera()">🔄 전/후면</button>
+        <button id="shootBtn" onclick="startShoot()">📸 촬영 시작</button>
+        <button class="btn-secondary" onclick="document.getElementById('fileUploadInput').click()">📁 불러오기</button>
+        <input type="file" id="fileUploadInput" accept="image/*" multiple hidden onchange="handleFileUpload(event)">
+      </div>
+      <div class="btn-row cam-controls" id="sessionControls" hidden>
+        <button class="btn-secondary" onclick="nextPose()">🔀 다른 포즈</button>
+        <button onclick="stopShoot()">⏹ 그만 찍기</button>
+      </div>
+    </section>
+
+    <!-- 2. 고르기 -->
+    <section class="card" id="galleryCard">
+      <div class="step-title">2. 4장 고르기 <small id="photoCount">0 / 20장</small></div>
+      <p class="pick-hint" id="pickHint" hidden></p>
+      <p class="hint" id="pickStatus">프레임에 넣을 순서대로 4장을 누르세요. ↻ 버튼으로 그 컷만 다시 찍을 수 있어요.</p>
+      <div class="photo-grid" id="photoGrid"></div>
+      <p class="empty" id="galleryEmpty">아직 사진이 없어요. 위에서 찍거나 📁 불러오기로 넣어 주세요.</p>
+    </section>
+
+    <!-- 3. 꾸미기 -->
+    <section class="card" id="customizerSection" hidden>
+      <div class="step-title">3. 프레임 꾸미기</div>
+
+      <div class="option-group">
+        <div class="option-sub-title">레이아웃</div>
+        <div class="layout-options">
+          <button class="layout-btn active" onclick="setLayout('v4', this)">📱 세로 4컷 (1x4)</button>
+          <button class="layout-btn" onclick="setLayout('grid2x2', this)">🖼️ 2x2 그리드</button>
+          <button class="layout-btn" onclick="setLayout('grid2x2_16_9', this)">🎬 16:9 2x2 그리드</button>
+          <button class="layout-btn" onclick="setLayout('grid2x2_9_16', this)">📱 9:16 2x2 그리드</button>
+          <button class="layout-btn" onclick="setLayout('film', this)">🎞️ 레트로 필름</button>
+          <button class="layout-btn" onclick="setLayout('wide', this)">💌 와이드 가로 (4x1)</button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <div class="option-sub-title">사진 비율</div>
+        <div class="ratio-options" id="frameRatioOptions">
           <button class="ratio-btn active" data-ratio="4:3" onclick="setPhotoRatio('4:3', this)">↔️ 가로 (4:3)</button>
           <button class="ratio-btn" data-ratio="3:4" onclick="setPhotoRatio('3:4', this)">↕️ 세로 (3:4)</button>
           <button class="ratio-btn" data-ratio="16:9" onclick="setPhotoRatio('16:9', this)">🖥️ 와이드 (16:9)</button>
@@ -474,117 +631,167 @@
         </div>
       </div>
 
-      <div class="video-container stage" id="videoContainer">
-        <video id="webcam" autoplay playsinline muted></video>
-        <div class="viewfinder-guide" id="viewfinderGuide"></div>
-        <div class="countdown-overlay" id="countdownOverlay">3</div>
+      <div class="option-group">
+        <div class="option-sub-title">테마</div>
+        <div class="seg" id="themeSeg"></div>
       </div>
 
-      <div class="cam-controls">
-        <button class="btn-secondary" onclick="toggleCamera()">🔄 전/후면 전환</button>
-        <button onclick="startPhotoShoot()">📸 촬영 (3초 타이머)</button>
-        <button class="btn-secondary" onclick="document.getElementById('fileUploadInput').click()">📁 사진 불러오기</button>
-        <input type="file" id="fileUploadInput" accept="image/*" multiple style="display: none;" onchange="handleFileUpload(event)">
+      <div class="option-group">
+        <div class="option-sub-title">프레임 색</div>
+        <div class="color-options" id="colorOptions"></div>
+        <div class="color-options" id="suggestRow" hidden>
+          <span class="suggest-label">📷 사진에서 뽑은 색</span>
+        </div>
       </div>
 
-      <div class="section-label">
-        <span>🖼️ 촬영 & 불러온 사진 갤러리</span>
-        <span id="photoCount" style="color: var(--cyan-ink);">0 / 20장</span>
+      <div class="option-group">
+        <div class="option-sub-title">사진 필터</div>
+        <div class="seg fill" id="filterSeg">
+          <button type="button" class="filter-btn active" data-v="none">원본</button>
+          <button type="button" class="filter-btn" data-v="bw">흑백</button>
+          <button type="button" class="filter-btn" data-v="sepia">세피아</button>
+          <button type="button" class="filter-btn" data-v="glow">선명하게</button>
+        </div>
       </div>
 
-      <div class="photo-grid" id="photoGrid"></div>
-
-      <div class="frame-customizer" id="customizerSection" style="display: none;">
-        <div class="section-label">🎨 4컷 프레임 스타일 설정</div>
-
-        <div class="option-group">
-          <div class="option-sub-title">1. 프레임 레이아웃 배치</div>
-          <div class="layout-options">
-            <button class="layout-btn active" onclick="setLayout('v4', this)">📱 세로 4컷 (1x4)</button>
-            <button class="layout-btn" onclick="setLayout('grid2x2', this)">🖼️ 2x2 그리드 (4:3)</button>
-            <button class="layout-btn" onclick="setLayout('grid2x2_16_9', this)">🎬 16:9 2x2 그리드</button>
-            <button class="layout-btn" onclick="setLayout('grid2x2_9_16', this)">📱 9:16 2x2 그리드</button>
-            <button class="layout-btn" onclick="setLayout('film', this)">🎞️ 레트로 필름</button>
-            <button class="layout-btn" onclick="setLayout('wide', this)">💌 와이드 가로 (4x1)</button>
-          </div>
+      <div class="option-group">
+        <div class="option-sub-title">문구 (비우면 빠져요)</div>
+        <div class="text-fields">
+          <input type="text" id="frameTitle" maxlength="30" placeholder="큰 제목 (예: 우정 영원히)" value="NEON PHOTO 4-CUT">
+          <input type="text" id="frameSubtitle" maxlength="40" placeholder="작은 부제 (예: 우리들의 첫 여행)">
         </div>
-
-        <div class="option-group">
-          <div class="option-sub-title">2. 프레임 사진 비율 (가로 / 세로)</div>
-          <div class="ratio-options" id="frameRatioOptions">
-            <button class="ratio-btn active" data-ratio="4:3" onclick="setPhotoRatio('4:3', this)">↔️ 가로 (4:3)</button>
-            <button class="ratio-btn" data-ratio="3:4" onclick="setPhotoRatio('3:4', this)">↕️ 세로 (3:4)</button>
-            <button class="ratio-btn" data-ratio="16:9" onclick="setPhotoRatio('16:9', this)">🖥️ 와이드 (16:9)</button>
-            <button class="ratio-btn" data-ratio="9:16" onclick="setPhotoRatio('9:16', this)">📱 숏폼 (9:16)</button>
-            <button class="ratio-btn" data-ratio="1:1" onclick="setPhotoRatio('1:1', this)">⏹️ 정방형 (1:1)</button>
-          </div>
+        <div class="seg" id="dateSeg">
+          <button type="button" class="seg-btn active" data-v="full">날짜 2026. 10. 15</button>
+          <button type="button" class="seg-btn" data-v="short">26. 10. 15</button>
+          <button type="button" class="seg-btn" data-v="none">날짜 숨기기</button>
         </div>
-
-        <div class="option-group">
-          <div class="option-sub-title">3. 프레임 컬러 앤 배경</div>
-          <div class="color-options">
-            <div class="color-dot active" style="background:#ff006e" onclick="setFrameColor('#ff006e', this)"></div>
-            <div class="color-dot" style="background:#00d4ff" onclick="setFrameColor('#00d4ff', this)"></div>
-            <div class="color-dot" style="background:#ffd166" onclick="setFrameColor('#ffd166', this)"></div>
-            <div class="color-dot" style="background:#7c3aed" onclick="setFrameColor('#7c3aed', this)"></div>
-            <div class="color-dot" style="background:#111122" onclick="setFrameColor('#111122', this)"></div>
-            <div class="color-dot" style="background:#ffffff" onclick="setFrameColor('#ffffff', this)"></div>
-          </div>
-        </div>
-
-        <div class="option-group">
-          <div class="option-sub-title">4. 사진 필터 효과</div>
-          <div class="filter-options">
-            <button class="filter-btn active" onclick="setFilter('none', this)">원본</button>
-            <button class="filter-btn" onclick="setFilter('bw', this)">클래식 흑백</button>
-            <button class="filter-btn" onclick="setFilter('sepia', this)">빈티지 세피아</button>
-            <button class="filter-btn" onclick="setFilter('glow', this)">네온 브라이트</button>
-          </div>
-        </div>
-
-        <div class="option-group">
-          <div class="option-sub-title">5. 기념 문구</div>
-          <div class="ratio-options" style="margin-bottom: 6px;">
-            <button type="button" class="ratio-btn active" id="textToggleOn" onclick="setTextEnabled(true, this)">💬 문구 있음</button>
-            <button type="button" class="ratio-btn" id="textToggleOff" onclick="setTextEnabled(false, this)">🚫 문구 없음</button>
-          </div>
-          <input type="text" id="frameTitle" placeholder="프레임 문구 (예: 우정 영원히 2026)" value="NEON PHOTO 4-CUT">
-        </div>
-
-        <button onclick="render4CutFrame()" style="background: linear-gradient(135deg, var(--cyan), var(--purple)); color: var(--text);">✨ 4컷 프레임 완성하기</button>
       </div>
 
-      <div class="preview-container" id="previewContainer">
-        <canvas id="fourCutCanvas"></canvas>
-        <button onclick="save4CutToGallery()" style="width: 100%;">📲 사진첩에 저장 / 공유</button>
-        <button onclick="download4Cut()" style="width: 100%; margin-top: 8px; background: var(--tint-2); color: inherit; border: 1px solid var(--line);">📥 파일로 다운로드 (PNG)</button>
+      <button onclick="render4CutFrame()">✨ 4컷 프레임 완성하기</button>
+    </section>
+
+    <!-- 4. 손보고 저장하기 -->
+    <section class="card" id="previewContainer" hidden>
+      <div class="step-title">4. 손보고 저장하기</div>
+      <div class="canvas-wrap"><canvas id="fourCutCanvas" data-tool="cell"></canvas></div>
+
+      <div class="tool-tabs" id="toolTabs">
+        <button type="button" class="seg-btn active" data-v="cell">🖼️ 칸</button>
+        <button type="button" class="seg-btn" data-v="sticker">😀 스티커</button>
+        <button type="button" class="seg-btn" data-v="pen">✏️ 펜</button>
       </div>
-    </div>
+
+      <div class="tool-panel" id="panel-cell">
+        <p class="hint" id="cellHint">칸 안을 끌면 사진이 보이는 위치가 바뀌어요. 두 칸을 차례로 누르면 서로 자리가 바뀌어요.</p>
+      </div>
+
+      <div class="tool-panel" id="panel-sticker" hidden>
+        <div class="sticker-grid" id="stickerGrid"></div>
+        <div class="sticker-ctrl" id="stickerCtrl" hidden>
+          <button type="button" class="btn-secondary" onclick="tweakSticker('smaller')" aria-label="스티커 작게">➖</button>
+          <button type="button" class="btn-secondary" onclick="tweakSticker('bigger')" aria-label="스티커 크게">➕</button>
+          <button type="button" class="btn-secondary" onclick="tweakSticker('left')" aria-label="왼쪽으로 돌리기">↺</button>
+          <button type="button" class="btn-secondary" onclick="tweakSticker('right')" aria-label="오른쪽으로 돌리기">↻</button>
+          <button type="button" class="btn-secondary" onclick="tweakSticker('delete')" aria-label="스티커 지우기">🗑</button>
+        </div>
+        <p class="hint">스티커를 누르면 프레임 가운데에 붙어요. 끌어서 옮기고, 두 손가락으로 크기와 각도를 바꿔요.</p>
+      </div>
+
+      <div class="tool-panel" id="panel-pen" hidden>
+        <div class="color-options" id="penColors"></div>
+        <div class="seg" id="penWidthSeg">
+          <button type="button" class="seg-btn" data-v="3">얇게</button>
+          <button type="button" class="seg-btn active" data-v="6">보통</button>
+          <button type="button" class="seg-btn" data-v="11">굵게</button>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn-secondary" onclick="undoStroke()">↶ 되돌리기</button>
+          <button type="button" class="btn-secondary" onclick="clearStrokes()">🧽 펜 모두 지우기</button>
+        </div>
+      </div>
+
+      <div class="save-block">
+        <h3>📷 사진으로 저장</h3>
+        <div class="btn-row">
+          <button onclick="save4CutToGallery()">📲 사진첩에 저장 / 공유</button>
+          <button class="btn-secondary" onclick="download4Cut()">📥 PNG</button>
+        </div>
+      </div>
+
+      <div class="save-block" id="motionBlock" hidden>
+        <h3>🎞️ 움직이는 4컷</h3>
+        <button class="btn-secondary" id="playBtn" onclick="togglePlay()">▶ 움직임 미리보기</button>
+        <div class="seg" id="motionFormatSeg">
+          <button type="button" class="seg-btn active" data-v="mp4">영상 MP4</button>
+          <button type="button" class="seg-btn" data-v="gif">GIF (작게)</button>
+        </div>
+        <div class="seg" id="loopSeg">
+          <button type="button" class="seg-btn active" data-v="boomerang">🔁 부메랑 (왕복)</button>
+          <button type="button" class="seg-btn" data-v="forward">➡️ 한 방향</button>
+        </div>
+        <button id="motionBtn" onclick="makeMotion()">🎞️ 움직이는 4컷 만들기</button>
+        <p class="status" id="motionStatus" hidden></p>
+        <video class="result-media" id="motionVideo" hidden muted loop playsinline autoplay></video>
+        <img class="result-media" id="motionGif" hidden alt="움직이는 4컷 미리보기">
+        <button id="motionSaveBtn" hidden onclick="saveMotion()">📲 사진첩에 저장 / 공유</button>
+      </div>
+
+      <div class="save-block">
+        <h3>🖨️ 인화용 저장</h3>
+        <div class="seg" id="paperSeg">
+          <button type="button" class="seg-btn" data-v="double">4×6 두 줄</button>
+          <button type="button" class="seg-btn" data-v="single">4×6 한 장</button>
+          <button type="button" class="seg-btn" data-v="a4">A4 모아 찍기</button>
+        </div>
+        <p class="hint" id="paperHint"></p>
+        <div class="copies-row" id="copiesRow" hidden>
+          <label for="printCopies">몇 장 뽑을까요</label>
+          <input type="number" id="printCopies" min="1" max="32" value="4" inputmode="numeric">
+        </div>
+        <label class="check-row"><input type="checkbox" id="cutLines" checked> 자르는 선 넣기</label>
+        <button id="printBtn" onclick="makePrint()">🖨️ 인화용 파일 만들기</button>
+        <p class="status" id="printStatus" hidden></p>
+        <img class="result-media" id="printPreview" hidden alt="인화용 파일 미리보기">
+        <button id="printSaveBtn" hidden onclick="savePrint()">📲 저장 / 공유</button>
+        <details class="print-guide">
+          <summary>인화하는 방법</summary>
+          <ul>
+            <li><b>사진관 앱·편의점 키오스크</b>: 사진 크기를 <b>4×6 (10×15cm)</b>으로 고르고 저장한 JPEG를 올리면 됩니다.</li>
+            <li><b>4×6 두 줄</b>은 가운데 선을 따라 반으로 자르면 두 사람이 한 줄씩 나눠 가질 수 있어요.</li>
+            <li>인화할 때 가장자리가 3mm 정도 잘릴 수 있어서, 사진과 글자는 그보다 안쪽에 두었어요.</li>
+            <li><b>A4 PDF</b>는 집 프린터에서 <b>실제 크기(100%)</b>로 인쇄하세요. '페이지에 맞춤'을 켜면 크기가 달라져요.</li>
+          </ul>
+        </details>
+      </div>
+    </section>
   </div>
 
   <script type="application/json" id="game-rules">
 {
  "title": "네온 4컷 사진관",
  "players": "1~10인",
- "time": "5분",
- "goal": "즉석에서 촬영하거나 불러온 사진으로 기념 4컷 프레임을 만듭니다.",
+ "time": "5~10분",
+ "goal": "즉석 사진 부스처럼 찍고, 4장을 골라 꾸민 뒤 사진·영상·인화용 파일로 저장합니다.",
  "steps": [
-  "카메라로 촬영하거나 파일 불러오기(드래그&드롭)로 사진을 준비합니다.",
-  "가로(4:3, 16:9), 세로(3:4, 9:16), 정방형 등 원하는 사진 비율을 고릅니다.",
-  "갤러리에서 마음에 드는 네 장의 사진을 선택합니다.",
-  "16:9 / 9:16 2x2 그리드, 세로 4컷 등 프레임 레이아웃과 필터를 고릅니다.",
-  "완성된 프레임을 확인하고 고화질 PNG로 다운로드합니다."
+  "사진 또는 움직이는 사진(2초)을 고르고, 한 장씩 찍거나 연속 8컷으로 찍습니다.",
+  "컷마다 화면 위에 포즈 가이드가 뜹니다. 인원수에 맞춰 고르고 '다른 포즈'로 바꿀 수 있습니다.",
+  "찍은 사진 중 4장을 프레임에 넣을 순서대로 누릅니다. ↻ 버튼으로 그 컷만 다시 찍을 수 있습니다.",
+  "레이아웃·테마·프레임 색·필터·문구를 고르고 '완성하기'를 누릅니다.",
+  "완성된 프레임에서 칸 위치를 맞추고 스티커와 손글씨로 꾸민 뒤, 사진·영상·인화용 파일로 저장합니다."
  ],
  "tips": [
-  "16:9 2x2 그리드는 와이드 화면에, 9:16 2x2 그리드는 인스타 스토리나 숏폼에 최적화되어 있습니다.",
-  "카메라 없이도 PC나 스마트폰에 저장된 사진을 불러와 프레임을 제작할 수 있습니다.",
-  "하단 기념 문구는 '문구 있음/없음' 토글로 깔끔하게 켜고 끌 수 있습니다.",
-  "사진 썸네일 좌측 상단의 ✕ 버튼으로 필요 없는 사진을 삭제할 수 있습니다."
+  "연속 8컷은 컷 사이 간격(5·7·10초)을 고를 수 있어 폰을 세워 두고 여럿이 찍기 좋습니다.",
+  "움직이는 사진을 고르면 MP4 영상이나 GIF로 4칸이 동시에 움직이는 4컷을 만들 수 있습니다.",
+  "프레임 색 아래 '사진에서 뽑은 색'은 고른 사진들과 어울리는 색입니다.",
+  "4×6 두 줄로 인화하면 반으로 잘라 두 사람이 한 줄씩 나눠 가질 수 있습니다.",
+  "카메라 없이도 저장된 사진을 불러와 만들 수 있습니다."
  ]
 }
   </script>
 
   <script>
+    const $ = (id) => document.getElementById(id);
+
     const RATIO_MAP = {
       '4:3': { label: '가로 (4:3)', num: 4 / 3 },
       '3:4': { label: '세로 (3:4)', num: 3 / 4 },
@@ -593,35 +800,105 @@
       '1:1': { label: '정방형 (1:1)', num: 1 }
     };
 
+    const MAX_SHOTS = 20;
+    const BURST_COUNT = 8;
+    // 움직이는 사진: 2초 × 15fps. 짧은 변 480px JPEG로 보관하면 한 컷이 1MB 안팎이라
+    // 8컷을 찍어도 모바일 메모리에 부담이 없다. 디코딩은 그릴 때 한 장씩만 한다.
+    const CLIP_FPS = 15;
+    const CLIP_FRAMES = 30;
+    const CLIP_EDGE = 480;
+    // 프레임을 3배 해상도로 저장한다. 화면 미리보기는 기기 픽셀 비율만큼만 그린다.
+    const SCALE = 3;
+
+    // 포즈 가이드 — 인원수별로 따로 둔다
+    const POSES = {
+      1: [['😊', '볼하트'], ['✌️', '브이'], ['😉', '윙크'], ['🤔', '턱 괴기'], ['😲', '깜짝 놀란 표정'],
+          ['🌸', '꽃받침'], ['🫰', '손가락 하트'], ['😛', '메롱'], ['🐱', '고양이 손'], ['👍', '엄지척'],
+          ['🙆', '머리 위로 큰 하트'], ['😎', '시크하게 옆 보기']],
+      2: [['👀', '서로 바라보기'], ['💞', '반쪽씩 하트 만들기'], ['🥰', '볼 맞대기'], ['🔙', '등 맞대고 팔짱'],
+          ['🤝', '어깨동무'], ['😱', '한 명 놀래키기'], ['🔫', '손가락 총 쏘고 맞기'], ['🌸', '서로 꽃받침 해 주기'],
+          ['🙈', '한 명은 눈 가리기'], ['✌️', '브이 겹치기']],
+      3: [['🦘', '다 같이 점프'], ['🤝', '다 같이 어깨동무'], ['✌️', '다 같이 브이'], ['🗼', '얼굴 탑 쌓기'],
+          ['🙃', '한 명만 다른 표정'], ['🌸', '단체 꽃받침'], ['😲', '다 같이 놀란 표정'], ['💪', '손 모아 파이팅'],
+          ['👉', '한 사람 가리키기'], ['🙌', '만세']]
+    };
+
+    // 테마: 배경 무늬와 글꼴, 기본 색·문구. 무늬는 모두 캔버스로 그려 외부 이미지가 없다.
+    const SERIF = "Georgia, 'Times New Roman', 'Noto Serif KR', serif";
+    const THEMES = {
+      basic:    { label: '⬜ 기본', color: '#ff006e', title: 'NEON PHOTO 4-CUT', pattern: null,
+                  font: (s) => `800 ${s}px Pretendard, sans-serif` },
+      birthday: { label: '🎂 생일', color: '#ffb3c7', title: 'HAPPY BIRTHDAY', pattern: 'confetti',
+                  font: (s) => `900 ${s}px Pretendard, sans-serif` },
+      travel:   { label: '✈️ 여행', color: '#f3e9d2', title: 'Bon Voyage', pattern: 'paper',
+                  font: (s) => `italic 700 ${s}px ${SERIF}` },
+      grad:     { label: '🎓 졸업', color: '#1e2a5a', title: 'CONGRATULATIONS', pattern: 'gradient',
+                  font: (s) => `700 ${s}px ${SERIF}`, titleColor: '#f1d27a', spacing: 2 },
+      xmas:     { label: '🎄 연말', color: '#14532d', title: 'MERRY CHRISTMAS', pattern: 'snow',
+                  font: (s) => `800 ${s}px Pretendard, sans-serif` },
+      couple:   { label: '💕 커플', color: '#ffd6e4', title: 'Love you', pattern: 'gingham',
+                  font: (s) => `italic 700 ${s}px ${SERIF}` }
+    };
+
+    const FRAME_COLORS = ['#ff006e', '#00d4ff', '#ffd166', '#7c3aed', '#111122', '#ffffff', '#f3e9d2', '#14532d'];
+    const PEN_COLORS = ['#ffffff', '#111122', '#ff006e', '#ffd166', '#00b4d8', '#06d6a0'];
+    const STICKERS = ['❤️', '💖', '✨', '⭐', '🌟', '🎉', '🎂', '🎈', '🎁', '🌸', '🌷', '🍀', '☀️', '🌈', '☁️', '🦋',
+                      '🐶', '🐱', '🐰', '🐻', '👑', '😎', '😍', '😂', '🥳', '😘', '👍', '✌️', '💯', '🔥', '📸', '✈️',
+                      '🎄', '🎓', '💌', '🍰'];
+    const EMOJI_FONT = "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif";
+
+    // ── 상태 ───────────────────────────────────────────────
+    // shots: { src: 정지 사진 dataURL, frames: 움직이는 사진의 JPEG Blob[] 또는 null,
+    //          cam: 카메라로 찍었는지(다시 찍기 가능), crop: 칸 안에서 보이는 위치 {ox, oy} (-1~1) }
+    const shots = [];
+    const selectedIndices = [];
+    let activeLayout = 'v4';
+    let activePhotoRatio = '4:3';
+    const deco = { theme: 'basic', color: '#ff006e', filter: 'none', title: 'NEON PHOTO 4-CUT', subtitle: '', dateFmt: 'full' };
+
+    let shotKind = 'photo';
+    let shootMode = 'single';
+    let burstInterval = 5;
+    let poseGroup = 1;
+    let session = null;
+
     let currentStream = null;
     let facingMode = 'user';
-    const capturedPhotos = [];
-    const selectedIndices = [];
-    let activeFrameColor = '#ff006e';
-    let activeLayout = 'v4';
-    let activeFilter = 'none';
-    let activePhotoRatio = '4:3';
-    let isTextEnabled = true;
 
-    function setTextEnabled(enabled, el) {
-      isTextEnabled = enabled;
-      const onBtn = document.getElementById('textToggleOn');
-      const offBtn = document.getElementById('textToggleOff');
-      if (onBtn && offBtn) {
-        onBtn.classList.toggle('active', enabled);
-        offBtn.classList.toggle('active', !enabled);
-      }
-      const titleInput = document.getElementById('frameTitle');
-      if (titleInput) {
-        titleInput.style.display = enabled ? 'block' : 'none';
-      }
+    // 편집기
+    let L = null;                 // 현재 프레임 배치
+    let tool = 'cell';
+    const stickers = [];          // { emoji, x, y, size, rot } (프레임 논리 좌표)
+    const strokes = [];           // { color, width, pts: [{x, y}] }
+    let selectedSticker = null;
+    let pendingSwap = null;       // 자리 바꾸기로 처음 누른 칸 번호
+    let penColor = '#ffffff';
+    let penWidth = 6;
+    const imgCache = new Map();   // src → 디코딩된 Image
+    let lastFrameBlob = null;
+    let exportTimer = null;
+
+    const video = $('webcam');
+    const canvas = $('fourCutCanvas');
+
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+    function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+    // 버튼 묶음: data-v 값을 눌린 것으로 표시하고 콜백에 넘긴다
+    function bindSeg(id, onPick) {
+      const box = $(id);
+      box.addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-v]');
+        if (!b || b.disabled || !box.contains(b)) return;
+        box.querySelectorAll('button[data-v]').forEach((x) => x.classList.toggle('active', x === b));
+        onPick(b.dataset.v, b);
+      });
+    }
+    function setSegValue(id, v) {
+      $(id).querySelectorAll('button[data-v]').forEach((x) => x.classList.toggle('active', x.dataset.v === String(v)));
     }
 
-    const video = document.getElementById('webcam');
-    const countdownOverlay = document.getElementById('countdownOverlay');
-    const photoGrid = document.getElementById('photoGrid');
-    const photoCount = document.getElementById('photoCount');
-
+    // ── 카메라 ─────────────────────────────────────────────
     async function initCamera() {
       if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
@@ -636,6 +913,7 @@
         video.srcObject = currentStream;
         updateViewfinderGuide();
       } catch (e) {
+        currentStream = null;
         console.error("Camera access error:", e);
       }
     }
@@ -646,24 +924,21 @@
       initCamera();
     }
 
-    function setPhotoRatio(ratio, el) {
+    function setPhotoRatio(ratio) {
       if (!RATIO_MAP[ratio]) return;
       activePhotoRatio = ratio;
       document.querySelectorAll('#shootRatioOptions .ratio-btn, #frameRatioOptions .ratio-btn').forEach(btn => {
-        if (btn.dataset.ratio === ratio) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
+        btn.classList.toggle('active', btn.dataset.ratio === ratio);
       });
       updateViewfinderGuide();
+      refreshIfShown();
     }
 
     function updateViewfinderGuide() {
-      const guide = document.getElementById('viewfinderGuide');
+      const guide = $('viewfinderGuide');
       if (!guide) return;
       const targetRatio = RATIO_MAP[activePhotoRatio].num;
-      const maxH = 250;
+      const maxH = 270;
       let w, h;
       if (targetRatio >= 1) {
         h = Math.min(maxH, Math.round(520 / targetRatio));
@@ -680,69 +955,293 @@
       guide.style.height = h + 'px';
     }
 
-    function startPhotoShoot() {
-      if (capturedPhotos.length >= 20) {
-        alert('최대 20장까지 보관할 수 있습니다.');
-        return;
-      }
-
-      let count = 3;
-      countdownOverlay.textContent = count;
-      countdownOverlay.style.display = 'flex';
-
-      const timer = setInterval(() => {
-        count--;
-        if (count > 0) {
-          countdownOverlay.textContent = count;
-        } else {
-          clearInterval(timer);
-          countdownOverlay.style.display = 'none';
-          snapPhoto();
-        }
-      }, 1000);
-    }
-
-    function snapPhoto() {
+    // 카메라 화면에서 지정 비율만큼 가운데를 잘라 낼 영역
+    function videoCrop() {
       const vW = video.videoWidth || 640;
       const vH = video.videoHeight || 480;
-      const targetRatio = RATIO_MAP[activePhotoRatio] ? RATIO_MAP[activePhotoRatio].num : (4 / 3);
-      const vRatio = vW / vH;
-
+      const r = RATIO_MAP[activePhotoRatio].num;
       let sW = vW, sH = vH, sx = 0, sy = 0;
-      if (vRatio > targetRatio) {
-        sW = vH * targetRatio;
+      if (vW / vH > r) {
+        sW = vH * r;
         sx = (vW - sW) / 2;
       } else {
-        sH = vW / targetRatio;
+        sH = vW / r;
         sy = (vH - sH) / 2;
       }
-
-      // 잘라낸 원본보다 크게 늘리면 흐려지기만 하므로, 긴 변은 원본 크기와 1600px 중 작은 쪽
-      const longEdge = Math.min(1600, Math.round(Math.max(sW, sH)));
-      const tempCanvas = document.createElement('canvas');
-      if (targetRatio >= 1) {
-        tempCanvas.width = longEdge;
-        tempCanvas.height = Math.round(longEdge / targetRatio);
-      } else {
-        tempCanvas.height = longEdge;
-        tempCanvas.width = Math.round(longEdge * targetRatio);
-      }
-      const ctx = tempCanvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      if (facingMode === 'user') {
-        ctx.translate(tempCanvas.width, 0);
-        ctx.scale(-1, 1);
-      }
-
-      ctx.drawImage(video, sx, sy, sW, sH, 0, 0, tempCanvas.width, tempCanvas.height);
-      const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.95);
-
-      capturedPhotos.push(dataUrl);
-      updateGallery();
+      return { sx, sy, sW, sH, r };
     }
 
+    function drawVideoTo(ctx, w, h, c) {
+      ctx.save();
+      if (facingMode === 'user') {   // 셀카는 거울처럼 보이는 대로 저장한다
+        ctx.translate(w, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(video, c.sx, c.sy, c.sW, c.sH, 0, 0, w, h);
+      ctx.restore();
+    }
+
+    function grabStill() {
+      const c = videoCrop();
+      // 잘라낸 원본보다 크게 늘리면 흐려지기만 하므로, 긴 변은 원본 크기와 1600px 중 작은 쪽
+      const longEdge = Math.min(1600, Math.round(Math.max(c.sW, c.sH)));
+      const t = document.createElement('canvas');
+      if (c.r >= 1) {
+        t.width = longEdge;
+        t.height = Math.round(longEdge / c.r);
+      } else {
+        t.height = longEdge;
+        t.width = Math.round(longEdge * c.r);
+      }
+      const ctx = t.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      drawVideoTo(ctx, t.width, t.height, c);
+      const url = t.toDataURL('image/jpeg', 0.95);
+      t.width = t.height = 0;
+      return url;
+    }
+
+    // ── 소리 (Web Audio로 직접 만든다) ─────────────────────
+    let audioCtx = null;
+    function ensureAudio() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      } catch { audioCtx = null; }
+    }
+
+    function beep(freq = 880, dur = 0.12, vol = 0.22) {
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(t);
+      o.stop(t + dur + 0.02);
+    }
+
+    // 찰칵: 짧은 잡음을 두 번 — 셔터가 열리고 닫히는 소리
+    function shutterSound() {
+      if (!audioCtx) return;
+      const len = Math.floor(audioCtx.sampleRate * 0.05);
+      const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+      [0, 0.07].forEach((delay) => {
+        const src = audioCtx.createBufferSource();
+        const f = audioCtx.createBiquadFilter();
+        const g = audioCtx.createGain();
+        src.buffer = buf;
+        f.type = 'bandpass';
+        f.frequency.value = delay ? 2400 : 3600;
+        g.gain.value = 0.9;
+        src.connect(f).connect(g).connect(audioCtx.destination);
+        src.start(audioCtx.currentTime + delay);
+      });
+    }
+
+    // 촬영 중 화면이 꺼지지 않게 한다 (지원하는 브라우저만)
+    let wakeLock = null;
+    async function requestWake() {
+      try { wakeLock = navigator.wakeLock ? await navigator.wakeLock.request('screen') : null; } catch { wakeLock = null; }
+    }
+    function releaseWake() {
+      try { if (wakeLock) wakeLock.release(); } catch { /* 이미 풀림 */ }
+      wakeLock = null;
+    }
+
+    // ── 촬영 화면 연출 ─────────────────────────────────────
+    const countEl = $('countdownOverlay');
+    let currentPose = null;
+
+    function showCount(n) {
+      countEl.textContent = n;
+      countEl.classList.toggle('far', n > 3);
+      countEl.style.display = 'flex';
+      countEl.classList.remove('pop');
+      void countEl.offsetWidth;   // 애니메이션을 처음부터 다시 돌린다
+      countEl.classList.add('pop');
+    }
+    function hideCount() { countEl.style.display = 'none'; }
+
+    function pickPose() {
+      if (!poseGroup) return null;
+      const list = POSES[poseGroup];
+      let p;
+      do { p = list[Math.floor(Math.random() * list.length)]; } while (list.length > 1 && p === currentPose);
+      return p;
+    }
+    function showPose(p) {
+      currentPose = p;
+      $('poseCard').hidden = !p;
+      if (p) {
+        $('poseEmoji').textContent = p[0];
+        $('poseText').textContent = p[1];
+      }
+    }
+    function nextPose() { showPose(pickPose()); }
+
+    function doFlash() {
+      const f = $('flash');
+      f.classList.remove('on');
+      void f.offsetWidth;
+      f.classList.add('on');
+    }
+
+    // 중지를 누르면 바로 멈추도록 잘게 나눠 기다린다
+    async function pause(ms) {
+      const end = performance.now() + ms;
+      while (performance.now() < end) {
+        if (session && session.cancelled) return false;
+        await sleep(Math.min(100, end - performance.now()));
+      }
+      return !(session && session.cancelled);
+    }
+
+    async function countdown(sec) {
+      for (let s = sec; s > 0; s--) {
+        showCount(s);
+        if (s <= 3) beep(s === 1 ? 1046 : 784);
+        if (!(await pause(1000))) { hideCount(); return false; }
+      }
+      hideCount();
+      return true;
+    }
+
+    async function capture(kind) {
+      if (!video.videoWidth) return null;
+      if (kind === 'motion') return recordClip();
+      const src = grabStill();
+      doFlash();
+      shutterSound();
+      return { src, frames: null, cam: true, crop: null };
+    }
+
+    // 2초 동안 15fps로 찍는다. toBlob은 호출 순간의 그림을 복사하므로 다음 프레임을 바로 그려도 된다.
+    async function recordClip() {
+      const c = videoCrop();
+      const t = document.createElement('canvas');
+      if (c.r >= 1) { t.height = CLIP_EDGE; t.width = Math.round(CLIP_EDGE * c.r); }
+      else { t.width = CLIP_EDGE; t.height = Math.round(CLIP_EDGE / c.r); }
+      const ctx = t.getContext('2d');
+      const pending = [];
+      let still = null;
+      $('recBar').hidden = false;
+      $('recFill').style.width = '0%';
+      beep(1318, 0.15);
+      const start = performance.now();
+      for (let i = 0; i < CLIP_FRAMES; i++) {
+        const wait = start + i * (1000 / CLIP_FPS) - performance.now();
+        if (wait > 0) await sleep(wait);
+        if (session && session.cancelled) break;
+        drawVideoTo(ctx, t.width, t.height, c);
+        pending.push(new Promise((res) => t.toBlob(res, 'image/jpeg', 0.85)));
+        // 정지 사진(인화·사진 저장용)은 가운데 순간을 원본 화질로 따로 남긴다
+        if (i === Math.floor(CLIP_FRAMES / 2)) still = grabStill();
+        $('recFill').style.width = `${((i + 1) / CLIP_FRAMES) * 100}%`;
+      }
+      const frames = (await Promise.all(pending)).filter(Boolean);
+      $('recBar').hidden = true;
+      t.width = t.height = 0;
+      if (frames.length < CLIP_FRAMES) return null;
+      doFlash();
+      shutterSound();
+      return { src: still || grabStill(), frames, cam: true, crop: null };
+    }
+
+    // ── 촬영 진행 ──────────────────────────────────────────
+    async function startShoot() {
+      if (session) return;
+      ensureAudio();
+      if (!currentStream || !video.videoWidth) {
+        await gameAlert('카메라가 켜져 있지 않아요.\n브라우저에서 카메라 권한을 허용하거나, 📁 불러오기로 사진을 넣어 주세요.');
+        return;
+      }
+      const total = shootMode === 'burst' ? BURST_COUNT : 1;
+      const room = MAX_SHOTS - shots.length;
+      if (room < total) {
+        await gameAlert(room <= 0
+          ? `사진은 ${MAX_SHOTS}장까지 보관해요. 필요 없는 사진을 지운 뒤 다시 찍어 주세요.`
+          : `연속 촬영은 ${total}장이 필요한데 ${room}장만 더 보관할 수 있어요.\n필요 없는 사진을 지우거나 '한 장씩'으로 찍어 주세요.`);
+        return;
+      }
+      await runSession(total, shootMode === 'burst' ? burstInterval : 3, shotKind, null);
+    }
+
+    async function retake(idx, e) {
+      if (e) e.stopPropagation();
+      if (session) return;
+      ensureAudio();
+      if (!currentStream || !video.videoWidth) {
+        await gameAlert('카메라가 켜져 있지 않아 다시 찍을 수 없어요.');
+        return;
+      }
+      $('shootCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      await runSession(1, 3, shots[idx].frames ? 'motion' : 'photo', idx);
+    }
+
+    async function runSession(total, interval, kind, replaceIdx) {
+      session = { cancelled: false };
+      setSessionUI(true);
+      requestWake();
+      let taken = 0;
+      const chip = $('shotChip');
+      try {
+        for (let n = 0; n < total; n++) {
+          chip.textContent = replaceIdx !== null ? `${replaceIdx + 1}번 다시 찍기` : (total > 1 ? `${n + 1} / ${total}` : '');
+          chip.hidden = !chip.textContent;
+          nextPose();
+          if (!(await countdown(interval))) break;
+          const shot = await capture(kind);
+          if (!shot || session.cancelled) break;
+          if (replaceIdx !== null) {
+            imgCache.delete(shots[replaceIdx].src);
+            shots[replaceIdx] = shot;
+          } else {
+            shots.push(shot);
+          }
+          taken++;
+          updateGallery();
+          if (n < total - 1 && !(await pause(900))) break;
+        }
+      } finally {
+        hideCount();
+        showPose(null);
+        chip.hidden = true;
+        $('recBar').hidden = true;
+        releaseWake();
+        setSessionUI(false);
+        session = null;
+      }
+      if (replaceIdx !== null && taken) {
+        refreshIfShown();
+      } else if (total > 1 && taken > 0) {
+        beep(1318, 0.2);
+        showPickHint(`📸 ${taken}컷을 찍었어요. 마음에 드는 4장을 프레임에 넣을 순서대로 골라 주세요.`);
+        $('galleryCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function stopShoot() { if (session) session.cancelled = true; }
+
+    function setSessionUI(on) {
+      $('idleControls').hidden = on;
+      $('sessionControls').hidden = !on;
+      $('shootOptions').classList.toggle('locked', on);
+      document.querySelectorAll('.btn-retake').forEach((b) => { b.disabled = on; });
+    }
+
+    function updateShootButton() {
+      const kind = shotKind === 'motion' ? '🎞️' : '📸';
+      $('shootBtn').textContent = shootMode === 'burst' ? `${kind} 연속 8컷 시작` : `${kind} 촬영 (3초)`;
+    }
+
+    // ── 불러오기 ───────────────────────────────────────────
     function handleFileUpload(event) {
       const files = Array.from(event.target.files || []);
       addFilesToGallery(files);
@@ -752,59 +1251,88 @@
     async function addFilesToGallery(files) {
       const imageFiles = files.filter(f => f.type.startsWith('image/'));
       if (imageFiles.length === 0) {
-        if (files.length > 0) alert('이미지 파일(JPG, PNG 등)만 등록할 수 있습니다.');
+        if (files.length > 0) gameAlert('이미지 파일(JPG, PNG 등)만 등록할 수 있습니다.');
         return;
       }
-
       for (const file of imageFiles) {
-        if (capturedPhotos.length >= 20) break;
+        if (shots.length >= MAX_SHOTS) {
+          gameAlert(`사진은 ${MAX_SHOTS}장까지 보관해요.`);
+          break;
+        }
         try {
           const { dataUrl } = await loadPhotoFile(file, 2000);
-          if (capturedPhotos.length < 20) {
-            capturedPhotos.push(dataUrl);
+          if (shots.length < MAX_SHOTS) {
+            shots.push({ src: dataUrl, frames: null, cam: false, crop: null });
             updateGallery();
           }
         } catch (err) {
-          alert(err.message);
+          gameAlert(err.message);
         }
       }
     }
 
+    // ── 사진 고르기 ────────────────────────────────────────
+    function showPickHint(text) {
+      const h = $('pickHint');
+      h.textContent = text;
+      h.hidden = !text;
+    }
+
     function deletePhoto(idx, event) {
       if (event) event.stopPropagation();
-      capturedPhotos.splice(idx, 1);
-
+      const [removed] = shots.splice(idx, 1);
+      if (removed) imgCache.delete(removed.src);
       const selPos = selectedIndices.indexOf(idx);
-      if (selPos !== -1) {
-        selectedIndices.splice(selPos, 1);
-      }
+      if (selPos !== -1) selectedIndices.splice(selPos, 1);
       for (let i = 0; i < selectedIndices.length; i++) {
-        if (selectedIndices[i] > idx) {
-          selectedIndices[i]--;
-        }
+        if (selectedIndices[i] > idx) selectedIndices[i]--;
       }
       updateGallery();
     }
 
     function updateGallery() {
-      photoGrid.innerHTML = '';
-      photoCount.textContent = `${capturedPhotos.length} / 20장`;
+      const grid = $('photoGrid');
+      grid.innerHTML = '';
+      $('photoCount').textContent = `${shots.length} / ${MAX_SHOTS}장`;
 
-      capturedPhotos.forEach((dataUrl, idx) => {
+      shots.forEach((shot, idx) => {
         const wrap = document.createElement('div');
         wrap.className = 'photo-thumb-wrap';
+
+        const img = document.createElement('img');
+        img.className = 'photo-thumb';
+        img.src = shot.src;
+        img.alt = `${idx + 1}번 사진`;
+        img.onclick = () => toggleSelectPhoto(idx);
+        wrap.appendChild(img);
 
         const delBtn = document.createElement('button');
         delBtn.className = 'btn-delete-photo';
         delBtn.type = 'button';
         delBtn.title = '사진 삭제';
+        delBtn.setAttribute('aria-label', `${idx + 1}번 사진 삭제`);
         delBtn.textContent = '✕';
         delBtn.onclick = (e) => deletePhoto(idx, e);
         wrap.appendChild(delBtn);
 
-        const img = document.createElement('img');
-        img.className = 'photo-thumb';
-        img.src = dataUrl;
+        if (shot.cam) {
+          const re = document.createElement('button');
+          re.className = 'btn-retake';
+          re.type = 'button';
+          re.title = '이 컷만 다시 찍기';
+          re.setAttribute('aria-label', `${idx + 1}번 사진 다시 찍기`);
+          re.textContent = '↻';
+          re.disabled = !!session;
+          re.onclick = (e) => retake(idx, e);
+          wrap.appendChild(re);
+        }
+
+        if (shot.frames) {
+          const m = document.createElement('span');
+          m.className = 'badge-motion';
+          m.textContent = '🎞 2초';
+          wrap.appendChild(m);
+        }
 
         const selPos = selectedIndices.indexOf(idx);
         if (selPos !== -1) {
@@ -814,16 +1342,24 @@
           badge.textContent = selPos + 1;
           wrap.appendChild(badge);
         }
-
-        img.onclick = () => toggleSelectPhoto(idx);
-        wrap.appendChild(img);
-        photoGrid.appendChild(wrap);
+        grid.appendChild(wrap);
       });
 
-      if (selectedIndices.length === 4) {
-        document.getElementById('customizerSection').style.display = 'flex';
-      } else {
-        document.getElementById('customizerSection').style.display = 'none';
+      $('galleryEmpty').hidden = shots.length > 0;
+      const n = selectedIndices.length;
+      $('pickStatus').textContent = n === 4
+        ? '4장을 다 골랐어요. 아래에서 프레임을 꾸며 보세요.'
+        : `프레임에 넣을 순서대로 4장을 누르세요 (${n} / 4). ↻ 버튼으로 그 컷만 다시 찍을 수 있어요.`;
+
+      const ready = n === 4;
+      $('customizerSection').hidden = !ready;
+      if (ready) {
+        showPickHint('');
+        updateColorSuggestions();
+        refreshIfShown();
+      } else if (!$('previewContainer').hidden) {
+        stopPlay();
+        $('previewContainer').hidden = true;
       }
     }
 
@@ -833,7 +1369,7 @@
         selectedIndices.splice(pos, 1);
       } else {
         if (selectedIndices.length >= 4) {
-          alert('4컷 프레임용 사진은 4장만 선택 가능합니다.');
+          gameAlert('4컷 프레임용 사진은 4장만 고를 수 있어요.\n바꾸려면 고른 사진을 한 번 더 눌러 빼 주세요.');
           return;
         }
         selectedIndices.push(idx);
@@ -841,284 +1377,1133 @@
       updateGallery();
     }
 
+    // ── 꾸미기 옵션 ────────────────────────────────────────
     function setLayout(layout, el) {
       activeLayout = layout;
       document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
       if (el) el.classList.add('active');
-
       if (layout === 'grid2x2_16_9') {
         setPhotoRatio('16:9');
       } else if (layout === 'grid2x2_9_16') {
         setPhotoRatio('9:16');
       }
+      refreshIfShown();
     }
 
-    function setFrameColor(color, el) {
-      activeFrameColor = color;
-      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-      el.classList.add('active');
+    function setFrameColor(color) {
+      deco.color = color;
+      document.querySelectorAll('#colorOptions .color-dot, #suggestRow .color-dot').forEach((d) => {
+        d.classList.toggle('active', d.dataset.color === color);
+      });
+      refreshIfShown();
     }
 
-    function setFilter(filter, el) {
-      activeFilter = filter;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      el.classList.add('active');
+    function makeColorDot(color) {
+      const d = document.createElement('button');
+      d.type = 'button';
+      d.className = 'color-dot';
+      d.style.background = color;
+      d.dataset.color = color;
+      d.setAttribute('aria-label', `프레임 색 ${color}`);
+      d.classList.toggle('active', color === deco.color);
+      d.onclick = () => setFrameColor(color);
+      return d;
+    }
+
+    function setTheme(key) {
+      const prev = THEMES[deco.theme];
+      const t = THEMES[key];
+      deco.theme = key;
+      // 사용자가 직접 쓴 문구는 지키고, 이전 테마의 기본 문구일 때만 바꾼다
+      const titleEl = $('frameTitle');
+      if (!titleEl.value.trim() || titleEl.value === prev.title) {
+        titleEl.value = t.title;
+        deco.title = t.title;
+      }
+      setFrameColor(t.color);
+    }
+
+    function colorDist(a, b) {
+      const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+      const [x, y] = [p(a), p(b)];
+      return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+    }
+
+    // 고른 사진들의 대표 색으로 어울리는 프레임 색을 3개까지 추천한다
+    async function updateColorSuggestions() {
+      const row = $('suggestRow');
+      row.querySelectorAll('.color-dot').forEach((d) => d.remove());
+      const imgs = await loadSelectedImages();
+      const picks = [];
+      for (const im of imgs) {
+        const c = im && dominantColor(im);
+        if (c && !picks.some((x) => colorDist(x, c) < 70)) picks.push(c);
+        if (picks.length === 3) break;
+      }
+      picks.forEach((c) => row.appendChild(makeColorDot(c)));
+      row.hidden = picks.length === 0;
+    }
+
+    function readTextFields() {
+      deco.title = $('frameTitle').value;
+      deco.subtitle = $('frameSubtitle').value;
+    }
+
+    // ── 프레임 배치 ────────────────────────────────────────
+    function footerSpec(big) {
+      const k = big ? 1.25 : 1;
+      const lines = [];
+      if (deco.title.trim()) lines.push({ kind: 'title', size: 24 * k, lh: 34 * k });
+      if (deco.subtitle.trim()) lines.push({ kind: 'sub', size: 14 * k, lh: 22 * k });
+      if (deco.dateFmt !== 'none') lines.push({ kind: 'date', size: 12 * k, lh: 20 * k });
+      const h = lines.length ? 12 * k + lines.reduce((s, l) => s + l.lh, 0) + 12 * k : 0;
+      return { lines, h, k };
+    }
+
+    function computeLayout() {
+      const ratioNum = RATIO_MAP[activePhotoRatio] ? RATIO_MAP[activePhotoRatio].num : (4 / 3);
+      const padding = 24;
+      const gap = 16;
+      const big = activeLayout === 'grid2x2_16_9' || activeLayout === 'grid2x2_9_16';
+      const F = footerSpec(big);
+      const footerH = F.lines.length ? F.h : padding;
+      const slots = [];
+      let W, H, itemW, itemH;
+
+      if (activeLayout === 'v4') {
+        itemW = ratioNum < 1 ? 340 : 400;
+        itemH = Math.round(itemW / ratioNum);
+        W = itemW + padding * 2;
+        H = padding + itemH * 4 + gap * 3 + footerH;
+        for (let i = 0; i < 4; i++) slots.push({ x: padding, y: padding + i * (itemH + gap), w: itemW, h: itemH });
+      } else if (activeLayout === 'grid2x2') {
+        const sizes = { '4:3': [400, 300], '3:4': [320, 427], '16:9': [440, 248], '9:16': [280, 498], '1:1': [360, 360] };
+        [itemW, itemH] = sizes[activePhotoRatio] || sizes['4:3'];
+        W = padding * 2 + itemW * 2 + gap;
+        H = padding + itemH * 2 + gap + footerH;
+        for (let i = 0; i < 4; i++) {
+          slots.push({ x: padding + (i % 2) * (itemW + gap), y: padding + Math.floor(i / 2) * (itemH + gap), w: itemW, h: itemH });
+        }
+      } else if (big) {
+        // 화면 비율이 정해진 프레임(1280×720 / 720×1280): 남은 자리에 맞춰 칸 크기를 정한다
+        const wide = activeLayout === 'grid2x2_16_9';
+        W = wide ? 1280 : 720;
+        H = wide ? 720 : 1280;
+        const r = wide ? 16 / 9 : 9 / 16;
+        const g = 20;
+        const pad = 36;
+        const availW = W - pad * 2;
+        const availH = H - pad - (F.lines.length ? F.h : pad);
+        itemW = Math.floor(Math.min((availW - g) / 2, ((availH - g) / 2) * r));
+        itemH = Math.round(itemW / r);
+        const x0 = Math.round((W - (itemW * 2 + g)) / 2);
+        const y0 = Math.round(pad + (availH - (itemH * 2 + g)) / 2);
+        for (let i = 0; i < 4; i++) {
+          slots.push({ x: x0 + (i % 2) * (itemW + g), y: y0 + Math.floor(i / 2) * (itemH + g), w: itemW, h: itemH });
+        }
+      } else if (activeLayout === 'film') {
+        itemW = 400;
+        itemH = Math.round(400 / ratioNum);
+        W = itemW + padding * 3;
+        H = padding + itemH * 4 + gap * 3 + footerH;
+        for (let i = 0; i < 4; i++) slots.push({ x: padding + 12, y: padding + i * (itemH + gap), w: itemW, h: itemH });
+      } else {
+        itemW = 300;
+        itemH = Math.round(300 / ratioNum);
+        W = padding * 2 + itemW * 4 + gap * 3;
+        H = padding + itemH + footerH;
+        for (let i = 0; i < 4; i++) slots.push({ x: padding + i * (itemW + gap), y: padding, w: itemW, h: itemH });
+      }
+      return { W, H, slots, F, big, footerTop: H - (F.lines.length ? F.h : 0), film: activeLayout === 'film' };
+    }
+
+    // ── 그리기 ─────────────────────────────────────────────
+    function rng(seed) {
+      let s = seed;
+      return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    }
+
+    function hexToRgb(h) { return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); }
+    function mix(h, target, t) {
+      const a = hexToRgb(h), b = hexToRgb(target);
+      return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`;
+    }
+    function isLightColor(h) {
+      const [r, g, b] = hexToRgb(h).map((v) => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4;
+    }
+
+    function heartPath(ctx, x, y, s) {
+      ctx.beginPath();
+      ctx.moveTo(x, y + s * 0.3);
+      ctx.bezierCurveTo(x, y, x - s * 0.5, y, x - s * 0.5, y + s * 0.3);
+      ctx.bezierCurveTo(x - s * 0.5, y + s * 0.6, x, y + s * 0.8, x, y + s);
+      ctx.bezierCurveTo(x, y + s * 0.8, x + s * 0.5, y + s * 0.6, x + s * 0.5, y + s * 0.3);
+      ctx.bezierCurveTo(x + s * 0.5, y, x, y, x, y + s * 0.3);
+      ctx.fill();
+    }
+
+    function drawPattern(ctx, F) {
+      const { W, H } = F;
+      const pattern = THEMES[deco.theme].pattern;
+      if (pattern === 'confetti') {
+        const r = rng(11);
+        const cols = ['#ff6b9a', '#ffd166', '#4cc9f0', '#80ed99', '#b388ff', '#ffffff'];
+        const n = Math.round((W * H) / 2200);
+        for (let i = 0; i < n; i++) {
+          ctx.fillStyle = cols[Math.floor(r() * cols.length)];
+          const x = r() * W, y = r() * H, s = 3 + r() * 5;
+          if (r() < 0.5) {
+            ctx.beginPath(); ctx.arc(x, y, s / 2, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.save(); ctx.translate(x, y); ctx.rotate(r() * Math.PI); ctx.fillRect(-s / 2, -s / 4, s, s / 2); ctx.restore();
+          }
+        }
+      } else if (pattern === 'paper') {
+        // 종이 질감: 아주 옅은 얼룩 점 + 가는 이중 테두리
+        const r = rng(7);
+        const n = Math.round((W * H) / 260);
+        for (let i = 0; i < n; i++) {
+          ctx.fillStyle = `rgba(110, 80, 40, ${0.03 + r() * 0.07})`;
+          ctx.fillRect(r() * W, r() * H, 1 + r() * 1.5, 1 + r() * 1.5);
+        }
+        ctx.strokeStyle = 'rgba(110, 80, 40, 0.45)';
+        ctx.lineWidth = 1.4;
+        ctx.strokeRect(8, 8, W - 16, H - 16);
+        ctx.lineWidth = 0.7;
+        ctx.strokeRect(12, 12, W - 24, H - 24);
+      } else if (pattern === 'gradient') {
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, mix(deco.color, '#ffffff', 0.18));
+        g.addColorStop(1, mix(deco.color, '#000000', 0.3));
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = 'rgba(241, 210, 122, 0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(10, 10, W - 20, H - 20);
+      } else if (pattern === 'snow') {
+        const r = rng(5);
+        const n = Math.round((W * H) / 1500);
+        for (let i = 0; i < n; i++) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.35 + r() * 0.55})`;
+          ctx.beginPath(); ctx.arc(r() * W, r() * H, 0.8 + r() * 2.4, 0, Math.PI * 2); ctx.fill();
+        }
+        // 바닥에 사탕 막대 줄무늬
+        ctx.save();
+        ctx.beginPath(); ctx.rect(0, H - 8, W, 8); ctx.clip();
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, H - 8, W, 8);
+        ctx.fillStyle = '#d62839';
+        for (let x = -16; x < W + 16; x += 16) {
+          ctx.beginPath(); ctx.moveTo(x, H); ctx.lineTo(x + 8, H); ctx.lineTo(x + 16, H - 8); ctx.lineTo(x + 8, H - 8); ctx.fill();
+        }
+        ctx.restore();
+      } else if (pattern === 'gingham') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        for (let x = 0; x < W; x += 28) ctx.fillRect(x, 0, 14, H);
+        for (let y = 0; y < H; y += 28) ctx.fillRect(0, y, W, 14);
+        const r = rng(3);
+        ctx.fillStyle = 'rgba(214, 51, 108, 0.55)';
+        const n = Math.round((W * H) / 9000);
+        for (let i = 0; i < n; i++) heartPath(ctx, r() * W, r() * H, 7 + r() * 6);
+      }
+    }
+
+    function dateText() {
+      const n = new Date();
+      const p = (x) => String(x).padStart(2, '0');
+      const y = deco.dateFmt === 'short' ? String(n.getFullYear()).slice(2) : n.getFullYear();
+      return `${y}. ${p(n.getMonth() + 1)}. ${p(n.getDate())}`;
+    }
+
+    // 글자가 프레임 폭을 넘으면 넘지 않을 때까지 줄인다
+    function fitFont(ctx, text, makeFont, size, maxW) {
+      let s = size;
+      ctx.font = makeFont(s);
+      while (s > 8 && ctx.measureText(text).width > maxW) {
+        s -= 1;
+        ctx.font = makeFont(s);
+      }
+    }
+
+    function drawFooter(ctx, F, base) {
+      if (!F.F.lines.length) return;
+      const th = THEMES[deco.theme];
+      const light = !F.film && isLightColor(base);
+      const main = light ? '#1b1d2e' : '#ffffff';
+      const dim = light ? 'rgba(27, 29, 46, 0.6)' : 'rgba(255, 255, 255, 0.7)';
+      const maxW = F.W - 48;
+      const cx = F.W / 2;
+      let top = F.footerTop + 12 * F.F.k;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+      for (const line of F.F.lines) {
+        const y = top + line.lh * 0.74;
+        if (line.kind === 'title') {
+          const text = deco.title.trim();
+          if ('letterSpacing' in ctx) ctx.letterSpacing = `${th.spacing || 0}px`;
+          fitFont(ctx, text, th.font, line.size, maxW);
+          ctx.fillStyle = F.film ? '#ffffff' : (th.titleColor || main);
+          ctx.fillText(text, cx, y);
+          if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+        } else if (line.kind === 'sub') {
+          const text = deco.subtitle.trim();
+          fitFont(ctx, text, (s) => `600 ${s}px Pretendard, sans-serif`, line.size, maxW);
+          ctx.fillStyle = main;
+          ctx.globalAlpha = 0.85;
+          ctx.fillText(text, cx, y);
+          ctx.globalAlpha = 1;
+        } else {
+          // 날짜 — 양옆에 가는 선을 그어 기념품 느낌을 준다
+          const text = dateText();
+          ctx.font = `600 ${line.size}px Pretendard, sans-serif`;
+          ctx.fillStyle = dim;
+          ctx.fillText(text, cx, y);
+          const half = ctx.measureText(text).width / 2 + 14 * F.F.k;
+          const len = 22 * F.F.k;
+          ctx.strokeStyle = dim;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx - half - len, y - line.size * 0.38);
+          ctx.lineTo(cx - half, y - line.size * 0.38);
+          ctx.moveTo(cx + half, y - line.size * 0.38);
+          ctx.lineTo(cx + half + len, y - line.size * 0.38);
+          ctx.stroke();
+        }
+        top += line.lh;
+      }
+      ctx.restore();
+    }
+
+    function drawBackground(ctx, F) {
+      const base = F.film ? '#0a0a0a' : deco.color;
+      ctx.fillStyle = base;
+      ctx.fillRect(0, 0, F.W, F.H);
+      if (F.film) {
+        ctx.fillStyle = '#ffffff';
+        for (let y = 15; y < F.H - 30; y += 25) {
+          ctx.fillRect(8, y, 10, 14);
+          ctx.fillRect(F.W - 18, y, 10, 14);
+        }
+      } else {
+        drawPattern(ctx, F);
+      }
+      drawFooter(ctx, F, base);
     }
 
     function applyFilterToContext(ctx) {
-      if (activeFilter === 'bw') {
+      if (deco.filter === 'bw') {
         ctx.filter = 'grayscale(100%) contrast(110%)';
-      } else if (activeFilter === 'sepia') {
+      } else if (deco.filter === 'sepia') {
         ctx.filter = 'sepia(80%) contrast(105%)';
-      } else if (activeFilter === 'glow') {
+      } else if (deco.filter === 'glow') {
         ctx.filter = 'saturate(150%) brightness(110%) contrast(105%)';
       } else {
         ctx.filter = 'none';
       }
     }
 
-    function drawImageCover(ctx, img, x, y, targetW, targetH) {
-      const imgRatio = img.width / img.height;
-      const targetRatio = targetW / targetH;
-      let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
-
-      if (imgRatio > targetRatio) {
-        sWidth = img.height * targetRatio;
-        sx = (img.width - sWidth) / 2;
-      } else {
-        sHeight = img.width / targetRatio;
-        sy = (img.height - sHeight) / 2;
-      }
-
-      ctx.drawImage(img, sx, sy, sWidth, sHeight, x, y, targetW, targetH);
+    // 칸을 꽉 채우도록 잘라 그린다. crop(-1~1)으로 잘리는 위치를 옮긴다.
+    function coverRect(img, w, h, crop) {
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      const tr = w / h;
+      let sW = iw, sH = ih;
+      if (iw / ih > tr) sW = ih * tr;
+      else sH = iw / tr;
+      const ox = crop ? crop.ox : 0;
+      const oy = crop ? crop.oy : 0;
+      return { sx: (iw - sW) * (ox + 1) / 2, sy: (ih - sH) * (oy + 1) / 2, sW, sH, iw, ih };
     }
 
-    function render4CutFrame() {
-      if (selectedIndices.length !== 4) return;
-
-      const canvas = document.getElementById('fourCutCanvas');
-      const ctx = canvas.getContext('2d');
-      // 프레임을 3배 해상도로 렌더한다. 캔버스 표시 크기는 CSS(max-width:100%)가
-      // 잡아 주므로 화면은 그대로이고, 저장되는 PNG만 또렷해진다.
-      const SCALE = 3;
-      const ratioNum = RATIO_MAP[activePhotoRatio] ? RATIO_MAP[activePhotoRatio].num : (4 / 3);
-
-      let itemW = 400;
-      let itemH = Math.round(400 / ratioNum);
-      const padding = 24;
-      const gap = 16;
-      const footerH = isTextEnabled ? 92 : padding;
-
-      const slots = [];
-
-      if (activeLayout === 'v4') {
-        // Vertical 1x4
-        if (ratioNum < 1) {
-          itemW = 340;
-          itemH = Math.round(340 / ratioNum);
-        } else {
-          itemW = 400;
-          itemH = Math.round(400 / ratioNum);
-        }
-        canvas.width = itemW + padding * 2;
-        canvas.height = padding + (itemH * 4) + (gap * 3) + footerH;
-        for (let i = 0; i < 4; i++) {
-          slots.push({ x: padding, y: padding + i * (itemH + gap), w: itemW, h: itemH });
-        }
-      } else if (activeLayout === 'grid2x2') {
-        // 2x2 Grid (Ratio-adaptive)
-        if (activePhotoRatio === '4:3') {
-          itemW = 400; itemH = 300;
-        } else if (activePhotoRatio === '3:4') {
-          itemW = 320; itemH = 427;
-        } else if (activePhotoRatio === '16:9') {
-          itemW = 440; itemH = 248;
-        } else if (activePhotoRatio === '9:16') {
-          itemW = 280; itemH = 498;
-        } else {
-          itemW = 360; itemH = 360;
-        }
-        canvas.width = padding * 2 + itemW * 2 + gap;
-        canvas.height = padding + itemH * 2 + gap + footerH;
-        for (let i = 0; i < 4; i++) {
-          const col = i % 2;
-          const row = Math.floor(i / 2);
-          slots.push({
-            x: padding + col * (itemW + gap),
-            y: padding + row * (itemH + gap),
-            w: itemW,
-            h: itemH
-          });
-        }
-      } else if (activeLayout === 'grid2x2_16_9') {
-        // 16:9 Aspect Ratio Frame (1280x720)
-        canvas.width = 1280;
-        canvas.height = 720;
-        const g2Gap = 20;
-        const g2ItemH = 290;
-        const g2ItemW = Math.round(g2ItemH * (16 / 9)); // 516
-        const g2PadX = Math.round((1280 - (g2ItemW * 2 + g2Gap)) / 2);
-        const g2TopPad = isTextEnabled ? 35 : Math.round((720 - (g2ItemH * 2 + g2Gap)) / 2);
-        for (let i = 0; i < 4; i++) {
-          const col = i % 2;
-          const row = Math.floor(i / 2);
-          slots.push({
-            x: g2PadX + col * (g2ItemW + g2Gap),
-            y: g2TopPad + row * (g2ItemH + g2Gap),
-            w: g2ItemW,
-            h: g2ItemH
-          });
-        }
-      } else if (activeLayout === 'grid2x2_9_16') {
-        // 9:16 Aspect Ratio Frame (720x1280)
-        canvas.width = 720;
-        canvas.height = 1280;
-        const g2Gap = 20;
-        const g2ItemW = 310;
-        const g2ItemH = Math.round(g2ItemW * (16 / 9)); // 551
-        const g2PadX = Math.round((720 - (g2ItemW * 2 + g2Gap)) / 2);
-        const g2PadY = isTextEnabled
-          ? Math.round((1280 - 80 - (g2ItemH * 2 + g2Gap)) / 2)
-          : Math.round((1280 - (g2ItemH * 2 + g2Gap)) / 2);
-        for (let i = 0; i < 4; i++) {
-          const col = i % 2;
-          const row = Math.floor(i / 2);
-          slots.push({
-            x: g2PadX + col * (g2ItemW + g2Gap),
-            y: g2PadY + row * (g2ItemH + g2Gap),
-            w: g2ItemW,
-            h: g2ItemH
-          });
-        }
-      } else if (activeLayout === 'film') {
-        // Retro Film Strip
-        itemW = 400;
-        itemH = Math.round(400 / ratioNum);
-        canvas.width = itemW + padding * 3;
-        canvas.height = padding + (itemH * 4) + (gap * 3) + footerH;
-        for (let i = 0; i < 4; i++) {
-          slots.push({ x: padding + 12, y: padding + i * (itemH + gap), w: itemW, h: itemH });
-        }
-      } else if (activeLayout === 'wide') {
-        // Wide 4x1
-        itemW = 300;
-        itemH = Math.round(300 / ratioNum);
-        canvas.width = padding * 2 + itemW * 4 + gap * 3;
-        canvas.height = padding + itemH + footerH;
-        for (let i = 0; i < 4; i++) {
-          slots.push({ x: padding + i * (itemW + gap), y: padding, w: itemW, h: itemH });
-        }
-      }
-
-      // 여기까지 canvas.width/height는 '논리 치수'로 잡혀 있다.
-      // 백업 스토어만 SCALE배로 키우고 컨텍스트를 그만큼 확대하면,
-      // 아래 그리기 코드는 논리 좌표 그대로 쓰면서 3배 해상도로 찍힌다.
-      const frameW = canvas.width;
-      const frameH = canvas.height;
-      canvas.width = frameW * SCALE;
-      canvas.height = frameH * SCALE;
-      ctx.scale(SCALE, SCALE);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      // Draw Frame BG
-      ctx.fillStyle = activeLayout === 'film' ? '#0a0a0a' : activeFrameColor;
-      ctx.fillRect(0, 0, frameW, frameH);
-
-      // Film Holes if film mode
-      if (activeLayout === 'film') {
-        ctx.fillStyle = '#ffffff';
-        for (let y = 15; y < frameH - 30; y += 25) {
-          ctx.fillRect(8, y, 10, 14);
-          ctx.fillRect(frameW - 18, y, 10, 14);
-        }
-      }
-
-      let loadedCount = 0;
-      selectedIndices.forEach((photoIdx, slot) => {
-        const img = new Image();
-        img.onload = () => {
-          const s = slots[slot];
-
-          // 인생네컷처럼 사진은 모서리를 깎지 않은 사각형으로, 테두리 선 없이 프레임 색 위에 바로 놓는다
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(s.x, s.y, s.w, s.h);
-          ctx.clip();
-          applyFilterToContext(ctx);
-          drawImageCover(ctx, img, s.x, s.y, s.w, s.h);
-          ctx.restore();
-
-          loadedCount++;
-          if (loadedCount === 4) {
-            // Draw Footer Text if enabled
-            if (isTextEnabled) {
-              const title = document.getElementById('frameTitle').value.trim() || 'NEON PHOTO 4-CUT';
-              const isLight = (activeFrameColor === '#ffffff' && activeLayout !== 'film');
-              const mainColor = isLight ? '#111122' : '#ffffff';
-              const dimColor = isLight ? 'rgba(17,17,34,0.55)' : 'rgba(255,255,255,0.6)';
-              const big = (activeLayout === 'grid2x2_16_9' || activeLayout === 'grid2x2_9_16');
-              ctx.textAlign = 'center';
-
-              // 제목
-              ctx.fillStyle = mainColor;
-              ctx.font = `800 ${big ? 28 : 23}px Pretendard, sans-serif`;
-              ctx.fillText(title, frameW / 2, frameH - 42);
-
-              // 날짜 — 오늘 날짜를 작게 아래에 깔아 기념품 느낌을 준다
-              const now = new Date();
-              const pad = (n) => String(n).padStart(2, '0');
-              const dateStr = `${now.getFullYear()}. ${pad(now.getMonth() + 1)}. ${pad(now.getDate())}`;
-              ctx.fillStyle = dimColor;
-              ctx.font = `600 ${big ? 16 : 13}px Pretendard, sans-serif`;
-              // 날짜 양옆에 가는 선을 그어 장식한다
-              const dateY = frameH - 20;
-              const dateW = ctx.measureText(dateStr).width;
-              ctx.fillText(dateStr, frameW / 2, dateY);
-              ctx.strokeStyle = dimColor;
-              ctx.lineWidth = 1;
-              const lineGap = dateW / 2 + 14;
-              const lineLen = big ? 28 : 20;
-              ctx.beginPath();
-              ctx.moveTo(frameW / 2 - lineGap - lineLen, dateY - 5);
-              ctx.lineTo(frameW / 2 - lineGap, dateY - 5);
-              ctx.moveTo(frameW / 2 + lineGap, dateY - 5);
-              ctx.lineTo(frameW / 2 + lineGap + lineLen, dateY - 5);
-              ctx.stroke();
-            }
-
-            lastFrameBlob = null;
-            canvas.toBlob(b => { lastFrameBlob = b; }, 'image/png');
-            document.getElementById('previewContainer').style.display = 'flex';
-            document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
-          }
-        };
-        img.src = capturedPhotos[photoIdx];
+    function drawPhotos(ctx, F, sources) {
+      F.slots.forEach((s, i) => {
+        const src = sources[i];
+        const shot = shots[selectedIndices[i]];
+        if (!src || !shot) return;
+        const r = coverRect(src, s.w, s.h, shot.crop);
+        // 인생네컷처럼 사진은 모서리를 깎지 않은 사각형으로, 테두리 선 없이 프레임 색 위에 바로 놓는다
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(s.x, s.y, s.w, s.h);
+        ctx.clip();
+        applyFilterToContext(ctx);
+        ctx.drawImage(src, r.sx, r.sy, r.sW, r.sH, s.x, s.y, s.w, s.h);
+        ctx.restore();
       });
     }
 
-    let lastFrameBlob = null;
+    function drawStroke(ctx, st) {
+      ctx.save();
+      ctx.strokeStyle = st.color;
+      ctx.lineWidth = st.width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      st.pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+      if (st.pts.length === 1) ctx.lineTo(st.pts[0].x + 0.01, st.pts[0].y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawSticker(ctx, s) {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.rot);
+      ctx.font = `${s.size}px ${EMOJI_FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(s.emoji, 0, s.size * 0.06);
+      ctx.restore();
+    }
+
+    function drawOverlay(ctx) {
+      strokes.forEach((st) => drawStroke(ctx, st));
+      stickers.forEach((s) => drawSticker(ctx, s));
+    }
+
+    // 편집 중에만 보이는 표시 (저장 파일에는 안 들어간다)
+    function drawEditUI(ctx, F) {
+      ctx.save();
+      ctx.setLineDash([8, 6]);
+      ctx.lineWidth = 3;
+      if (pendingSwap !== null && F.slots[pendingSwap]) {
+        const s = F.slots[pendingSwap];
+        ctx.strokeStyle = '#00d4ff';
+        ctx.strokeRect(s.x + 2, s.y + 2, s.w - 4, s.h - 4);
+      }
+      if (selectedSticker && tool === 'sticker') {
+        const s = selectedSticker;
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.rot);
+        ctx.strokeStyle = '#00d4ff';
+        ctx.lineWidth = 2;
+        const h = s.size * 0.62;
+        ctx.strokeRect(-h, -h, h * 2, h * 2);
+      }
+      ctx.restore();
+    }
+
+    function paint(ctx, sx, sy, sources, ui) {
+      ctx.setTransform(sx, 0, 0, sy, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      drawBackground(ctx, L);
+      drawPhotos(ctx, L, sources);
+      drawOverlay(ctx);
+      if (ui) drawEditUI(ctx, L);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    // ── 사진 불러오기 캐시 ─────────────────────────────────
+    function loadImage(src) {
+      if (imgCache.has(src)) return Promise.resolve(imgCache.get(src));
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => { imgCache.set(src, img); resolve(img); };
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    function loadSelectedImages() {
+      return Promise.all(selectedIndices.map((i) => (shots[i] ? loadImage(shots[i].src) : null)));
+    }
+
+    function stillSources() {
+      return selectedIndices.map((i) => (shots[i] ? imgCache.get(shots[i].src) : null));
+    }
+
+    // ── 미리보기 · 편집 캔버스 ─────────────────────────────
+    let liveSources = null;   // 움직임 미리보기 중이면 지금 프레임
+
+    function previewShown() { return !$('previewContainer').hidden; }
+
+    let refreshQueued = false;
+    function refreshIfShown() {
+      if (!previewShown() || refreshQueued) return;
+      refreshQueued = true;
+      requestAnimationFrame(async () => {
+        refreshQueued = false;
+        await refreshPreview();
+      });
+    }
+
+    async function refreshPreview() {
+      if (selectedIndices.length !== 4) return;
+      readTextFields();
+      L = computeLayout();
+      await loadSelectedImages();
+      const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+      canvas.width = Math.round(L.W * dpr);
+      canvas.height = Math.round(L.H * dpr);
+      redraw();
+      updateMotionUI();
+      updatePaperUI();
+      scheduleExport();
+    }
+
+    function redraw() {
+      if (!L) return;
+      paint(canvas.getContext('2d'), canvas.width / L.W, canvas.height / L.H, liveSources || stillSources(), true);
+    }
+
+    async function render4CutFrame() {
+      if (selectedIndices.length !== 4) return;
+      pendingSwap = null;
+      selectedSticker = null;
+      $('previewContainer').hidden = false;
+      await refreshPreview();
+      $('previewContainer').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 저장용 고해상도 PNG는 편집이 멈춘 뒤 미리 만들어 둔다.
+    // 사파리는 클릭 직후에만 공유 창을 허락해서, 누른 다음에 만들면 공유가 막힌다.
+    function scheduleExport() {
+      lastFrameBlob = null;
+      clearTimeout(exportTimer);
+      exportTimer = setTimeout(async () => {
+        const c = await renderStill(SCALE);
+        c.toBlob((b) => { lastFrameBlob = b; c.width = c.height = 0; }, 'image/png');
+      }, 600);
+    }
+
+    async function renderStill(scale) {
+      await loadSelectedImages();
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(L.W * scale));
+      c.height = Math.max(1, Math.round(L.H * scale));
+      paint(c.getContext('2d'), c.width / L.W, c.height / L.H, stillSources(), false);
+      return c;
+    }
 
     function save4CutToGallery() {
       const name = `neon_4cut_${Date.now()}.png`;
       if (lastFrameBlob) {
         saveToGallery(lastFrameBlob, name);
       } else {
-        document.getElementById('fourCutCanvas').toBlob(b => b && saveToGallery(b, name), 'image/png');
+        renderStill(SCALE).then((c) => c.toBlob((b) => b && saveToGallery(b, name), 'image/png'));
       }
     }
 
-    function download4Cut() {
-      const canvas = document.getElementById('fourCutCanvas');
-      const a = document.createElement('a');
-      a.href = canvas.toDataURL('image/png');
-      a.download = `neon_4cut_${Date.now()}.png`;
-      a.click();
+    async function download4Cut() {
+      const c = await renderStill(SCALE);
+      c.toBlob((b) => {
+        if (!b) return;
+        const url = URL.createObjectURL(b);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `neon_4cut_${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      }, 'image/png');
     }
 
-    // Drag and Drop support on the card
-    const cardEl = document.querySelector('.card');
-    if (cardEl) {
+    // ── 편집 도구 ──────────────────────────────────────────
+    function setTool(t) {
+      tool = t;
+      setSegValue('toolTabs', t);
+      ['cell', 'sticker', 'pen'].forEach((k) => { $(`panel-${k}`).hidden = k !== t; });
+      canvas.dataset.tool = t;
+      pendingSwap = null;
+      if (t !== 'sticker') selectedSticker = null;
+      updateStickerCtrl();
+      redraw();
+    }
+
+    function toLogical(e) {
+      const r = canvas.getBoundingClientRect();
+      return { x: ((e.clientX - r.left) / r.width) * L.W, y: ((e.clientY - r.top) / r.height) * L.H };
+    }
+
+    function slotAt(p) {
+      return L.slots.findIndex((s) => p.x >= s.x && p.x <= s.x + s.w && p.y >= s.y && p.y <= s.y + s.h);
+    }
+
+    function stickerAt(p) {
+      for (let i = stickers.length - 1; i >= 0; i--) {
+        const s = stickers[i];
+        if (Math.hypot(p.x - s.x, p.y - s.y) < s.size * 0.62) return s;
+      }
+      return null;
+    }
+
+    // 칸 안에서 사진을 끈 만큼 잘리는 위치를 옮긴다 (손가락 방향으로 사진이 따라온다)
+    function panSlot(si, dx, dy) {
+      const shot = shots[selectedIndices[si]];
+      const img = imgCache.get(shot.src);
+      const s = L.slots[si];
+      if (!img) return;
+      const crop = shot.crop || { ox: 0, oy: 0 };
+      const r = coverRect(img, s.w, s.h, crop);
+      const k = r.sW / s.w;
+      const extraX = r.iw - r.sW;
+      const extraY = r.ih - r.sH;
+      if (extraX > 1) crop.ox = clamp(crop.ox - (dx * k * 2) / extraX, -1, 1);
+      if (extraY > 1) crop.oy = clamp(crop.oy - (dy * k * 2) / extraY, -1, 1);
+      shot.crop = crop;
+    }
+
+    function handleCellTap(si) {
+      if (pendingSwap === null) {
+        pendingSwap = si;
+        $('cellHint').textContent = `${si + 1}번 칸을 골랐어요. 바꿀 칸을 누르세요. 같은 칸을 다시 누르면 취소돼요.`;
+      } else {
+        if (pendingSwap !== si) {
+          const a = selectedIndices[pendingSwap];
+          selectedIndices[pendingSwap] = selectedIndices[si];
+          selectedIndices[si] = a;
+          updateGallery();
+          scheduleExport();
+        }
+        pendingSwap = null;
+        $('cellHint').textContent = '칸 안을 끌면 사진이 보이는 위치가 바뀌어요. 두 칸을 차례로 누르면 서로 자리가 바뀌어요.';
+      }
+      redraw();
+    }
+
+    const pointers = new Map();
+    let gesture = null;
+
+    function pinchInfo() {
+      const [a, b] = [...pointers.values()];
+      return { d: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x) };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      if (!L) return;
+      e.preventDefault();
+      try { canvas.setPointerCapture(e.pointerId); } catch { /* 이미 잡힘 */ }
+      const p = toLogical(e);
+      pointers.set(e.pointerId, p);
+
+      if (pointers.size === 2) {
+        // 두 손가락: 고른 스티커의 크기·각도. 펜으로 긋던 선은 실수로 보고 지운다.
+        if (gesture && gesture.type === 'draw') strokes.pop();
+        if (tool === 'sticker' && selectedSticker) {
+          const info = pinchInfo();
+          gesture = { type: 'pinch', s: selectedSticker, d0: info.d, a0: info.ang, size0: selectedSticker.size, rot0: selectedSticker.rot };
+        } else {
+          gesture = null;
+        }
+        redraw();
+        return;
+      }
+      if (pointers.size > 2) return;
+
+      if (tool === 'cell') {
+        const si = slotAt(p);
+        gesture = si < 0 ? null : { type: 'pan', si, start: p, last: p, moved: false };
+      } else if (tool === 'sticker') {
+        selectedSticker = stickerAt(p);
+        gesture = selectedSticker ? { type: 'move', last: p } : null;
+        updateStickerCtrl();
+        redraw();
+      } else if (tool === 'pen') {
+        const st = { color: penColor, width: penWidth, pts: [p] };
+        strokes.push(st);
+        gesture = { type: 'draw', st };
+        redraw();
+      }
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId) || !L) return;
+      const p = toLogical(e);
+      pointers.set(e.pointerId, p);
+      if (!gesture) return;
+      if (gesture.type === 'pinch') {
+        if (pointers.size < 2) return;
+        const info = pinchInfo();
+        gesture.s.size = clamp(gesture.size0 * (info.d / (gesture.d0 || 1)), 16, 480);
+        gesture.s.rot = gesture.rot0 + (info.ang - gesture.a0);
+      } else if (gesture.type === 'pan') {
+        if (!gesture.moved && Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) > 6) gesture.moved = true;
+        if (!gesture.moved) return;
+        panSlot(gesture.si, p.x - gesture.last.x, p.y - gesture.last.y);
+        gesture.last = p;
+      } else if (gesture.type === 'move') {
+        selectedSticker.x += p.x - gesture.last.x;
+        selectedSticker.y += p.y - gesture.last.y;
+        gesture.last = p;
+      } else if (gesture.type === 'draw') {
+        gesture.st.pts.push(p);
+      }
+      redraw();
+    });
+
+    function endPointer(e) {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.delete(e.pointerId);
+      if (gesture && gesture.type === 'pinch') {
+        if (pointers.size < 2) { gesture = null; scheduleExport(); }
+        return;
+      }
+      if (!gesture) return;
+      if (gesture.type === 'pan' && !gesture.moved && e.type === 'pointerup') handleCellTap(gesture.si);
+      gesture = null;
+      scheduleExport();
+      redraw();
+    }
+    canvas.addEventListener('pointerup', endPointer);
+    canvas.addEventListener('pointercancel', endPointer);
+
+    function addSticker(emoji) {
+      if (!L) return;
+      const s = { emoji, x: L.W / 2, y: L.slots[0].y + L.slots[0].h / 2, size: Math.round(Math.min(L.W, L.H) * 0.16), rot: 0 };
+      stickers.push(s);
+      selectedSticker = s;
+      if (tool !== 'sticker') setTool('sticker');
+      updateStickerCtrl();
+      redraw();
+      scheduleExport();
+    }
+
+    function tweakSticker(action) {
+      const s = selectedSticker;
+      if (!s) return;
+      if (action === 'smaller') s.size = Math.max(16, s.size * 0.85);
+      else if (action === 'bigger') s.size = Math.min(480, s.size * 1.18);
+      else if (action === 'left') s.rot -= Math.PI / 12;
+      else if (action === 'right') s.rot += Math.PI / 12;
+      else if (action === 'delete') {
+        stickers.splice(stickers.indexOf(s), 1);
+        selectedSticker = null;
+      }
+      updateStickerCtrl();
+      redraw();
+      scheduleExport();
+    }
+
+    function updateStickerCtrl() {
+      $('stickerCtrl').hidden = !(selectedSticker && tool === 'sticker');
+    }
+
+    function undoStroke() {
+      if (!strokes.length) return;
+      strokes.pop();
+      redraw();
+      scheduleExport();
+    }
+
+    function clearStrokes() {
+      strokes.length = 0;
+      redraw();
+      scheduleExport();
+    }
+
+    // ── 움직이는 4컷 ───────────────────────────────────────
+    let motionFormat = 'mp4';
+    let boomerang = true;
+    let playing = false;
+    let playTimer = null;
+    let motionBlob = null;
+    let motionName = '';
+    let motionUrl = null;
+    let busy = false;
+
+    function hasMotion() {
+      return selectedIndices.some((i) => shots[i] && shots[i].frames);
+    }
+
+    function updateMotionUI() {
+      const m = hasMotion();
+      $('motionBlock').hidden = !m;
+      if (!m) stopPlay();
+      if (!canRecordMp4()) {
+        const b = $('motionFormatSeg').querySelector('[data-v="mp4"]');
+        b.disabled = true;
+        b.title = '이 브라우저는 영상 저장을 지원하지 않아요';
+        if (motionFormat === 'mp4') { motionFormat = 'gif'; setSegValue('motionFormatSeg', 'gif'); }
+      }
+    }
+
+    function frameSeq() {
+      const fwd = [...Array(CLIP_FRAMES).keys()];
+      return boomerang ? fwd.concat(fwd.slice(1, -1).reverse()) : fwd;
+    }
+
+    // 프레임 하나를 그릴 때 필요한 사진만 그때그때 풀어 쓴다 (메모리를 프레임 몇 장 분량으로 유지)
+    async function sourcesAt(fi) {
+      return Promise.all(selectedIndices.map(async (i) => {
+        const sh = shots[i];
+        if (!sh) return null;
+        if (sh.frames) return createImageBitmap(sh.frames[Math.min(fi, sh.frames.length - 1)]);
+        return imgCache.get(sh.src) || loadImage(sh.src);
+      }));
+    }
+
+    function closeSources(arr) {
+      if (!arr) return;
+      arr.forEach((s) => { if (s && typeof s.close === 'function') s.close(); });
+    }
+
+    function togglePlay() {
+      if (playing) { stopPlay(); return; }
+      playing = true;
+      $('playBtn').textContent = '⏸ 미리보기 멈추기';
+      const seq = frameSeq();
+      let f = 0;
+      const tick = async () => {
+        if (!playing) return;
+        const t0 = performance.now();
+        const srcs = await sourcesAt(seq[f % seq.length]);
+        if (!playing) { closeSources(srcs); return; }
+        const old = liveSources;
+        liveSources = srcs;
+        redraw();
+        closeSources(old);
+        f++;
+        playTimer = setTimeout(tick, Math.max(0, 1000 / CLIP_FPS - (performance.now() - t0)));
+      };
+      tick();
+    }
+
+    function stopPlay() {
+      playing = false;
+      clearTimeout(playTimer);
+      closeSources(liveSources);
+      liveSources = null;
+      $('playBtn').textContent = '▶ 움직임 미리보기';
+      redraw();
+    }
+
+    function layerCanvas(w, h, draw) {
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      draw(c.getContext('2d'));
+      return c;
+    }
+
+    let gifEncoderModule = null;
+    function loadGifEncoder() {
+      if (!gifEncoderModule) {
+        gifEncoderModule = import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js')
+          .catch(err => { gifEncoderModule = null; throw err; });
+      }
+      return gifEncoderModule;
+    }
+
+    function setStatus(id, text, error = false) {
+      const el = $(id);
+      el.hidden = !text;
+      el.textContent = text || '';
+      el.classList.toggle('error', error);
+    }
+
+    async function makeMotion() {
+      if (busy || !L) return;
+      busy = true;
+      stopPlay();
+      const btn = $('motionBtn');
+      btn.disabled = true;
+      $('motionSaveBtn').hidden = true;
+      const fmt = motionFormat;
+      const seq = frameSeq();
+
+      // 영상: 긴 변 1920px, 넓이 200만 화소 이내 (H.264 1080p 수준). GIF는 가로 540px 이하로 작게.
+      let s = Math.min(2, 1920 / Math.max(L.W, L.H), Math.sqrt(2.0e6 / (L.W * L.H)));
+      if (fmt === 'gif') s = Math.min(s, 540 / L.W, 960 / L.H);
+      const even = (v) => Math.max(2, Math.round(v / 2) * 2);
+      const ow = even(L.W * s);
+      const oh = even(L.H * s);
+      const sx = ow / L.W;
+      const sy = oh / L.H;
+      const out = document.createElement('canvas');
+      out.width = ow;
+      out.height = oh;
+      const octx = out.getContext('2d', { willReadFrequently: fmt === 'gif' });
+      // 배경·문구와 스티커·펜은 프레임마다 같으므로 한 번만 그려 둔다
+      const bg = layerCanvas(ow, oh, (c) => { c.setTransform(sx, 0, 0, sy, 0, 0); drawBackground(c, L); });
+      const ov = layerCanvas(ow, oh, (c) => { c.setTransform(sx, 0, 0, sy, 0, 0); drawOverlay(c); });
+      // 영상은 6초 안팎이 되도록 반복해 넣는다. GIF는 스스로 무한 반복한다.
+      const reps = fmt === 'mp4' ? Math.max(1, Math.ceil((6 * CLIP_FPS) / seq.length)) : 1;
+      const total = seq.length * reps;
+
+      let writer = null;
+      let gif = null;
+      let enc = null;
+      let blob = null;
+      try {
+        if (fmt === 'mp4') {
+          writer = await createMp4Writer(ow, oh, { fps: CLIP_FPS });
+        } else {
+          try { gif = await loadGifEncoder(); } catch { throw new Error('GIF 인코더를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+          enc = gif.GIFEncoder();
+        }
+        for (let k = 0; k < total; k++) {
+          const srcs = await sourcesAt(seq[k % seq.length]);
+          octx.setTransform(1, 0, 0, 1, 0, 0);
+          octx.drawImage(bg, 0, 0);
+          octx.setTransform(sx, 0, 0, sy, 0, 0);
+          drawPhotos(octx, L, srcs);
+          octx.setTransform(1, 0, 0, 1, 0, 0);
+          octx.drawImage(ov, 0, 0);
+          closeSources(srcs);
+          if (writer) {
+            await writer.addFrame(out);
+          } else {
+            const { data } = octx.getImageData(0, 0, ow, oh);
+            const palette = gif.quantize(data, 256);
+            enc.writeFrame(gif.applyPalette(data, palette), ow, oh, { palette, delay: Math.round(1000 / CLIP_FPS) });
+          }
+          if (k % 3 === 0) setStatus('motionStatus', `만드는 중… ${k + 1} / ${total}`);
+          await yieldToBrowser();
+        }
+        if (writer) {
+          blob = await writer.finish();
+        } else {
+          enc.finish();
+          blob = new Blob([enc.bytes()], { type: 'image/gif' });
+        }
+      } catch (err) {
+        if (writer) writer.cancel();
+        setStatus('motionStatus', `만들지 못했어요: ${err.message}`, true);
+        return;
+      } finally {
+        bg.width = bg.height = ov.width = ov.height = out.width = out.height = 0;
+        btn.disabled = false;
+        busy = false;
+      }
+
+      motionBlob = blob;
+      motionName = `neon_4cut_motion_${Date.now()}.${fmt}`;
+      if (motionUrl) URL.revokeObjectURL(motionUrl);
+      motionUrl = URL.createObjectURL(blob);
+      const vid = $('motionVideo');
+      const img = $('motionGif');
+      vid.hidden = fmt !== 'mp4';
+      img.hidden = fmt === 'mp4';
+      if (fmt === 'mp4') { vid.src = motionUrl; vid.play().catch(() => {}); } else { vid.removeAttribute('src'); img.src = motionUrl; }
+      setStatus('motionStatus', `완성! ${(blob.size / 1048576).toFixed(1)}MB · ${fmt === 'mp4' ? `${Math.round(total / CLIP_FPS)}초 영상` : '무한 반복 GIF'}`);
+      $('motionSaveBtn').hidden = false;
+    }
+
+    function saveMotion() {
+      if (motionBlob) saveToGallery(motionBlob, motionName);
+    }
+
+    // ── 인화용 저장 ────────────────────────────────────────
+    const DPI = 300;
+    const MM = DPI / 25.4;
+    const BLEED = Math.round(3 * MM);   // 인화할 때 잘려 나갈 수 있는 가장자리 3mm
+    let paper = null;
+    let printBlob = null;
+    let printName = '';
+    let printUrl = null;
+
+    function frameIsTall() { return L && L.H / L.W >= 1.8; }
+
+    function updatePaperUI() {
+      if (!L) return;
+      const tall = frameIsTall();
+      const dbl = $('paperSeg').querySelector('[data-v="double"]');
+      dbl.disabled = !tall;
+      if (!paper || (paper === 'double' && !tall)) paper = tall ? 'double' : 'single';
+      setSegValue('paperSeg', paper);
+      $('copiesRow').hidden = paper !== 'a4';
+      $('paperHint').textContent = {
+        double: '4×6(10×15cm) 한 장에 세로 4컷 두 줄. 반으로 잘라 둘이 나눠 가져요.',
+        single: '4×6(10×15cm) 한 장에 꽉 차게. 가로로 긴 프레임은 가로 용지로 맞춰요.',
+        a4: tall ? 'A4 한 장에 세로 4컷을 8줄까지 실제 스트립 크기로 모아요. 집 프린터용 PDF.'
+                 : 'A4 한 장에 4장씩 모아요. 집 프린터용 PDF.'
+      }[paper] + (tall ? '' : ' (4×6 두 줄은 세로 4컷·필름 레이아웃에서 쓸 수 있어요.)');
+    }
+
+    let jspdfPromise = null;
+    function loadJsPdf() {
+      if (window.jspdf) return Promise.resolve(window.jspdf);
+      if (!jspdfPromise) {
+        jspdfPromise = new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+          s.onload = () => resolve(window.jspdf);
+          s.onerror = () => { jspdfPromise = null; reject(new Error('PDF 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.')); };
+          document.head.appendChild(s);
+        });
+      }
+      return jspdfPromise;
+    }
+
+    // 상자(maxW×maxH)에 맞는 크기로 프레임을 새로 그린다 — 늘려 붙이지 않아 인화해도 또렷하다
+    function frameToFit(maxW, maxH) {
+      return renderStill(Math.min(maxW / L.W, maxH / L.H));
+    }
+
+    function printBase() { return L.film ? '#0a0a0a' : deco.color; }
+
+    function dashedLine(ctx, x1, y1, x2, y2) {
+      ctx.save();
+      ctx.strokeStyle = isLightColor(printBase()) ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([18, 12]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    async function makePrint() {
+      if (busy || !L) return;
+      busy = true;
+      const btn = $('printBtn');
+      btn.disabled = true;
+      $('printSaveBtn').hidden = true;
+      $('printPreview').hidden = true;
+      setStatus('printStatus', '만드는 중…');
+      const cut = $('cutLines').checked;
+      try {
+        if (paper === 'a4') {
+          await makeA4(cut);
+        } else {
+          const c = document.createElement('canvas');
+          const landscape = paper === 'single' && L.W > L.H;
+          c.width = landscape ? 1800 : 1200;
+          c.height = landscape ? 1200 : 1800;
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = printBase();   // 잘려 나가도 티 나지 않게 가장자리까지 프레임 색으로 채운다
+          ctx.fillRect(0, 0, c.width, c.height);
+          const inset = BLEED + 12;
+          if (paper === 'double') {
+            const half = c.width / 2;
+            const inner = 20;
+            const boxW = half - inset - inner;
+            const boxH = c.height - inset * 2;
+            const f = await frameToFit(boxW, boxH);
+            [inset, half + inner].forEach((x0) => {
+              ctx.drawImage(f, x0 + (boxW - f.width) / 2, inset + (boxH - f.height) / 2);
+            });
+            f.width = f.height = 0;
+            if (cut) dashedLine(ctx, half, 0, half, c.height);
+          } else {
+            const boxW = c.width - inset * 2;
+            const boxH = c.height - inset * 2;
+            const f = await frameToFit(boxW, boxH);
+            ctx.drawImage(f, inset + (boxW - f.width) / 2, inset + (boxH - f.height) / 2);
+            f.width = f.height = 0;
+          }
+          printBlob = await new Promise((res) => c.toBlob(res, 'image/jpeg', 0.95));
+          printName = `neon_4cut_4x6_${Date.now()}.jpg`;
+          c.width = c.height = 0;
+          if (printUrl) URL.revokeObjectURL(printUrl);
+          printUrl = URL.createObjectURL(printBlob);
+          $('printPreview').src = printUrl;
+          $('printPreview').hidden = false;
+          setStatus('printStatus', `완성! 4×6 (10×15cm) · ${landscape ? '1800×1200' : '1200×1800'}px · 300dpi`);
+        }
+        $('printSaveBtn').hidden = false;
+      } catch (err) {
+        setStatus('printStatus', `만들지 못했어요: ${err.message}`, true);
+      } finally {
+        btn.disabled = false;
+        busy = false;
+      }
+    }
+
+    // A4에 실제 크기로 모아 찍는다. 세로 4컷은 스트립(약 4.6×13.8cm) 8개, 그 밖에는 9.5×13.5cm 4개.
+    async function makeA4(cut) {
+      const { jsPDF } = await loadJsPdf();
+      const strip = frameIsTall();
+      const [cellW, cellH] = strip ? [46, 138] : [95, 135];
+      const cols = strip ? 4 : 2;
+      const rows = 2;
+      const gap = strip ? 3 : 5;
+      const perPage = cols * rows;
+      const mx = (210 - (cols * cellW + (cols - 1) * gap)) / 2;
+      const my = (297 - (rows * cellH + (rows - 1) * gap)) / 2;
+      const copies = clamp(parseInt($('printCopies').value, 10) || 1, 1, 32);
+      $('printCopies').value = copies;
+
+      const f = await frameToFit(cellW * MM, cellH * MM);
+      const url = f.toDataURL('image/jpeg', 0.92);
+      const iw = f.width / MM;
+      const ih = f.height / MM;
+      f.width = f.height = 0;
+
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      for (let n = 0; n < copies; n++) {
+        if (n > 0 && n % perPage === 0) doc.addPage();
+        const idx = n % perPage;
+        const x = mx + (idx % cols) * (cellW + gap) + (cellW - iw) / 2;
+        const y = my + Math.floor(idx / cols) * (cellH + gap) + (cellH - ih) / 2;
+        // 같은 그림은 'frame' 별칭으로 한 번만 넣어 PDF 용량을 줄인다
+        doc.addImage(url, 'JPEG', x, y, iw, ih, 'frame', 'FAST');
+        if (cut) {
+          doc.setDrawColor(150);
+          doc.setLineWidth(0.15);
+          const m = 1.5, l = 4;
+          [[x, y, -1, -1], [x + iw, y, 1, -1], [x, y + ih, -1, 1], [x + iw, y + ih, 1, 1]].forEach(([cx, cy, dx, dy]) => {
+            doc.line(cx + dx * m, cy, cx + dx * (m + l), cy);
+            doc.line(cx, cy + dy * m, cx, cy + dy * (m + l));
+          });
+        }
+      }
+      printBlob = doc.output('blob');
+      printName = `neon_4cut_a4_${Date.now()}.pdf`;
+      const pages = Math.ceil(copies / perPage);
+      setStatus('printStatus', `완성! A4 PDF ${pages}쪽 · ${copies}장 (${strip ? '스트립' : '4×6 크기'}) — 실제 크기(100%)로 인쇄하세요.`);
+    }
+
+    function savePrint() {
+      if (printBlob) saveToGallery(printBlob, printName);
+    }
+
+    // ── 연결 ───────────────────────────────────────────────
+    bindSeg('kindSeg', (v) => { shotKind = v; updateShootButton(); });
+    bindSeg('modeSeg', (v) => { shootMode = v; $('intervalSeg').hidden = v !== 'burst'; updateShootButton(); });
+    bindSeg('intervalSeg', (v) => { burstInterval = Number(v); });
+    bindSeg('peopleSeg', (v) => { poseGroup = Number(v); });
+    bindSeg('filterSeg', (v) => { deco.filter = v; refreshIfShown(); });
+    bindSeg('dateSeg', (v) => { deco.dateFmt = v; refreshIfShown(); });
+    bindSeg('themeSeg', (v) => setTheme(v));
+    bindSeg('toolTabs', (v) => setTool(v));
+    bindSeg('penWidthSeg', (v) => { penWidth = Number(v); });
+    bindSeg('motionFormatSeg', (v) => { motionFormat = v; });
+    bindSeg('loopSeg', (v) => { boomerang = v === 'boomerang'; if (playing) { stopPlay(); togglePlay(); } });
+    bindSeg('paperSeg', (v) => { paper = v; updatePaperUI(); });
+
+    ['frameTitle', 'frameSubtitle'].forEach((id) => $(id).addEventListener('input', refreshIfShown));
+
+    Object.entries(THEMES).forEach(([key, t]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'seg-btn' + (key === deco.theme ? ' active' : '');
+      b.dataset.v = key;
+      b.textContent = t.label;
+      $('themeSeg').appendChild(b);
+    });
+    FRAME_COLORS.forEach((c) => $('colorOptions').appendChild(makeColorDot(c)));
+    STICKERS.forEach((em) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = em;
+      b.setAttribute('aria-label', `스티커 ${em} 붙이기`);
+      b.onclick = () => addSticker(em);
+      $('stickerGrid').appendChild(b);
+    });
+    PEN_COLORS.forEach((c) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pen-dot' + (c === penColor ? ' active' : '');
+      b.style.background = c;
+      b.setAttribute('aria-label', `펜 색 ${c}`);
+      b.onclick = () => {
+        penColor = c;
+        $('penColors').querySelectorAll('.pen-dot').forEach((d) => d.classList.toggle('active', d === b));
+      };
+      $('penColors').appendChild(b);
+    });
+
+    // 사진을 끌어다 놓으면 불러온다
+    document.querySelectorAll('#shootCard, #galleryCard').forEach((cardEl) => {
       cardEl.addEventListener('dragover', (e) => {
         e.preventDefault();
         cardEl.classList.add('drag-over');
@@ -1134,7 +2519,7 @@
           addFilesToGallery(Array.from(e.dataTransfer.files));
         }
       });
-    }
+    });
 
     // Mouse drag-to-scroll support for horizontal option lists
     function enableDragScroll(el) {
@@ -1150,15 +2535,8 @@
         startX = e.pageX - el.offsetLeft;
         scrollLeft = el.scrollLeft;
       });
-
-      el.addEventListener('mouseleave', () => {
-        isDown = false;
-      });
-
-      el.addEventListener('mouseup', () => {
-        isDown = false;
-      });
-
+      el.addEventListener('mouseleave', () => { isDown = false; });
+      el.addEventListener('mouseup', () => { isDown = false; });
       el.addEventListener('mousemove', (e) => {
         if (!isDown) return;
         const x = e.pageX - el.offsetLeft;
@@ -1169,7 +2547,6 @@
         }
         el.scrollLeft = scrollLeft - walk;
       });
-
       el.addEventListener('click', (e) => {
         if (hasDragged) {
           e.preventDefault();
@@ -1180,6 +2557,15 @@
     }
 
     document.querySelectorAll('.layout-options, .ratio-options').forEach(enableDragScroll);
+    // 날짜 버튼에는 오늘 날짜를 그대로 보여 준다
+    ['full', 'short'].forEach((fmt) => {
+      const keep = deco.dateFmt;
+      deco.dateFmt = fmt;
+      $('dateSeg').querySelector(`[data-v="${fmt}"]`).textContent = fmt === 'full' ? `날짜 ${dateText()}` : dateText();
+      deco.dateFmt = keep;
+    });
+    updateShootButton();
+    updateGallery();
   </script>
 </body>
 </html>
