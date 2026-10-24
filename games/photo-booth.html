@@ -301,7 +301,6 @@
 
     canvas {
       max-width: 280px;
-      border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
@@ -418,7 +417,10 @@
 
       <div class="preview-container" id="previewContainer">
         <canvas id="fourCutCanvas"></canvas>
-        <button onclick="download4Cut()" style="width: 100%;">📥 완성된 4컷 사진 다운로드 (PNG)</button>
+        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+          <button id="saveGalleryBtn" onclick="saveToGalleryOrShare()" style="width: 100%; background: linear-gradient(135deg, var(--green), #059669);">📲 사진첩에 저장 / 공유하기</button>
+          <button class="btn-secondary" onclick="download4Cut()" style="width: 100%;">💾 파일로 다운로드 (PNG)</button>
+        </div>
       </div>
     </div>
   </div>
@@ -465,7 +467,11 @@
       }
       try {
         currentStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: {
+            facingMode: facingMode,
+            width: { ideal: 3840 },
+            height: { ideal: 2160 }
+          },
           audio: false
         });
         video.srcObject = currentStream;
@@ -503,18 +509,32 @@
     }
 
     function snapPhoto() {
+      const vWidth = video.videoWidth || 1280;
+      const vHeight = video.videoHeight || 720;
+      // 너무 과도하게 크지 않도록 긴 변 기준 최대 1600px로 캡처
+      const maxDim = 1600;
+      let targetW = vWidth;
+      let targetH = vHeight;
+      if (Math.max(vWidth, vHeight) > maxDim) {
+        const scale = maxDim / Math.max(vWidth, vHeight);
+        targetW = Math.round(vWidth * scale);
+        targetH = Math.round(vHeight * scale);
+      }
+
       const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = video.videoWidth || 640;
-      tempCanvas.height = video.videoHeight || 480;
+      tempCanvas.width = targetW;
+      tempCanvas.height = targetH;
       const ctx = tempCanvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       if (facingMode === 'user') {
-        ctx.translate(tempCanvas.width, 0);
+        ctx.translate(targetW, 0);
         ctx.scale(-1, 1);
       }
 
-      ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-      const dataUrl = tempCanvas.toDataURL('image/jpeg');
+      ctx.drawImage(video, 0, 0, targetW, targetH);
+      const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.95);
 
       capturedPhotos.push(dataUrl);
       updateGallery();
@@ -618,6 +638,8 @@
 
       const canvas = document.getElementById('fourCutCanvas');
       const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       const itemW = 400;
       const itemH = 300;
@@ -698,6 +720,41 @@
         };
         img.src = capturedPhotos[photoIdx];
       });
+    }
+
+    async function saveToGalleryOrShare() {
+      const canvas = document.getElementById('fourCutCanvas');
+      if (!canvas) return;
+
+      const fileName = `neon_4cut_${Date.now()}.png`;
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          download4Cut();
+          return;
+        }
+
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: '네온 4컷 사진',
+              text: '네온 4컷 사진관에서 촬영한 4컷 사진입니다!'
+            });
+            return;
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              download4Cut();
+            }
+            return;
+          }
+        }
+
+        // Web Share API 미지원 브라우저 (PC 또는 구형 브라우저)
+        download4Cut();
+      }, 'image/png');
     }
 
     function download4Cut() {
