@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>조건부 자리 배치 뽑기 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
+    <style>
+        :root {
+            --accent: #6366f1;
+            --accent-ink: #3730a3;
+            --accent-soft: #eef2ff;
+            --on-accent: #ffffff;
+            --table-bg: var(--surface-2);
+            --seat-bg: var(--surface);
+            --seat-border: var(--line-strong);
+            --seat-text: var(--text);
+            --chip-near: #ec4899;
+            --chip-far: #f59e0b;
+            --chip-fixed: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 60px;
+        }
+
+        .back { position: absolute; top: 20px; left: 20px; z-index: 10; }
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 44px 0 4px;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        .sub { color: var(--muted); font-size: .88rem; margin-bottom: 20px; text-align: center; }
+
+        .wrap { width: 100%; max-width: 680px; display: flex; flex-direction: column; gap: 16px; }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--r-lg, 20px);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: var(--r-pill, 999px);
+            background: var(--surface-2);
+            color: var(--text-2);
+        }
+
+        .card-badge.ok { background: var(--ok-soft, #ecfdf5); color: var(--ok, #059669); }
+        .card-badge.warn { background: var(--warn-soft, #fffbeb); color: var(--warn, #d97706); }
+        .card-badge.bad { background: var(--bad-soft, #fef2f2); color: var(--bad, #dc2626); }
+
+        .hint { color: var(--muted); font-size: 0.82rem; line-height: 1.5; margin-bottom: 10px; }
+
+        textarea {
+            width: 100%;
+            height: 110px;
+            padding: 12px 14px;
+            border-radius: var(--r-md, 12px);
+            border: 1px solid var(--line);
+            background: var(--surface-2);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        textarea:focus { border-color: var(--accent); }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .btn-preset {
+            padding: 10px;
+            border-radius: var(--r-md, 12px);
+            border: 1px solid var(--line);
+            background: var(--surface-2);
+            color: var(--text-2);
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .btn-preset:hover { border-color: var(--accent); color: var(--accent-ink); }
+        .btn-preset.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+
+        .table-custom-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .table-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--line);
+            border-radius: var(--r-md, 12px);
+            font-size: 0.92rem;
+        }
+
+        .table-row .info { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .table-row .controls { display: flex; align-items: center; gap: 6px; }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: var(--surface);
+            color: var(--text);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .btn-icon:hover { background: var(--surface-3); }
+
+        .btn-add-table {
+            width: 100%;
+            padding: 10px;
+            border-radius: var(--r-md, 12px);
+            border: 1px dashed var(--line-strong);
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .btn-add-table:hover { border-color: var(--accent); color: var(--accent-ink); }
+
+        /* 조건 추가 영역 */
+        .rule-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: var(--surface-2);
+            border-radius: var(--r-md, 12px);
+            border: 1px solid var(--line);
+        }
+
+        .rule-form select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .rule-form button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: var(--on-accent);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .rules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .rule-tag {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            background: var(--surface-2);
+            border: 1px solid var(--line);
+        }
+        .rule-tag.near { border-left: 4px solid var(--chip-near); }
+        .rule-tag.far { border-left: 4px solid var(--chip-far); }
+        .rule-tag.fixed { border-left: 4px solid var(--chip-fixed); }
+
+        .rule-tag .del-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 4px;
+        }
+        .rule-tag .del-btn:hover { color: var(--bad, #dc2626); }
+
+        .btn-main {
+            width: 100%;
+            border: none;
+            border-radius: var(--r-pill, 999px);
+            padding: 16px;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .btn-main:active { transform: scale(0.98); }
+        .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* 결과 도면 화면 */
+        .plan-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 10px 0;
+        }
+
+        .table-diagram {
+            background: var(--surface-2);
+            border: 1px solid var(--line);
+            border-radius: var(--r-lg, 20px);
+            padding: 20px 14px;
+            position: relative;
+        }
+
+        .table-diagram-header {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-2);
+        }
+
+        /* 사각 테이블 레이아웃 */
+        .rect-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .seat-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .table-top {
+            width: 90%;
+            max-width: 480px;
+            height: 38px;
+            background: var(--surface-3);
+            border: 1px solid var(--line-strong);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 2px;
+        }
+
+        /* 원탁 레이아웃 */
+        .round-layout {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            height: 320px;
+            margin: 10px auto;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .round-center-table {
+            width: 130px;
+            height: 130px;
+            background: var(--surface-3);
+            border: 1px solid var(--line-strong);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--muted);
+            z-index: 1;
+        }
+
+        .seat-chip {
+            padding: 8px 12px;
+            border-radius: 12px;
+            background: var(--surface);
+            border: 1.5px solid var(--line-strong);
+            font-size: 0.92rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            transition: all 0.2s;
+            max-width: 130px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: var(--shadow-sm);
+        }
+        .seat-chip:active { cursor: grabbing; }
+        .seat-chip.empty {
+            background: transparent;
+            border-style: dashed;
+            color: var(--muted);
+            font-weight: 500;
+        }
+        .seat-chip.selected {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent-ink);
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+        }
+        .seat-chip.drag-over {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .seat-badge {
+            font-size: 0.75rem;
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+        .badge-near { background: var(--chip-near); color: #fff; }
+        .badge-far { background: var(--chip-far); color: #fff; }
+        .badge-fixed { background: var(--chip-fixed); color: #fff; }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .result-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: var(--r-md, 12px);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            background: var(--surface);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .result-actions button.primary {
+            background: var(--accent);
+            color: var(--on-accent);
+            border: none;
+        }
+
+        .alert-box {
+            padding: 12px 14px;
+            border-radius: var(--r-md, 12px);
+            background: var(--bad-soft, #fef2f2);
+            border: 1px solid var(--bad, #dc2626);
+            color: var(--bad, #dc2626);
+            font-size: 0.88rem;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .wrap { width: 100%; }
+            .card { padding: 16px; }
+            .seat-chip { padding: 6px 10px; font-size: 0.85rem; }
+            .round-layout { width: 280px; height: 280px; }
+            .round-center-table { width: 100px; height: 100px; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back back-button">← 메인</a>
+    <h1>🪑 조건부 자리 배치 뽑기</h1>
+    <p class="sub">붙여 앉히기, 떨어뜨리기, 자리 고정 조건을 지키며 스마트하게 배치합니다.</p>
+
+    <div class="wrap">
+        <!-- 1. 명단 입력 -->
+        <section class="card">
+            <div class="card-header">
+                <div class="card-title">👥 1. 참가자 명단</div>
+                <div class="card-badge" id="memberCountBadge">0명</div>
+            </div>
+            <p class="hint">이름을 줄바꿈이나 쉼표로 구분해 입력하세요. (동명이인은 자동으로 구분됩니다)</p>
+            <textarea id="namesInput" placeholder="김철수, 이영희, 박민수, 최지우&#10;정우성, 강동원, 한지민, 송중기" oninput="onNamesChanged()"></textarea>
+        </section>
+
+        <!-- 2. 테이블 구성 -->
+        <section class="card">
+            <div class="card-header">
+                <div class="card-title">🍽️ 2. 테이블 구성</div>
+                <div class="card-badge" id="seatCapacityBadge">좌석 0석</div>
+            </div>
+            <p class="hint">빠른 프리셋을 누르거나 직접 테이블 모양과 좌석 수를 조정하세요.</p>
+            <div class="preset-grid">
+                <button type="button" class="btn-preset active" onclick="applyPreset('4p')">4인석 여러 개</button>
+                <button type="button" class="btn-preset" onclick="applyPreset('6p')">6인석 여러 개</button>
+                <button type="button" class="btn-preset" onclick="applyPreset('round')">원탁 여러 개</button>
+                <button type="button" class="btn-preset" onclick="applyPreset('single')">긴 테이블 1개</button>
+            </div>
+
+            <div class="table-custom-list" id="tableList"></div>
+            <button type="button" class="btn-add-table" onclick="addCustomTable()">+ 새 테이블 추가하기</button>
+        </section>
+
+        <!-- 3. 조건 설정 (선택) -->
+        <section class="card">
+            <div class="card-header">
+                <div class="card-title">🎯 3. 자리 조건 (선택)</div>
+                <div class="card-badge" id="rulesCountBadge">0개 조건</div>
+            </div>
+            <p class="hint">누가 누구와 붙어야 하는지, 혹은 떨어져야 하는지 지정할 수 있습니다.</p>
+
+            <div class="rule-form">
+                <select id="ruleTypeSelect" onchange="onRuleTypeChanged()">
+                    <option value="near">👫 붙여 앉히기 (같은 테이블)</option>
+                    <option value="far">↔️ 떨어뜨리기 (다른 테이블)</option>
+                    <option value="fixed">📌 자리 고정 (특정 테이블)</option>
+                </select>
+                <select id="rulePersonA"></select>
+                <select id="rulePersonB"></select>
+                <select id="ruleTargetTable" style="display:none;"></select>
+                <button type="button" onclick="addRule()">조건 추가</button>
+            </div>
+
+            <div id="ruleConflictWarning" class="alert-box" style="display: none;"></div>
+            <div class="rules-list" id="rulesList"></div>
+        </section>
+
+        <button type="button" class="btn-main" id="startShuffleBtn" onclick="executeSeatShuffle()">🎲 자리 배치 뽑기</button>
+
+        <!-- 4. 결과 도면 화면 -->
+        <section class="card" id="resultCard" style="display: none;">
+            <div class="card-header">
+                <div class="card-title">🎉 자리 배치 결과 도면</div>
+                <div class="card-badge ok" id="resultStatusBadge">조건 모두 만족</div>
+            </div>
+            <p class="hint">자리를 클릭하거나 드래그하여 두 사람의 위치를 맞바꿀 수 있습니다.</p>
+
+            <div id="unmetConditionsAlert" class="alert-box" style="display: none;"></div>
+
+            <div class="plan-wrap" id="planDiagram"></div>
+
+            <div class="result-actions">
+                <button type="button" onclick="executeSeatShuffle()">🔄 다시 뽑기</button>
+                <button type="button" onclick="copyResultText()">📋 텍스트 복사</button>
+                <button type="button" class="primary" onclick="exportPlanImage()">📲 도면 이미지 저장</button>
+            </div>
+        </section>
+    </div>
+
+    <script type="application/json" id="game-rules">
+    {
+        "title": "조건부 자리 배치 뽑기",
+        "players": "4~60인",
+        "time": "약 3분",
+        "goal": "붙여 앉히기·떨어뜨리기·자리 고정 조건을 충족하며 테이블 좌석을 무작위로 배치합니다.",
+        "steps": [
+            "참가자 명단을 줄바꿈 또는 쉼표로 입력합니다.",
+            "모임 장소에 맞는 테이블 구성(4인석, 6인석, 원탁 등)을 선택하거나 직접 추가합니다.",
+            "필요에 따라 '붙여 앉히기', '떨어뜨리기', '자리 고정' 조건을 등록합니다.",
+            "자리 배치 뽑기를 눌러 도면 결과를 확인합니다.",
+            "결과 화면에서 사람 카드를 선택해 원하는 위치로 자리를 직접 맞바꿀 수도 있습니다."
+        ],
+        "tips": [
+            "모순되는 조건(A-B 붙이기와 A-B 떨어뜨리기 동시 등록 등)은 사전에 감지되어 알림이 뜹니다.",
+            "결과는 텍스트로 복사해 단톡방에 올리거나 고화질 도면 이미지로 저장할 수 있습니다."
+        ]
+    }
+    </script>
+
+    <script>
+        const STORAGE_KEY = 'simple_game_seat_shuffle_state';
+
+        let members = [];
+        let tables = [];
+        let rules = []; // { id, type: 'near'|'far'|'fixed', pA, pB, tableId }
+        let currentPlacement = []; // tableIdx -> array of (memberName | null)
+        let selectedSeatForSwap = null; // { tableIdx, seatIdx }
+
+        // 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedState();
+            updateMemberSelects();
+            renderTablesList();
+            renderRulesList();
+            validateState();
+        });
+
+        function parseNamesFromInput() {
+            const raw = document.getElementById('namesInput').value;
+            const list = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            // 동명이인 처리
+            const counts = {};
+            const uniqueList = [];
+            list.forEach(name => {
+                counts[name] = (counts[name] || 0) + 1;
+            });
+            const tracker = {};
+            list.forEach(name => {
+                if (counts[name] > 1) {
+                    tracker[name] = (tracker[name] || 0) + 1;
+                    uniqueList.push(`${name}(${tracker[name]})`);
+                } else {
+                    uniqueList.push(name);
+                }
+            });
+            return uniqueList;
+        }
+
+        function onNamesChanged() {
+            members = parseNamesFromInput();
+            document.getElementById('memberCountBadge').textContent = `${members.length}명`;
+            updateMemberSelects();
+            validateState();
+            saveState();
+        }
+
+        function updateMemberSelects() {
+            const selA = document.getElementById('rulePersonA');
+            const selB = document.getElementById('rulePersonB');
+            const curA = selA.value;
+            const curB = selB.value;
+
+            selA.innerHTML = members.length ? '' : '<option value="">(명단 입력 필요)</option>';
+            selB.innerHTML = members.length ? '' : '<option value="">(명단 입력 필요)</option>';
+
+            members.forEach(m => {
+                const optA = document.createElement('option');
+                optA.value = m;
+                optA.textContent = m;
+                selA.appendChild(optA);
+
+                const optB = document.createElement('option');
+                optB.value = m;
+                optB.textContent = m;
+                selB.appendChild(optB);
+            });
+
+            if (curA && members.includes(curA)) selA.value = curA;
+            if (curB && members.includes(curB)) selB.value = curB;
+            else if (members.length > 1) selB.selectedIndex = 1;
+        }
+
+        function onRuleTypeChanged() {
+            const type = document.getElementById('ruleTypeSelect').value;
+            const selB = document.getElementById('rulePersonB');
+            const selTable = document.getElementById('ruleTargetTable');
+
+            if (type === 'fixed') {
+                selB.style.display = 'none';
+                selTable.style.display = 'inline-block';
+                updateTargetTableSelect();
+            } else {
+                selB.style.display = 'inline-block';
+                selTable.style.display = 'none';
+            }
+        }
+
+        function updateTargetTableSelect() {
+            const sel = document.getElementById('ruleTargetTable');
+            sel.innerHTML = '';
+            tables.forEach((t, idx) => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = `${t.name} (${t.shape === 'round' ? '원탁' : '사각'} ${t.capacity}석)`;
+                sel.appendChild(opt);
+            });
+        }
+
+        function applyPreset(presetType) {
+            document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const count = Math.max(members.length, 4);
+            tables = [];
+
+            if (presetType === '4p') {
+                const num = Math.ceil(count / 4);
+                for (let i = 1; i <= num; i++) {
+                    tables.push({ id: `T${i}`, name: `테이블 ${i}`, shape: 'rect', capacity: 4 });
+                }
+            } else if (presetType === '6p') {
+                const num = Math.ceil(count / 6);
+                for (let i = 1; i <= num; i++) {
+                    tables.push({ id: `T${i}`, name: `테이블 ${i}`, shape: 'rect', capacity: 6 });
+                }
+            } else if (presetType === 'round') {
+                const num = Math.ceil(count / 6);
+                for (let i = 1; i <= num; i++) {
+                    tables.push({ id: `T${i}`, name: `원탁 ${i}`, shape: 'round', capacity: 6 });
+                }
+            } else if (presetType === 'single') {
+                tables.push({ id: 'T1', name: '메인 긴 테이블', shape: 'rect', capacity: Math.max(count, 8) });
+            }
+
+            renderTablesList();
+            onRuleTypeChanged();
+            validateState();
+            saveState();
+        }
+
+        function addCustomTable() {
+            const nextIdx = tables.length + 1;
+            tables.push({ id: `T${Date.now()}`, name: `테이블 ${nextIdx}`, shape: 'rect', capacity: 4 });
+            renderTablesList();
+            onRuleTypeChanged();
+            validateState();
+            saveState();
+        }
+
+        function removeTable(idx) {
+            if (tables.length <= 1) {
+                gameAlert('최소 하나의 테이블은 있어야 합니다.');
+                return;
+            }
+            tables.splice(idx, 1);
+            renderTablesList();
+            onRuleTypeChanged();
+            validateState();
+            saveState();
+        }
+
+        function updateTableCapacity(idx, delta) {
+            tables[idx].capacity = Math.max(2, Math.min(20, tables[idx].capacity + delta));
+            renderTablesList();
+            validateState();
+            saveState();
+        }
+
+        function toggleTableShape(idx) {
+            tables[idx].shape = tables[idx].shape === 'rect' ? 'round' : 'rect';
+            renderTablesList();
+            validateState();
+            saveState();
+        }
+
+        function renderTablesList() {
+            const listEl = document.getElementById('tableList');
+            listEl.innerHTML = '';
+
+            let totalCap = 0;
+            tables.forEach((t, idx) => {
+                totalCap += t.capacity;
+                const row = document.createElement('div');
+                row.className = 'table-row';
+                row.innerHTML = `
+                    <div class="info">
+                        <button type="button" class="btn-icon" onclick="toggleTableShape(${idx})" title="모양 변경">
+                            ${t.shape === 'round' ? '⭕' : '🔲'}
+                        </button>
+                        <span>${t.name}</span>
+                        <span class="card-badge">${t.shape === 'round' ? '원탁' : '사각'} ${t.capacity}인석</span>
+                    </div>
+                    <div class="controls">
+                        <button type="button" class="btn-icon" onclick="updateTableCapacity(${idx}, -1)">-</button>
+                        <span style="min-width: 24px; text-align: center; font-weight: 700;">${t.capacity}</span>
+                        <button type="button" class="btn-icon" onclick="updateTableCapacity(${idx}, 1)">+</button>
+                        <button type="button" class="btn-icon" style="color: var(--bad);" onclick="removeTable(${idx})">×</button>
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
+
+            const badge = document.getElementById('seatCapacityBadge');
+            badge.textContent = `좌석 ${totalCap}석`;
+            if (totalCap >= members.length && members.length > 0) {
+                badge.className = 'card-badge ok';
+            } else if (totalCap < members.length) {
+                badge.className = 'card-badge bad';
+            } else {
+                badge.className = 'card-badge';
+            }
+        }
+
+        function addRule() {
+            const type = document.getElementById('ruleTypeSelect').value;
+            const pA = document.getElementById('rulePersonA').value;
+            const pB = document.getElementById('rulePersonB').value;
+            const tableId = document.getElementById('ruleTargetTable').value;
+
+            if (!pA) {
+                gameAlert('명단을 먼저 입력해 주세요.');
+                return;
+            }
+
+            if (type !== 'fixed' && pA === pB) {
+                gameAlert('서로 다른 두 사람을 선택해야 합니다.');
+                return;
+            }
+
+            // 중복 검사
+            const exists = rules.some(r => {
+                if (r.type !== type) return false;
+                if (type === 'fixed') return r.pA === pA && r.tableId === tableId;
+                return (r.pA === pA && r.pB === pB) || (r.pA === pB && r.pB === pA);
+            });
+
+            if (exists) {
+                gameAlert('이미 등록된 조건입니다.');
+                return;
+            }
+
+            rules.push({ id: `R${Date.now()}`, type, pA, pB, tableId });
+            renderRulesList();
+            validateState();
+            saveState();
+        }
+
+        function removeRule(id) {
+            rules = rules.filter(r => r.id !== id);
+            renderRulesList();
+            validateState();
+            saveState();
+        }
+
+        function renderRulesList() {
+            const listEl = document.getElementById('rulesList');
+            listEl.innerHTML = '';
+            document.getElementById('rulesCountBadge').textContent = `${rules.length}개 조건`;
+
+            rules.forEach(r => {
+                const item = document.createElement('div');
+                item.className = `rule-tag ${r.type}`;
+                let desc = '';
+                if (r.type === 'near') desc = `👫 <strong>${escapeHtml(r.pA)}</strong> & <strong>${escapeHtml(r.pB)}</strong> : 같은 테이블`;
+                else if (r.type === 'far') desc = `↔️ <strong>${escapeHtml(r.pA)}</strong> & <strong>${escapeHtml(r.pB)}</strong> : 다른 테이블`;
+                else {
+                    const targetT = tables.find(t => t.id === r.tableId);
+                    const tName = targetT ? targetT.name : '지정 테이블';
+                    desc = `📌 <strong>${escapeHtml(r.pA)}</strong> : [${escapeHtml(tName)}] 고정`;
+                }
+
+                item.innerHTML = `
+                    <span>${desc}</span>
+                    <button type="button" class="del-btn" onclick="removeRule('${r.id}')">×</button>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        function validateState() {
+            const totalCap = tables.reduce((acc, t) => acc + t.capacity, 0);
+            const startBtn = document.getElementById('startShuffleBtn');
+            const warnBox = document.getElementById('ruleConflictWarning');
+
+            if (members.length === 0) {
+                startBtn.disabled = true;
+                warnBox.style.display = 'none';
+                return;
+            }
+
+            if (totalCap < members.length) {
+                startBtn.disabled = true;
+                warnBox.style.display = 'block';
+                warnBox.textContent = `좌석 수(${totalCap}석)가 인원 수(${members.length}명)보다 적습니다. 테이블 좌석을 늘려주세요.`;
+                return;
+            }
+
+            // 조건 충돌 검사
+            const conflict = findRuleConflict();
+            if (conflict) {
+                startBtn.disabled = true;
+                warnBox.style.display = 'block';
+                warnBox.textContent = `조건 충돌: ${conflict}`;
+                return;
+            }
+
+            warnBox.style.display = 'none';
+            startBtn.disabled = false;
+        }
+
+        function findRuleConflict() {
+            // A-B 붙이기와 A-B 떨어뜨리기가 동시에 있는 경우
+            for (const r1 of rules) {
+                if (r1.type === 'near') {
+                    for (const r2 of rules) {
+                        if (r2.type === 'far') {
+                            const match = (r1.pA === r2.pA && r1.pB === r2.pB) || (r1.pA === r2.pB && r1.pB === r2.pA);
+                            if (match) {
+                                return `"${r1.pA}"님과 "${r1.pB}"님에 대해 '붙여 앉히기'와 '떨어뜨리기'가 동시에 설정되어 있습니다.`;
+                            }
+                        }
+                    }
+                }
+                if (r1.type === 'fixed') {
+                    for (const r2 of rules) {
+                        if (r2.type === 'fixed' && r1.pA === r2.pA && r1.tableId !== r2.tableId) {
+                            return `"${r1.pA}"님에게 두 개 이상의 서로 다른 고정 테이블이 지정되어 있습니다.`;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function saveState() {
+            const state = {
+                namesText: document.getElementById('namesInput').value,
+                tables,
+                rules
+            };
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {}
+        }
+
+        function loadSavedState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.namesText) {
+                        document.getElementById('namesInput').value = parsed.namesText;
+                        members = parseNamesFromInput();
+                        document.getElementById('memberCountBadge').textContent = `${members.length}명`;
+                    }
+                    if (Array.isArray(parsed.tables) && parsed.tables.length) {
+                        tables = parsed.tables;
+                    } else {
+                        applyPreset('4p');
+                    }
+                    if (Array.isArray(parsed.rules)) {
+                        rules = parsed.rules;
+                    }
+                } else {
+                    applyPreset('4p');
+                }
+            } catch (e) {
+                applyPreset('4p');
+            }
+        }
+
+        // ── 핵심 알고리즘: 조건부 배치 ─────────────────────────
+        function executeSeatShuffle() {
+            if (members.length === 0) return;
+            const totalCap = tables.reduce((acc, t) => acc + t.capacity, 0);
+            if (totalCap < members.length) {
+                gameAlert('좌석 수가 부족합니다.');
+                return;
+            }
+
+            // 수천 번 시뮬레이션하여 모든 조건 만족(또는 가장 위반 적은) 배치 탐색
+            let bestAssignment = null;
+            let minViolations = 999999;
+            let bestViolatedReasons = [];
+
+            const attempts = 4000;
+
+            for (let it = 0; it < attempts; it++) {
+                const candidate = generateCandidatePlacement();
+                const { violations, reasons } = evaluatePlacement(candidate);
+
+                if (violations === 0) {
+                    bestAssignment = candidate;
+                    minViolations = 0;
+                    bestViolatedReasons = [];
+                    break;
+                }
+
+                if (violations < minViolations) {
+                    minViolations = violations;
+                    bestAssignment = candidate;
+                    bestViolatedReasons = reasons;
+                }
+            }
+
+            currentPlacement = bestAssignment;
+            renderPlanDiagram(minViolations, bestViolatedReasons);
+        }
+
+        function generateCandidatePlacement() {
+            // 테이블별 슬롯 구조 생성
+            const tableSeats = tables.map(t => new Array(t.capacity).fill(null));
+
+            // 1. 고정 자리 먼저 배치
+            const fixedRules = rules.filter(r => r.type === 'fixed');
+            const unplaced = [...members];
+
+            fixedRules.forEach(r => {
+                const tIdx = tables.findIndex(t => t.id === r.tableId);
+                if (tIdx !== -1) {
+                    const freeSeats = [];
+                    tableSeats[tIdx].forEach((v, si) => { if (v === null) freeSeats.push(si); });
+                    if (freeSeats.length > 0) {
+                        const chosenSeat = freeSeats[Math.floor(Math.random() * freeSeats.length)];
+                        tableSeats[tIdx][chosenSeat] = r.pA;
+                        const pIdx = unplaced.indexOf(r.pA);
+                        if (pIdx !== -1) unplaced.splice(pIdx, 1);
+                    }
+                }
+            });
+
+            // 2. 붙여 앉히기 그룹을 가급적 같은 테이블에 몰아넣기
+            const nearRules = rules.filter(r => r.type === 'near');
+            // Union-Find / 클러스터링
+            const groups = [];
+            const visited = new Set();
+
+            unplaced.forEach(p => {
+                if (!visited.has(p)) {
+                    const group = [p];
+                    visited.add(p);
+                    let queue = [p];
+                    while (queue.length) {
+                        const cur = queue.shift();
+                        nearRules.forEach(nr => {
+                            let partner = null;
+                            if (nr.pA === cur) partner = nr.pB;
+                            else if (nr.pB === cur) partner = nr.pA;
+                            if (partner && !visited.has(partner) && unplaced.includes(partner)) {
+                                visited.add(partner);
+                                group.push(partner);
+                                queue.push(partner);
+                            }
+                        });
+                    }
+                    groups.push(group);
+                }
+            });
+
+            // 크기가 큰 그룹부터 비어있는 테이블에 배치
+            groups.sort((a, b) => b.length - a.length);
+
+            groups.forEach(grp => {
+                // 수용 가능한 테이블 후보 탐색
+                const candidateTables = [];
+                tableSeats.forEach((seats, tIdx) => {
+                    const freeCount = seats.filter(s => s === null).length;
+                    if (freeCount >= grp.length) candidateTables.push(tIdx);
+                });
+
+                if (candidateTables.length > 0) {
+                    const chosenT = candidateTables[Math.floor(Math.random() * candidateTables.length)];
+                    grp.forEach(person => {
+                        const freeSeats = [];
+                        tableSeats[chosenT].forEach((v, si) => { if (v === null) freeSeats.push(si); });
+                        const sIdx = freeSeats[Math.floor(Math.random() * freeSeats.length)];
+                        tableSeats[chosenT][sIdx] = person;
+                    });
+                } else {
+                    // 한 테이블에 다 안 들어가면 남은 좌석에 쪼개어 배치
+                    grp.forEach(person => {
+                        const allFree = [];
+                        tableSeats.forEach((seats, tIdx) => {
+                            seats.forEach((v, si) => { if (v === null) allFree.push({ tIdx, si }); });
+                        });
+                        if (allFree.length > 0) {
+                            const pick = allFree[Math.floor(Math.random() * allFree.length)];
+                            tableSeats[pick.tIdx][pick.si] = person;
+                        }
+                    });
+                }
+            });
+
+            return tableSeats;
+        }
+
+        function evaluatePlacement(placement) {
+            let violations = 0;
+            const reasons = [];
+
+            // 사람별 위치 맵핑
+            const personMap = {};
+            placement.forEach((seats, tIdx) => {
+                seats.forEach((p, sIdx) => {
+                    if (p) personMap[p] = { tIdx, sIdx };
+                });
+            });
+
+            rules.forEach(r => {
+                if (r.type === 'near') {
+                    const locA = personMap[r.pA];
+                    const locB = personMap[r.pB];
+                    if (!locA || !locB || locA.tIdx !== locB.tIdx) {
+                        violations += 10;
+                        reasons.push(`"${r.pA}" & "${r.pB}" 같은 테이블 조건 불만족`);
+                    }
+                } else if (r.type === 'far') {
+                    const locA = personMap[r.pA];
+                    const locB = personMap[r.pB];
+                    if (locA && locB && locA.tIdx === locB.tIdx) {
+                        violations += 10;
+                        reasons.push(`"${r.pA}" & "${r.pB}" 다른 테이블 조건 불만족 (같은 테이블 배정)`);
+                    }
+                } else if (r.type === 'fixed') {
+                    const loc = personMap[r.pA];
+                    const targetIdx = tables.findIndex(t => t.id === r.tableId);
+                    if (!loc || loc.tIdx !== targetIdx) {
+                        violations += 15;
+                        const targetT = tables[targetIdx];
+                        reasons.push(`"${r.pA}" 고정 테이블[${targetT ? targetT.name : ''}] 조건 불만족`);
+                    }
+                }
+            });
+
+            return { violations, reasons };
+        }
+
+        // ── 도면 렌더링 ────────────────────────────────────────
+        function renderPlanDiagram(violations = 0, reasons = []) {
+            const planEl = document.getElementById('planDiagram');
+            planEl.innerHTML = '';
+            document.getElementById('resultCard').style.display = 'block';
+
+            const statusBadge = document.getElementById('resultStatusBadge');
+            const alertBox = document.getElementById('unmetConditionsAlert');
+
+            if (violations === 0) {
+                statusBadge.className = 'card-badge ok';
+                statusBadge.textContent = '조건 모두 만족';
+                alertBox.style.display = 'none';
+            } else {
+                statusBadge.className = 'card-badge warn';
+                statusBadge.textContent = `${violations / 10}건 조건 미충족`;
+                alertBox.style.display = 'block';
+                alertBox.innerHTML = `⚠️ 최적 배치를 찾았으나 다음 조건을 만족하지 못했습니다:<br>• ${reasons.join('<br>• ')}`;
+            }
+
+            currentPlacement.forEach((seats, tIdx) => {
+                const tInfo = tables[tIdx];
+                const box = document.createElement('div');
+                box.className = 'table-diagram';
+
+                const filledCount = seats.filter(Boolean).length;
+                box.innerHTML = `
+                    <div class="table-diagram-header">
+                        <span>${escapeHtml(tInfo.name)} (${tInfo.shape === 'round' ? '원탁' : '사각'})</span>
+                        <span>${filledCount} / ${tInfo.capacity}석 착석</span>
+                    </div>
+                `;
+
+                if (tInfo.shape === 'rect') {
+                    // 사각 테이블 양면 배치 (위/아래)
+                    const half = Math.ceil(tInfo.capacity / 2);
+                    const topSeats = seats.slice(0, half);
+                    const bottomSeats = seats.slice(half);
+
+                    const rectWrap = document.createElement('div');
+                    rectWrap.className = 'rect-layout';
+
+                    const topRow = document.createElement('div');
+                    topRow.className = 'seat-row';
+                    topSeats.forEach((p, offset) => {
+                        topRow.appendChild(createSeatChip(p, tIdx, offset));
+                    });
+
+                    const centerTable = document.createElement('div');
+                    centerTable.className = 'table-top';
+                    centerTable.textContent = tInfo.name;
+
+                    const bottomRow = document.createElement('div');
+                    bottomRow.className = 'seat-row';
+                    bottomSeats.forEach((p, offset) => {
+                        bottomRow.appendChild(createSeatChip(p, tIdx, half + offset));
+                    });
+
+                    rectWrap.appendChild(topRow);
+                    rectWrap.appendChild(centerTable);
+                    rectWrap.appendChild(bottomRow);
+                    box.appendChild(rectWrap);
+                } else {
+                    // 원탁 원형 배치
+                    const roundWrap = document.createElement('div');
+                    roundWrap.className = 'round-layout';
+
+                    const centerTable = document.createElement('div');
+                    centerTable.className = 'round-center-table';
+                    centerTable.textContent = tInfo.name;
+                    roundWrap.appendChild(centerTable);
+
+                    const cap = tInfo.capacity;
+                    const radius = 115; // 픽셀 기준 반지름
+
+                    seats.forEach((p, sIdx) => {
+                        const chip = createSeatChip(p, tIdx, sIdx);
+                        chip.style.position = 'absolute';
+                        const angle = (2 * Math.PI / cap) * sIdx - Math.PI / 2;
+                        const x = Math.round(160 + radius * Math.cos(angle) - 45);
+                        const y = Math.round(160 + radius * Math.sin(angle) - 18);
+                        chip.style.left = `${x}px`;
+                        chip.style.top = `${y}px`;
+                        roundWrap.appendChild(chip);
+                    });
+
+                    box.appendChild(roundWrap);
+                }
+
+                planEl.appendChild(box);
+            });
+
+            document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function createSeatChip(personName, tIdx, sIdx) {
+            const chip = document.createElement('div');
+            chip.className = personName ? 'seat-chip' : 'seat-chip empty';
+            chip.draggable = true;
+
+            let badgesHtml = '';
+            if (personName) {
+                const hasNear = rules.some(r => r.type === 'near' && (r.pA === personName || r.pB === personName));
+                const hasFar = rules.some(r => r.type === 'far' && (r.pA === personName || r.pB === personName));
+                const hasFixed = rules.some(r => r.type === 'fixed' && r.pA === personName);
+
+                if (hasNear) badgesHtml += '<span class="seat-badge badge-near">👫</span>';
+                if (hasFar) badgesHtml += '<span class="seat-badge badge-far">↔️</span>';
+                if (hasFixed) badgesHtml += '<span class="seat-badge badge-fixed">📌</span>';
+            }
+
+            chip.innerHTML = personName
+                ? `<span>${escapeHtml(personName)}</span>${badgesHtml}`
+                : '<span>(빈자리)</span>';
+
+            // 선택 / 스왑 인터랙션 (클릭 & 드래그)
+            chip.onclick = () => handleSeatSelect(tIdx, sIdx, chip);
+
+            chip.ondragstart = (e) => {
+                e.dataTransfer.setData('text/plain', JSON.stringify({ tIdx, sIdx }));
+            };
+
+            chip.ondragover = (e) => {
+                e.preventDefault();
+                chip.classList.add('drag-over');
+            };
+
+            chip.ondragleave = () => {
+                chip.classList.remove('drag-over');
+            };
+
+            chip.ondrop = (e) => {
+                e.preventDefault();
+                chip.classList.remove('drag-over');
+                try {
+                    const source = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    swapSeats(source.tIdx, source.sIdx, tIdx, sIdx);
+                } catch (err) {}
+            };
+
+            return chip;
+        }
+
+        function handleSeatSelect(tIdx, sIdx, chipEl) {
+            if (!selectedSeatForSwap) {
+                selectedSeatForSwap = { tIdx, sIdx };
+                document.querySelectorAll('.seat-chip').forEach(c => c.classList.remove('selected'));
+                chipEl.classList.add('selected');
+            } else {
+                if (selectedSeatForSwap.tIdx === tIdx && selectedSeatForSwap.sIdx === sIdx) {
+                    selectedSeatForSwap = null;
+                    chipEl.classList.remove('selected');
+                } else {
+                    swapSeats(selectedSeatForSwap.tIdx, selectedSeatForSwap.sIdx, tIdx, sIdx);
+                    selectedSeatForSwap = null;
+                }
+            }
+        }
+
+        function swapSeats(t1, s1, t2, s2) {
+            const temp = currentPlacement[t1][s1];
+            currentPlacement[t1][s1] = currentPlacement[t2][s2];
+            currentPlacement[t2][s2] = temp;
+
+            const { violations, reasons } = evaluatePlacement(currentPlacement);
+            renderPlanDiagram(violations, reasons);
+        }
+
+        // ── 결과 공유 및 복사 ──────────────────────────────────
+        function copyResultText() {
+            if (!currentPlacement.length) return;
+
+            let text = `🪑 [자리 배치 결과]\n총 인원: ${members.length}명\n\n`;
+
+            currentPlacement.forEach((seats, tIdx) => {
+                const t = tables[tIdx];
+                const seated = seats.filter(Boolean);
+                text += `▶ ${t.name} (${seated.length}명):\n`;
+                text += seated.length ? `  ${seated.join(', ')}\n\n` : `  (배치된 인원 없음)\n\n`;
+            });
+
+            text += `Generated by 미니게임 천국 🎲`;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    gameAlert('자리 배치 결과가 클립보드에 복사되었습니다! 단톡방에 공유하세요.');
+                }).catch(() => {
+                    gameAlert('복사에 실패했습니다.');
+                });
+            } else {
+                gameAlert('클립보드 기능을 지원하지 않는 브라우저입니다.');
+            }
+        }
+
+        function exportPlanImage() {
+            const diagram = document.getElementById('planDiagram');
+            if (!diagram) return;
+
+            // HTML5 Canvas로 도면 렌더링
+            const width = 800;
+            let height = 100;
+            currentPlacement.forEach((seats) => {
+                height += 170;
+            });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = Math.max(height, 400);
+            const ctx = canvas.getContext('2d');
+
+            // 배경
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, width, canvas.height);
+
+            // 타이틀
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 26px Pretendard, sans-serif';
+            ctx.fillText('🪑 자리 배치 도면', 30, 45);
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '15px Pretendard, sans-serif';
+            ctx.fillText(`총 참가자: ${members.length}명 · 일시: ${new Date().toLocaleDateString('ko-KR')}`, 30, 75);
+
+            let currentY = 110;
+
+            currentPlacement.forEach((seats, tIdx) => {
+                const tInfo = tables[tIdx];
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(30, currentY, width - 60, 140, 16);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#334155';
+                ctx.font = 'bold 16px Pretendard, sans-serif';
+                ctx.fillText(`[${tInfo.name}] (${tInfo.shape === 'round' ? '원탁' : '사각'} ${tInfo.capacity}인석)`, 50, currentY + 32);
+
+                // 좌석 그리기
+                const chipW = 105;
+                const chipH = 36;
+                const startX = 50;
+                const chipY = currentY + 60;
+
+                seats.forEach((p, sIdx) => {
+                    const x = startX + (sIdx % 6) * (chipW + 12);
+                    const y = chipY + Math.floor(sIdx / 6) * (chipH + 8);
+
+                    ctx.fillStyle = p ? '#f1f5f9' : 'transparent';
+                    ctx.strokeStyle = p ? '#cbd5e1' : '#cbd5e1';
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, chipW, chipH, 8);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = p ? '#0f172a' : '#94a3b8';
+                    ctx.font = p ? 'bold 14px Pretendard, sans-serif' : '13px Pretendard, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(p || '(빈자리)', x + chipW / 2, y + 23);
+                    ctx.textAlign = 'left';
+                });
+
+                currentY += 160;
+            });
+
+            canvas.toBlob(blob => {
+                if (blob) {
+                    saveToGallery(blob, `seat_plan_${Date.now()}.png`);
+                }
+            }, 'image/png');
+        }
+    </script>
+</body>
+
+</html>
