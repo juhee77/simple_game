@@ -1,0 +1,6 @@
+# 도메인만 맞으면 Caddy가 Let's Encrypt 인증서를 알아서 받고 갱신한다.
+# WebSocket(/ws/...)도 reverse_proxy가 그대로 넘긴다.
+{$ROOM_DOMAIN} {
+	encode gzip
+	reverse_proxy app:8080
+}
