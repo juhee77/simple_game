@@ -3,8 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
-    # 서버 코드만 바뀐 커밋은 사이트를 다시 올리지 않는다 (서버는 server.yml이 맡는다)
-    paths-ignore: [ 'server/**', '.github/workflows/server.yml' ]
+    # 서버 코드만 바뀐 커밋은 사이트를 다시 올리지 않는다
+    paths-ignore: [ 'server/**' ]
   workflow_dispatch:
 
 permissions:

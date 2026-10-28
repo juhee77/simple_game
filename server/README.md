@@ -83,8 +83,13 @@ Docker만 켜 두면 됩니다. Testcontainers가 Postgres를 띄워 줍니다.
 
 ## 배포
 
-`main`에 `server/` 변경이 들어오면 [Room Server 워크플로](../.github/workflows/server.yml)가 테스트한 뒤
-`ghcr.io/juhee77/simple_game-room-server` 이미지(amd64·arm64)를 올립니다. Pages 배포에는 `server/`가 포함되지 않습니다.
+서버용 CI는 아직 없습니다. 이미지는 직접 빌드해서 올립니다. Pages 배포에는 `server/`가 포함되지 않습니다.
+
+```bash
+# ARM 서버(Oracle 무료 VM)와 일반 서버 둘 다 쓸 수 있게 두 아키텍처로 빌드해 GHCR에 올린다
+docker buildx build --platform linux/amd64,linux/arm64 \
+  -t ghcr.io/juhee77/simple_game-room-server:latest --push .
+```
 
 서버 한 대(예: Oracle Cloud 무료 ARM VM)에서:
 
@@ -102,4 +107,5 @@ GHCR 패키지는 처음에 비공개로 만들어집니다. 서버에서 `docke
 
 - 방 만들기 속도 제한 (Bucket4j) — 지금은 방당 인원과 메시지 크기만 제한
 - 인증하지 않은 채 열려 있는 연결을 시간 제한으로 끊기 (지금은 1분 무응답 시 끊김)
+- 서버 CI (테스트·이미지 자동 업로드)
 - 실제 게임 연결 (2단계: 마피아/`imposter` 또는 `meetup-planner`)
