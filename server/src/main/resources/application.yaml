@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: room-server
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/room}
+    username: ${DATABASE_USERNAME:room}
+    password: ${DATABASE_PASSWORD:room}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  # Railway·Fly.io 같은 호스팅은 PORT 환경 변수로 포트를 정해 준다
+  port: ${PORT:8080}
+  shutdown: graceful
+  # Caddy 뒤에서 돌 때 X-Forwarded-* 헤더로 원래 주소·프로토콜을 알아낸다
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+room:
+  allowed-origins: ${ROOM_ALLOWED_ORIGINS:https://juhee77.github.io,http://localhost:[*],http://127.0.0.1:[*]}

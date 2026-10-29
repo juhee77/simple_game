@@ -188,6 +188,7 @@ python3 -m http.server 8000
 | Device Motion API | 자이로 센서 게임 |
 | LocalStorage | 점수/기록 저장 |
 | Google Fonts (Outfit) | 타이포그래피 |
+| Kotlin + Spring Boot (`server/`) | 여러 기기가 함께 쓰는 방(room) 서버 — [server/README.md](server/README.md) |
 
 ---
 
@@ -228,8 +229,10 @@ simple_game/
 ├── scripts/
 │   ├── main.js                 # 메인 페이지 로직
 │   ├── game-common.js          # 공통 게임 유틸리티
+│   ├── room-client.js          # 방 서버 클라이언트 (여러 기기가 함께 하기)
 │   ├── stamp-assets.mjs        # 에셋 캐시 버스팅
 │   └── add-metadata.js         # 메타데이터 관리
+├── server/                     # 방(room) 서버 — Kotlin + Spring Boot (Pages에는 올라가지 않음)
 └── THIRD_PARTY_NOTICES.md      # 서드파티 라이선스
 ```
 

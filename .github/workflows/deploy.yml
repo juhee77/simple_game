@@ -3,6 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
+    # 서버 코드만 바뀐 커밋은 사이트를 다시 올리지 않는다
+    paths-ignore: [ 'server/**' ]
   workflow_dispatch:
 
 permissions:
@@ -27,10 +29,14 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
+      # 서버 코드는 공개 사이트에 올리지 않는다
+      - name: Stage site
+        run: rsync -a --exclude '.git' --exclude '.github' --exclude '/server' ./ _site/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
       
       - name: Deploy to GitHub Pages
         id: deployment
