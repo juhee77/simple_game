@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>즉석 사진 디지털 방명록 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Outfit:wght@400;600;800;900&family=Noto+Sans+KR:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- QR Code Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- jsPDF for High-DPI A4 Print Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Supabase Client for Free PostgreSQL Realtime DB -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- PeerJS for Zero-Setup WebRTC P2P fallback -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+    <style>
+        :root {
+            --cork-color: #cb9b69;
+            --polaroid-bg: #fdfcf7;
+            --polaroid-border: #f0ece1;
+            --accent-gold: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-cyan: #06b6d4;
+            --text-dark: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            background: #181310;
+            color: #ffffff;
+            touch-action: pan-x pan-y;
+            position: fixed;
+        }
+
+        /* ── 테마별 보드 배경 ─────────────────────────────────── */
+        #boardContainer {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.4s ease;
+        }
+
+        /* 코르크 보드 테마 (기본) */
+        .theme-cork {
+            background-color: #ba8c59;
+            background-image:
+                radial-gradient(rgba(255, 255, 255, 0.1) 15%, transparent 20%),
+                radial-gradient(rgba(0, 0, 0, 0.15) 15%, transparent 20%),
+                linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.25));
+            background-size: 16px 16px, 20px 20px, 100% 100%;
+            box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.7);
+        }
+
+        /* 모던 화이트 갤러리 테마 */
+        .theme-gallery {
+            background-color: #1e232d;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.85);
+        }
+
+        /* 미드나잇 네온 파티 테마 */
+        .theme-midnight {
+            background: radial-gradient(circle at 50% 50%, #151b36 0%, #060913 100%);
+            box-shadow: inset 0 0 140px rgba(6, 182, 212, 0.15);
+        }
+
+        /* ── 가상 캔버스 보드 영역 ────────────────────────────── */
+        #corkSurface {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            overflow: hidden;
+        }
+
+        /* ── 상단 배너 헤더 ─────────────────────────────────── */
+        .board-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: calc(env(safe-area-inset-top, 12px) + 8px) 16px 12px;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:active {
+            transform: scale(0.92);
+        }
+
+        .board-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .board-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .board-title .edit-icon {
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+
+        .board-meta {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pill-badge {
+            background: rgba(245, 158, 11, 0.25);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #fef08a;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .cloud-status-pill {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #6ee7b7;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .header-btn {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #f8fafc;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .header-btn:active {
+            transform: scale(0.94);
+        }
+
+        /* ── 하단 컨트롤 도크 (Host Dock) ─────────────────────── */
+        .dock-bar {
+            position: absolute;
+            bottom: calc(env(safe-area-inset-bottom, 14px) + 12px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(245, 158, 11, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+            z-index: 40;
+            max-width: 95vw;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .dock-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .dock-btn {
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .dock-btn .dock-icon {
+            font-size: 1.3rem;
+        }
+
+        .dock-btn:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dock-btn.primary {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+            padding: 8px 16px;
+        }
+
+        .dock-btn.primary .dock-icon {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        /* ── 폴라로이드 카드 (Board Items) ───────────────────── */
+        .polaroid-card {
+            position: absolute;
+            width: 170px;
+            background: var(--polaroid-bg);
+            padding: 10px 10px 16px;
+            border-radius: 4px;
+            box-shadow:
+                0 10px 25px rgba(0, 0, 0, 0.35),
+                0 2px 6px rgba(0, 0, 0, 0.2),
+                inset 0 0 0 1px var(--polaroid-border);
+            cursor: grab;
+            transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28), box-shadow 0.2s ease;
+            transform-origin: center center;
+            touch-action: none;
+        }
+
+        .polaroid-card:active {
+            cursor: grabbing;
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.5),
+                0 6px 12px rgba(0, 0, 0, 0.3);
+            z-index: 100 !important;
+        }
+
+        .polaroid-card.newly-added {
+            animation: polaroidDrop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes polaroidDrop {
+            0% { transform: translate(-50%, -50%) scale(2) rotate(20deg); opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .polaroid-photo-frame {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #2b2b2b;
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .polaroid-photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+
+        .polaroid-caption-area {
+            margin-top: 10px;
+            text-align: center;
+            min-height: 38px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .polaroid-message {
+            font-family: 'Nanum Pen Script', 'Gaegu', cursive;
+            font-size: 1.25rem;
+            color: #1e293b;
+            line-height: 1.15;
+            word-break: break-all;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .polaroid-author {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* 마스킹 테이프 장식 */
+        .tape-deco {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 18px;
+            background: rgba(254, 240, 138, 0.85);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            opacity: 0.9;
+            pointer-events: none;
+            clip-path: polygon(3% 0%, 97% 0%, 100% 100%, 0% 100%);
+        }
+
+        .tape-washi-pink { background: rgba(244, 114, 182, 0.82); }
+        .tape-washi-cyan { background: rgba(56, 189, 248, 0.82); }
+        .tape-washi-lime { background: rgba(74, 222, 128, 0.82); }
+
+        /* 압정 장식 (Pin) */
+        .pin-deco {
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.3rem;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+            pointer-events: none;
+        }
+
+        /* ── 모달 공통 스타일 ─────────────────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-window {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-close-modal {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #cbd5e1;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* ── 사진 찍기 / 데코 스튜디오 모달 ──────────────────── */
+        .camera-viewport {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #cameraVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #cameraCanvas {
+            display: none;
+        }
+
+        #capturedPreview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .camera-overlay-controls {
+            position: absolute;
+            bottom: 12px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .shutter-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #fff;
+            border: 4px solid rgba(245, 158, 11, 0.8);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            transition: all 0.2s;
+        }
+
+        .shutter-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* 손글씨 서명 & 텍스트 탭 */
+        .sign-toggle-tabs {
+            display: flex;
+            gap: 6px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .sign-tab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .sign-tab.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        #handwritePad {
+            width: 100%;
+            height: 90px;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #94a3b8;
+        }
+
+        .custom-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .custom-input:focus {
+            outline: none;
+            border-color: #f59e0b;
+        }
+
+        /* 스티커 팔레트 */
+        .sticker-selector {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 0;
+            scrollbar-width: none;
+        }
+
+        .sticker-selector::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sticker-chip {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 6px 10px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .sticker-chip:active, .sticker-chip.active {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            transform: scale(1.1);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .submit-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ── QR 모달 ────────────────────────────────────────── */
+        .qr-card-box {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: #0f172a;
+        }
+
+        #qrCodeArea {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-instruction {
+            font-size: 0.85rem;
+            color: #475569;
+            text-align: center;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .share-url-row {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .btn-copy-url {
+            background: #0f172a;
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* ── 라이트박스 확대 뷰 ──────────────────────────────── */
+        .lightbox-card {
+            width: 300px;
+            background: var(--polaroid-bg);
+            padding: 16px 16px 26px;
+            border-radius: 6px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+            transform-origin: center center;
+            animation: zoomPolaroid 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        @keyframes zoomPolaroid {
+            0% { transform: scale(0.6) rotate(-10deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .lightbox-card .polaroid-photo-frame {
+            border-radius: 4px;
+        }
+
+        .lightbox-card .polaroid-message {
+            font-size: 1.8rem;
+            color: #0f172a;
+            margin-top: 12px;
+        }
+
+        .lightbox-actions {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .btn-download-single {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn-delete-single {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* ── 안내 토스트 ─────────────────────────────────────── */
+        .toast-banner {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 20px) + 80px);
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #fef08a;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 800;
+            z-index: 120;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            white-space: nowrap;
+        }
+
+        .toast-banner.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ── 빈 화면 가이드 ─────────────────────────────────── */
+        .empty-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .empty-guide.hidden {
+            opacity: 0;
+        }
+
+        .empty-guide-icon {
+            font-size: 4rem;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+            animation: bouncePin 2s infinite ease-in-out;
+        }
+
+        @keyframes bouncePin {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .empty-guide-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .empty-guide-desc {
+            font-size: 0.88rem;
+            color: #cbd5e1;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body class="theme-cork">
+    <!-- 가상 보드 영역 -->
+    <div id="boardContainer" class="theme-cork">
+        <div id="corkSurface"></div>
+    </div>
+
+    <!-- 빈 방 안내 -->
+    <div id="emptyGuide" class="empty-guide">
+        <div class="empty-guide-icon">📌</div>
+        <div class="empty-guide-title">아직 걸린 사진이 없어요!</div>
+        <div class="empty-guide-desc">하단의 [📸 사진 남기기]를 눌러 첫 번째 축하 사진을 걸어보세요.</div>
+    </div>
+
+    <!-- 상단 배너 헤더 -->
+    <header class="board-header">
+        <div class="header-left">
+            <a href="../index.html" class="back-btn" title="메인으로">‹</a>
+            <div class="board-title-group">
+                <div class="board-title" id="boardTitleDisplay" title="모임명 클릭하여 수정">
+                    <span id="boardTitleText">우리의 파티 방명록 🏠</span>
+                    <span class="edit-icon">✏️</span>
+                </div>
+                <div class="board-meta">
+                    <span class="pill-badge" id="photoCountBadge">📸 0장의 추억</span>
+                    <span class="cloud-status-pill" id="cloudStatusBadge" title="클라우드 실시간 동기화 상태">
+                        <span>🟢</span> <span id="cloudStatusText">로컬 보관</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn" id="btnThemeToggle" title="보드 배경 테마 변경">
+                <span>🎨</span> 테마
+            </button>
+            <button class="header-btn" id="btnDbSettings" title="PostgreSQL Supabase 클라우드 연동">
+                <span>⚙️</span> DB 설정
+            </button>
+        </div>
+    </header>
+
+    <!-- 하단 컨트롤 도크 -->
+    <nav class="dock-bar">
+        <button class="dock-btn primary" id="btnOpenSnapModal">
+            <span class="dock-icon">📸</span>
+            <span>사진 남기기</span>
+        </button>
+        <button class="dock-btn" id="btnOpenQrModal">
+            <span class="dock-icon">📱</span>
+            <span>QR 초대</span>
+        </button>
+        <button class="dock-btn" id="btnExportPoster">
+            <span class="dock-icon">🖼️</span>
+            <span>포스터 저장</span>
+        </button>
+        <button class="dock-btn" id="btnExportPdf">
+            <span class="dock-icon">📄</span>
+            <span>A4 인쇄</span>
+        </button>
+        <button class="dock-btn" id="btnClearBoard">
+            <span class="dock-icon">🧹</span>
+            <span>정리</span>
+        </button>
+    </nav>
+
+    <!-- ── 모달 1: 사진 촬영 & 방명록 작성 스튜디오 ────────────── -->
+    <div id="snapModal" class="modal-overlay">
+        <div class="modal-window">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>✨</span> 즉석 폴라로이드 남기기
+                </div>
+                <button class="btn-close-modal" id="btnCloseSnapModal">×</button>
+            </div>
+
+            <!-- 카메라 뷰포트 / 사진 프리뷰 -->
+            <div class="camera-viewport">
+                <video id="cameraVideo" autoplay playsinline muted></video>
+                <img id="capturedPreview" alt="촬영된 사진">
+                <canvas id="cameraCanvas"></canvas>
+                <div class="camera-overlay-controls" id="cameraControls">
+                    <button class="shutter-btn" id="btnShutter" title="찰칵! 사진 찍기">📸</button>
+                </div>
+            </div>
+
+            <!-- 파일 선택 폴백 버튼 -->
+            <div style="display: flex; gap: 8px;">
+                <label for="fileUploadInput" class="header-btn" style="flex: 1; text-align: center; justify-content: center; cursor: pointer;">
+                    <span>📁</span> 앨범에서 사진 선택
+                </label>
+                <input type="file" id="fileUploadInput" accept="image/*" style="display: none;">
+                <button class="header-btn" id="btnRetake" style="display: none;">
+                    <span>🔄</span> 다시 찍기
+                </button>
+            </div>
+
+            <!-- 작성자 이름 -->
+            <div class="input-group">
+                <label>작성자 이름 / 닉네임</label>
+                <input type="text" id="guestNameInput" class="custom-input" placeholder="예: 지우, 민수, 단짝친구 등" maxlength="15">
+            </div>
+
+            <!-- 메시지 서명 방식 탭 (텍스트 / 손글씨) -->
+            <div class="input-group">
+                <label>축하 메시지 & 손글씨 서명</label>
+                <div class="sign-toggle-tabs">
+                    <button class="sign-tab active" id="tabTextMsg">✍️ 텍스트 입력</button>
+                    <button class="sign-tab" id="tabDrawMsg">🎨 직접 손글씨 쓰기</button>
+                </div>
+
+                <div id="textInputArea">
+                    <input type="text" id="guestMessageInput" class="custom-input" placeholder="축하의 한마디를 남겨주세요!" maxlength="40">
+                </div>
+
+                <div id="drawInputArea" style="display: none; flex-direction: column; gap: 6px;">
+                    <canvas id="handwritePad"></canvas>
+                    <button class="header-btn" id="btnClearSignature" style="align-self: flex-end; padding: 4px 10px; font-size: 0.75rem;">
+                        지우기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 스티커 고르기 -->
+            <div class="input-group">
+                <label>부착할 스티커 & 마스킹 테이프</label>
+                <div class="sticker-selector">
+                    <button class="sticker-chip active" data-sticker="📌">📌 압정</button>
+                    <button class="sticker-chip" data-sticker="🎉">🎉 파티</button>
+                    <button class="sticker-chip" data-sticker="💖">💖 하트</button>
+                    <button class="sticker-chip" data-sticker="🥂">🥂 짠!</button>
+                    <button class="sticker-chip" data-sticker="🎂">🎂 케이크</button>
+                    <button class="sticker-chip" data-sticker="💐">💐 꽃다발</button>
+                    <button class="sticker-chip" data-sticker="✨">✨ 반짝</button>
+                    <button class="sticker-chip" data-sticker="🍀">🍀 행운</button>
+                    <button class="sticker-chip" data-sticker=" tape-pink">🎀 핑크 테이프</button>
+                    <button class="sticker-chip" data-sticker=" tape-cyan">💎 시안 테이프</button>
+                </div>
+            </div>
+
+            <!-- 등록 버튼 -->
+            <button class="submit-btn" id="btnPinToBoard">
+                <span>📌</span> 보드에 핀 꽂기!
+            </button>
+        </div>
+    </div>
+
+    <!-- ── 모달 2: 모바일 하객 QR 초대 ─────────────────────── -->
+    <div id="qrModal" class="modal-overlay">
+        <div class="modal-window">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>📱</span> 하객 모바일 촬영 QR
+                </div>
+                <button class="btn-close-modal" id="btnCloseQrModal">×</button>
+            </div>
+
+            <div class="qr-card-box">
+                <div id="qrCodeArea"></div>
+                <div class="qr-instruction">
+                    스마트폰 기본 카메라로 QR 코드를 비추면<br>
+                    앱 설치 없이 즉시 셀카를 찍고 방명록에 등록할 수 있어요!
+                </div>
+                <div class="share-url-row">
+                    <input type="text" id="shareUrlDisplay" class="custom-input" readonly style="color: #0f172a; background: #f1f5f9;">
+                    <button class="btn-copy-url" id="btnCopyGuestUrl">링크 복사</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 모달 3: 라이트박스 단일 사진 상세 ────────────────── -->
+    <div id="lightboxModal" class="modal-overlay">
+        <div style="display: flex; flex-direction: column; align-items: center; max-width: 90vw;">
+            <div id="lightboxContent" class="lightbox-card">
+                <!-- 동적 렌더링 -->
+            </div>
+            <div class="lightbox-actions">
+                <button class="btn-download-single" id="btnDownloadSingle">
+                    <span>💾</span> 이 사진만 저장
+                </button>
+                <button class="btn-delete-single" id="btnDeleteSingle">
+                    <span>🗑️</span> 사진 삭제
+                </button>
+                <button class="btn-close-modal" id="btnCloseLightbox" style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.2);">
+                    ✕
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 모달 4: PostgreSQL Supabase DB 연동 설정 ─────────── -->
+    <div id="dbSettingsModal" class="modal-overlay">
+        <div class="modal-window">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>🐘</span> PostgreSQL Supabase 실시간 연동
+                </div>
+                <button class="btn-close-modal" id="btnCloseDbModal">×</button>
+            </div>
+
+            <div style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4;">
+                무료 <b>Supabase</b> (PostgreSQL + Realtime WebSocket)를 연동하면,
+                하객들이 각자 폰에서 등록한 사진이 화면에 실시간으로 나타납니다!
+            </div>
+
+            <div class="input-group">
+                <label>Supabase Project URL</label>
+                <input type="text" id="sbUrlInput" class="custom-input" placeholder="https://your-project.supabase.co">
+            </div>
+
+            <div class="input-group">
+                <label>Supabase Anon Key (Public Key)</label>
+                <input type="password" id="sbKeyInput" class="custom-input" placeholder="eyJh... (공개 anon 키)">
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button class="header-btn" id="btnCopySqlSchema" style="flex: 1; justify-content: center;">
+                    📋 SQL 스키마 복사
+                </button>
+                <button class="submit-btn" id="btnSaveDbConfig" style="flex: 1; padding: 10px;">
+                    연동 저장 & 재연결
+                </button>
+            </div>
+
+            <div style="font-size: 0.78rem; color: #64748b; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                💡 <b>무설정 로컬 모드</b>: 설정을 비워두면 기기 내부(IndexedDB)에만 안전하게 보관됩니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림 토스트 -->
+    <div id="toastBanner" class="toast-banner">알림 메시지</div>
+
+    <!-- Common Game Scripts -->
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+
+    <script>
+        (function() {
+            // ── 오디오 합성 엔진 ────────────────────────────────────
+            class ShutterAudio {
+                constructor() { this.ctx = null; }
+                init() {
+                    if (!this.ctx) {
+                        const AC = window.AudioContext || window.webkitAudioContext;
+                        if (AC) this.ctx = new AC();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+                }
+                playShutter() {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.12);
+                }
+                playPinThump() {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.14);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.14);
+                }
+            }
+            const sound = new ShutterAudio();
+
+            // ── 상태 관리 ──────────────────────────────────────────
+            const STORAGE_KEY_PHOTOS = 'polaroid_guestbook_photos_v1';
+            const STORAGE_KEY_CONFIG = 'polaroid_guestbook_config_v1';
+            const STORAGE_KEY_TITLE  = 'polaroid_guestbook_title_v1';
+
+            let photos = [];
+            let boardTitle = localStorage.getItem(STORAGE_KEY_TITLE) || '우리의 파티 방명록 🏠';
+            let currentTheme = 'theme-cork';
+            let currentSticker = '📌';
+            let currentCapturedDataUrl = null;
+            let videoStream = null;
+            let activeInspectPhoto = null;
+
+            // Supabase State
+            let supabaseClient = null;
+            let isSupabaseConnected = false;
+
+            // DOM 요소
+            const corkSurface = document.getElementById('corkSurface');
+            const boardContainer = document.getElementById('boardContainer');
+            const emptyGuide = document.getElementById('emptyGuide');
+            const boardTitleText = document.getElementById('boardTitleText');
+            const boardTitleDisplay = document.getElementById('boardTitleDisplay');
+            const photoCountBadge = document.getElementById('photoCountBadge');
+            const cloudStatusBadge = document.getElementById('cloudStatusBadge');
+            const cloudStatusText = document.getElementById('cloudStatusText');
+            const toastBanner = document.getElementById('toastBanner');
+
+            // 모달들
+            const snapModal = document.getElementById('snapModal');
+            const btnOpenSnapModal = document.getElementById('btnOpenSnapModal');
+            const btnCloseSnapModal = document.getElementById('btnCloseSnapModal');
+
+            const qrModal = document.getElementById('qrModal');
+            const btnOpenQrModal = document.getElementById('btnOpenQrModal');
+            const btnCloseQrModal = document.getElementById('btnCloseQrModal');
+            const qrCodeArea = document.getElementById('qrCodeArea');
+            const shareUrlDisplay = document.getElementById('shareUrlDisplay');
+            const btnCopyGuestUrl = document.getElementById('btnCopyGuestUrl');
+
+            const lightboxModal = document.getElementById('lightboxModal');
+            const lightboxContent = document.getElementById('lightboxContent');
+            const btnCloseLightbox = document.getElementById('btnCloseLightbox');
+            const btnDownloadSingle = document.getElementById('btnDownloadSingle');
+            const btnDeleteSingle = document.getElementById('btnDeleteSingle');
+
+            const dbSettingsModal = document.getElementById('dbSettingsModal');
+            const btnDbSettings = document.getElementById('btnDbSettings');
+            const btnCloseDbModal = document.getElementById('btnCloseDbModal');
+            const sbUrlInput = document.getElementById('sbUrlInput');
+            const sbKeyInput = document.getElementById('sbKeyInput');
+            const btnSaveDbConfig = document.getElementById('btnSaveDbConfig');
+            const btnCopySqlSchema = document.getElementById('btnCopySqlSchema');
+
+            // 촬영 및 입력 요소
+            const cameraVideo = document.getElementById('cameraVideo');
+            const cameraCanvas = document.getElementById('cameraCanvas');
+            const capturedPreview = document.getElementById('capturedPreview');
+            const btnShutter = document.getElementById('btnShutter');
+            const fileUploadInput = document.getElementById('fileUploadInput');
+            const btnRetake = document.getElementById('btnRetake');
+            const guestNameInput = document.getElementById('guestNameInput');
+            const guestMessageInput = document.getElementById('guestMessageInput');
+            const btnPinToBoard = document.getElementById('btnPinToBoard');
+            const stickerChips = document.querySelectorAll('.sticker-chip');
+
+            // 손글씨 서명 패드
+            const tabTextMsg = document.getElementById('tabTextMsg');
+            const tabDrawMsg = document.getElementById('tabDrawMsg');
+            const textInputArea = document.getElementById('textInputArea');
+            const drawInputArea = document.getElementById('drawInputArea');
+            const handwritePad = document.getElementById('handwritePad');
+            const btnClearSignature = document.getElementById('btnClearSignature');
+            let isDrawing = false;
+            let drawCtx = null;
+
+            // 내보내기 버튼들
+            const btnExportPoster = document.getElementById('btnExportPoster');
+            const btnExportPdf = document.getElementById('btnExportPdf');
+            const btnClearBoard = document.getElementById('btnClearBoard');
+            const btnThemeToggle = document.getElementById('btnThemeToggle');
+
+            function showToast(msg) {
+                toastBanner.textContent = msg;
+                toastBanner.classList.add('show');
+                clearTimeout(toastBanner._timer);
+                toastBanner._timer = setTimeout(() => toastBanner.classList.remove('show'), 2400);
+            }
+
+            // ── 로컬 스토리지 로드 ──────────────────────────────────
+            function loadLocalPhotos() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY_PHOTOS);
+                    photos = saved ? JSON.parse(saved) : [];
+                } catch {
+                    photos = [];
+                }
+                renderAllPolaroids();
+            }
+
+            function saveLocalPhotos() {
+                try {
+                    localStorage.setItem(STORAGE_KEY_PHOTOS, JSON.stringify(photos));
+                } catch (e) {
+                    console.warn('LocalStorage 저장 한도 초과:', e);
+                }
+                updateHeaderMeta();
+            }
+
+            function updateHeaderMeta() {
+                boardTitleText.textContent = boardTitle;
+                photoCountBadge.textContent = `📸 ${photos.length}장의 추억`;
+                if (photos.length === 0) {
+                    emptyGuide.classList.remove('hidden');
+                } else {
+                    emptyGuide.classList.add('hidden');
+                }
+            }
+
+            // ── 모임명 수정 ────────────────────────────────────────
+            boardTitleDisplay.addEventListener('click', () => {
+                const newTitle = prompt('새로운 방명록 타이틀을 입력하세요:', boardTitle);
+                if (newTitle && newTitle.trim()) {
+                    boardTitle = newTitle.trim();
+                    localStorage.setItem(STORAGE_KEY_TITLE, boardTitle);
+                    updateHeaderMeta();
+                    showToast('방명록 제목이 변경되었습니다.');
+                }
+            });
+
+            // ── 테마 토글 ──────────────────────────────────────────
+            const THEMES = ['theme-cork', 'theme-gallery', 'theme-midnight'];
+            btnThemeToggle.addEventListener('click', () => {
+                const nextIdx = (THEMES.indexOf(currentTheme) + 1) % THEMES.length;
+                currentTheme = THEMES[nextIdx];
+                boardContainer.className = currentTheme;
+                document.body.className = currentTheme;
+                const themeNames = { 'theme-cork': '코르크 보드', 'theme-gallery': '모던 갤러리', 'theme-midnight': '미드나잇 네온' };
+                showToast(`🎨 테마: ${themeNames[currentTheme]}`);
+            });
+
+            // ── 폴라로이드 렌더링 ───────────────────────────────────
+            function renderAllPolaroids() {
+                corkSurface.innerHTML = '';
+                photos.forEach((photo, idx) => {
+                    const card = createPolaroidElement(photo, idx);
+                    corkSurface.appendChild(card);
+                });
+                updateHeaderMeta();
+            }
+
+            function createPolaroidElement(photo, idx) {
+                const card = document.createElement('div');
+                card.className = 'polaroid-card';
+                card.dataset.id = photo.id;
+
+                // 위치 및 회전
+                card.style.left = `${photo.x}px`;
+                card.style.top = `${photo.y}px`;
+                card.style.transform = `rotate(${photo.rotation}deg)`;
+                card.style.zIndex = photo.zIndex || (10 + idx);
+
+                // 상단 데코 (테이프 또는 압정)
+                let decoHtml = '';
+                if (photo.sticker === '📌') {
+                    decoHtml = `<div class="pin-deco">📌</div>`;
+                } else if (photo.sticker && photo.sticker.startsWith(' tape-')) {
+                    const tapeClass = photo.sticker.includes('pink') ? 'tape-washi-pink' : 'tape-washi-cyan';
+                    decoHtml = `<div class="tape-deco ${tapeClass}"></div>`;
+                } else if (photo.sticker) {
+                    decoHtml = `<div class="pin-deco">${photo.sticker}</div>`;
+                }
+
+                card.innerHTML = `
+                    ${decoHtml}
+                    <div class="polaroid-photo-frame">
+                        <img src="${photo.dataUrl}" alt="폴라로이드">
+                    </div>
+                    <div class="polaroid-caption-area">
+                        <div class="polaroid-message">${escapeHtml(photo.message || '')}</div>
+                        <div class="polaroid-author">${escapeHtml(photo.author || '익명')} • ${photo.date || ''}</div>
+                    </div>
+                `;
+
+                // 드래그 & 이동 기능
+                setupDrag(card, photo);
+
+                // 클릭 시 라이트박스 확대
+                card.addEventListener('click', (e) => {
+                    if (card._hasDragged) return;
+                    openLightbox(photo);
+                });
+
+                return card;
+            }
+
+            // 부드러운 터치/마우스 드래그 & 위치 보존
+            function setupDrag(element, photo) {
+                let startX, startY, origX, origY;
+                let isDragging = false;
+
+                function onStart(e) {
+                    e.stopPropagation();
+                    isDragging = true;
+                    element._hasDragged = false;
+                    const evt = e.touches ? e.touches[0] : e;
+                    startX = evt.clientX;
+                    startY = evt.clientY;
+                    origX = photo.x;
+                    origY = photo.y;
+
+                    // 맨 앞으로 가져오기
+                    const maxZ = photos.reduce((max, p) => Math.max(max, p.zIndex || 10), 10);
+                    photo.zIndex = maxZ + 1;
+                    element.style.zIndex = photo.zIndex;
+
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onEnd);
+                    document.addEventListener('touchmove', onMove, { passive: false });
+                    document.addEventListener('touchend', onEnd);
+                }
+
+                function onMove(e) {
+                    if (!isDragging) return;
+                    const evt = e.touches ? e.touches[0] : e;
+                    const dx = evt.clientX - startX;
+                    const dy = evt.clientY - startY;
+
+                    if (Math.hypot(dx, dy) > 5) {
+                        element._hasDragged = true;
+                        if (e.cancelable) e.preventDefault();
+                    }
+
+                    photo.x = Math.max(10, Math.min(window.innerWidth - 180, origX + dx));
+                    photo.y = Math.max(50, Math.min(window.innerHeight - 240, origY + dy));
+                    element.style.left = `${photo.x}px`;
+                    element.style.top = `${photo.y}px`;
+                }
+
+                function onEnd() {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onEnd);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onEnd);
+                    saveLocalPhotos();
+                }
+
+                element.addEventListener('mousedown', onStart);
+                element.addEventListener('touchstart', onStart, { passive: false });
+            }
+
+            // ── 라이트박스 ──────────────────────────────────────────
+            function openLightbox(photo) {
+                activeInspectPhoto = photo;
+                sound.playShutter();
+                lightboxContent.innerHTML = `
+                    <div class="polaroid-photo-frame" style="width: 100%; aspect-ratio: 1;">
+                        <img src="${photo.dataUrl}" alt="확대 사진">
+                    </div>
+                    <div style="margin-top: 14px; text-align: center;">
+                        <div class="polaroid-message" style="font-size: 1.6rem;">${escapeHtml(photo.message || '')}</div>
+                        <div style="font-size: 0.85rem; font-weight: 800; color: #64748b; margin-top: 4px;">
+                            ${escapeHtml(photo.author || '익명')} • ${photo.date || ''}
+                        </div>
+                    </div>
+                `;
+                lightboxModal.classList.add('active');
+            }
+
+            btnCloseLightbox.addEventListener('click', () => lightboxModal.classList.remove('active'));
+
+            btnDownloadSingle.addEventListener('click', () => {
+                if (!activeInspectPhoto) return;
+                // 단일 카드 캔버스 렌더링 후 저장
+                const cardC = document.createElement('canvas');
+                cardC.width = 600;
+                cardC.height = 720;
+                const cctx = cardC.getContext('2d');
+                cctx.fillStyle = '#fdfcf7';
+                cctx.fillRect(0, 0, 600, 720);
+
+                const img = new Image();
+                img.onload = async () => {
+                    cctx.drawImage(img, 36, 36, 528, 528);
+                    cctx.font = '36px "Nanum Pen Script", cursive';
+                    cctx.fillStyle = '#0f172a';
+                    cctx.textAlign = 'center';
+                    cctx.fillText(activeInspectPhoto.message || '', 300, 620);
+                    cctx.font = 'bold 20px "Outfit", sans-serif';
+                    cctx.fillStyle = '#64748b';
+                    cctx.fillText(`${activeInspectPhoto.author} • ${activeInspectPhoto.date}`, 300, 665);
+
+                    cardC.toBlob(async (blob) => {
+                        await saveToGallery(blob, `polaroid-${Date.now()}.png`);
+                        showToast('사진이 저장되었습니다.');
+                    });
+                };
+                img.src = activeInspectPhoto.dataUrl;
+            });
+
+            btnDeleteSingle.addEventListener('click', () => {
+                if (!activeInspectPhoto) return;
+                if (!confirm('이 사진을 보드에서 삭제할까요?')) return;
+                photos = photos.filter(p => p.id !== activeInspectPhoto.id);
+                saveLocalPhotos();
+                renderAllPolaroids();
+                lightboxModal.classList.remove('active');
+                showToast('사진이 삭제되었습니다.');
+            });
+
+            // ── 카메라 & 서명 스튜디오 모달 ────────────────────────
+            btnOpenSnapModal.addEventListener('click', () => {
+                openCameraStudio();
+            });
+
+            btnCloseSnapModal.addEventListener('click', () => {
+                closeCameraStudio();
+            });
+
+            async function openCameraStudio() {
+                snapModal.classList.add('active');
+                currentCapturedDataUrl = null;
+                capturedPreview.style.display = 'none';
+                cameraVideo.style.display = 'block';
+                btnRetake.style.display = 'none';
+                cameraControls.style.display = 'flex';
+                guestMessageInput.value = '';
+                guestNameInput.value = '';
+
+                initHandwritePad();
+
+                try {
+                    videoStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1080 } },
+                        audio: false
+                    });
+                    cameraVideo.srcObject = videoStream;
+                } catch (err) {
+                    console.warn('카메라 접근 불가 (파일 업로드로 유도):', err);
+                    cameraVideo.style.display = 'none';
+                }
+            }
+
+            function closeCameraStudio() {
+                snapModal.classList.remove('active');
+                if (videoStream) {
+                    videoStream.getTracks().forEach(t => t.stop());
+                    videoStream = null;
+                }
+            }
+
+            // 셔터 누르기
+            btnShutter.addEventListener('click', () => {
+                if (!videoStream) return;
+                sound.playShutter();
+
+                const vw = cameraVideo.videoWidth || 640;
+                const vh = cameraVideo.videoHeight || 640;
+                const size = Math.min(vw, vh);
+
+                cameraCanvas.width = 640;
+                cameraCanvas.height = 640;
+                const ctx = cameraCanvas.getContext('2d');
+
+                // 정방형 1:1 크롭
+                const sx = (vw - size) / 2;
+                const sy = (vh - size) / 2;
+                ctx.drawImage(cameraVideo, sx, sy, size, size, 0, 0, 640, 640);
+
+                currentCapturedDataUrl = cameraCanvas.toDataURL('image/jpeg', 0.88);
+                capturedPreview.src = currentCapturedDataUrl;
+                capturedPreview.style.display = 'block';
+                cameraVideo.style.display = 'none';
+                cameraControls.style.display = 'none';
+                btnRetake.style.display = 'inline-flex';
+            });
+
+            btnRetake.addEventListener('click', () => {
+                currentCapturedDataUrl = null;
+                capturedPreview.style.display = 'none';
+                cameraVideo.style.display = 'block';
+                cameraControls.style.display = 'flex';
+                btnRetake.style.display = 'none';
+            });
+
+            // 앨범 파일 업로드
+            fileUploadInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                try {
+                    const loaded = await loadPhotoFile(file, 800, 0.88);
+                    currentCapturedDataUrl = loaded.dataUrl;
+                    capturedPreview.src = currentCapturedDataUrl;
+                    capturedPreview.style.display = 'block';
+                    cameraVideo.style.display = 'none';
+                    cameraControls.style.display = 'none';
+                    btnRetake.style.display = 'inline-flex';
+                } catch (err) {
+                    showToast('사진을 불러오지 못했습니다.');
+                }
+            });
+
+            // 서명 탭 토글
+            tabTextMsg.addEventListener('click', () => {
+                tabTextMsg.classList.add('active');
+                tabDrawMsg.classList.remove('active');
+                textInputArea.style.display = 'block';
+                drawInputArea.style.display = 'none';
+            });
+
+            tabDrawMsg.addEventListener('click', () => {
+                tabDrawMsg.classList.add('active');
+                tabTextMsg.classList.remove('active');
+                textInputArea.style.display = 'none';
+                drawInputArea.style.display = 'flex';
+                initHandwritePad();
+            });
+
+            function initHandwritePad() {
+                const pad = handwritePad;
+                pad.width = pad.offsetWidth * 2;
+                pad.height = pad.offsetHeight * 2;
+                drawCtx = pad.getContext('2d');
+                drawCtx.scale(2, 2);
+                drawCtx.lineCap = 'round';
+                drawCtx.lineJoin = 'round';
+                drawCtx.lineWidth = 3;
+                drawCtx.strokeStyle = '#0f172a';
+
+                pad.onmousedown = (e) => startDraw(e.offsetX, e.offsetY);
+                pad.onmousemove = (e) => draw(e.offsetX, e.offsetY);
+                window.onmouseup = stopDraw;
+
+                pad.ontouchstart = (e) => {
+                    const r = pad.getBoundingClientRect();
+                    startDraw(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+                };
+                pad.ontouchmove = (e) => {
+                    const r = pad.getBoundingClientRect();
+                    draw(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+                };
+                pad.ontouchend = stopDraw;
+            }
+
+            function startDraw(x, y) { isDrawing = true; drawCtx.beginPath(); drawCtx.moveTo(x, y); }
+            function draw(x, y) { if (!isDrawing) return; drawCtx.lineTo(x, y); drawCtx.stroke(); }
+            function stopDraw() { isDrawing = false; }
+
+            btnClearSignature.addEventListener('click', () => {
+                if (drawCtx) drawCtx.clearRect(0, 0, handwritePad.width, handwritePad.height);
+            });
+
+            // 스티커 선택
+            stickerChips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    stickerChips.forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    currentSticker = chip.dataset.sticker;
+                });
+            });
+
+            // ── 보드에 핀 꽂기 ─────────────────────────────────────
+            btnPinToBoard.addEventListener('click', async () => {
+                if (!currentCapturedDataUrl) {
+                    showToast('먼저 사진을 촬영하거나 앨범에서 선택해주세요!');
+                    return;
+                }
+
+                const author = guestNameInput.value.trim() || '익명 하객';
+                let message = guestMessageInput.value.trim();
+
+                // 만약 직접 손글씨를 썼다면 이미지 합성
+                if (tabDrawMsg.classList.contains('active')) {
+                    message = '손글씨 서명 ✍️';
+                }
+
+                // 자연스러운 보드 배치 좌표 계산 (정중앙 주변 랜덤 분산)
+                const boardW = window.innerWidth;
+                const boardH = window.innerHeight;
+                const randX = Math.floor(boardW * 0.15 + Math.random() * (boardW * 0.65));
+                const randY = Math.floor(boardH * 0.2 + Math.random() * (boardH * 0.5));
+                const randRot = Math.round((Math.random() * 12 - 6) * 10) / 10;
+
+                const newPhoto = {
+                    id: 'pg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                    dataUrl: currentCapturedDataUrl,
+                    author: author,
+                    message: message,
+                    sticker: currentSticker,
+                    date: new Date().toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
+                    x: randX,
+                    y: randY,
+                    rotation: randRot,
+                    zIndex: photos.length + 15
+                };
+
+                photos.push(newPhoto);
+                saveLocalPhotos();
+
+                // 만약 Supabase 연동 상태라면 원격 DB에 INSERT
+                if (isSupabaseConnected && supabaseClient) {
+                    try {
+                        await supabaseClient.from('guestbook_photos').insert([{
+                            room_id: boardTitle,
+                            author: newPhoto.author,
+                            message: newPhoto.message,
+                            photo_data: newPhoto.dataUrl,
+                            sticker: newPhoto.sticker,
+                            pin_x: randX,
+                            pin_y: randY,
+                            rotation: randRot
+                        }]);
+                    } catch (err) {
+                        console.warn('Supabase INSERT 실패 (로컬 저장은 유지됨):', err);
+                    }
+                }
+
+                sound.playPinThump();
+                closeCameraStudio();
+                renderAllPolaroids();
+                showToast(`🎉 ${author}님의 사진이 핀으로 꽂혔습니다!`);
+            });
+
+            // ── 전체 4K 포스터 이미지 내보내기 ──────────────────────
+            btnExportPoster.addEventListener('click', async () => {
+                if (photos.length === 0) {
+                    showToast('내보낼 사진이 아직 없습니다.');
+                    return;
+                }
+                showToast('🎨 고화질 포스터를 렌더링하고 있어요...');
+
+                const posterW = 2400;
+                const posterH = 1600;
+                const pCanvas = document.createElement('canvas');
+                pCanvas.width = posterW;
+                pCanvas.height = posterH;
+                const pctx = pCanvas.getContext('2d');
+
+                // 1. 코르크 배경
+                pctx.fillStyle = '#ba8c59';
+                pctx.fillRect(0, 0, posterW, posterH);
+
+                // 노이즈 질감
+                pctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+                for (let x = 0; x < posterW; x += 32) {
+                    for (let y = 0; y < posterH; y += 32) {
+                        if ((x + y) % 64 === 0) pctx.fillRect(x, y, 16, 16);
+                    }
+                }
+
+                // 비네팅 그늘
+                const vignette = pctx.createRadialGradient(posterW / 2, posterH / 2, 400, posterW / 2, posterH / 2, 1400);
+                vignette.addColorStop(0, 'rgba(0,0,0,0)');
+                vignette.addColorStop(1, 'rgba(0,0,0,0.6)');
+                pctx.fillStyle = vignette;
+                pctx.fillRect(0, 0, posterW, posterH);
+
+                // 2. 상단 나무 배너 & 타이틀
+                pctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                pctx.fillRect(posterW / 2 - 450, 60, 900, 100);
+                pctx.strokeStyle = '#cb9b69';
+                pctx.lineWidth = 6;
+                pctx.strokeRect(posterW / 2 - 450, 60, 900, 100);
+
+                pctx.font = 'bold 44px "Outfit", "Noto Sans KR", sans-serif';
+                pctx.fillStyle = '#1e293b';
+                pctx.textAlign = 'center';
+                pctx.fillText(boardTitle, posterW / 2, 128);
+
+                // 3. 폴라로이드 사진들 순차 합성
+                const scaleX = posterW / window.innerWidth;
+                const scaleY = posterH / window.innerHeight;
+
+                for (const p of photos) {
+                    await new Promise((resolve) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            pctx.save();
+                            const px = p.x * scaleX;
+                            const py = p.y * scaleY;
+                            pctx.translate(px, py);
+                            pctx.rotate((p.rotation * Math.PI) / 180);
+
+                            const cardW = 260;
+                            const cardH = 320;
+
+                            // 그림자
+                            pctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                            pctx.shadowBlur = 24;
+                            pctx.shadowOffsetY = 12;
+
+                            // 흰색 필름 종이
+                            pctx.fillStyle = '#fdfcf7';
+                            pctx.fillRect(-cardW / 2, -cardH / 2, cardW, cardH);
+                            pctx.shadowBlur = 0;
+                            pctx.shadowOffsetY = 0;
+
+                            // 사진
+                            pctx.drawImage(img, -cardW / 2 + 14, -cardH / 2 + 14, cardW - 28, cardW - 28);
+
+                            // 캡션 & 서명
+                            pctx.font = '30px "Nanum Pen Script", cursive';
+                            pctx.fillStyle = '#0f172a';
+                            pctx.fillText(p.message || '', 0, cardH / 2 - 40);
+
+                            pctx.font = 'bold 16px "Outfit", sans-serif';
+                            pctx.fillStyle = '#64748b';
+                            pctx.fillText(`${p.author} • ${p.date}`, 0, cardH / 2 - 16);
+
+                            // 압정/테이프
+                            pctx.font = '32px sans-serif';
+                            pctx.fillText(p.sticker || '📌', 0, -cardH / 2 + 10);
+
+                            pctx.restore();
+                            resolve();
+                        };
+                        img.src = p.dataUrl;
+                    });
+                }
+
+                // 4. 저장 및 갤러리 연동
+                pCanvas.toBlob(async (blob) => {
+                    await saveToGallery(blob, `guestbook-poster-${Date.now()}.png`);
+                    showToast('📸 대형 포스터 저장이 완료되었습니다!');
+                }, 'image/png');
+            });
+
+            // ── A4 다중 페이지 실물 인쇄용 PDF 내보내기 ─────────────
+            btnExportPdf.addEventListener('click', async () => {
+                if (photos.length === 0) {
+                    showToast('인쇄할 사진이 없습니다.');
+                    return;
+                }
+                showToast('📄 A4 인쇄용 문서를 만들고 있어요...');
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                const pageWidth = 210;
+                const pageHeight = 297;
+
+                // 4장씩 그리드로 A4 페이지 분할 배치 (가로 2 x 세로 2)
+                const itemsPerPage = 4;
+                const totalPages = Math.ceil(photos.length / itemsPerPage);
+
+                for (let page = 0; page < totalPages; page++) {
+                    if (page > 0) pdf.addPage();
+
+                    // 헤더 타이틀
+                    pdf.setFontSize(18);
+                    pdf.setTextColor(30, 41, 59);
+                    pdf.text(boardTitle, pageWidth / 2, 20, { align: 'center' });
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(100, 116, 139);
+                    pdf.text(`방명록 포토북 • Page ${page + 1} / ${totalPages}`, pageWidth / 2, 28, { align: 'center' });
+
+                    const slice = photos.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+
+                    // 4분할 좌표
+                    const coords = [
+                        { x: 20, y: 38 },
+                        { x: 115, y: 38 },
+                        { x: 20, y: 160 },
+                        { x: 115, y: 160 }
+                    ];
+
+                    for (let i = 0; i < slice.length; i++) {
+                        const p = slice[i];
+                        const pos = coords[i];
+                        const cardW = 75;
+                        const cardH = 95;
+
+                        // 폴라로이드 배경
+                        pdf.setFillColor(253, 252, 247);
+                        pdf.setDrawColor(220, 215, 200);
+                        pdf.roundedRect(pos.x, pos.y, cardW, cardH, 2, 2, 'FD');
+
+                        // 사진 추가
+                        try {
+                            pdf.addImage(p.dataUrl, 'JPEG', pos.x + 5, pos.y + 5, cardW - 10, cardW - 10);
+                        } catch (e) {
+                            console.warn('PDF 사진 임베딩 스킵:', e);
+                        }
+
+                        // 작성자 & 메시지
+                        pdf.setFontSize(9);
+                        pdf.setTextColor(15, 23, 42);
+                        pdf.text(p.author || '익명', pos.x + cardW / 2, pos.y + cardH - 14, { align: 'center' });
+                        pdf.setFontSize(8);
+                        pdf.setTextColor(100, 116, 139);
+                        pdf.text(p.date || '', pos.x + cardW / 2, pos.y + cardH - 8, { align: 'center' });
+                    }
+                }
+
+                pdf.save(`guestbook-${Date.now()}.pdf`);
+                showToast('📄 A4 인쇄용 PDF가 다운로드되었습니다!');
+            });
+
+            // ── 보드 비우기 ────────────────────────────────────────
+            btnClearBoard.addEventListener('click', () => {
+                if (photos.length === 0) return;
+                if (!confirm('보드 위의 모든 사진을 정리하고 새로 시작할까요?')) return;
+                photos = [];
+                saveLocalPhotos();
+                renderAllPolaroids();
+                showToast('보드가 깨끗하게 정리되었습니다.');
+            });
+
+            // ── QR 코드 모달 ───────────────────────────────────────
+            btnOpenQrModal.addEventListener('click', () => {
+                qrCodeArea.innerHTML = '';
+                const guestUrl = `${location.origin}${location.pathname}#room=${encodeURIComponent(boardTitle)}&guest=true`;
+                shareUrlDisplay.value = guestUrl;
+
+                new QRCode(qrCodeArea, {
+                    text: guestUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#0f172a',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+
+                qrModal.classList.add('active');
+            });
+
+            btnCloseQrModal.addEventListener('click', () => qrModal.classList.remove('active'));
+
+            btnCopyGuestUrl.addEventListener('click', () => {
+                shareUrlDisplay.select();
+                navigator.clipboard.writeText(shareUrlDisplay.value).then(() => {
+                    showToast('📋 하객용 초대 링크가 복사되었습니다!');
+                });
+            });
+
+            // ── PostgreSQL Supabase 연동 설정 ───────────────────────
+            btnDbSettings.addEventListener('click', () => {
+                const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CONFIG) || '{}');
+                sbUrlInput.value = cfg.url || '';
+                sbKeyInput.value = cfg.key || '';
+                dbSettingsModal.classList.add('active');
+            });
+
+            btnCloseDbModal.addEventListener('click', () => dbSettingsModal.classList.remove('active'));
+
+            btnSaveDbConfig.addEventListener('click', () => {
+                const url = sbUrlInput.value.trim();
+                const key = sbKeyInput.value.trim();
+                localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify({ url, key }));
+                initSupabase(url, key);
+                dbSettingsModal.classList.remove('active');
+            });
+
+            btnCopySqlSchema.addEventListener('click', () => {
+                const sql = `-- Supabase PostgreSQL 방명록 테이블 스키마
+CREATE TABLE IF NOT EXISTS guestbook_photos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    room_id TEXT NOT NULL,
+    author TEXT NOT NULL,
+    message TEXT,
+    photo_data TEXT NOT NULL,
+    sticker TEXT DEFAULT '📌',
+    pin_x FLOAT DEFAULT 200,
+    pin_y FLOAT DEFAULT 200,
+    rotation FLOAT DEFAULT 0.0,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 실시간 브로드캐스트 활성화
+ALTER PUBLICATION supabase_realtime ADD TABLE guestbook_photos;
+ALTER TABLE guestbook_photos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Read" ON guestbook_photos FOR SELECT USING (true);
+CREATE POLICY "Public Insert" ON guestbook_photos FOR INSERT WITH CHECK (true);`;
+
+                navigator.clipboard.writeText(sql).then(() => {
+                    showToast('📋 SQL 스키마가 클립보드에 복사되었습니다! Supabase SQL Editor에 붙여넣으세요.');
+                });
+            });
+
+            async function initSupabase(url, key) {
+                if (!url || !key || !window.supabase) {
+                    isSupabaseConnected = false;
+                    cloudStatusBadge.innerHTML = '<span>🟢</span> <span>로컬 보관</span>';
+                    cloudStatusBadge.style.borderColor = '#10b981';
+                    return;
+                }
+
+                try {
+                    supabaseClient = window.supabase.createClient(url, key);
+                    isSupabaseConnected = true;
+                    cloudStatusBadge.innerHTML = '<span>⚡</span> <span>PostgreSQL 실시간</span>';
+                    cloudStatusBadge.style.borderColor = '#38bdf8';
+                    showToast('🐘 PostgreSQL Supabase에 실시간 연결되었습니다!');
+
+                    // Realtime 수신 리스너 등록
+                    supabaseClient
+                        .channel('public:guestbook_photos')
+                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'guestbook_photos' }, payload => {
+                            const row = payload.new;
+                            if (row.room_id === boardTitle && !photos.some(p => p.id === row.id)) {
+                                const newP = {
+                                    id: row.id,
+                                    dataUrl: row.photo_data,
+                                    author: row.author,
+                                    message: row.message,
+                                    sticker: row.sticker,
+                                    x: row.pin_x,
+                                    y: row.pin_y,
+                                    rotation: row.rotation,
+                                    date: new Date(row.created_at).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })
+                                };
+                                photos.push(newP);
+                                saveLocalPhotos();
+                                sound.playPinThump();
+                                renderAllPolaroids();
+                                showToast(`💌 [원격] ${newP.author}님의 사진이 도착했습니다!`);
+                            }
+                        })
+                        .subscribe();
+                } catch (e) {
+                    console.warn('Supabase 초기화 오류:', e);
+                    isSupabaseConnected = false;
+                }
+            }
+
+            // ── 초기화 실행 ─────────────────────────────────────────
+            loadLocalPhotos();
+
+            // 저장된 DB 설정 확인 및 자동 연결
+            const savedCfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CONFIG) || '{}');
+            if (savedCfg.url && savedCfg.key) {
+                initSupabase(savedCfg.url, savedCfg.key);
+            }
+
+            // 만약 하객 모드(#guest=true)로 열렸다면 즉시 촬영 모달 띄우기
+            if (location.hash.includes('guest=true')) {
+                setTimeout(() => {
+                    openCameraStudio();
+                }, 300);
+            }
+        })();
+    </script>
+
+    <!-- 프로젝트 표준 Game Rules JSON -->
+    <script type="application/json" id="game-rules">
+    {
+        "title": "즉석 사진 디지털 방명록",
+        "goal": "파티나 모임에서 참가자들이 셀카와 축하 메시지를 남겨 하나의 대형 폴라로이드 벽을 완성합니다.",
+        "steps": [
+            "하단의 [📸 사진 남기기]를 눌러 즉석 카메라로 셀카를 찍거나 앨범에서 사진을 선택합니다.",
+            "하단 여백에 축하 메시지나 손글씨 서명을 적고, 원하는 스티커나 마스킹 테이프를 고릅니다.",
+            "[보드에 핀 꽂기 📌]를 누르면 사진이 찰칵 소리와 함께 보드에 걸립니다.",
+            "[📱 QR 초대]를 열어 하객들이 각자 자기 스마트폰으로 접속해 사진을 등록하게 할 수 있습니다.",
+            "모임이 끝나면 [🖼️ 포스터 저장] 또는 [📄 A4 인쇄]로 영구 소장할 수 있습니다."
+        ],
+        "tips": [
+            "보드 위의 사진을 드래그하여 원하는 위치로 자유롭게 정리할 수 있습니다.",
+            "사진을 탭하면 고화질 라이트박스로 확대하여 감상할 수 있습니다.",
+            "무료 Supabase (PostgreSQL) 키를 설정하면 여러 기기 간 실시간 동기화가 활성화됩니다."
+        ],
+        "players": "1~50명",
+        "time": "약 3분"
+    }
+    </script>
+</body>
+</html>
