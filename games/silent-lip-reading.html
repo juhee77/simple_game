@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>소리 없는 아우성 | 무음 립리딩 퀴즈</title>
+    <link rel="stylesheet" href="../css/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../css/game-common.css?v=2187f848">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --surface-card: rgba(18, 25, 42, 0.9);
+            --primary-neon: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.35);
+            --coral-pink: #f43f5e;
+            --coral-glow: rgba(244, 63, 94, 0.4);
+            --lime: #10b981;
+            --lime-glow: rgba(16, 185, 129, 0.4);
+            --gold: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 80% 90%, rgba(244, 63, 94, 0.1) 0%, transparent 40%),
+                linear-gradient(180deg, #090d16 0%, #04060a 100%);
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .btn-nav-icon {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-nav-icon:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .title-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sub-badge {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--coral-pink);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .page-title {
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            padding: 16px;
+            max-width: 540px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .phase-view {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .phase-view.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── PHASE 1: 게임 설정 (Setup) ───────────────────────── */
+        .setup-card {
+            background: var(--surface-card);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+            border-radius: 24px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .hero-banner {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-icon {
+            font-size: 3.2rem;
+            filter: drop-shadow(0 0 20px var(--coral-glow));
+            animation: pulseLips 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseLips {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .hero-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .hero-desc {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.45;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 8px 12px;
+            border-left: 3px solid var(--coral-pink);
+        }
+
+        .section-label {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 모드 선택: 팀 배틀 vs 짝꿍/개인전 */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .mode-btn {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 12px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+
+        .mode-btn.active {
+            border-color: var(--coral-pink);
+            background: rgba(244, 63, 94, 0.15);
+            color: #ffffff;
+            box-shadow: 0 0 16px var(--coral-glow);
+        }
+
+        .mode-title {
+            font-size: 0.95rem;
+            font-weight: 900;
+            margin-bottom: 2px;
+        }
+
+        .mode-sub {
+            font-size: 0.72rem;
+            opacity: 0.8;
+        }
+
+        /* 카테고리 4종 그리드 */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .category-btn {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .category-btn.active {
+            border-color: var(--primary-neon);
+            background: rgba(56, 189, 248, 0.12);
+            box-shadow: 0 0 14px var(--primary-glow);
+        }
+
+        .cat-icon {
+            font-size: 1.6rem;
+        }
+
+        .cat-name {
+            font-size: 0.92rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .cat-desc {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.25;
+        }
+
+        /* 시간 & 패스 옵션 */
+        .options-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .option-pill {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #cbd5e1;
+            padding: 10px 6px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-pill.active {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--lime);
+            color: #a7f3d0;
+            box-shadow: 0 0 12px var(--lime-glow);
+        }
+
+        /* 마이크 반칙 방지 토글 */
+        .mic-guard-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mic-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .mic-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mic-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--coral-pink);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .btn-start-quiz {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: #ffffff;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 24px var(--coral-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.15s;
+        }
+
+        .btn-start-quiz:active {
+            transform: scale(0.97);
+        }
+
+        /* ── PHASE 2: 퀴즈 출제 화면 (Live Quiz HUD) ──────────── */
+        .quiz-stage {
+            background: #000;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 28px;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 440px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.95);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 반칙 경고 빨간 플래시 */
+        .foul-flash {
+            animation: foulFlash 0.6s ease-in-out;
+        }
+
+        @keyframes foulFlash {
+            0%, 100% { background: #000; }
+            50% { background: #7f1d1d; }
+        }
+
+        .foul-banner {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 900;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+            display: none;
+            z-index: 20;
+            animation: bounceAlert 0.4s infinite alternate;
+        }
+
+        @keyframes bounceAlert {
+            from { transform: translateX(-50%) scale(1); }
+            to { transform: translateX(-50%) scale(1.08); }
+        }
+
+        .hud-header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .team-pill {
+            background: rgba(56, 189, 248, 0.2);
+            border: 1px solid var(--primary-neon);
+            color: #e0f2fe;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .timer-badge {
+            background: rgba(244, 63, 94, 0.2);
+            border: 1px solid var(--coral-pink);
+            color: #ffe4e6;
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-badge.urgent {
+            animation: pulseUrgent 0.5s infinite alternate;
+            background: #f43f5e;
+            color: #fff;
+        }
+
+        @keyframes pulseUrgent {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .score-pill {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--lime);
+            color: #a7f3d0;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 800;
+        }
+
+        /* 제시어 박스 */
+        .word-display-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .char-count-pill {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-muted);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+        }
+
+        .syllable-blocks-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .syllable-block {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            width: 72px;
+            height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        .syllable-block:nth-child(even) {
+            border-color: var(--primary-neon);
+            color: #e0f2fe;
+            text-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .syllable-block:nth-child(odd) {
+            border-color: var(--coral-pink);
+            color: #ffe4e6;
+            text-shadow: 0 0 20px var(--coral-glow);
+        }
+
+        .lip-hint-tip {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* 퀴즈 대형 액션 버튼 2종 */
+        .quiz-action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.6fr;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn-quiz {
+            padding: 16px;
+            border-radius: 18px;
+            border: none;
+            font-size: 1.15rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+
+        .btn-quiz:active {
+            transform: scale(0.96);
+        }
+
+        .btn-pass {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .btn-correct {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 24px var(--lime-glow);
+        }
+
+        .quiz-btn-sub {
+            font-size: 0.72rem;
+            opacity: 0.8;
+            font-weight: 700;
+        }
+
+        /* ── PHASE 3: 라운드 복기 & 리뷰 (Review) ──────────────── */
+        .review-card {
+            background: var(--surface-card);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+            border-radius: 24px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .review-header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .review-score-badge {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--lime);
+            text-shadow: 0 0 20px var(--lime-glow);
+            line-height: 1;
+            margin: 6px 0;
+        }
+
+        .word-chips-scroll {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .word-chip-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        .word-chip-row.hit {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #a7f3d0;
+        }
+
+        .word-chip-row.passed {
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #fca5a5;
+        }
+
+        /* ── PHASE 4: 최종 우승 시상식 (Winner) ────────────────── */
+        .winner-card {
+            background: var(--surface-card);
+            border: 2px solid var(--coral-pink);
+            box-shadow: 0 20px 70px var(--coral-glow);
+            border-radius: 28px;
+            padding: 28px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .winner-lips {
+            font-size: 4rem;
+            animation: bounceLips 2s infinite ease-in-out;
+        }
+
+        @keyframes bounceLips {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .winner-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--coral-pink);
+        }
+
+        .winner-team-name {
+            font-size: 2.3rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-action.primary {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: #ffffff;
+            border: none;
+            font-weight: 900;
+            padding: 14px;
+        }
+
+        /* Confetti */
+        #confettiCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Toast */
+        .toast-msg {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(9, 13, 22, 0.95);
+            border: 1px solid var(--coral-pink);
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            white-space: nowrap;
+        }
+
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="btn-nav-icon" title="메인으로">‹</a>
+        <div class="title-group">
+            <span class="sub-badge">SILENT LIP-READING</span>
+            <span class="page-title">소리 없는 아우성</span>
+        </div>
+        <button id="btnSoundToggle" class="btn-nav-icon" title="사운드 토글">🔊</button>
+    </div>
+
+    <main>
+        <!-- ── PHASE 1: 게임 설정 (Setup) ───────────────────────── -->
+        <div id="phaseSetup" class="phase-view active">
+            <div class="setup-card">
+                <div class="hero-banner">
+                    <div class="hero-icon">👄</div>
+                    <h2 class="hero-title">무음 립리딩 퀴즈</h2>
+                    <p class="hero-desc">
+                        목소리는 일절 내지 마세요! 오직 <b>입술 모양과 표정</b>만으로<br>
+                        제시어를 전달하고 제한 시간 안에 정답을 맞히세요.
+                    </p>
+                </div>
+
+                <!-- 게임 모드 선택 -->
+                <div class="section-label">
+                    <span>👥 대결 모드 선택</span>
+                </div>
+                <div class="mode-grid">
+                    <div class="mode-btn active" id="btnModeTeam" data-mode="team">
+                        <div class="mode-title">청팀 vs 백팀</div>
+                        <div class="mode-sub">팀별 번갈아가며 대결</div>
+                    </div>
+                    <div class="mode-btn" id="btnModeCoop" data-mode="coop">
+                        <div class="mode-title">2인 짝꿍 / 협동</div>
+                        <div class="mode-sub">최고 기록 도전 모드</div>
+                    </div>
+                </div>
+
+                <!-- 제시어 카테고리 (4종) -->
+                <div class="section-label">
+                    <span>📚 제시어 팩 선택 (총 220단어)</span>
+                </div>
+                <div class="category-grid">
+                    <div class="category-btn active" data-cat="food">
+                        <span class="cat-icon">🍕</span>
+                        <div class="cat-name">음식 & 야식</div>
+                        <div class="cat-desc">마라탕, 평양냉면, 붕어빵, 삼겹살</div>
+                    </div>
+                    <div class="category-btn" data-cat="media">
+                        <span class="cat-icon">🎬</span>
+                        <div class="cat-name">영화 & 예능</div>
+                        <div class="cat-desc">오징어 게임, 기생충, 무한도전, 범죄도시</div>
+                    </div>
+                    <div class="category-btn" data-cat="celebs">
+                        <span class="cat-icon">🌟</span>
+                        <div class="cat-name">연예인 & 스타</div>
+                        <div class="cat-desc">방탄소년단, 뉴진스, 아이유, 손흥민</div>
+                    </div>
+                    <div class="category-btn" data-cat="meme">
+                        <span class="cat-icon">🤯</span>
+                        <div class="cat-name">발음 고난도 & 밈</div>
+                        <div class="cat-desc">중꺾마, 킹받네, 폼미쳤다, 알잘딱깔센</div>
+                    </div>
+                </div>
+
+                <!-- 제한 시간 선택 -->
+                <div class="section-label">
+                    <span>⏱️ 라운드 제한 시간</span>
+                </div>
+                <div class="options-row">
+                    <button class="option-pill" data-time="45">45초<br><small>(스피드)</small></button>
+                    <button class="option-pill active" data-time="60">60초<br><small>(표준 추천)</small></button>
+                    <button class="option-pill" data-time="90">90초<br><small>(느긋함)</small></button>
+                </div>
+
+                <!-- 마이크 반칙 방지 토글 -->
+                <div class="mic-guard-box">
+                    <div class="mic-info">
+                        <div class="mic-title">
+                            <span>🎤 소리 감지 반칙 방지</span>
+                            <span style="font-size:0.65rem; padding:2px 6px; background:#f43f5e; border-radius:10px; color:#fff;">스마트</span>
+                        </div>
+                        <div class="mic-sub">출제자가 목소리를 내면 삐-! 경고가 울립니다.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="chkMicGuard" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button class="btn-start-quiz" id="btnStartGame">
+                    <span>👄 립리딩 퀴즈 시작하기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── PHASE 2: 퀴즈 출제 화면 (Live Quiz HUD) ──────────── -->
+        <div id="phaseQuiz" class="phase-view">
+            <div class="quiz-stage" id="quizStage">
+                <!-- 반칙 경고 배너 -->
+                <div class="foul-banner" id="foulBanner">🤫 소리 내면 반칙!! 입술만 움직이세요!</div>
+
+                <!-- HUD 상단 정보 -->
+                <div class="hud-header">
+                    <span class="team-pill" id="currentTeamTag">🔵 청팀 출제 중</span>
+                    <span class="timer-badge" id="timerBadge">60</span>
+                    <span class="score-pill" id="scorePill">0 개 정답</span>
+                </div>
+
+                <!-- 중앙 제시어 박스 -->
+                <div class="word-display-box">
+                    <div class="char-count-pill" id="charCountPill">[ 3글자 ]</div>
+                    <div class="syllable-blocks-row" id="syllablesContainer">
+                        <div class="syllable-block">떡</div>
+                        <div class="syllable-block">볶</div>
+                        <div class="syllable-block">이</div>
+                    </div>
+                    <div class="lip-hint-tip">💡 목소리를 내지 말고 입모양을 과장되게 크게 뻐끔거리세요!</div>
+                </div>
+
+                <!-- 대형 컨트롤 버튼 (패스 vs 정답) -->
+                <div class="quiz-action-grid">
+                    <button class="btn-quiz btn-pass" id="btnPassWord">
+                        <span>❌ 패스</span>
+                        <span class="quiz-btn-sub" id="passCountText">남은 패스: 2회</span>
+                    </button>
+                    <button class="btn-quiz btn-correct" id="btnCorrectWord">
+                        <span>⭕ 정답!</span>
+                        <span class="quiz-btn-sub">+1점 획득</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── PHASE 3: 라운드 복기 & 하이라이트 (Review) ────────── -->
+        <div id="phaseReview" class="phase-view">
+            <div class="review-card">
+                <div class="review-header">
+                    <h3 style="font-size:1.3rem; font-weight:900;" id="reviewTitle">청팀 라운드 종료!</h3>
+                    <div class="review-score-badge" id="reviewScoreCount">7개 정답</div>
+                    <p style="font-size:0.85rem; color:var(--text-muted);">이번 라운드에 출제된 단어 복기</p>
+                </div>
+
+                <div class="section-label">
+                    <span>📋 출제 단어 결과</span>
+                </div>
+                <div class="word-chips-scroll" id="reviewWordsContainer"></div>
+
+                <button class="btn-start-quiz" id="btnNextTeamOrEnd" style="margin-top:6px;">
+                    <span>다음 팀 도전하기 (백팀) ›</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── PHASE 4: 최종 우승 시상식 (Winner) ────────────────── -->
+        <div id="phaseWinner" class="phase-view">
+            <div class="winner-card">
+                <div class="winner-lips">👄👑</div>
+                <div class="winner-title">독순술 최강 복사기 입술 챔피언!</div>
+                <div class="winner-team-name" id="winnerTeamName">청팀 우승!</div>
+                <div style="font-size:1.1rem; font-weight:900; color:var(--lime); margin-top:-6px;" id="winnerSummaryScore">
+                    청팀 8개 vs 백팀 5개
+                </div>
+
+                <div class="actions-grid">
+                    <button class="btn-action primary" id="btnPlayAgain">
+                        <span>🔄</span> 같은 설정으로 한 판 더!
+                    </button>
+                    <button class="btn-action" id="btnSaveResultImage">
+                        <span>📸</span> 결과 카드 저장
+                    </button>
+                    <button class="btn-action" id="btnCopyKakao">
+                        <span>📋</span> 카톡 텍스트 복사
+                    </button>
+                    <button class="btn-action" id="btnBackToSetup" style="grid-column: span 2;">
+                        <span>⚙️</span> 카테고리/시간 재설정
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toastMsg" class="toast-msg">알림 메시지</div>
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Common Scripts -->
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+
+    <script>
+        (function() {
+            // ── 220 엄선 한국어 립리딩 데이터셋 ──────────────────────
+            const WORDS_DATABASE = {
+                food: [
+                    "떡볶이", "마라탕", "삼겹살", "평양냉면", "타코야키", "샤브샤브", "돈까스", "불닭볶음면",
+                    "양념치킨", "붕어빵", "김치찌개", "소금빵", "탕수육", "팥빙수", "족발보쌈", "육회비빔밥",
+                    "계란말이", "크로플", "간장게장", "로제파스타", "김밥천국", "곱창전골", "치즈볼", "베이글",
+                    "순대국밥", "비빔냉면", "짜장면", "짬뽕", "멘보샤", "마카롱", "츄러스", "감자튀김",
+                    "어묵탕", "콘치즈", "부대찌개", "닭볶음탕", "칼국수", "회덮밥", "낙지탕탕이", "호떡",
+                    "핫도그", "닭꼬치", "꿔바로우", "카레라이스", "스테이크", "수제버거", "피자나라", "바닐라라떼",
+                    "아메리카노", "버블티", "딸기빙수", "초콜릿", "붕어싸만코", "닭발", "오돌뼈"
+                ],
+                media: [
+                    "오징어 게임", "기생충", "무한도전", "범죄도시", "겨울왕국", "더 글로리", "아바타", "타이타닉",
+                    "신서유기", "환승연애", "극한직업", "런닝맨", "나는 솔로", "태극기 휘날리며", "응답하라", "이상한 변호사",
+                    "눈물의 여왕", "서울의 봄", "인터스텔라", "해리포터", "센과 치히로", "슬램덩크", "스파이더맨", "어벤져스",
+                    "킹덤", "나 혼자 산다", "유 퀴즈", "골목식당", "쇼미더머니", "피지컬 백", "솔로지옥", "흑백요리사",
+                    "카지노", "수리남", "하트시그널", "지구오락실", "일박이일", "라디오스타", "복면가왕", "아는 형님",
+                    "패밀리가 떴다", "엑시트", "베테랑", "도깨비", "태양의 후예", "미스터 션샤인", "별에서 온 그대", "사랑의 불시착",
+                    "시그널", "비밀의 숲", "슬기로운 의사생활", "동백꽃 필 무렵", "파묘", "곡성", "부산행"
+                ],
+                celebs: [
+                    "방탄소년단", "뉴진스", "아이유", "유재석", "손흥민", "임영웅", "블랙핑크", "에스파",
+                    "강호동", "신동엽", "이효리", "봉준호", "박지성", "김연아", "페이커", "아이브",
+                    "르세라핌", "세븐틴", "트와이스", "싸이", "이병헌", "마동석", "송중기", "박보검",
+                    "김수현", "전지현", "수지", "송혜교", "한소희", "차은우", "변우석", "기안팔십사",
+                    "덱스", "풍자", "침착맨", "탁재훈", "하하", "노홍철", "정형돈", "박명수",
+                    "조세호", "이광수", "성시경", "백종원", "안성재", "이수근", "은지원", "규현",
+                    "송민호", "피오", "미미", "안유진", "이영지", "카리나", "장원영"
+                ],
+                meme: [
+                    "중꺾마", "킹받네", "폼미쳤다", "알잘딱깔센", "억까", "갓생", "억빠", "뇌절",
+                    "누칼협", "존맛탱", "케바케", "사바사", "점메추", "스불재", "반모", "완내스",
+                    "티엠아이", "당모치", "마상", "어쩔티비", "저쩔티비", "쿠쿠루삥뽕", "박박", "나심비",
+                    "핑프", "좋댓구알", "캘박", "팩폭", "갑통알", "꾸안꾸", "삼귀다", "보배",
+                    "혼바비언", "남아공", "일며들다", "군싹", "머선일이고", "무물", "쉽살재귀", "스포",
+                    "할많하않", "오운완", "만반잘부", "오저치고", "졌잘싸", "비담", "손민수", "쌉가능",
+                    "레전드", "실화냐", "킹정", "뇌피셜", "팩트체크", "극대노", "멘붕"
+                ]
+            };
+
+            // ── 오디오 합성 엔진 ────────────────────────────────────
+            class LipSynthAudio {
+                constructor() {
+                    this.ctx = null;
+                    this.enabled = true;
+                }
+                init() {
+                    if (!this.ctx) {
+                        const AC = window.AudioContext || window.webkitAudioContext;
+                        if (AC) this.ctx = new AC();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+                }
+                playCorrect() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    [523.25, 659.25, 1046.5].forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.setValueAtTime(0.2, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + idx * 0.08);
+                        osc.stop(this.ctx.currentTime + idx * 0.08 + 0.26);
+                    });
+                }
+                playPass() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(140, this.ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.18);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.19);
+                }
+                playWhistle() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(2200, this.ctx.currentTime);
+                    osc.frequency.setValueAtTime(2600, this.ctx.currentTime + 0.08);
+                    osc.frequency.setValueAtTime(2200, this.ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.45);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.46);
+                }
+                playTick() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.04);
+                }
+                playFoulSiren() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(440, this.ctx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.31);
+                }
+            }
+
+            const sound = new LipSynthAudio();
+
+            // ── 게임 상태 ──────────────────────────────────────────
+            let gameMode = 'team'; // 'team' (청팀 vs 백팀) or 'coop'
+            let selectedCategory = 'food';
+            let roundDuration = 60;
+            let maxPasses = 2;
+
+            let currentTeam = 'blue'; // 'blue' or 'white'
+            let blueScore = 0;
+            let whiteScore = 0;
+            let blueReview = []; // [{ word, hit }]
+            let whiteReview = [];
+
+            let remainingTime = 60;
+            let timerInterval = null;
+            let currentWordList = [];
+            let currentWordIndex = 0;
+            let passesLeft = 2;
+            let currentTurnHits = []; // [{ word, hit: true/false }]
+
+            // 마이크 볼륨 감지 상태
+            let micStream = null;
+            let micAudioCtx = null;
+            let micAnalyser = null;
+            let micAnimFrame = null;
+            let isMicFoulCooling = false;
+
+            // ── DOM References ─────────────────────────────────────
+            const phaseSetup = document.getElementById('phaseSetup');
+            const phaseQuiz = document.getElementById('phaseQuiz');
+            const phaseReview = document.getElementById('phaseReview');
+            const phaseWinner = document.getElementById('phaseWinner');
+
+            const btnModeTeam = document.getElementById('btnModeTeam');
+            const btnModeCoop = document.getElementById('btnModeCoop');
+            const chkMicGuard = document.getElementById('chkMicGuard');
+            const btnStartGame = document.getElementById('btnStartGame');
+
+            const quizStage = document.getElementById('quizStage');
+            const foulBanner = document.getElementById('foulBanner');
+            const currentTeamTag = document.getElementById('currentTeamTag');
+            const timerBadge = document.getElementById('timerBadge');
+            const scorePill = document.getElementById('scorePill');
+            const charCountPill = document.getElementById('charCountPill');
+            const syllablesContainer = document.getElementById('syllablesContainer');
+            const btnPassWord = document.getElementById('btnPassWord');
+            const btnCorrectWord = document.getElementById('btnCorrectWord');
+            const passCountText = document.getElementById('passCountText');
+
+            const reviewTitle = document.getElementById('reviewTitle');
+            const reviewScoreCount = document.getElementById('reviewScoreCount');
+            const reviewWordsContainer = document.getElementById('reviewWordsContainer');
+            const btnNextTeamOrEnd = document.getElementById('btnNextTeamOrEnd');
+
+            const winnerTeamName = document.getElementById('winnerTeamName');
+            const winnerSummaryScore = document.getElementById('winnerSummaryScore');
+            const btnPlayAgain = document.getElementById('btnPlayAgain');
+            const btnSaveResultImage = document.getElementById('btnSaveResultImage');
+            const btnCopyKakao = document.getElementById('btnCopyKakao');
+            const btnBackToSetup = document.getElementById('btnBackToSetup');
+
+            const toastMsg = document.getElementById('toastMsg');
+            const confettiCanvas = document.getElementById('confettiCanvas');
+            const btnSoundToggle = document.getElementById('btnSoundToggle');
+
+            function showToast(text) {
+                toastMsg.textContent = text;
+                toastMsg.classList.add('show');
+                clearTimeout(toastMsg._t);
+                toastMsg._t = setTimeout(() => toastMsg.classList.remove('show'), 2200);
+            }
+
+            btnSoundToggle.addEventListener('click', () => {
+                sound.enabled = !sound.enabled;
+                btnSoundToggle.textContent = sound.enabled ? '🔊' : '🔇';
+                showToast(sound.enabled ? '🔊 사운드 ON' : '🔇 사운드 OFF');
+            });
+
+            function setPhase(phase) {
+                [phaseSetup, phaseQuiz, phaseReview, phaseWinner].forEach(p => p.classList.remove('active'));
+                phase.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // ── 모드 & 옵션 선택 이벤트 ─────────────────────────────
+            btnModeTeam.addEventListener('click', () => {
+                btnModeTeam.classList.add('active');
+                btnModeCoop.classList.remove('active');
+                gameMode = 'team';
+                sound.playTick();
+            });
+
+            btnModeCoop.addEventListener('click', () => {
+                btnModeCoop.classList.add('active');
+                btnModeTeam.classList.remove('active');
+                gameMode = 'coop';
+                sound.playTick();
+            });
+
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedCategory = btn.dataset.cat;
+                    sound.playTick();
+                });
+            });
+
+            document.querySelectorAll('[data-time]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-time]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    roundDuration = parseInt(btn.dataset.time, 10);
+                    sound.playTick();
+                });
+            });
+
+            // ── 마이크 볼륨 반칙 감지 ───────────────────────────────
+            async function startMicGuard() {
+                if (!chkMicGuard.checked) return;
+                try {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    micAudioCtx = new AC();
+                    const src = micAudioCtx.createMediaStreamSource(micStream);
+                    micAnalyser = micAudioCtx.createAnalyser();
+                    micAnalyser.fftSize = 256;
+                    src.connect(micAnalyser);
+
+                    const dataArray = new Uint8Array(micAnalyser.frequencyBinCount);
+
+                    function monitorAudio() {
+                        if (!micAnalyser) return;
+                        micAnalyser.getByteFrequencyData(dataArray);
+                        let sum = 0;
+                        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                        const average = sum / dataArray.length;
+
+                        // 데시벨 임계치 넘었을 때 (목소리 발성 감지)
+                        if (average > 38 && !isMicFoulCooling) {
+                            triggerFoulAlert();
+                        }
+                        micAnimFrame = requestAnimationFrame(monitorAudio);
+                    }
+                    monitorAudio();
+                } catch (e) {
+                    console.log("Mic access skipped or denied:", e);
+                }
+            }
+
+            function stopMicGuard() {
+                if (micAnimFrame) cancelAnimationFrame(micAnimFrame);
+                if (micStream) {
+                    micStream.getTracks().forEach(t => t.stop());
+                    micStream = null;
+                }
+                if (micAudioCtx) {
+                    micAudioCtx.close();
+                    micAudioCtx = null;
+                }
+            }
+
+            function triggerFoulAlert() {
+                isMicFoulCooling = true;
+                sound.playFoulSiren();
+                quizStage.classList.add('foul-flash');
+                foulBanner.style.display = 'block';
+
+                setTimeout(() => {
+                    quizStage.classList.remove('foul-flash');
+                    foulBanner.style.display = 'none';
+                    setTimeout(() => { isMicFoulCooling = false; }, 800);
+                }, 1200);
+            }
+
+            // ── 게임 시작 ──────────────────────────────────────────
+            btnStartGame.addEventListener('click', () => {
+                sound.init();
+                blueScore = 0;
+                whiteScore = 0;
+                blueReview = [];
+                whiteReview = [];
+                currentTeam = 'blue';
+
+                startTeamRound();
+            });
+
+            function startTeamRound() {
+                // 단어 풀 셔플
+                const pool = [...WORDS_DATABASE[selectedCategory]];
+                for (let i = pool.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [pool[i], pool[j]] = [pool[j], pool[i]];
+                }
+                currentWordList = pool;
+                currentWordIndex = 0;
+                passesLeft = maxPasses;
+                currentTurnHits = [];
+
+                remainingTime = roundDuration;
+                timerBadge.textContent = remainingTime;
+                timerBadge.classList.remove('urgent');
+
+                if (gameMode === 'team') {
+                    currentTeamTag.textContent = currentTeam === 'blue' ? '🔵 청팀 출제 중' : '⚪ 백팀 출제 중';
+                    currentTeamTag.style.borderColor = currentTeam === 'blue' ? '#38bdf8' : '#cbd5e1';
+                } else {
+                    currentTeamTag.textContent = '🤝 짝꿍 협동 모드';
+                }
+
+                updateScorePill();
+                updatePassButtonText();
+                displayCurrentWord();
+
+                setPhase(phaseQuiz);
+                sound.playWhistle();
+
+                // 마이크 감지 시작
+                startMicGuard();
+
+                // 타이머 루프
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    remainingTime--;
+                    timerBadge.textContent = remainingTime;
+
+                    if (remainingTime <= 10 && remainingTime > 0) {
+                        timerBadge.classList.add('urgent');
+                        sound.playTick();
+                    }
+
+                    if (remainingTime <= 0) {
+                        clearInterval(timerInterval);
+                        stopMicGuard();
+                        sound.playWhistle();
+                        concludeTeamRound();
+                    }
+                }, 1000);
+            }
+
+            function updateScorePill() {
+                const hits = currentTurnHits.filter(h => h.hit).length;
+                scorePill.textContent = `${hits} 개 정답`;
+            }
+
+            function updatePassButtonText() {
+                passCountText.textContent = `남은 패스: ${passesLeft}회`;
+                btnPassWord.disabled = passesLeft <= 0;
+                btnPassWord.style.opacity = passesLeft <= 0 ? '0.4' : '1';
+            }
+
+            function displayCurrentWord() {
+                if (currentWordIndex >= currentWordList.length) {
+                    // 단어 다 떨어짐 -> 자동 종료
+                    clearInterval(timerInterval);
+                    stopMicGuard();
+                    concludeTeamRound();
+                    return;
+                }
+
+                const word = currentWordList[currentWordIndex];
+                charCountPill.textContent = `[ ${word.replace(/\s+/g, '').length}글자 ]`;
+
+                syllablesContainer.innerHTML = '';
+                // 띄어쓰기 유지 또는 음절 블록
+                for (let i = 0; i < word.length; i++) {
+                    const ch = word[i];
+                    if (ch === ' ') {
+                        const spacer = document.createElement('div');
+                        spacer.style.width = '20px';
+                        syllablesContainer.appendChild(spacer);
+                    } else {
+                        const block = document.createElement('div');
+                        block.className = 'syllable-block';
+                        block.textContent = ch;
+                        syllablesContainer.appendChild(block);
+                    }
+                }
+            }
+
+            // 정답 버튼 클릭
+            btnCorrectWord.addEventListener('click', () => {
+                sound.playCorrect();
+                const word = currentWordList[currentWordIndex];
+                currentTurnHits.push({ word: word, hit: true });
+                updateScorePill();
+
+                currentWordIndex++;
+                displayCurrentWord();
+            });
+
+            // 패스 버튼 클릭
+            btnPassWord.addEventListener('click', () => {
+                if (passesLeft <= 0) return;
+                sound.playPass();
+                passesLeft--;
+                updatePassButtonText();
+
+                const word = currentWordList[currentWordIndex];
+                currentTurnHits.push({ word: word, hit: false });
+
+                currentWordIndex++;
+                displayCurrentWord();
+            });
+
+            // ── 라운드 결산 & 복기 ────────────────────────────────
+            function concludeTeamRound() {
+                const hits = currentTurnHits.filter(h => h.hit).length;
+
+                if (currentTeam === 'blue') {
+                    blueScore = hits;
+                    blueReview = [...currentTurnHits];
+                } else {
+                    whiteScore = hits;
+                    whiteReview = [...currentTurnHits];
+                }
+
+                // 복기 화면 렌더링
+                const teamTitle = gameMode === 'team' ? (currentTeam === 'blue' ? '🔵 청팀 라운드 종료!' : '⚪ 백팀 라운드 종료!') : '🎉 라운드 종료!';
+                reviewTitle.textContent = teamTitle;
+                reviewScoreCount.textContent = `${hits}개 정답!`;
+
+                reviewWordsContainer.innerHTML = '';
+                currentTurnHits.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = `word-chip-row ${item.hit ? 'hit' : 'passed'}`;
+                    row.innerHTML = `
+                        <span>${item.hit ? '⭕' : '❌'} ${escapeHtml(item.word)}</span>
+                        <span>${item.hit ? '정답 (+1)' : '패스'}</span>
+                    `;
+                    reviewWordsContainer.appendChild(row);
+                });
+
+                if (gameMode === 'team' && currentTeam === 'blue') {
+                    btnNextTeamOrEnd.querySelector('span').textContent = '다음 팀 도전하기 (⚪ 백팀) ›';
+                } else {
+                    btnNextTeamOrEnd.querySelector('span').textContent = '🏆 최종 대결 결과 보기 ›';
+                }
+
+                setPhase(phaseReview);
+            }
+
+            btnNextTeamOrEnd.addEventListener('click', () => {
+                if (gameMode === 'team' && currentTeam === 'blue') {
+                    currentTeam = 'white';
+                    startTeamRound();
+                } else {
+                    showFinalWinner();
+                }
+            });
+
+            // ── PHASE 4: 최종 시상식 ──────────────────────────────
+            function showFinalWinner() {
+                if (gameMode === 'team') {
+                    if (blueScore > whiteScore) {
+                        winnerTeamName.textContent = '🔵 청팀 대승리!';
+                    } else if (whiteScore > blueScore) {
+                        winnerTeamName.textContent = '⚪ 백팀 대승리!';
+                    } else {
+                        winnerTeamName.textContent = '🤝 무승부! (동점)';
+                    }
+                    winnerSummaryScore.textContent = `청팀 ${blueScore}개  vs  백팀 ${whiteScore}개`;
+                } else {
+                    winnerTeamName.textContent = `🏆 ${blueScore}개 달성!`;
+                    winnerSummaryScore.textContent = `환상의 립싱크 짝꿍 케미 인증!`;
+                }
+
+                launchConfetti();
+                setPhase(phaseWinner);
+            }
+
+            btnPlayAgain.addEventListener('click', () => {
+                blueScore = 0;
+                whiteScore = 0;
+                blueReview = [];
+                whiteReview = [];
+                currentTeam = 'blue';
+                startTeamRound();
+            });
+
+            btnBackToSetup.addEventListener('click', () => {
+                stopMicGuard();
+                clearInterval(timerInterval);
+                setPhase(phaseSetup);
+            });
+
+            // ── 카카오톡 공유 ──────────────────────────────────────
+            btnCopyKakao.addEventListener('click', () => {
+                let text = `[👄 소리 없는 아우성: 무음 립리딩 퀴즈 결과]\n`;
+                text += `일시: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n`;
+                text += `카테고리: ${getCategoryName(selectedCategory)} (${roundDuration}초 제한)\n\n`;
+
+                if (gameMode === 'team') {
+                    const winMsg = blueScore > whiteScore ? '청팀 승리!' : (whiteScore > blueScore ? '백팀 승리!' : '무승부!');
+                    text += `🏆 승리: ${winMsg}\n`;
+                    text += `• 🔵 청팀: ${blueScore}개 정답\n`;
+                    text += `• ⚪ 백팀: ${whiteScore}개 정답\n`;
+                } else {
+                    text += `🏆 최종 스코어: ${blueScore}개 정답 완수!\n`;
+                }
+
+                text += `\n#미니게임천국 #소리없는아우성 #립리딩퀴즈`;
+
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('📋 단톡방 공유 텍스트가 복사되었습니다!');
+                }).catch(() => {
+                    showToast('⚠️ 클립보드 복사에 실패했습니다.');
+                });
+            });
+
+            function getCategoryName(cat) {
+                const map = {
+                    food: '🍕 음식 & 야식',
+                    media: '🎬 영화 & 예능',
+                    celebs: '🌟 연예인 & 스타',
+                    meme: '🤯 발음 고난도 & 밈'
+                };
+                return map[cat] || cat;
+            }
+
+            // ── Canvas 결과 카드 이미지 생성 ────────────────────────
+            btnSaveResultImage.addEventListener('click', async () => {
+                showToast('📸 립리딩 결과 카드를 생성하고 있어요...');
+                const cw = 740;
+                const ch = 840;
+                const canvas = document.createElement('canvas');
+                canvas.width = cw;
+                canvas.height = ch;
+                const ctx = canvas.getContext('2d');
+
+                // 배경 그라데이션
+                const grad = ctx.createLinearGradient(0, 0, 0, ch);
+                grad.addColorStop(0, '#111827');
+                grad.addColorStop(0.5, '#0b0f19');
+                grad.addColorStop(1, '#030508');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, cw, ch);
+
+                // 장식 격자선
+                ctx.strokeStyle = 'rgba(244, 63, 94, 0.08)';
+                ctx.lineWidth = 1;
+                for (let x = 40; x < cw; x += 40) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ch); ctx.stroke();
+                }
+                for (let y = 40; y < ch; y += 40) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cw, y); ctx.stroke();
+                }
+
+                // 상단 엠블럼
+                ctx.font = 'bold 15px "Pretendard", sans-serif';
+                ctx.fillStyle = '#f43f5e';
+                ctx.textAlign = 'center';
+                ctx.fillText('👄 MINI GAME HEAVEN • SILENT LIP-READING 👄', cw / 2, 50);
+
+                ctx.font = '900 34px "Pretendard", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('소리 없는 아우성 립리딩 대결 결과', cw / 2, 95);
+
+                // 챔피언 배너 박스
+                ctx.fillStyle = 'rgba(18, 25, 42, 0.9)';
+                ctx.strokeStyle = '#f43f5e';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(40, 130, cw - 80, 200, 20);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.font = '45px sans-serif';
+                ctx.fillText('👄', cw / 2, 195);
+
+                ctx.font = '900 32px "Pretendard", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                const winText = gameMode === 'team' ? (blueScore > whiteScore ? '청팀 승리!' : (whiteScore > blueScore ? '백팀 승리!' : '무승부!')) : `${blueScore}개 정답 달성!`;
+                ctx.fillText(winText, cw / 2, 245);
+
+                ctx.font = 'bold 18px "Pretendard", sans-serif';
+                ctx.fillStyle = '#fef08a';
+                if (gameMode === 'team') {
+                    ctx.fillText(`청팀 ${blueScore}개  vs  백팀 ${whiteScore}개`, cw / 2, 285);
+                } else {
+                    ctx.fillText(`환상의 독순술 짝꿍 케미 인증`, cw / 2, 285);
+                }
+
+                // 출제 단어 하이라이트 박스
+                const boxY = 360;
+                ctx.font = '800 16px "Pretendard", sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'left';
+                ctx.fillText(`📋 하이라이트 맞힌 단어 (${getCategoryName(selectedCategory)})`, 45, boxY);
+
+                const allHits = [...blueReview, ...whiteReview].filter(w => w.hit);
+                const displayHits = allHits.slice(0, 8);
+
+                ctx.fillStyle = '#161f33';
+                ctx.fillRect(45, boxY + 15, cw - 90, 360);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                ctx.strokeRect(45, boxY + 15, cw - 90, 360);
+
+                let listY = boxY + 50;
+                if (displayHits.length === 0) {
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = 'bold 15px "Pretendard", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('맞힌 단어가 없습니다', cw / 2, boxY + 190);
+                } else {
+                    displayHits.forEach((item, idx) => {
+                        ctx.fillStyle = idx % 2 === 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.06)';
+                        ctx.fillRect(60, listY - 22, cw - 120, 38);
+                        ctx.strokeStyle = 'rgba(16, 185, 129, 0.25)';
+                        ctx.strokeRect(60, listY - 22, cw - 120, 38);
+
+                        ctx.textAlign = 'left';
+                        ctx.fillStyle = '#a7f3d0';
+                        ctx.font = '800 15px "Pretendard", sans-serif';
+                        ctx.fillText(`⭕ ${idx + 1}. ${item.word}`, 80, listY + 2);
+
+                        ctx.textAlign = 'right';
+                        ctx.fillStyle = '#10b981';
+                        ctx.fillText('정답 (+1점)', cw - 80, listY + 2);
+
+                        listY += 42;
+                    });
+                }
+
+                // Footer
+                ctx.font = '600 13px "Pretendard", sans-serif';
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'center';
+                ctx.fillText('미니게임 천국 • 소리 없는 아우성 무음 립리딩 퀴즈', cw / 2, ch - 25);
+
+                canvas.toBlob(async (blob) => {
+                    await saveToGallery(blob, `silent-lip-reading-${Date.now()}.png`);
+                    showToast('📸 결과 이미지가 저장되었습니다!');
+                }, 'image/png');
+            });
+
+            // ── 폭죽 파티클 (Confetti) ──────────────────────────────
+            function launchConfetti() {
+                const c = confettiCanvas;
+                c.width = window.innerWidth;
+                c.height = window.innerHeight;
+                const cctx = c.getContext('2d');
+                const particles = [];
+                const colors = ['#f43f5e', '#38bdf8', '#10b981', '#f59e0b', '#fef08a'];
+
+                for (let i = 0; i < 60; i++) {
+                    particles.push({
+                        x: c.width / 2,
+                        y: c.height / 2,
+                        vx: (Math.random() - 0.5) * 12,
+                        vy: (Math.random() - 0.8) * 14,
+                        size: Math.random() * 6 + 4,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        alpha: 1,
+                        decay: 0.015 + Math.random() * 0.02
+                    });
+                }
+
+                function anim() {
+                    cctx.clearRect(0, 0, c.width, c.height);
+                    let alive = false;
+                    particles.forEach(p => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.3;
+                        p.alpha -= p.decay;
+                        if (p.alpha > 0) {
+                            alive = true;
+                            cctx.fillStyle = p.color;
+                            cctx.globalAlpha = p.alpha;
+                            cctx.fillRect(p.x, p.y, p.size, p.size);
+                        }
+                    });
+                    if (alive) requestAnimationFrame(anim);
+                    else cctx.clearRect(0, 0, c.width, c.height);
+                }
+                anim();
+            }
+        })();
+    </script>
+
+    <!-- 프로젝트 표준 Game Rules JSON Block -->
+    <script type="application/json" id="game-rules">
+    {
+        "title": "소리 없는 아우성 (무음 립리딩 퀴즈)",
+        "goal": "목소리를 내지 않고 오직 입술 모양과 표정만으로 제시어를 전달하여 제한 시간 내에 가장 많은 정답을 맞히세요.",
+        "steps": [
+            "대결 모드(청팀 vs 백팀 또는 2인 협동)와 4대 제시어 카테고리(음식, 영화/예능, 연예인, 밈)를 선택합니다.",
+            "출제자는 폰 화면의 큼직한 음절 블록을 보며, 목소리를 내지 않고 오직 과장된 입모양으로 단어를 표현합니다.",
+            "맞히는 팀원은 입모양을 집중해서 읽고 정답을 외치며, 맞히면 [⭕ 정답!] 버튼을 누릅니다.",
+            "단어가 너무 어려우면 [❌ 패스] 버튼을 누를 수 있습니다 (라운드당 2회 제한).",
+            "마이크 반칙 방지 옵션이 켜져 있으면, 출제자가 소리를 낼 경우 삐-! 소리와 함께 화면이 빨갛게 번쩍이며 경고가 뜹니다.",
+            "제한 시간 종료 후 맞힌 단어를 복기하고 최종 립리딩 챔피언 결과 카드를 공유할 수 있습니다."
+        ],
+        "tips": [
+            "모음 '아, 오, 우, 이'와 입술이 닿는 자음 'ㅁ, ㅂ, ㅍ'의 입모양을 크게 벌려주는 것이 핵심입니다.",
+            "팀원이 글자 수를 알 수 있도록 음절마다 고개를 끄덕이며 리듬감을 주는 것도 좋은 전략입니다!"
+        ],
+        "players": "2~10인",
+        "time": "약 2~5분"
+    }
+    </script>
+</body>
+</html>
