@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>가장 작은 유일한 숫자 - 미니게임 천국</title>
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Noto+Sans+KR:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #070913;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --accent-gold: #f59e0b;
+            --accent-cyan: #06b6d4;
+            --accent-rose: #f43f5e;
+            --accent-emerald: #10b981;
+            --accent-purple: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            position: fixed;
+            touch-action: manipulation;
+        }
+
+        /* 앰비언트 사이버 그리드 배경 */
+        .ambient-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 50% 20%, rgba(6, 182, 212, 0.15) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(244, 63, 94, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 상단 네비게이션 헤더 */
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: calc(env(safe-area-inset-top, 12px) + 8px) 16px 12px;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(180deg, rgba(7, 9, 19, 0.8) 0%, transparent 100%);
+            backdrop-filter: blur(8px);
+        }
+
+        .header-title-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-back:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .game-title-text {
+            font-size: 1.15rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 40%, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .round-badge {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fef08a;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        /* 메인 컨테이너 */
+        main {
+            position: absolute;
+            inset: 0;
+            padding: calc(env(safe-area-inset-top, 12px) + 60px) 16px calc(env(safe-area-inset-bottom, 12px) + 16px);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        main::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* ── 화면 전환 상태 컨테이너 ────────────────────────────── */
+        .game-phase {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            max-width: 480px;
+            margin: auto;
+            gap: 16px;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .game-phase.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── PHASE 1: 설정 (Setup) ────────────────────────────── */
+        .setup-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+            border-radius: 24px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            backdrop-filter: blur(16px);
+        }
+
+        .hero-banner {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hero-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.6));
+            animation: pulseIcon 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseIcon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .hero-title {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-rule {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            line-height: 1.4;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 8px 12px;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .section-label {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-chips-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .player-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-num-tag {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #cbd5e1;
+            flex-shrink: 0;
+        }
+
+        .player-input {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .player-input:focus {
+            outline: none;
+            border-color: #06b6d4;
+        }
+
+        .btn-remove-player {
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #fb7185;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .btn-add-player {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px dashed rgba(255, 255, 255, 0.25);
+            color: #cbd5e1;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-add-player:active {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .preset-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .preset-pill {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            padding: 10px 6px;
+            border-radius: 14px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-pill.active {
+            background: rgba(6, 182, 212, 0.25);
+            border-color: #06b6d4;
+            color: #67e8f9;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-start-game {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-start-game:active {
+            transform: scale(0.97);
+        }
+
+        /* ── PHASE 2: 폰 넘겨주기 (Pass Screen) ─────────────────── */
+        .pass-card {
+            background: var(--card-bg);
+            border: 2px dashed rgba(245, 158, 11, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            border-radius: 28px;
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 20px;
+            min-height: 420px;
+            cursor: pointer;
+        }
+
+        .pass-icon {
+            font-size: 4.5rem;
+            filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.7));
+            animation: bouncePass 1.8s infinite ease-in-out;
+        }
+
+        @keyframes bouncePass {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .pass-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .pass-target-name {
+            color: #fef08a;
+            font-size: 2.1rem;
+            font-weight: 900;
+            text-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+            margin: 4px 0;
+        }
+
+        .pass-desc {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .tap-to-open-hint {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #38bdf8;
+            margin-top: 10px;
+        }
+
+        /* ── PHASE 3: 비밀 숫자 입력 (Submit) ───────────────────── */
+        .submit-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            border-radius: 24px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .submit-header {
+            text-align: center;
+        }
+
+        .submit-badge {
+            display: inline-block;
+            background: rgba(6, 182, 212, 0.2);
+            border: 1px solid #06b6d4;
+            color: #67e8f9;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .submit-current-player {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        /* 디지털 숫자 표시창 */
+        .digit-display-box {
+            background: #000;
+            border: 2px solid rgba(245, 158, 11, 0.6);
+            box-shadow: inset 0 0 25px rgba(245, 158, 11, 0.25), 0 0 20px rgba(245, 158, 11, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+        }
+
+        .digit-number {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: #fef08a;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 30px rgba(245, 158, 11, 0.8);
+            line-height: 1;
+        }
+
+        .digit-sub-hint {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        /* 키패드 그리드 */
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .key-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .key-btn:active {
+            background: rgba(6, 182, 212, 0.4);
+            transform: scale(0.95);
+        }
+
+        .key-btn.action {
+            background: rgba(244, 63, 94, 0.2);
+            color: #fb7185;
+            font-size: 1rem;
+        }
+
+        .btn-confirm-submit {
+            background: linear-gradient(135deg, #06b6d4, #0284c7);
+            color: #ffffff;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-confirm-submit:active {
+            transform: scale(0.97);
+        }
+
+        /* ── PHASE 4: 전광판 개표 연출 (The Reveal) ─────────────── */
+        .reveal-card {
+            background: #000;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.95);
+            border-radius: 28px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 480px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 스크린 흔들림 이펙트 */
+        .shake {
+            animation: screenShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes screenShake {
+            10%, 90% { transform: translate3d(-3px, 0, 0); }
+            20%, 80% { transform: translate3d(5px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .reveal-billboard {
+            background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px 16px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+        }
+
+        .reveal-scan-label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #38bdf8;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .reveal-number {
+            font-size: 5.5rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+        }
+
+        .reveal-status-msg {
+            font-size: 1.15rem;
+            font-weight: 800;
+            min-height: 1.6rem;
+        }
+
+        .status-exploding {
+            color: #f43f5e;
+            text-shadow: 0 0 15px rgba(244, 63, 94, 0.8);
+            animation: pulseExplode 0.3s infinite alternate;
+        }
+
+        @keyframes pulseExplode {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .status-unique {
+            color: #fef08a;
+            font-size: 1.35rem;
+            text-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
+        }
+
+        /* 탈락자/제출자 리스트 */
+        .reveal-history-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 160px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .history-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .history-row.bust {
+            background: rgba(244, 63, 94, 0.15);
+            border-color: rgba(244, 63, 94, 0.3);
+            color: #fca5a5;
+        }
+
+        .history-row.winner {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            color: #fef08a;
+        }
+
+        /* ── PHASE 5: 최종 우승 및 결과 (Winner Screen) ──────────── */
+        .winner-card {
+            background: var(--card-bg);
+            border: 2px solid rgba(245, 158, 11, 0.5);
+            box-shadow: 0 20px 70px rgba(245, 158, 11, 0.2), 0 0 30px rgba(0, 0, 0, 0.8);
+            border-radius: 28px;
+            padding: 28px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .winner-crown {
+            font-size: 4rem;
+            filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.8));
+            animation: floatCrown 2.5s infinite ease-in-out;
+        }
+
+        @keyframes floatCrown {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(4deg); }
+        }
+
+        .winner-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #f59e0b;
+            letter-spacing: 0.05em;
+        }
+
+        .winner-name {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin: -6px 0 0;
+        }
+
+        .winner-stat-pill {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fef08a;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 900;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-action:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-action.primary {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            border: none;
+            font-weight: 900;
+            padding: 14px;
+        }
+
+        /* 파티클 캔버스 */
+        #confettiCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* 토스트 안내 */
+        .toast-msg {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #fef08a;
+            padding: 10px 22px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            white-space: nowrap;
+        }
+
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- 상단 헤더 -->
+    <header>
+        <div class="header-title-box">
+            <a href="../index.html" class="btn-back" title="메인으로">‹</a>
+            <span class="game-title-text">가장 작은 유일한 숫자</span>
+        </div>
+        <div class="round-badge" id="roundStatusBadge">1라운드</div>
+    </header>
+
+    <main>
+        <!-- ── PHASE 1: 게임 설정 ─────────────────────────────── -->
+        <div id="phaseSetup" class="game-phase active">
+            <div class="setup-card">
+                <div class="hero-banner">
+                    <div class="hero-icon">⚖️</div>
+                    <div class="hero-title">최저 고유 숫자 눈치 게임</div>
+                    <div class="hero-rule">
+                        <b>가장 작은 숫자</b>를 낸 사람이 승리하지만,<br>
+                        남과 단 한 명이라도 겹치면 <b>폭발 탈락</b>합니다!
+                    </div>
+                </div>
+
+                <!-- 인원 및 이름 설정 -->
+                <div class="section-label">
+                    <span>👥 참가 플레이어</span>
+                    <span id="playerCountLabel">4명</span>
+                </div>
+                <div class="player-chips-grid" id="playerListContainer"></div>
+                <button class="btn-add-player" id="btnAddPlayer">
+                    <span>➕</span> 플레이어 추가하기
+                </button>
+
+                <!-- 숫자 범위 선택 -->
+                <div class="section-label">
+                    <span>🎯 선택 가능한 숫자 범위</span>
+                </div>
+                <div class="preset-row">
+                    <button class="preset-pill active" data-range="30">1 ~ 30<br><small>(소수 정예)</small></button>
+                    <button class="preset-pill" data-range="50">1 ~ 50<br><small>(추천 밸런스)</small></button>
+                    <button class="preset-pill" data-range="100">1 ~ 100<br><small>(대규모)</small></button>
+                </div>
+
+                <!-- 시작 버튼 -->
+                <button class="btn-start-game" id="btnStartGame">
+                    <span>🚀</span> 게임 시작하기
+                </button>
+            </div>
+        </div>
+
+        <!-- ── PHASE 2: 폰 넘겨주기 화면 ───────────────────────── -->
+        <div id="phasePass" class="game-phase">
+            <div class="pass-card" id="btnOpenSubmit">
+                <div class="pass-icon">📱</div>
+                <div class="pass-title">폰을 건네주세요!</div>
+                <div class="pass-target-name" id="passTargetPlayerName">플레이어 1</div>
+                <div class="pass-desc">
+                    다른 사람이 보지 못하게 폰을 건네받은 뒤<br>
+                    화면을 터치하여 비밀 숫자를 입력하세요.
+                </div>
+                <div class="tap-to-open-hint">화면을 탭하여 입력창 열기 👆</div>
+            </div>
+        </div>
+
+        <!-- ── PHASE 3: 비밀 숫자 입력 ─────────────────────────── -->
+        <div id="phaseSubmit" class="game-phase">
+            <div class="submit-card">
+                <div class="submit-header">
+                    <div class="submit-badge" id="submitTurnBadge">1 / 4 번째 제출</div>
+                    <div class="submit-current-player" id="submitPlayerName">플레이어 1</div>
+                </div>
+
+                <div class="digit-display-box">
+                    <div class="digit-number" id="displayDigits">_</div>
+                    <div class="digit-sub-hint" id="rangeHintText">1부터 30까지의 숫자를 입력하세요</div>
+                </div>
+
+                <!-- 가상 키패드 -->
+                <div class="keypad-grid">
+                    <button class="key-btn" data-key="1">1</button>
+                    <button class="key-btn" data-key="2">2</button>
+                    <button class="key-btn" data-key="3">3</button>
+                    <button class="key-btn" data-key="4">4</button>
+                    <button class="key-btn" data-key="5">5</button>
+                    <button class="key-btn" data-key="6">6</button>
+                    <button class="key-btn" data-key="7">7</button>
+                    <button class="key-btn" data-key="8">8</button>
+                    <button class="key-btn" data-key="9">9</button>
+                    <button class="key-btn action" data-key="clear">지움</button>
+                    <button class="key-btn" data-key="0">0</button>
+                    <button class="key-btn action" data-key="del">⌫</button>
+                </div>
+
+                <button class="btn-confirm-submit" id="btnConfirmSubmit">
+                    <span>🔒</span> 이 숫자로 비밀 제출
+                </button>
+            </div>
+        </div>
+
+        <!-- ── PHASE 4: 전광판 순차 개표 (The Reveal) ─────────────── -->
+        <div id="phaseReveal" class="game-phase">
+            <div class="reveal-card" id="revealCardBox">
+                <div class="reveal-billboard">
+                    <div class="reveal-scan-label">SCANNING BOARD</div>
+                    <div class="reveal-number" id="revealCurrentNum">1</div>
+                    <div class="reveal-status-msg" id="revealStatusMsg">카운트다운 시작...</div>
+                </div>
+
+                <div class="section-label">
+                    <span>📜 실시간 개표 현황</span>
+                    <span id="revealProgressRatio">0 / 4 확인</span>
+                </div>
+
+                <div class="reveal-history-box" id="revealHistoryList"></div>
+            </div>
+        </div>
+
+        <!-- ── PHASE 5: 최종 우승 및 결과 ──────────────────────── -->
+        <div id="phaseWinner" class="game-phase">
+            <div class="winner-card">
+                <div class="winner-crown" id="winnerIcon">👑</div>
+                <div class="winner-title" id="winnerSubtitle">최저 고유 숫자 달성!</div>
+                <div class="winner-name" id="winnerPlayerName">민수</div>
+                <div class="winner-stat-pill" id="winnerStatBadge">당첨 숫자: 3 (단독 생존)</div>
+
+                <div class="actions-grid">
+                    <button class="btn-action primary" id="btnPlayAgain">
+                        <span>🔄</span> 같은 멤버로 한 번 더!
+                    </button>
+                    <button class="btn-action" id="btnSaveResultImage">
+                        <span>📸</span> 결과 카드 저장
+                    </button>
+                    <button class="btn-action" id="btnCopyKakao">
+                        <span>📋</span> 카톡 텍스트 복사
+                    </button>
+                    <button class="btn-action" id="btnBackToSetup" style="grid-column: span 2;">
+                        <span>⚙️</span> 인원/범위 재설정
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toastMsg" class="toast-msg">알림 메시지</div>
+
+    <!-- Common Game Scripts -->
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+
+    <script>
+        (function() {
+            // ── 오디오 합성 엔진 ────────────────────────────────────
+            class SynthAudio {
+                constructor() { this.ctx = null; }
+                init() {
+                    if (!this.ctx) {
+                        const AC = window.AudioContext || window.webkitAudioContext;
+                        if (AC) this.ctx = new AC();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+                }
+                playTick() {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.06);
+                }
+                playExplode() {
+                    this.init();
+                    if (!this.ctx) return;
+                    // 저주파 쏘우투스 + 노이즈감 폭발음
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.35);
+                    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.35);
+                }
+                playWinFanfare() {
+                    this.init();
+                    if (!this.ctx) return;
+                    const chords = [523.25, 659.25, 783.99, 1046.5];
+                    chords.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.setValueAtTime(0.25, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.6);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + idx * 0.08);
+                        osc.stop(this.ctx.currentTime + idx * 0.08 + 0.6);
+                    });
+                }
+                playBuzzer() {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(90, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.4);
+                }
+            }
+            const sound = new SynthAudio();
+
+            // ── 게임 상태 ──────────────────────────────────────────
+            const STORAGE_KEY_PLAYERS = 'lowest_unique_players_v1';
+            let players = ['플레이어 1', '플레이어 2', '플레이어 3', '플레이어 4'];
+            let maxRange = 30;
+            let currentTurnIndex = 0;
+            let currentInputDigits = '';
+            let submissions = []; // { player: string, number: number }
+            let roundNumber = 1;
+            let lastGameResult = null;
+
+            // DOM 캐싱
+            const phaseSetup = document.getElementById('phaseSetup');
+            const phasePass = document.getElementById('phasePass');
+            const phaseSubmit = document.getElementById('phaseSubmit');
+            const phaseReveal = document.getElementById('phaseReveal');
+            const phaseWinner = document.getElementById('phaseWinner');
+
+            const playerListContainer = document.getElementById('playerListContainer');
+            const btnAddPlayer = document.getElementById('btnAddPlayer');
+            const playerCountLabel = document.getElementById('playerCountLabel');
+            const btnStartGame = document.getElementById('btnStartGame');
+            const presetPills = document.querySelectorAll('.preset-pill');
+
+            const passTargetPlayerName = document.getElementById('passTargetPlayerName');
+            const btnOpenSubmit = document.getElementById('btnOpenSubmit');
+
+            const submitTurnBadge = document.getElementById('submitTurnBadge');
+            const submitPlayerName = document.getElementById('submitPlayerName');
+            const displayDigits = document.getElementById('displayDigits');
+            const rangeHintText = document.getElementById('rangeHintText');
+            const keyBtns = document.querySelectorAll('.key-btn');
+            const btnConfirmSubmit = document.getElementById('btnConfirmSubmit');
+
+            const revealCardBox = document.getElementById('revealCardBox');
+            const revealCurrentNum = document.getElementById('revealCurrentNum');
+            const revealStatusMsg = document.getElementById('revealStatusMsg');
+            const revealProgressRatio = document.getElementById('revealProgressRatio');
+            const revealHistoryList = document.getElementById('revealHistoryList');
+
+            const winnerIcon = document.getElementById('winnerIcon');
+            const winnerSubtitle = document.getElementById('winnerSubtitle');
+            const winnerPlayerName = document.getElementById('winnerPlayerName');
+            const winnerStatBadge = document.getElementById('winnerStatBadge');
+            const btnPlayAgain = document.getElementById('btnPlayAgain');
+            const btnSaveResultImage = document.getElementById('btnSaveResultImage');
+            const btnCopyKakao = document.getElementById('btnCopyKakao');
+            const btnBackToSetup = document.getElementById('btnBackToSetup');
+
+            const roundStatusBadge = document.getElementById('roundStatusBadge');
+            const toastMsg = document.getElementById('toastMsg');
+            const confettiCanvas = document.getElementById('confettiCanvas');
+
+            function showToast(msg) {
+                toastMsg.textContent = msg;
+                toastMsg.classList.add('show');
+                clearTimeout(toastMsg._t);
+                toastMsg._t = setTimeout(() => toastMsg.classList.remove('show'), 2200);
+            }
+
+            function setPhase(phase) {
+                [phaseSetup, phasePass, phaseSubmit, phaseReveal, phaseWinner].forEach(p => p.classList.remove('active'));
+                phase.classList.add('active');
+            }
+
+            // ── 플레이어 목록 관리 ──────────────────────────────────
+            function loadSavedPlayers() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY_PLAYERS);
+                    if (saved) players = JSON.parse(saved);
+                } catch {}
+                renderPlayerList();
+            }
+
+            function savePlayers() {
+                try {
+                    localStorage.setItem(STORAGE_KEY_PLAYERS, JSON.stringify(players));
+                } catch {}
+            }
+
+            function renderPlayerList() {
+                playerListContainer.innerHTML = '';
+                players.forEach((name, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'player-row';
+                    row.innerHTML = `
+                        <div class="player-num-tag">${idx + 1}</div>
+                        <input type="text" class="player-input" value="${escapeHtml(name)}" maxlength="10">
+                        ${players.length > 2 ? `<button class="btn-remove-player" title="삭제">×</button>` : ''}
+                    `;
+                    const input = row.querySelector('.player-input');
+                    input.addEventListener('input', (e) => {
+                        players[idx] = e.target.value.trim() || `플레이어 ${idx + 1}`;
+                        savePlayers();
+                    });
+                    const removeBtn = row.querySelector('.btn-remove-player');
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', () => {
+                            players.splice(idx, 1);
+                            savePlayers();
+                            renderPlayerList();
+                        });
+                    }
+                    playerListContainer.appendChild(row);
+                });
+                playerCountLabel.textContent = `${players.length}명`;
+            }
+
+            btnAddPlayer.addEventListener('click', () => {
+                if (players.length >= 12) {
+                    showToast('최대 12명까지 참가할 수 있습니다.');
+                    return;
+                }
+                players.push(`플레이어 ${players.length + 1}`);
+                savePlayers();
+                renderPlayerList();
+            });
+
+            // 범위 프리셋 선택
+            presetPills.forEach(pill => {
+                pill.addEventListener('click', () => {
+                    presetPills.forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    maxRange = parseInt(pill.dataset.range, 10);
+                });
+            });
+
+            // ── 게임 시작 ──────────────────────────────────────────
+            btnStartGame.addEventListener('click', () => {
+                sound.init();
+                submissions = [];
+                currentTurnIndex = 0;
+                roundStatusBadge.textContent = `${roundNumber}라운드`;
+                preparePassTurn();
+            });
+
+            function preparePassTurn() {
+                passTargetPlayerName.textContent = players[currentTurnIndex];
+                setPhase(phasePass);
+            }
+
+            btnOpenSubmit.addEventListener('click', () => {
+                sound.playTick();
+                currentInputDigits = '';
+                submitTurnBadge.textContent = `${currentTurnIndex + 1} / ${players.length} 번째 제출`;
+                submitPlayerName.textContent = players[currentTurnIndex];
+                rangeHintText.textContent = `1부터 ${maxRange}까지의 숫자를 입력하세요`;
+                updateDisplayDigits();
+                setPhase(phaseSubmit);
+            });
+
+            // ── 키패드 입력 처리 ────────────────────────────────────
+            keyBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sound.playTick();
+                    const key = btn.dataset.key;
+                    if (key === 'clear') {
+                        currentInputDigits = '';
+                    } else if (key === 'del') {
+                        currentInputDigits = currentInputDigits.slice(0, -1);
+                    } else {
+                        if (currentInputDigits.length >= 3) return;
+                        currentInputDigits += key;
+                    }
+                    updateDisplayDigits();
+                });
+            });
+
+            function updateDisplayDigits() {
+                displayDigits.textContent = currentInputDigits || '_';
+            }
+
+            btnConfirmSubmit.addEventListener('click', () => {
+                const num = parseInt(currentInputDigits, 10);
+                if (!num || num < 1 || num > maxRange) {
+                    showToast(`1부터 ${maxRange} 사이의 유효한 숫자를 입력해주세요!`);
+                    sound.playBuzzer();
+                    return;
+                }
+
+                submissions.push({
+                    player: players[currentTurnIndex],
+                    number: num
+                });
+
+                currentTurnIndex++;
+                if (currentTurnIndex < players.length) {
+                    preparePassTurn();
+                } else {
+                    startRevealPhase();
+                }
+            });
+
+            // ── PHASE 4: 전광판 순차 개표 (The Reveal) ───────────────
+            function startRevealPhase() {
+                setPhase(phaseReveal);
+                revealHistoryList.innerHTML = '';
+                revealProgressRatio.textContent = `0 / ${submissions.length} 확인`;
+
+                // 제출된 숫자 집계
+                const countMap = new Map(); // number -> [player names]
+                submissions.forEach(sub => {
+                    if (!countMap.has(sub.number)) countMap.set(sub.number, []);
+                    countMap.get(sub.number).push(sub.player);
+                });
+
+                const maxSubmitted = Math.max(...submissions.map(s => s.number));
+                let currentScan = 1;
+                let foundWinner = null;
+
+                const timer = setInterval(() => {
+                    revealCurrentNum.textContent = currentScan;
+
+                    if (countMap.has(currentScan)) {
+                        const submitters = countMap.get(currentScan);
+                        const count = submitters.length;
+
+                        if (count > 1) {
+                            // 폭발 탈락!
+                            sound.playExplode();
+                            triggerScreenShake();
+                            revealStatusMsg.className = 'reveal-status-msg status-exploding';
+                            revealStatusMsg.textContent = `💥 [${currentScan}] ${count}명 중복 제출! 전원 폭발 탈락!`;
+
+                            const historyItem = document.createElement('div');
+                            historyItem.className = 'history-row bust';
+                            historyItem.innerHTML = `
+                                <span>숫자 ${currentScan} (${submitters.join(', ')})</span>
+                                <span>💥 폭발 (${count}명)</span>
+                            `;
+                            revealHistoryList.prepend(historyItem);
+                        } else {
+                            // 단독 고유 숫자 적중! 우승자 탄생!
+                            foundWinner = {
+                                player: submitters[0],
+                                number: currentScan
+                            };
+                            sound.playWinFanfare();
+                            revealStatusMsg.className = 'reveal-status-msg status-unique';
+                            revealStatusMsg.textContent = `🎯 [${currentScan}] ${submitters[0]} 단독 적중! 우승!`;
+
+                            const historyItem = document.createElement('div');
+                            historyItem.className = 'history-row winner';
+                            historyItem.innerHTML = `
+                                <span>숫자 ${currentScan} (${submitters[0]})</span>
+                                <span>👑 단독 우승!</span>
+                            `;
+                            revealHistoryList.prepend(historyItem);
+
+                            clearInterval(timer);
+                            setTimeout(() => {
+                                showFinalWinner(foundWinner, submissions);
+                            }, 1800);
+                            return;
+                        }
+                    } else {
+                        // 아무도 제출하지 않은 숫자: 경쾌한 틱 소리 내며 빠르게 지나감
+                        sound.playTick();
+                        revealStatusMsg.className = 'reveal-status-msg';
+                        revealStatusMsg.textContent = `[${currentScan}] 제출자 없음... 통과`;
+                    }
+
+                    currentScan++;
+                    if (currentScan > maxSubmitted) {
+                        clearInterval(timer);
+                        // 전원 자멸/무승부
+                        setTimeout(() => {
+                            showFinalDraw(submissions);
+                        }, 1200);
+                    }
+                }, 750);
+            }
+
+            function triggerScreenShake() {
+                revealCardBox.classList.remove('shake');
+                void revealCardBox.offsetWidth; // reflow
+                revealCardBox.classList.add('shake');
+            }
+
+            // ── PHASE 5: 결과 발표 ──────────────────────────────────
+            function showFinalWinner(winner, allSubs) {
+                lastGameResult = {
+                    winner: winner.player,
+                    number: winner.number,
+                    isDraw: false,
+                    subs: allSubs,
+                    date: new Date()
+                };
+
+                winnerIcon.textContent = '👑';
+                winnerSubtitle.textContent = '최저 고유 숫자 달성!';
+                winnerPlayerName.textContent = winner.player;
+                winnerStatBadge.textContent = `당첨 숫자: ${winner.number} (단독 생존)`;
+
+                launchConfetti();
+                setPhase(phaseWinner);
+            }
+
+            function showFinalDraw(allSubs) {
+                sound.playBuzzer();
+                lastGameResult = {
+                    winner: null,
+                    isDraw: true,
+                    subs: allSubs,
+                    date: new Date()
+                };
+
+                winnerIcon.textContent = '💀';
+                winnerSubtitle.textContent = '모든 숫자가 폭발했습니다!';
+                winnerPlayerName.textContent = '전원 자멸 (무승부)';
+                winnerStatBadge.textContent = '아무도 단독 숫자를 지켜내지 못했습니다.';
+
+                setPhase(phaseWinner);
+            }
+
+            btnPlayAgain.addEventListener('click', () => {
+                roundNumber++;
+                roundStatusBadge.textContent = `${roundNumber}라운드`;
+                submissions = [];
+                currentTurnIndex = 0;
+                preparePassTurn();
+            });
+
+            btnBackToSetup.addEventListener('click', () => {
+                setPhase(phaseSetup);
+            });
+
+            // ── 카카오톡 결과 텍스트 복사 ───────────────────────────
+            btnCopyKakao.addEventListener('click', () => {
+                if (!lastGameResult) return;
+                sound.playTick();
+
+                let text = `[⚖️ 가장 작은 유일한 숫자 결과]\n`;
+                text += `일시: ${lastGameResult.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n`;
+                text += `참가: ${lastGameResult.subs.length}명 (범위: 1~${maxRange})\n\n`;
+
+                if (lastGameResult.isDraw) {
+                    text += `결과: 💀 전원 자멸! (단독 숫자가 없어 모두 탈락)\n`;
+                } else {
+                    text += `👑 우승자: ${lastGameResult.winner}\n`;
+                    text += `🎯 당첨 숫자: ${lastGameResult.number}\n`;
+                }
+
+                text += `\n[제출 현황]\n`;
+                const sorted = [...lastGameResult.subs].sort((a, b) => a.number - b.number);
+                sorted.forEach(s => {
+                    text += `• ${s.player} : [${s.number}]\n`;
+                });
+
+                text += `\n#미니게임천국 #최저고유숫자`;
+
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('📋 단톡방 공유 텍스트가 복사되었습니다!');
+                });
+            });
+
+            // ── 고화질 결과 카드 이미지 저장 ────────────────────────
+            btnSaveResultImage.addEventListener('click', async () => {
+                if (!lastGameResult) return;
+                sound.playTick();
+                showToast('📸 결과 카드를 생성하고 있어요...');
+
+                const cw = 720;
+                const ch = 900;
+                const canvas = document.createElement('canvas');
+                canvas.width = cw;
+                canvas.height = ch;
+                const ctx = canvas.getContext('2d');
+
+                // 사이버네온 배경
+                const grad = ctx.createLinearGradient(0, 0, 0, ch);
+                grad.addColorStop(0, '#0a0f1d');
+                grad.addColorStop(0.5, '#070913');
+                grad.addColorStop(1, '#020408');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, cw, ch);
+
+                // 장식 격자선
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+                ctx.lineWidth = 1;
+                for (let x = 40; x < cw; x += 40) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ch); ctx.stroke();
+                }
+                for (let y = 40; y < ch; y += 40) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cw, y); ctx.stroke();
+                }
+
+                // 상단 엠블럼
+                ctx.font = 'bold 15px "Outfit", sans-serif';
+                ctx.fillStyle = '#f59e0b';
+                ctx.textAlign = 'center';
+                ctx.fillText('⚡ MINI GAME HEAVEN • LOWEST UNIQUE NUMBER ⚡', cw / 2, 60);
+
+                ctx.font = '900 36px "Outfit", "Noto Sans KR", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('⚖️ 가장 작은 유일한 숫자', cw / 2, 110);
+
+                // 우승자 카드 박스
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+                ctx.strokeStyle = lastGameResult.isDraw ? '#ef4444' : '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(40, 160, cw - 80, 240, 24);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.font = '50px sans-serif';
+                ctx.fillText(lastGameResult.isDraw ? '💀' : '👑', cw / 2, 235);
+
+                ctx.font = '900 32px "Noto Sans KR", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(lastGameResult.isDraw ? '전원 자멸 (무승부)' : lastGameResult.winner, cw / 2, 290);
+
+                ctx.font = 'bold 18px "Noto Sans KR", sans-serif';
+                ctx.fillStyle = lastGameResult.isDraw ? '#fca5a5' : '#fef08a';
+                ctx.fillText(lastGameResult.isDraw ? '모든 숫자가 중복되어 전원 폭발했습니다' : `승리 숫자: [${lastGameResult.number}] 단독 생존`, cw / 2, 340);
+
+                // 제출 분포 막대 리스트
+                ctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText('📊 전체 제출 숫자 분포', cw / 2, 440);
+
+                const countMap = new Map();
+                lastGameResult.subs.forEach(s => {
+                    if (!countMap.has(s.number)) countMap.set(s.number, []);
+                    countMap.get(s.number).push(s.player);
+                });
+
+                const sortedNums = Array.from(countMap.keys()).sort((a, b) => a - b);
+                let listY = 480;
+
+                sortedNums.slice(0, 6).forEach(num => {
+                    const submitters = countMap.get(num);
+                    const isWin = !lastGameResult.isDraw && num === lastGameResult.number;
+                    const isBust = submitters.length > 1;
+
+                    ctx.fillStyle = isWin ? 'rgba(245, 158, 11, 0.2)' : (isBust ? 'rgba(244, 63, 94, 0.15)' : 'rgba(30, 41, 59, 0.6)');
+                    ctx.strokeStyle = isWin ? '#f59e0b' : (isBust ? 'rgba(244, 63, 94, 0.4)' : 'rgba(255, 255, 255, 0.1)');
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.roundRect(50, listY, cw - 100, 44, 10);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.font = '900 18px "Outfit", sans-serif';
+                    ctx.fillStyle = isWin ? '#fef08a' : (isBust ? '#fb7185' : '#ffffff');
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`숫자 [${num}]`, 70, listY + 28);
+
+                    ctx.font = 'bold 14px "Noto Sans KR", sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(`${submitters.join(', ')} (${isBust ? '💥 중복' : '🎯 유일'})`, cw - 70, listY + 28);
+
+                    listY += 54;
+                });
+
+                // 하단 푸터
+                ctx.font = '600 13px "Noto Sans KR", sans-serif';
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'center';
+                ctx.fillText('미니게임 천국 • 가장 작은 숫자를 내되 남과 겹치지 마라!', cw / 2, ch - 35);
+
+                canvas.toBlob(async (blob) => {
+                    await saveToGallery(blob, `lowest-unique-${Date.now()}.png`);
+                    showToast('📸 결과 이미지가 저장되었습니다!');
+                }, 'image/png');
+            });
+
+            // ── 폭죽 파티클 (Confetti) ──────────────────────────────
+            function launchConfetti() {
+                const c = confettiCanvas;
+                c.width = window.innerWidth;
+                c.height = window.innerHeight;
+                const cctx = c.getContext('2d');
+                const particles = [];
+                const colors = ['#f59e0b', '#06b6d4', '#ec4899', '#10b981', '#fef08a'];
+
+                for (let i = 0; i < 60; i++) {
+                    particles.push({
+                        x: c.width / 2,
+                        y: c.height / 2,
+                        vx: (Math.random() - 0.5) * 12,
+                        vy: (Math.random() - 0.8) * 14,
+                        size: Math.random() * 6 + 4,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        alpha: 1,
+                        decay: 0.015 + Math.random() * 0.02
+                    });
+                }
+
+                function anim() {
+                    cctx.clearRect(0, 0, c.width, c.height);
+                    let alive = false;
+                    particles.forEach(p => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.3; // 중력
+                        p.alpha -= p.decay;
+                        if (p.alpha > 0) {
+                            alive = true;
+                            cctx.fillStyle = p.color;
+                            cctx.globalAlpha = p.alpha;
+                            cctx.fillRect(p.x, p.y, p.size, p.size);
+                        }
+                    });
+                    if (alive) requestAnimationFrame(anim);
+                    else cctx.clearRect(0, 0, c.width, c.height);
+                }
+                anim();
+            }
+
+            // 초기 실행
+            loadSavedPlayers();
+        })();
+    </script>
+
+    <!-- 프로젝트 표준 Game Rules JSON Block -->
+    <script type="application/json" id="game-rules">
+    {
+        "title": "가장 작은 유일한 숫자",
+        "goal": "다른 사람과 단 한 명이라도 겹치지 않는 가장 작은 숫자를 제출하여 승리하세요.",
+        "steps": [
+            "참가 인원(2~12인)과 숫자 범위(1~30, 1~50, 1~100)를 설정하고 게임을 시작합니다.",
+            "폰을 한 명씩 건네받으며 자신이 원하는 숫자를 비밀리에 키패드로 입력하여 제출합니다.",
+            "모든 제출이 끝나면 전광판이 1부터 순차적으로 카운트업하며 숫자를 스캔합니다.",
+            "2명 이상 겹친 숫자는 💥 폭발음과 함께 전원 탈락 처리됩니다.",
+            "가장 먼저 단 1명만 제출한 고유 숫자가 나타나면 그 사람이 단독 우승자가 됩니다.",
+            "결과 화면에서 숫자 제출 분포를 확인하고 결과 카드를 이미지나 카톡으로 공유할 수 있습니다."
+        ],
+        "tips": [
+            "1을 내면 이기기 쉽지만 다른 사람들도 1을 낼 확률이 매우 높습니다.",
+            "남들의 심리를 역이용해 2, 3, 4 등 살짝 높은 숫자를 노려보는 것이 핵심 전략입니다."
+        ],
+        "players": "2~12인",
+        "time": "약 2분"
+    }
+    </script>
+</body>
+</html>
