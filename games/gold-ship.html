@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>황금 보물선 탐험 | 푸시 유어 럭 파티 게임</title>
+    <link rel="stylesheet" href="../css/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../css/game-common.css?v=2187f848">
+    <style>
+        :root {
+            --sea-dark: #071320;
+            --sea-mid: #0d233a;
+            --sea-card: rgba(13, 35, 58, 0.85);
+            --gold: #f59e0b;
+            --gold-bright: #fef08a;
+            --gold-glow: rgba(245, 158, 11, 0.4);
+            --ruby: #f43f5e;
+            --ruby-glow: rgba(244, 63, 94, 0.4);
+            --emerald: #10b981;
+            --cyan: #06b6d4;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--sea-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+                radial-gradient(circle at 90% 90%, rgba(245, 158, 11, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #071320 0%, #03080e 100%);
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(7, 19, 32, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .title-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .top-sub-badge {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--gold);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .top-title {
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            padding: 16px;
+            max-width: 520px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .phase-view {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .phase-view.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── PHASE 1: 원정대 결성 (Setup) ──────────────────────── */
+        .setup-card {
+            background: var(--sea-card);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+            border-radius: 24px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .hero-banner {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-icon {
+            font-size: 3.2rem;
+            filter: drop-shadow(0 0 20px var(--gold-glow));
+            animation: swayShip 3s infinite ease-in-out;
+        }
+
+        @keyframes swayShip {
+            0%, 100% { transform: rotate(-4deg) translateY(0); }
+            50% { transform: rotate(4deg) translateY(-4px); }
+        }
+
+        .hero-title {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .hero-desc {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.45;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 8px 12px;
+            border-left: 3px solid var(--gold);
+        }
+
+        .section-label {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-list-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 160px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .player-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 900;
+            color: var(--gold);
+            flex-shrink: 0;
+        }
+
+        .player-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .btn-remove-player {
+            background: rgba(244, 63, 94, 0.2);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            color: #fb7185;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-add-player {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px dashed rgba(255, 255, 255, 0.25);
+            color: #cbd5e1;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-add-player:active {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .pill-btn {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #cbd5e1;
+            padding: 10px 6px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pill-btn.active {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: var(--gold);
+            color: var(--gold-bright);
+            box-shadow: 0 0 14px var(--gold-glow);
+        }
+
+        .btn-sail {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #000;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 24px rgba(245, 158, 11, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.15s;
+        }
+
+        .btn-sail:active {
+            transform: scale(0.97);
+        }
+
+        /* ── PHASE 2: 탐험 게임 화면 (Expedition View) ────────── */
+        .game-hud {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 상단 원정대 선단 바 */
+        .fleet-bar {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 4px 2px;
+        }
+
+        .fleet-chip {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 6px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 90px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .fleet-chip.current {
+            border-color: var(--gold);
+            background: rgba(245, 158, 11, 0.15);
+            box-shadow: 0 0 14px var(--gold-glow);
+            transform: translateY(-2px);
+        }
+
+        .chip-name {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #cbd5e1;
+        }
+
+        .fleet-chip.current .chip-name {
+            color: #ffffff;
+        }
+
+        .chip-bank {
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: var(--gold);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 탐험 중앙 무대 */
+        .adventure-stage {
+            background: radial-gradient(circle at center, #0f2742 0%, #06111e 100%);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            min-height: 400px;
+            justify-content: space-between;
+        }
+
+        /* 난파 흔들림 이펙트 */
+        .storm-shake {
+            animation: stormShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes stormShake {
+            10%, 90% { transform: translate3d(-4px, 0, 0); }
+            20%, 80% { transform: translate3d(6px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translate3d(8px, 0, 0); }
+        }
+
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .captain-tag {
+            background: rgba(6, 182, 212, 0.2);
+            border: 1px solid var(--cyan);
+            color: #67e8f9;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .danger-meter {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .skull-icon {
+            font-size: 1.1rem;
+            filter: grayscale(1);
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .skull-icon.active {
+            filter: grayscale(0);
+            opacity: 1;
+            animation: pulseSkull 0.8s infinite alternate;
+        }
+
+        @keyframes pulseSkull {
+            from { transform: scale(1); filter: drop-shadow(0 0 4px var(--ruby)); }
+            to { transform: scale(1.2); filter: drop-shadow(0 0 12px var(--ruby-glow)); }
+        }
+
+        .shield-badge {
+            font-size: 0.9rem;
+            color: var(--cyan);
+            display: none;
+        }
+
+        .shield-badge.active {
+            display: inline-block;
+            animation: pulseShield 1s infinite alternate;
+        }
+
+        @keyframes pulseShield {
+            from { transform: scale(1); }
+            to { transform: scale(1.15); }
+        }
+
+        /* 중앙 3D 카드 디스플레이 */
+        .card-view-wrap {
+            perspective: 1000px;
+            width: 150px;
+            height: 200px;
+            margin: 6px 0;
+        }
+
+        .flip-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .flip-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            padding: 12px;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0c1a2c 100%);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: var(--gold);
+        }
+
+        .card-front {
+            background: #0d1e30;
+            transform: rotateY(180deg);
+        }
+
+        .card-front.gold {
+            background: linear-gradient(145deg, #2a2209 0%, #151004 100%);
+            border-color: #f59e0b;
+        }
+
+        .card-front.skull {
+            background: linear-gradient(145deg, #330b14 0%, #180308 100%);
+            border-color: #f43f5e;
+        }
+
+        .card-front.charm {
+            background: linear-gradient(145deg, #092c30 0%, #031417 100%);
+            border-color: #06b6d4;
+        }
+
+        .card-icon {
+            font-size: 3.5rem;
+            margin-bottom: 4px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .card-value {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--gold);
+            margin-top: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 턴 전리품 주머니 */
+        .loot-bag-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1.5px solid rgba(245, 158, 11, 0.5);
+            border-radius: 18px;
+            padding: 12px 20px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .loot-label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .loot-value {
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: var(--gold-bright);
+            text-shadow: 0 0 15px var(--gold-glow);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 액션 버튼 2개: PUSH vs BANK */
+        .decision-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn-decision {
+            padding: 16px 12px;
+            border-radius: 16px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+
+        .btn-decision:active {
+            transform: scale(0.96);
+        }
+
+        .btn-bank {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-push {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #000000;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-sub-hint {
+            font-size: 0.72rem;
+            font-weight: 700;
+            opacity: 0.85;
+        }
+
+        /* ── PHASE 3: 최종 챔피언 & 시상식 (Winner) ────────────── */
+        .winner-card {
+            background: var(--sea-card);
+            border: 2px solid var(--gold);
+            box-shadow: 0 20px 70px var(--gold-glow);
+            border-radius: 28px;
+            padding: 28px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .crown-icon {
+            font-size: 4rem;
+            filter: drop-shadow(0 0 20px var(--gold-glow));
+            animation: bounceCrown 2s infinite ease-in-out;
+        }
+
+        @keyframes bounceCrown {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .winner-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--gold);
+        }
+
+        .winner-name {
+            font-size: 2.3rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .winner-gold-badge {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid var(--gold);
+            color: var(--gold-bright);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 900;
+        }
+
+        .scoreboard-table-wrap {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            overflow: hidden;
+            margin: 4px 0;
+        }
+
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .score-table th {
+            padding: 10px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: left;
+        }
+
+        .score-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: #f8fafc;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-action.primary {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000000;
+            border: none;
+            font-weight: 900;
+            padding: 14px;
+        }
+
+        /* Confetti */
+        #confettiCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Toast */
+        .toast-msg {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(7, 19, 32, 0.95);
+            border: 1px solid var(--gold);
+            color: var(--gold-bright);
+            padding: 10px 22px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            white-space: nowrap;
+        }
+
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="../index.html" class="btn-icon" title="메인으로">‹</a>
+        <div class="title-group">
+            <span class="top-sub-badge">PUSH YOUR LUCK</span>
+            <span class="top-title">황금 보물선 탐험</span>
+        </div>
+        <button id="btnSoundToggle" class="btn-icon" title="사운드 토글">🔊</button>
+    </div>
+
+    <main>
+        <!-- ── PHASE 1: 게임 설정 ─────────────────────────────── -->
+        <div id="phaseSetup" class="phase-view active">
+            <div class="setup-card">
+                <div class="hero-banner">
+                    <div class="hero-icon">⛵</div>
+                    <h2 class="hero-title">미지의 해역 황금 보물선</h2>
+                    <p class="hero-desc">
+                        보물을 뒤집을수록 상금이 눈덩이처럼 불어나지만,<br>
+                        <b>해골 2장</b>이 나오는 순간 모든 보물이 침몰합니다!
+                    </p>
+                </div>
+
+                <!-- 탐험가 명단 -->
+                <div class="section-label">
+                    <span>🏴‍☠️ 탐험가 등록 (2~8명)</span>
+                    <span id="playerCountBadge">4명</span>
+                </div>
+                <div class="player-list-box" id="playerListBox"></div>
+                <button class="btn-add-player" id="btnAddPlayer">
+                    <span>➕</span> 탐험가 추가하기
+                </button>
+
+                <!-- 승리 목표 금화 설정 -->
+                <div class="section-label">
+                    <span>🪙 목표 금화 (해적왕 기준)</span>
+                </div>
+                <div class="options-grid">
+                    <button class="pill-btn" data-goal="3000">3,000 G<br><small>(초스피드)</small></button>
+                    <button class="pill-btn active" data-goal="5000">5,000 G<br><small>(표준 추천)</small></button>
+                    <button class="pill-btn" data-goal="10000">10,000 G<br><small>(대항해)</small></button>
+                </div>
+
+                <!-- 위험도 해역 선택 -->
+                <div class="section-label">
+                    <span>🌊 탐험 해역 (난이도)</span>
+                </div>
+                <div class="options-grid">
+                    <button class="pill-btn" data-zone="safe">카리브 연안<br><small>(해골 15%)</small></button>
+                    <button class="pill-btn active" data-zone="normal">버뮤다 삼각<br><small>(해골 22%)</small></button>
+                    <button class="pill-btn" data-zone="hard">크라켄 심해<br><small>(해골 30%)</small></button>
+                </div>
+
+                <button class="btn-sail" id="btnStartGame">
+                    <span>⚓ 출항하기 (탐험 시작)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── PHASE 2: 탐험 게임 화면 ───────────────────────── -->
+        <div id="phaseGame" class="phase-view">
+            <div class="game-hud">
+                <!-- 상단 선단 금고 바 -->
+                <div class="fleet-bar" id="fleetBar"></div>
+
+                <!-- 탐험 중앙 무대 -->
+                <div class="adventure-stage" id="stageBox">
+                    <div class="stage-header">
+                        <span class="captain-tag" id="currentCaptainBadge">⛵ 민수 선장의 턴</span>
+                        <div class="danger-meter">
+                            <span class="shield-badge" id="shieldBadge" title="구원의 부적 보호 중">🛡️</span>
+                            <span class="skull-icon" id="skullIcon1">☠️</span>
+                            <span class="skull-icon" id="skullIcon2">☠️</span>
+                        </div>
+                    </div>
+
+                    <!-- 3D 카드 플립 뷰 -->
+                    <div class="card-view-wrap">
+                        <div class="flip-card" id="flipCard">
+                            <div class="card-face card-back">
+                                <div style="font-size:3rem;">🧭</div>
+                                <div style="font-size:0.8rem; font-weight:800; margin-top:8px;">미지의 해역</div>
+                            </div>
+                            <div class="card-face card-front" id="cardFront">
+                                <div class="card-icon" id="cardIcon">🪙</div>
+                                <div class="card-title" id="cardTitle">금화 주머니</div>
+                                <div class="card-value" id="cardValue">+500 G</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 이번 턴 전리품 주머니 -->
+                    <div class="loot-bag-box">
+                        <div class="loot-label">
+                            <span>💰 획득한 전리품:</span>
+                        </div>
+                        <div class="loot-value" id="currentLootText">0 G</div>
+                    </div>
+
+                    <!-- 결정 버튼 2종: BANK vs PUSH -->
+                    <div class="decision-grid">
+                        <button class="btn-decision btn-bank" id="btnBank">
+                            <span>💰 금고에 저장 (Bank)</span>
+                            <span class="btn-sub-hint">전리품 확정 후 턴 종료</span>
+                        </button>
+                        <button class="btn-decision btn-push" id="btnPush">
+                            <span>🔥 한 번 더 탐험 (Push!)</span>
+                            <span class="btn-sub-hint">대박을 노리고 카드 오픈</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── PHASE 3: 최종 챔피언 & 시상식 ──────────────────── -->
+        <div id="phaseWinner" class="phase-view">
+            <div class="winner-card">
+                <div class="crown-icon">👑</div>
+                <div class="winner-title">황금 보물선의 전설 해적왕!</div>
+                <div class="winner-name" id="winnerName">민수 선장</div>
+                <div class="winner-gold-badge" id="winnerStat">최종 금고: 5,200 G 달성!</div>
+
+                <div class="section-label" style="width: 100%; margin-top: 6px;">
+                    <span>📜 최종 원정대 선단 순위표</span>
+                </div>
+                <div class="scoreboard-table-wrap">
+                    <table class="score-table">
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>선장</th>
+                                <th style="text-align:right;">금고 잔고</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finalScoreTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="actions-grid">
+                    <button class="btn-action primary" id="btnPlayAgain">
+                        <span>🔄</span> 같은 멤버로 재출항
+                    </button>
+                    <button class="btn-action" id="btnSaveResultImage">
+                        <span>📸</span> 보물 지도 저장
+                    </button>
+                    <button class="btn-action" id="btnCopyKakao">
+                        <span>📋</span> 카톡 텍스트 복사
+                    </button>
+                    <button class="btn-action" id="btnBackToSetup" style="grid-column: span 2;">
+                        <span>⚙️</span> 인원/난이도 재설정
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toastMsg" class="toast-msg">알림 메시지</div>
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Project Common Scripts -->
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+
+    <script>
+        (function() {
+            // ── 오디오 합성 엔진 ────────────────────────────────────
+            class SeaSynthAudio {
+                constructor() {
+                    this.ctx = null;
+                    this.enabled = true;
+                }
+                init() {
+                    if (!this.ctx) {
+                        const AC = window.AudioContext || window.webkitAudioContext;
+                        if (AC) this.ctx = new AC();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+                }
+                playCoin() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(987.77, this.ctx.currentTime); // B5
+                    osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.08); // E6
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.3);
+                }
+                playGem() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    [1046.5, 1318.5, 1567.9, 2093.0].forEach((freq, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.06);
+                        gain.gain.setValueAtTime(0.15, this.ctx.currentTime + i * 0.06);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.06 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + i * 0.06);
+                        osc.stop(this.ctx.currentTime + i * 0.06 + 0.26);
+                    });
+                }
+                playHorn() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(110, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(95, this.ctx.currentTime + 0.5);
+                    gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.55);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.56);
+                }
+                playStormThunder() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.7);
+                    gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.75);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.75);
+                }
+                playBankLock() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    [523.25, 659.25, 783.99].forEach((f, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(f, this.ctx.currentTime + i * 0.08);
+                        gain.gain.setValueAtTime(0.2, this.ctx.currentTime + i * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.08 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + i * 0.08);
+                        osc.stop(this.ctx.currentTime + i * 0.08 + 0.26);
+                    });
+                }
+                playVictory() {
+                    if (!this.enabled) return;
+                    this.init();
+                    if (!this.ctx) return;
+                    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.3, this.ctx.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.1 + 0.4);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + i * 0.1);
+                        osc.stop(this.ctx.currentTime + i * 0.1 + 0.42);
+                    });
+                }
+            }
+
+            const sound = new SeaSynthAudio();
+
+            // ── 게임 상태 ──────────────────────────────────────────
+            const STORAGE_KEY = 'gold_ship_players_v1';
+            let players = ['민수', '지우', '현우', '서연'];
+            let bankScores = {}; // { '민수': 1200 }
+            let goalGold = 5000;
+            let currentZone = 'normal'; // 'safe', 'normal', 'hard'
+
+            let currentTurnPlayerIndex = 0;
+            let turnLoot = 0;
+            let skullCount = 0;
+            let hasShield = false;
+            let isAnimating = false;
+
+            // ── DOM References ─────────────────────────────────────
+            const phaseSetup = document.getElementById('phaseSetup');
+            const phaseGame = document.getElementById('phaseGame');
+            const phaseWinner = document.getElementById('phaseWinner');
+
+            const playerListBox = document.getElementById('playerListBox');
+            const playerCountBadge = document.getElementById('playerCountBadge');
+            const btnAddPlayer = document.getElementById('btnAddPlayer');
+            const btnStartGame = document.getElementById('btnStartGame');
+
+            const fleetBar = document.getElementById('fleetBar');
+            const stageBox = document.getElementById('stageBox');
+            const currentCaptainBadge = document.getElementById('currentCaptainBadge');
+            const skullIcon1 = document.getElementById('skullIcon1');
+            const skullIcon2 = document.getElementById('skullIcon2');
+            const shieldBadge = document.getElementById('shieldBadge');
+
+            const flipCard = document.getElementById('flipCard');
+            const cardFront = document.getElementById('cardFront');
+            const cardIcon = document.getElementById('cardIcon');
+            const cardTitle = document.getElementById('cardTitle');
+            const cardValue = document.getElementById('cardValue');
+            const currentLootText = document.getElementById('currentLootText');
+
+            const btnBank = document.getElementById('btnBank');
+            const btnPush = document.getElementById('btnPush');
+
+            const winnerName = document.getElementById('winnerName');
+            const winnerStat = document.getElementById('winnerStat');
+            const finalScoreTableBody = document.getElementById('finalScoreTableBody');
+            const btnPlayAgain = document.getElementById('btnPlayAgain');
+            const btnSaveResultImage = document.getElementById('btnSaveResultImage');
+            const btnCopyKakao = document.getElementById('btnCopyKakao');
+            const btnBackToSetup = document.getElementById('btnBackToSetup');
+
+            const toastMsg = document.getElementById('toastMsg');
+            const confettiCanvas = document.getElementById('confettiCanvas');
+            const btnSoundToggle = document.getElementById('btnSoundToggle');
+
+            function showToast(text) {
+                toastMsg.textContent = text;
+                toastMsg.classList.add('show');
+                clearTimeout(toastMsg._t);
+                toastMsg._t = setTimeout(() => toastMsg.classList.remove('show'), 2200);
+            }
+
+            btnSoundToggle.addEventListener('click', () => {
+                sound.enabled = !sound.enabled;
+                btnSoundToggle.textContent = sound.enabled ? '🔊' : '🔇';
+                showToast(sound.enabled ? '🔊 사운드 ON' : '🔇 사운드 OFF');
+            });
+
+            function setPhase(phase) {
+                [phaseSetup, phaseGame, phaseWinner].forEach(p => p.classList.remove('active'));
+                phase.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // ── 플레이어 목록 관리 ──────────────────────────────────
+            function loadSavedPlayers() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) players = JSON.parse(saved);
+                } catch {}
+                renderPlayerList();
+            }
+
+            function savePlayers() {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+                } catch {}
+            }
+
+            function renderPlayerList() {
+                playerListBox.innerHTML = '';
+                players.forEach((p, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'player-row';
+                    row.innerHTML = `
+                        <div class="player-avatar">⚓</div>
+                        <input type="text" class="player-input" value="${escapeHtml(p)}" maxlength="10">
+                        ${players.length > 2 ? `<button class="btn-remove-player" title="삭제">×</button>` : ''}
+                    `;
+                    const input = row.querySelector('.player-input');
+                    input.addEventListener('input', (e) => {
+                        players[idx] = e.target.value.trim() || `선장 ${idx + 1}`;
+                        savePlayers();
+                    });
+                    const rmBtn = row.querySelector('.btn-remove-player');
+                    if (rmBtn) {
+                        rmBtn.addEventListener('click', () => {
+                            players.splice(idx, 1);
+                            savePlayers();
+                            renderPlayerList();
+                        });
+                    }
+                    playerListBox.appendChild(row);
+                });
+                playerCountBadge.textContent = `${players.length}명`;
+            }
+
+            btnAddPlayer.addEventListener('click', () => {
+                if (players.length >= 8) {
+                    showToast('최대 8명까지 참가할 수 있습니다.');
+                    return;
+                }
+                players.push(`선장 ${players.length + 1}`);
+                savePlayers();
+                renderPlayerList();
+            });
+
+            // 목표 금액 선택
+            document.querySelectorAll('[data-goal]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-goal]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    goalGold = parseInt(btn.dataset.goal, 10);
+                });
+            });
+
+            // 난이도 해역 선택
+            document.querySelectorAll('[data-zone]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-zone]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentZone = btn.dataset.zone;
+                });
+            });
+
+            // ── 게임 시작 ──────────────────────────────────────────
+            btnStartGame.addEventListener('click', () => {
+                sound.init();
+                bankScores = {};
+                players.forEach(p => bankScores[p] = 0);
+                currentTurnPlayerIndex = 0;
+                startTurn();
+                setPhase(phaseGame);
+                showToast(`⚓ 탐험 시작! 목표: ${goalGold.toLocaleString()} 골드`);
+            });
+
+            function startTurn() {
+                turnLoot = 0;
+                skullCount = 0;
+                hasShield = false;
+                isAnimating = false;
+
+                updateFleetBar();
+                updateDangerMeter();
+                currentLootText.textContent = '0 G';
+                currentCaptainBadge.textContent = `⛵ ${players[currentTurnPlayerIndex]} 선장의 턴`;
+
+                flipCard.classList.remove('flipped');
+                cardFront.className = 'card-face card-front';
+                btnBank.disabled = true; // 첫 카드를 뒤집기 전엔 뱅크 불가
+                btnBank.style.opacity = '0.5';
+                btnPush.disabled = false;
+            }
+
+            function updateFleetBar() {
+                fleetBar.innerHTML = '';
+                players.forEach((p, idx) => {
+                    const chip = document.createElement('div');
+                    chip.className = `fleet-chip ${idx === currentTurnPlayerIndex ? 'current' : ''}`;
+                    chip.innerHTML = `
+                        <div class="chip-name">${escapeHtml(p)}</div>
+                        <div class="chip-bank">${(bankScores[p] || 0).toLocaleString()} G</div>
+                    `;
+                    fleetBar.appendChild(chip);
+                });
+            }
+
+            function updateDangerMeter() {
+                skullIcon1.classList.toggle('active', skullCount >= 1);
+                skullIcon2.classList.toggle('active', skullCount >= 2);
+                shieldBadge.classList.toggle('active', hasShield);
+            }
+
+            // ── 카드 생성 알고리즘 (해역 난이도 반영) ─────────────────
+            function drawTreasureCard() {
+                // 난이도별 해골 확률
+                let skullProb = 0.22; // normal
+                if (currentZone === 'safe') skullProb = 0.15;
+                else if (currentZone === 'hard') skullProb = 0.30;
+
+                const roll = Math.random();
+
+                if (roll < skullProb) {
+                    return { type: 'skull', title: '저주받은 해골', value: 0, icon: '☠️' };
+                }
+
+                // 특수 부적 or 2배 상자 (10%)
+                const specialRoll = Math.random();
+                if (specialRoll < 0.05 && !hasShield) {
+                    return { type: 'charm', title: '구원의 부적', value: 0, icon: '🛡️' };
+                }
+                if (specialRoll >= 0.05 && specialRoll < 0.10 && turnLoot > 0) {
+                    return { type: 'double', title: '황금 보물상자', value: turnLoot, icon: '✨' };
+                }
+
+                // 일반 보물
+                const lootRoll = Math.random();
+                if (lootRoll < 0.40) {
+                    return { type: 'gold', title: '금화 주머니', value: 300, icon: '🪙' };
+                } else if (lootRoll < 0.70) {
+                    return { type: 'gold', title: '은화 상자', value: 600, icon: '💰' };
+                } else if (lootRoll < 0.90) {
+                    return { type: 'gem', title: '심해 사파이어', value: 1000, icon: '💎' };
+                } else {
+                    return { type: 'relic', title: '고대 황금 우상', value: 1800, icon: '🏺' };
+                }
+            }
+
+            // ── PUSH (카드 뒤집기) ──────────────────────────────────
+            btnPush.addEventListener('click', () => {
+                if (isAnimating) return;
+                isAnimating = true;
+                btnPush.disabled = true;
+                btnBank.disabled = true;
+
+                // 1. 카드 뒤집기
+                flipCard.classList.remove('flipped');
+
+                setTimeout(() => {
+                    const card = drawTreasureCard();
+                    cardIcon.textContent = card.icon;
+                    cardTitle.textContent = card.title;
+
+                    cardFront.className = 'card-face card-front';
+                    if (card.type === 'skull') cardFront.classList.add('skull');
+                    else if (card.type === 'charm') cardFront.classList.add('charm');
+                    else cardFront.classList.add('gold');
+
+                    if (card.type === 'double') {
+                        cardValue.textContent = '상금 2배 뻥튀기!';
+                    } else if (card.type === 'charm') {
+                        cardValue.textContent = '해골 1회 방어 획득!';
+                    } else if (card.type === 'skull') {
+                        cardValue.textContent = '위험! 재앙 출현';
+                    } else {
+                        cardValue.textContent = `+${card.value.toLocaleString()} G`;
+                    }
+
+                    flipCard.classList.add('flipped');
+                    processCardResult(card);
+                }, 250);
+            });
+
+            function processCardResult(card) {
+                setTimeout(() => {
+                    if (card.type === 'skull') {
+                        if (hasShield) {
+                            // 부적으로 방어!
+                            hasShield = false;
+                            sound.playGem();
+                            updateDangerMeter();
+                            showToast("🛡️ 구원의 부적이 해골을 소멸시켰습니다! 위기 모면!");
+                            resumeTurnControls();
+                        } else {
+                            skullCount++;
+                            updateDangerMeter();
+
+                            if (skullCount === 1) {
+                                sound.playHorn();
+                                showToast("⚠️ 경고! 해골 1장 출현! 한 장 더 나오면 전액 침몰!");
+                                resumeTurnControls();
+                            } else {
+                                // 난파! 폭망 (Bust)
+                                sound.playStormThunder();
+                                triggerStormShake();
+                                turnLoot = 0;
+                                currentLootText.textContent = '0 G (난파 폭망 💥)';
+                                showToast("💥 해골 2장 중복! 보물선이 침몰하여 전액 몰수되었습니다!");
+
+                                setTimeout(() => {
+                                    passToNextPlayer();
+                                }, 2200);
+                            }
+                        }
+                    } else if (card.type === 'charm') {
+                        hasShield = true;
+                        sound.playGem();
+                        updateDangerMeter();
+                        showToast("🛡️ 구원의 부적 획득! 다음 해골 1회를 무효화합니다.");
+                        resumeTurnControls();
+                    } else if (card.type === 'double') {
+                        turnLoot = turnLoot * 2;
+                        sound.playCoin();
+                        currentLootText.textContent = `${turnLoot.toLocaleString()} G`;
+                        showToast("✨ 대박! 현재 전리품이 2배로 증가했습니다!");
+                        resumeTurnControls();
+                    } else {
+                        turnLoot += card.value;
+                        if (card.type === 'gem' || card.type === 'relic') sound.playGem();
+                        else sound.playCoin();
+                        currentLootText.textContent = `${turnLoot.toLocaleString()} G`;
+                        resumeTurnControls();
+                    }
+                }, 400);
+            }
+
+            function resumeTurnControls() {
+                isAnimating = false;
+                btnPush.disabled = false;
+                btnBank.disabled = false;
+                btnBank.style.opacity = '1';
+            }
+
+            function triggerStormShake() {
+                stageBox.classList.remove('storm-shake');
+                void stageBox.offsetWidth;
+                stageBox.classList.add('storm-shake');
+            }
+
+            // ── BANK (금고에 안전 입금 & 턴 종료) ─────────────────────
+            btnBank.addEventListener('click', () => {
+                if (isAnimating || turnLoot <= 0) return;
+                sound.playBankLock();
+
+                const player = players[currentTurnPlayerIndex];
+                bankScores[player] += turnLoot;
+                showToast(`💰 ${player} 선장이 ${turnLoot.toLocaleString()} G를 금고에 입금했습니다!`);
+
+                updateFleetBar();
+
+                // 목표 금액 달성 검사
+                if (bankScores[player] >= goalGold) {
+                    setTimeout(() => {
+                        showWinner(player);
+                    }, 800);
+                } else {
+                    setTimeout(() => {
+                        passToNextPlayer();
+                    }, 900);
+                }
+            });
+
+            function passToNextPlayer() {
+                currentTurnPlayerIndex = (currentTurnPlayerIndex + 1) % players.length;
+                startTurn();
+            }
+
+            // ── 시상식 & 결과 ──────────────────────────────────────
+            function showWinner(champion) {
+                sound.playVictory();
+                winnerName.textContent = `${champion} 선장`;
+                winnerStat.textContent = `최종 금고: ${bankScores[champion].toLocaleString()} G (목표 ${goalGold.toLocaleString()} G 달성)`;
+
+                // 순위표 렌더링
+                finalScoreTableBody.innerHTML = '';
+                const ranked = [...players].sort((a, b) => (bankScores[b] || 0) - (bankScores[a] || 0));
+                ranked.forEach((p, idx) => {
+                    const tr = document.createElement('tr');
+                    const medal = idx === 0 ? '👑 1위' : (idx === 1 ? '🥈 2위' : (idx === 2 ? '🥉 3위' : `${idx + 1}위`));
+                    tr.innerHTML = `
+                        <td style="font-weight:900; color:${idx === 0 ? 'var(--gold)' : '#cbd5e1'};">${medal}</td>
+                        <td style="font-weight:800;">${escapeHtml(p)}</td>
+                        <td style="text-align:right; font-weight:900; color:var(--gold);">${(bankScores[p] || 0).toLocaleString()} G</td>
+                    `;
+                    finalScoreTableBody.appendChild(tr);
+                });
+
+                launchConfetti();
+                setPhase(phaseWinner);
+            }
+
+            btnPlayAgain.addEventListener('click', () => {
+                bankScores = {};
+                players.forEach(p => bankScores[p] = 0);
+                currentTurnPlayerIndex = 0;
+                startTurn();
+                setPhase(phaseGame);
+            });
+
+            btnBackToSetup.addEventListener('click', () => {
+                setPhase(phaseSetup);
+            });
+
+            // ── 카카오톡 공유 ──────────────────────────────────────
+            btnCopyKakao.addEventListener('click', () => {
+                const ranked = [...players].sort((a, b) => (bankScores[b] || 0) - (bankScores[a] || 0));
+                const champion = ranked[0];
+
+                let text = `[⛵ 황금 보물선 탐험 항해 보고서]\n`;
+                text += `일시: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n`;
+                text += `목표: ${goalGold.toLocaleString()} 골드 (해역: ${currentZone === 'safe' ? '카리브 연안' : (currentZone === 'hard' ? '크라켄 심해' : '버뮤다 삼각')})\n`;
+                text += `👑 해적왕 등극: ${champion} (${(bankScores[champion] || 0).toLocaleString()} G)\n\n`;
+
+                text += `[선단 최종 금고 순위]\n`;
+                ranked.forEach((p, idx) => {
+                    text += `${idx + 1}위. ${p} 선장 : ${(bankScores[p] || 0).toLocaleString()} G\n`;
+                });
+
+                text += `\n#미니게임천국 #황금보물선 #푸시유어럭`;
+
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('📋 단톡방 공유 텍스트가 복사되었습니다!');
+                }).catch(() => {
+                    showToast('⚠️ 클립보드 복사에 실패했습니다.');
+                });
+            });
+
+            // ── Canvas 고화질 보물 지도 이미지 저장 ──────────────────
+            btnSaveResultImage.addEventListener('click', async () => {
+                showToast('📸 보물 지도 카드를 생성하고 있어요...');
+                const cw = 740;
+                const rowH = 48;
+                const ch = 540 + players.length * rowH;
+                const canvas = document.createElement('canvas');
+                canvas.width = cw;
+                canvas.height = ch;
+                const ctx = canvas.getContext('2d');
+
+                // 양피지 / 심해 항해 지도 그라데이션
+                const grad = ctx.createLinearGradient(0, 0, 0, ch);
+                grad.addColorStop(0, '#0a1d30');
+                grad.addColorStop(0.5, '#071524');
+                grad.addColorStop(1, '#03080e');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, cw, ch);
+
+                // 장식 격자선
+                ctx.strokeStyle = 'rgba(245, 158, 11, 0.08)';
+                ctx.lineWidth = 1;
+                for (let x = 40; x < cw; x += 40) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ch); ctx.stroke();
+                }
+                for (let y = 40; y < ch; y += 40) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cw, y); ctx.stroke();
+                }
+
+                // 나침반 엠블럼
+                ctx.font = 'bold 15px "Pretendard", sans-serif';
+                ctx.fillStyle = '#f59e0b';
+                ctx.textAlign = 'center';
+                ctx.fillText('⚡ MINI GAME HEAVEN • PUSH YOUR LUCK ⚡', cw / 2, 50);
+
+                ctx.font = '900 34px "Pretendard", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('⛵ 황금 보물선 탐험 항해 결과', cw / 2, 95);
+
+                const ranked = [...players].sort((a, b) => (bankScores[b] || 0) - (bankScores[a] || 0));
+                const champion = ranked[0];
+
+                // 챔피언 배너 박스
+                ctx.fillStyle = 'rgba(15, 39, 66, 0.9)';
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(40, 130, cw - 80, 160, 20);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.font = '40px sans-serif';
+                ctx.fillText('👑', cw / 2, 185);
+
+                ctx.font = '900 30px "Pretendard", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(`전설의 해적왕 : ${champion} 선장`, cw / 2, 230);
+
+                ctx.font = 'bold 16px "Pretendard", sans-serif';
+                ctx.fillStyle = '#fef08a';
+                ctx.fillText(`최종 금고: ${(bankScores[champion] || 0).toLocaleString()} G  |  목표 ${goalGold.toLocaleString()} G 달성`, cw / 2, 265);
+
+                // 선단 테이블
+                const tableY = 320;
+                ctx.font = '800 16px "Pretendard", sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'left';
+                ctx.fillText('📊 원정대 선단 최종 순위표', 45, tableY);
+
+                // Table Header
+                ctx.fillStyle = '#162e4a';
+                ctx.fillRect(45, tableY + 15, cw - 90, 36);
+
+                ctx.fillStyle = '#8899ac';
+                ctx.font = '800 13px "Pretendard", sans-serif';
+                ctx.fillText('순위', 65, tableY + 38);
+                ctx.fillText('선장 이름', 220, tableY + 38);
+                ctx.textAlign = 'right';
+                ctx.fillText('금고 잔고', cw - 65, tableY + 38);
+
+                // Rows
+                ranked.forEach((p, pIdx) => {
+                    const ry = tableY + 51 + pIdx * rowH;
+                    ctx.fillStyle = pIdx % 2 === 0 ? '#0b1928' : '#0e2034';
+                    ctx.fillRect(45, ry, cw - 90, rowH);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+                    ctx.strokeRect(45, ry, cw - 90, rowH);
+
+                    ctx.textAlign = 'left';
+                    ctx.fillStyle = pIdx === 0 ? '#fef08a' : '#ffffff';
+                    ctx.font = '800 14px "Pretendard", sans-serif';
+                    ctx.fillText(pIdx === 0 ? '👑 1위' : `${pIdx + 1}위`, 65, ry + 30);
+                    ctx.fillText(p, 220, ry + 30);
+
+                    ctx.textAlign = 'right';
+                    ctx.font = '900 16px "Pretendard", sans-serif';
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillText(`${(bankScores[p] || 0).toLocaleString()} G`, cw - 65, ry + 30);
+                });
+
+                // Footer
+                ctx.font = '600 13px "Pretendard", sans-serif';
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'center';
+                ctx.fillText('미니게임 천국 • 욕심과 안전 사이 벼랑 끝 보물선 탐험!', cw / 2, ch - 25);
+
+                canvas.toBlob(async (blob) => {
+                    await saveToGallery(blob, `gold-ship-${Date.now()}.png`);
+                    showToast('📸 보물 지도 이미지가 저장되었습니다!');
+                }, 'image/png');
+            });
+
+            // ── 폭죽 파티클 (Confetti) ──────────────────────────────
+            function launchConfetti() {
+                const c = confettiCanvas;
+                c.width = window.innerWidth;
+                c.height = window.innerHeight;
+                const cctx = c.getContext('2d');
+                const particles = [];
+                const colors = ['#f59e0b', '#06b6d4', '#ec4899', '#10b981', '#fef08a'];
+
+                for (let i = 0; i < 60; i++) {
+                    particles.push({
+                        x: c.width / 2,
+                        y: c.height / 2,
+                        vx: (Math.random() - 0.5) * 12,
+                        vy: (Math.random() - 0.8) * 14,
+                        size: Math.random() * 6 + 4,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        alpha: 1,
+                        decay: 0.015 + Math.random() * 0.02
+                    });
+                }
+
+                function anim() {
+                    cctx.clearRect(0, 0, c.width, c.height);
+                    let alive = false;
+                    particles.forEach(p => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.3;
+                        p.alpha -= p.decay;
+                        if (p.alpha > 0) {
+                            alive = true;
+                            cctx.fillStyle = p.color;
+                            cctx.globalAlpha = p.alpha;
+                            cctx.fillRect(p.x, p.y, p.size, p.size);
+                        }
+                    });
+                    if (alive) requestAnimationFrame(anim);
+                    else cctx.clearRect(0, 0, c.width, c.height);
+                }
+                anim();
+            }
+
+            // 초기화
+            loadSavedPlayers();
+        })();
+    </script>
+
+    <!-- 프로젝트 표준 Game Rules JSON Block -->
+    <script type="application/json" id="game-rules">
+    {
+        "title": "황금 보물선 탐험 (푸시 유어 럭)",
+        "goal": "욕심과 안전 사이에서 카드를 뒤집어 목표 금화에 가장 먼저 도달하여 전설의 해적왕이 되세요.",
+        "steps": [
+            "2~8명의 탐험가를 등록하고 목표 금화(3,000G, 5,000G, 10,000G)와 해역 난이도를 설정합니다.",
+            "선장의 턴이 오면 중앙의 미지의 해역 덱에서 카드를 1장 오픈(Push)합니다.",
+            "금화·보석·유물이 나오면 이번 턴 전리품 주머니에 금화가 눈덩이처럼 누적됩니다.",
+            "구원의 부적은 다음 해골 1회를 무효화해주며, 황금 보물상자는 지금까지 모은 상금을 2배로 불려줍니다.",
+            "첫 번째 해골이 나오면 경고 사이렌이 울리며, 두 번째 해골이 나오는 순간 배가 난파되어 이번 턴의 모든 보물이 0원으로 침몰합니다.",
+            "매 카드 오픈 후 [금고에 저장 (Bank)]을 누르면 안전하게 내 개인 금고에 보물을 확정 입금하고 턴을 마칠 수 있습니다.",
+            "가장 먼저 목표 금화를 달성한 선장이 해적왕으로 등극합니다."
+        ],
+        "tips": [
+            "해골이 1장 나왔을 때는 무리하게 한 번 더 파기보다 안전하게 [금고에 저장]하는 것이 현명합니다.",
+            "구원의 부적이 있을 때는 해골 1장을 무조건 막아주므로 과감하게 푸시(Push)할 수 있습니다!"
+        ],
+        "players": "2~8인",
+        "time": "약 5~10분"
+    }
+    </script>
+</body>
+</html>
