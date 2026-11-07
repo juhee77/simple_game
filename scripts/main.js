@@ -52,6 +52,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const badge = badgeEl?.textContent.trim() || '';
         const icon = card.querySelector('.game-icon')?.textContent.trim() || '🎮';
 
+        const addedDate = card.dataset.date || '';
+
+        // New 뱃지 판별: 추가일(data-date="YYYY-MM-DD") 기준 7일 이내인지 자동 계산
+        let isNew = false;
+        if (addedDate) {
+            const today = new Date();
+            const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+            const parts = addedDate.split('-').map(Number);
+            if (parts.length === 3) {
+                const addedMid = new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+                const diffDays = Math.round((todayMid - addedMid) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 0 && diffDays <= 7) {
+                    isNew = true;
+                }
+            }
+        }
+
         const wrap = document.createElement('div');
         wrap.className = 'game-item';
         card.replaceWith(wrap);
@@ -62,9 +79,22 @@ document.addEventListener('DOMContentLoaded', () => {
         meta.className = 'game-meta';
         meta.innerHTML = `<span class="meta-chip">${playersText(min, max)}</span><span class="meta-chip">${time}분</span>`;
         card.appendChild(meta);
+
+        // 뱃지 처리: 7일 이내 신규 게임이면 NEW 뱃지 표시, 7일 경과 시 자동 제거/숨김
         if (badgeEl) {
-            if (badge.toUpperCase() === 'NEW') badgeEl.classList.add('is-new');
-            else badgeEl.hidden = true;   // 분류 글자는 검색에만 쓴다
+            if (isNew) {
+                badgeEl.textContent = 'NEW';
+                badgeEl.classList.add('is-new');
+                badgeEl.hidden = false;
+            } else {
+                badgeEl.classList.remove('is-new');
+                badgeEl.hidden = true; // 7일 지난 게임이나 일반 분류명 텍스트는 숨김 (검색어엔 유지)
+            }
+        } else if (isNew) {
+            const newBadge = document.createElement('div');
+            newBadge.className = 'game-badge is-new';
+            newBadge.textContent = 'NEW';
+            card.appendChild(newBadge);
         }
 
         const star = document.createElement('button');
