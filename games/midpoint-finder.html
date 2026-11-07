@@ -177,19 +177,36 @@
     }
     
     /* Line Colors */
-    .line-1호선 { background: #0052A4; }
-    .line-2호선 { background: #e4fbed; }
-    .line-3호선 { background: #EF7C1C; }
-    .line-4호선 { background: #00A5DE; }
-    .line-5호선 { background: #996CAC; }
-    .line-6호선 { background: #CD7C2F; }
-    .line-7호선 { background: #f9fbe4; }
-    .line-8호선 { background: #EA545D; }
-    .line-9호선 { background: #BDB092; }
-    .line-신분당선 { background: #D4003B; }
-    .line-경의중앙선 { background: #77C4A3; }
-    .line-수인분당선 { background: #F5A200; }
-    .line-공항철도 { background: #0090D2; }
+    .line-1호선 { background: #0052A4; color: #fff; }
+    .line-2호선 { background: #22c55e; color: #fff; }
+    .line-3호선 { background: #EF7C1C; color: #fff; }
+    .line-4호선 { background: #00A5DE; color: #fff; }
+    .line-5호선 { background: #996CAC; color: #fff; }
+    .line-6호선 { background: #CD7C2F; color: #fff; }
+    .line-7호선 { background: #748c08; color: #fff; }
+    .line-8호선 { background: #EA545D; color: #fff; }
+    .line-9호선 { background: #BDB092; color: #fff; }
+    .line-신분당선 { background: #D4003B; color: #fff; }
+    .line-경의중앙선 { background: #77C4A3; color: #fff; }
+    .line-수인분당선 { background: #F5A200; color: #fff; }
+    .line-공항철도 { background: #0090D2; color: #fff; }
+    .line-GTX-A { background: #991b1b; color: #ffffff; font-weight: 700; }
+    
+    .area-badge {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      white-space: nowrap;
+    }
+    .autocomplete-sub {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-left: auto;
+    }
     
     .participants {
       display: flex;
@@ -327,16 +344,37 @@
     .result-item {
       display: flex;
       flex-direction: column;
-      background: var(--tint-1);
+      background: var(--surface);
       border: 1px solid var(--card-border);
       border-radius: var(--radius-card);
       overflow: hidden;
-      transition: border-color 0.2s, background 0.2s;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
-    .result-item.selected, .result-item:first-child {
-      border-color: var(--cyan);
-      background: rgba(0, 212, 255, 0.04);
+    .result-item.selected {
+      border: 2px solid #4f46e5;
+      background: var(--surface);
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.12);
+    }
+
+    .result-item.top-rank {
+      border: 2px solid #6366f1;
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.03) 0%, var(--surface) 100%);
+    }
+
+    .result-top-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      width: fit-content;
+      margin-bottom: 2px;
     }
 
     .result-header {
@@ -345,18 +383,21 @@
       flex-direction: column;
       gap: 8px;
       cursor: pointer;
+      user-select: none;
     }
 
     .result-main-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
 
     .rank-title {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
+      flex-wrap: wrap;
     }
 
     .rank-badge {
@@ -364,100 +405,121 @@
       font-size: 16px;
     }
 
-    .rank-badge.top1 { color: var(--yellow-ink); }
-    .rank-badge.top2 { color: var(--text); }
-    .rank-badge.top3 { color: #8b5622; }
+    .rank-badge.top1 { color: #d97706; }
+    .rank-badge.top2 { color: #475569; }
+    .rank-badge.top3 { color: #b45309; }
 
     .station-name {
-      font-weight: 700;
-      font-size: 17px;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
     }
 
     .avg-info {
       text-align: right;
-    }
-
-    .avg-dist {
-      font-weight: 700;
-      font-size: 15px;
-      color: var(--cyan-ink);
+      flex-shrink: 0;
     }
 
     .avg-time {
-      font-size: 12px;
-      color: var(--text-dim);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #4f46e5;
     }
 
-    .result-sub-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 6px;
-      border-top: 1px solid var(--line);
-      font-size: 13px;
-    }
-
-    .fairness-tag {
+    .result-ai-summary {
+      background: rgba(79, 70, 229, 0.07);
+      border-left: 3px solid #4f46e5;
+      padding: 7px 11px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #3730a3;
+      font-weight: 600;
+      line-height: 1.4;
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--green-ink);
-      font-weight: 600;
     }
 
-    .toggle-details-btn {
-      color: var(--text-dim);
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .participant-breakdown {
+    .details-accordion {
       display: none;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border-top: 1px solid var(--card-border);
       flex-direction: column;
-      gap: 10px;
-      padding: 14px 16px;
-      background: var(--tint-2);
-      border-top: 1px solid var(--line);
+      gap: 8px;
+    }
+
+    .details-accordion.show {
+      display: flex;
     }
 
     .breakdown-row {
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
 
     .breakdown-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 13px;
+      font-size: 0.88rem;
     }
 
     .p-name-dept {
       display: flex;
       align-items: center;
       gap: 6px;
+      font-weight: 700;
     }
 
     .tag-max {
       font-size: 10px;
-      padding: 2px 6px;
+      padding: 1px 6px;
       border-radius: 10px;
-      background: rgba(255, 0, 110, 0.2);
-      color: var(--pink);
-      border: 1px solid var(--pink);
+      background: rgba(239, 68, 68, 0.12);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      font-weight: 700;
     }
 
     .tag-min {
       font-size: 10px;
-      padding: 2px 6px;
+      padding: 1px 6px;
       border-radius: 10px;
-      background: rgba(6, 214, 160, 0.2);
-      color: var(--green-ink);
-      border: 1px solid var(--green);
+      background: rgba(34, 197, 94, 0.12);
+      color: #16a34a;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      font-weight: 700;
     }
+
+    .breakdown-route {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    .route-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 7px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+    }
+    .route-chip.work { background: rgba(37,99,235,0.08); color: #2563eb; }
+    .route-chip.meet { background: rgba(234,88,12,0.12); color: #ea580c; font-weight: 700; }
+    .route-chip.home { background: rgba(124,58,237,0.08); color: #7c3aed; }
+    .route-arrow { color: var(--text-dim); font-size: 0.75rem; }
 
     .p-travel-val {
       font-weight: 600;
@@ -779,13 +841,13 @@
         <!-- 퇴근 후 모임 모드 듀얼 입력창 (회사 & 집) -->
         <div id="dualStationArea" class="dual-station-grid">
           <div class="station-input-wrap">
-            <span class="station-input-label">🏢 회사 (출발역)</span>
-            <input type="text" id="workStationInput" placeholder="회사 역 검색 (예: 역삼)" autocomplete="off">
+            <span class="station-input-label">🏢 회사/출발지 (역 또는 지역)</span>
+            <input type="text" id="workStationInput" placeholder="역 또는 지역·상권 (예: 역삼, 판교, 성수, 여의도)" autocomplete="off">
             <div class="autocomplete-list" id="workAutocompleteList"></div>
           </div>
           <div class="station-input-wrap">
-            <span class="station-input-label">🏠 집 (귀가역)</span>
-            <input type="text" id="homeStationInput" placeholder="집 역 검색 (예: 판교)" autocomplete="off">
+            <span class="station-input-label">🏠 집/도착지 (역 또는 지역)</span>
+            <input type="text" id="homeStationInput" placeholder="역 또는 지역·상권 (예: 분당, 일산, 연남동, 송도)" autocomplete="off">
             <div class="autocomplete-list" id="homeAutocompleteList"></div>
             <label class="same-home-check">
               <input type="checkbox" id="sameHomeCheck" onchange="toggleSameHome(this.checked)"> 회사와 집 동일(재택)
@@ -795,7 +857,7 @@
 
         <!-- 일반 모드 단일 입력창 -->
         <div id="singleStationArea" style="display:none; position:relative;">
-          <input type="text" id="stationInput" placeholder="출발역 검색 (예: 강남)" autocomplete="off">
+          <input type="text" id="stationInput" placeholder="출발역 또는 지역·상권 검색 (예: 강남, 가로수길, 홍대, 판교)" autocomplete="off">
           <div class="autocomplete-list" id="autocompleteList"></div>
         </div>
 
@@ -1063,9 +1125,13 @@
       '화전': [37.6047, 126.8607], '화정': [37.6345, 126.8324], '회기': [37.5896, 127.0577],
       '회룡': [37.7245, 127.0468], '회현': [37.5586, 126.9784], '효창공원앞': [37.5391, 126.9613],
       '흑석': [37.5087, 126.9636],
+      // GTX-A 및 주요 환승/지역 역 보강
+      '동탄': [37.2001, 127.0982], '성남': [37.3949, 127.1264], '킨텍스': [37.6650, 126.7530],
+      '운정중앙': [37.7126, 126.7441], '인천대입구': [37.3917, 126.6453]
     };
 
     const LINE_ORDER = [
+      ['GTX-A', '운정중앙, 킨텍스, 대곡, 연신내, 서울역, 수서, 성남, 구성, 동탄'],
       ['1호선', '소요산, 동두천, 보산, 동두천중앙, 지행, 덕정, 덕계, 양주, 녹양, 가능, 의정부, 회룡, 망월사, 도봉산, 도봉, 방학, 창동, 녹천, 월계, 광운대, 석계, 신이문, 외대앞, 회기, 청량리, 제기동, 신설동, 동묘앞, 동대문, 종로5가, 종로3가, 종각, 시청, 서울역, 남영, 용산, 노량진, 대방, 신길, 영등포, 신도림, 구로, 구일, 개봉, 오류동, 온수, 역곡, 소사, 부천, 중동, 송내, 부개, 부평, 백운, 동암, 간석, 주안, 도화, 제물포, 도원, 동인천, 인천, 금천구청, 독산, 가산디지털단지, 관악, 안양, 명학, 금정, 군포, 당정, 의왕, 성균관대, 화서, 수원, 세류, 병점, 세마, 오산대, 오산, 진위, 송탄, 서정리, 지제, 평택, 성환, 직산, 두정, 천안, 봉명, 쌍용, 아산, 배방, 온양온천, 신창'],
       ['2호선', '시청, 을지로입구, 을지로3가, 을지로4가, 동대문역사문화공원, 신당, 상왕십리, 왕십리, 한양대, 뚝섬, 성수, 건대입구, 구의, 강변, 잠실나루, 잠실, 잠실새내, 종합운동장, 삼성, 선릉, 역삼, 강남, 교대, 서초, 방배, 사당, 낙성대, 서울대입구, 봉천, 신림, 신대방, 구로디지털단지, 대림, 신도림, 문래, 영등포구청, 당산, 합정, 홍대입구, 신촌, 이대, 아현, 충정로'],
       ['3호선', '대화, 주엽, 정발산, 마두, 백석, 대곡, 화정, 원당, 원흥, 삼송, 지축, 구파발, 연신내, 불광, 녹번, 홍제, 무악재, 독립문, 경복궁, 안국, 종로3가, 을지로3가, 충무로, 동대입구, 약수, 금호, 옥수, 압구정, 신사, 잠원, 고속터미널, 교대, 남부터미널, 양재, 매봉, 도곡, 대치, 학여울, 대청, 일원, 수서, 가락시장, 경찰병원, 오금'],
@@ -1079,6 +1145,47 @@
       ['경의중앙선', '서울역, 홍대입구, 가좌, 디지털미디어시티, 수색, 화전, 행신, 강매, 탄현, 일산, 풍산, 백마, 곡산, 대곡, 능곡, 문산, 운정, 금릉, 파주, 월롱, 용문, 지평, 양평, 오빈, 아신, 국수, 신원, 양수, 운길산, 팔당, 도심, 덕소, 양정, 구리, 도농, 양원, 망우, 상봉, 중랑, 회기, 청량리, 왕십리, 응봉, 옥수, 한남, 서빙고, 이촌, 용산'],
       ['수인분당선', '왕십리, 서울숲, 압구정로데오, 강남구청, 선정릉, 선릉, 한티, 도곡, 구룡, 개포동, 대모산입구, 수서, 복정, 가천대, 태평, 모란, 야탑, 이매, 서현, 수내, 정자, 미금, 오리, 죽전, 보정, 구성, 신갈, 기흥, 상갈, 청명, 영통, 망포, 매탄권선, 수원시청, 매교, 수원, 고색, 오목천, 어천, 야목, 사리, 달월, 월곶, 소래포구, 인천논현, 호구포, 남동인더스파크, 원인재, 연수, 송도'],
       ['공항철도', '서울역, 공덕, 홍대입구, 디지털미디어시티, 김포공항, 계양, 검암, 운서, 공항화물청사, 인천공항1터미널, 인천공항2터미널'],
+    ];
+
+    // 일반 지역명/상권/핫플레이스 검색 사전 (역명이 아닌 일반 지역명으로 검색해도 자동 연계)
+    const POPULAR_AREAS = [
+      { name: '판교 테크노밸리', station: '판교', desc: 'IT밸리·현대백화점' },
+      { name: '판교', station: '판교', desc: '신분당선·경강선' },
+      { name: '성수 카페거리', station: '성수', desc: '핫플레이스·팝업스토어' },
+      { name: '성수동', station: '성수', desc: '2호선 성수역 인근' },
+      { name: '여의도 더현대', station: '여의도', desc: 'IFC몰·더현대 서울' },
+      { name: '여의도 금융가', station: '여의도', desc: '5·9호선 여의도역' },
+      { name: '홍대 연남동', station: '홍대입구', desc: '연트럴파크·경의선숲길' },
+      { name: '연남동', station: '홍대입구', desc: '연트럴파크 카페거리' },
+      { name: '홍대거리', station: '홍대입구', desc: '2호선·공항철도' },
+      { name: '을지로 힙지로', station: '을지로3가', desc: '노포·골목 핫플' },
+      { name: '힙지로', station: '을지로3가', desc: '2·3호선 을지로3가' },
+      { name: '신사 가로수길', station: '신사', desc: '트렌디 카페·쇼핑' },
+      { name: '가로수길', station: '신사', desc: '3호선·신분당선 신사역' },
+      { name: '샤로수길', station: '서울대입구', desc: '관악구 맛집 거리' },
+      { name: '압구정 로데오', station: '압구정로데오', desc: '도산공원·명품거리' },
+      { name: '가산디지털단지 (가디)', station: '가산디지털단지', desc: 'G밸리 패션·IT타운' },
+      { name: '구로디지털단지 (구디)', station: '구로디지털단지', desc: '깔깔거리·IT타운' },
+      { name: '잠실 송리단길', station: '송파나루', desc: '석촌호수 동호' },
+      { name: '잠실 롯데월드몰', station: '잠실', desc: '2·8호선 잠실역' },
+      { name: '상암 DMC', station: '디지털미디어시티', desc: '방송미디어센터' },
+      { name: '마곡 사이언스파크', station: '마곡나루', desc: 'LG사이언스파크·식물원' },
+      { name: '익선동 한옥마을', station: '종로3가', desc: '종로 익선동 핫플' },
+      { name: '혜화 대학로', station: '혜화', desc: '연극·문화예술 거리' },
+      { name: '용산 용리단길', station: '신용산', desc: '아모레·하이브 인근' },
+      { name: '이태원 경리단길', station: '녹사평', desc: '경리단길·해방촌' },
+      { name: '송도 센트럴파크', station: '인천대입구', desc: '송도국제도시 중심' },
+      { name: '일산 라페스타', station: '정발산', desc: '웨스턴돔·호수공원' },
+      { name: '킨텍스 전시장', station: '킨텍스', desc: 'GTX-A 킨텍스역' },
+      { name: '동탄 신도시', station: '동탄', desc: 'GTX-A·SRT 동탄역' },
+      { name: '운정 신도시', station: '운정중앙', desc: 'GTX-A 운정중앙역' },
+      { name: '수원 인계동', station: '수원시청', desc: '수원 최대 번화가' },
+      { name: '수원 행궁동', station: '수원', desc: '화성행궁·행리단길' },
+      { name: '분당 서현역', station: '서현', desc: '분당 로데오거리' },
+      { name: '분당 정자동 카페거리', station: '정자', desc: '정자동 엠코헤리츠' },
+      { name: '광화문 광장', station: '광화문', desc: '5호선 광화문역' },
+      { name: '문정 법조타운', station: '문정', desc: '동부지법·지식산업센터' },
+      { name: '양재 시민의숲', station: '양재시민의숲', desc: '양재 R&D 혁신허브' }
     ];
 
     // 노선 목록을 훑어 STATIONS를 만든다.
@@ -1314,27 +1421,64 @@
       return Math.max(5, Math.round(distKm * 2.2 + 3));
     }
 
-    // 자동완성 셋업 헬퍼
+    // 자동완성 셋업 헬퍼 (일반 지역/상권 + 지하철역 동시 지원)
     function setupAutocomplete(inputEl, listEl, onSelect) {
       inputEl.addEventListener('input', () => {
         const val = inputEl.value.trim().toLowerCase();
         listEl.innerHTML = '';
         if (!val) { listEl.style.display = 'none'; return; }
 
-        const matches = STATIONS.filter(s => s.name.toLowerCase().includes(val) || s.name.replace(/역$/, '').includes(val)).slice(0, 8);
-        if (matches.length === 0) { listEl.style.display = 'none'; return; }
+        // 1. 일반 지역/상권 검색
+        const areaMatches = POPULAR_AREAS.filter(a => 
+          a.name.toLowerCase().includes(val) || 
+          (a.desc && a.desc.toLowerCase().includes(val))
+        ).slice(0, 4);
 
-        matches.forEach(st => {
+        // 2. 지하철역 검색
+        const stationMatches = STATIONS.filter(s => 
+          s.name.toLowerCase().includes(val) || 
+          s.name.replace(/역$/, '').includes(val)
+        ).slice(0, 8);
+
+        if (areaMatches.length === 0 && stationMatches.length === 0) {
+          listEl.style.display = 'none';
+          return;
+        }
+
+        // 지역/상권 결과 먼저 노출
+        areaMatches.forEach(area => {
+          const targetStation = STATIONS.find(s => s.name === area.station);
+          if (!targetStation) return;
+
           const div = document.createElement('div');
           div.className = 'autocomplete-item';
-          div.innerHTML = `${lineBadges(st)} <span>${st.name}역</span>`;
+          div.innerHTML = `
+            <span class="area-badge">📍 지역/상권</span>
+            <span style="font-weight:700;">${area.name}</span>
+            <span class="autocomplete-sub">${targetStation.name}역 연계</span>
+          `;
           div.addEventListener('click', () => {
-            inputEl.value = st.name;
-            onSelect(st);
+            const mappedObj = { ...targetStation, displayName: area.name };
+            inputEl.value = `${area.name} (${targetStation.name}역)`;
+            onSelect(mappedObj);
             listEl.style.display = 'none';
           });
           listEl.appendChild(div);
         });
+
+        // 지하철역 결과 노출
+        stationMatches.forEach(st => {
+          const div = document.createElement('div');
+          div.className = 'autocomplete-item';
+          div.innerHTML = `${lineBadges(st)} <span>${st.name}역</span>`;
+          div.addEventListener('click', () => {
+            inputEl.value = `${st.name}역`;
+            onSelect({ ...st, displayName: `${st.name}역` });
+            listEl.style.display = 'none';
+          });
+          listEl.appendChild(div);
+        });
+
         listEl.style.display = 'block';
       });
 
@@ -1349,7 +1493,7 @@
       selectedWorkStation = st;
       if (sameHomeCheck && sameHomeCheck.checked) {
         selectedHomeStation = st;
-        homeStationInput.value = st.name;
+        homeStationInput.value = workStationInput.value;
       }
     });
 
@@ -1363,8 +1507,25 @@
 
     function findStationByName(name) {
       if (!name) return null;
-      const clean = name.replace(/역$/, '').trim();
-      return STATIONS.find(s => s.name === clean || s.name === name);
+      const clean = name.replace(/역$/, '').replace(/\(.*\)/, '').trim().toLowerCase();
+      
+      // 1. 지역/상권 이름에서 검색
+      const areaFound = POPULAR_AREAS.find(a => 
+        a.name.toLowerCase() === clean || 
+        a.name.toLowerCase().includes(clean) || 
+        clean.includes(a.name.toLowerCase())
+      );
+      if (areaFound) {
+        const st = STATIONS.find(s => s.name === areaFound.station);
+        if (st) return { ...st, displayName: areaFound.name };
+      }
+
+      // 2. 지하철역에서 검색
+      const stFound = STATIONS.find(s => s.name.toLowerCase() === clean || s.name === name);
+      if (stFound) return { ...stFound, displayName: `${stFound.name}역` };
+
+      // 부분 매칭 검색
+      return STATIONS.find(s => s.name.toLowerCase().includes(clean));
     }
 
     // 참가자 추가
@@ -1449,18 +1610,21 @@
 
         let badgeInfo = '';
         if (p.mode === 'afterwork') {
+          const wLabel = p.workStation.displayName || `${p.workStation.name}역`;
+          const hLabel = p.homeStation.displayName || `${p.homeStation.name}역`;
           badgeInfo = `
             <div class="participant-trip-badge">
-              <span>🏢 ${p.workStation.name}역</span>
+              <span>🏢 ${wLabel}</span>
               <span>➔</span>
-              <span>🏠 ${p.homeStation.name}역</span>
+              <span>🏠 ${hLabel}</span>
             </div>
           `;
         } else {
+          const sLabel = p.station.displayName || `${p.station.name}역`;
           badgeInfo = `
             <div class="participant-trip-badge">
               ${lineBadges(p.station)}
-              <span>${p.station.name}역 출발</span>
+              <span>${sLabel} 출발</span>
             </div>
           `;
         }
@@ -1683,36 +1847,51 @@
 
       topSpots.forEach((st, i) => {
         const item = document.createElement('div');
-        item.className = `result-item ${i === selectedStationIndex ? 'selected' : ''}`;
+        const isSelected = i === selectedStationIndex;
+        item.className = `result-item ${isSelected ? 'selected' : ''} ${i === 0 ? 'top-rank' : ''}`;
         const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
 
         let detailsHtml = '';
 
         if (currentMode === 'afterwork') {
           st.details.forEach(d => {
+            const isMax = d.totalTime === st.maxTime && st.maxTime !== st.minTime;
+            const isMin = d.totalTime === st.minTime && st.maxTime !== st.minTime;
+            const timeTag = isMax ? `<span class="tag-max">최장 이동</span>` : (isMin ? `<span class="tag-min">최단 이동</span>` : '');
+
             detailsHtml += `
               <div class="breakdown-row">
                 <div class="breakdown-top">
-                  <span>👤 <strong>${d.name}</strong></span>
-                  <span style="color:#4f46e5; font-weight:800;">총 ${d.totalTime}분</span>
+                  <div class="p-name-dept">
+                    <span>👤 ${d.name}</span>
+                    ${timeTag}
+                  </div>
+                  <span style="color:#4f46e5; font-weight:800; font-size:0.95rem;">총 ${d.totalTime}분</span>
                 </div>
                 <div class="breakdown-route">
-                  <span>🏢 ${d.workStation} (${d.tWork}분)</span>
-                  <span>➔</span>
-                  <span style="color:#ea580c; font-weight:700;">🍻 ${st.name}</span>
-                  <span>➔</span>
-                  <span>🏠 ${d.homeStation} (${d.tHome}분)</span>
+                  <span class="route-chip work">🏢 ${d.workStation} (${d.tWork}분)</span>
+                  <span class="route-arrow">➔</span>
+                  <span class="route-chip meet">🍻 ${st.name}역</span>
+                  <span class="route-arrow">➔</span>
+                  <span class="route-chip home">🏠 ${d.homeStation} (${d.tHome}분)</span>
                 </div>
               </div>
             `;
           });
         } else {
           st.details.forEach(d => {
+            const isMax = d.time === st.maxTime && st.maxTime !== st.minTime;
+            const isMin = d.time === st.minTime && st.maxTime !== st.minTime;
+            const timeTag = isMax ? `<span class="tag-max">최장 이동</span>` : (isMin ? `<span class="tag-min">최단 이동</span>` : '');
+
             detailsHtml += `
               <div class="breakdown-row">
                 <div class="breakdown-top">
-                  <span>👤 <strong>${d.name}</strong> (${d.fromStation}역)</span>
-                  <span style="color:#4f46e5; font-weight:800;">${d.dist.toFixed(1)}km (약 ${d.time}분)</span>
+                  <div class="p-name-dept">
+                    <span>👤 ${d.name} (${d.fromStation}역)</span>
+                    ${timeTag}
+                  </div>
+                  <span style="color:#4f46e5; font-weight:800; font-size:0.95rem;">${d.dist.toFixed(1)}km (약 ${d.time}분)</span>
                 </div>
               </div>
             `;
@@ -1722,8 +1901,13 @@
         const meetBadge = meetLabel(st);
         const linesCount = (st.lines || [st.line]).length;
 
+        const aiSummaryText = currentMode === 'afterwork'
+          ? `💡 전원 소요시간 편차가 ${st.timeGap}분으로 균형 잡혀 있으며, 귀가 평균 소요시간은 ${st.avgHomeTime}분입니다.`
+          : `💡 모든 출발역과의 평균 소요시간이 약 ${st.avgTime}분으로 가장 대칭적인 위치입니다.`;
+
         item.innerHTML = `
           <div class="result-header" onclick="selectStation(${i})">
+            ${i === 0 ? `<div class="result-top-badge">👑 종합 1위 최적 추천</div>` : ''}
             <div class="result-main-row">
               <div class="rank-title">
                 <span class="rank-badge ${rankClass}">${i+1}위</span>
@@ -1732,15 +1916,17 @@
                 ${meetBadge ? `<span class="spot-badge ${meetBadge.cls}">${meetBadge.text}</span>` : ''}
                 ${linesCount > 1 ? `<span class="spot-badge spot-tr">환승 ${linesCount}개</span>` : ''}
               </div>
-              <div class="avg-info" style="text-align:right">
+              <div class="avg-info">
                 <div class="avg-time">평균 ${st.avgTime}분</div>
-                <div style="font-size:0.75rem; color:var(--text-dim)">
+                <div style="font-size:0.75rem; color:var(--text-dim); margin-top:2px;">
                   ${currentMode === 'afterwork' ? `퇴근합류 ${st.avgWorkTime}분 · 귀가 ${st.avgHomeTime}분` : `평균 ${st.avgDist.toFixed(1)}km`}
                 </div>
               </div>
             </div>
+            ${i === 0 ? `<div class="result-ai-summary">${aiSummaryText}</div>` : ''}
           </div>
-          <div class="details-accordion" style="display:${i === selectedStationIndex ? 'block' : 'none'}; margin-top:8px;">
+          <div class="details-accordion ${isSelected ? 'show' : ''}">
+            <div style="font-size:0.8rem; font-weight:700; color:var(--text-dim); margin-bottom:2px;">참가자별 소요 시간 & 이동 경로</div>
             ${detailsHtml}
           </div>
         `;
@@ -1750,7 +1936,7 @@
       renderLeafletMap(topSpots[selectedStationIndex]);
     }
 
-    // Leaflet 실제 지도 렌더링
+    // Leaflet 실제 지도 렌더링 (100% 무료 OpenStreetMap 타일 사용, API 키 필요 없음)
     function renderLeafletMap(activeSpot) {
       if (!activeSpot) return;
 
@@ -1760,11 +1946,14 @@
           scrollWheelZoom: false
         }).setView([activeSpot.lat, activeSpot.lng], 12);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-          subdomains: 'abcd',
-          maxZoom: 19
+        // OpenStreetMap 표준 타일 레이어 (API Key 없이 안정적 제공)
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+          maxZoom: 19,
+          crossOrigin: true
         }).addTo(leafletMap);
+      } else {
+        leafletMap.panTo([activeSpot.lat, activeSpot.lng]);
       }
 
       // 이전 마커/레이어 제거
@@ -1787,7 +1976,7 @@
       bounds.push([activeSpot.lat, activeSpot.lng]);
 
       // 2. 참가자별 마커 및 점선 연결
-      participants.forEach((p, idx) => {
+      participants.forEach((p) => {
         if (p.mode === 'afterwork') {
           // 회사 마커 (파랑)
           const workM = L.circleMarker([p.workStation.lat, p.workStation.lng], {
@@ -1798,7 +1987,8 @@
             opacity: 1,
             fillOpacity: 0.9
           }).addTo(leafletMap);
-          workM.bindPopup(`<b>🏢 ${p.name} 회사: ${p.workStation.name}역</b>`);
+          const wLabel = p.workStation.displayName || `${p.workStation.name}역`;
+          workM.bindPopup(`<b>🏢 ${p.name} 회사: ${wLabel}</b>`);
           mapLayers.push(workM);
           bounds.push([p.workStation.lat, p.workStation.lng]);
 
@@ -1819,7 +2009,8 @@
               opacity: 1,
               fillOpacity: 0.9
             }).addTo(leafletMap);
-            homeM.bindPopup(`<b>🏠 ${p.name} 집: ${p.homeStation.name}역</b>`);
+            const hLabel = p.homeStation.displayName || `${p.homeStation.name}역`;
+            homeM.bindPopup(`<b>🏠 ${p.name} 집: ${hLabel}</b>`);
             mapLayers.push(homeM);
             bounds.push([p.homeStation.lat, p.homeStation.lng]);
 
@@ -1840,7 +2031,8 @@
             opacity: 1,
             fillOpacity: 0.9
           }).addTo(leafletMap);
-          stM.bindPopup(`<b>👤 ${p.name} 출발: ${p.station.name}역</b>`);
+          const sLabel = p.station.displayName || `${p.station.name}역`;
+          stM.bindPopup(`<b>👤 ${p.name} 출발: ${sLabel}</b>`);
           mapLayers.push(stM);
           bounds.push([p.station.lat, p.station.lng]);
 
@@ -1852,9 +2044,15 @@
         }
       });
 
-      if (bounds.length > 0) {
-        leafletMap.fitBounds(bounds, { padding: [35, 35], maxZoom: 14 });
-      }
+      // DOM reflow 후 Leaflet 크기 재계산 (화면에 지도가 안 보이거나 회색으로 깨지는 현상 해결)
+      setTimeout(() => {
+        if (leafletMap) {
+          leafletMap.invalidateSize();
+          if (bounds.length > 0) {
+            leafletMap.fitBounds(bounds, { padding: [35, 35], maxZoom: 14 });
+          }
+        }
+      }, 150);
     }
 
     // ──────────────────────────────────────────
