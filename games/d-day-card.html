@@ -2,604 +2,1182 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D-Day & 모임 카운트다운 | 미니게임 천국</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>D-Day & 날짜 세기 | 미니게임 천국</title>
   <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
   <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
   <script src="../scripts/game-common.js?v=efdc1560"></script>
-  <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
   <style>
     :root {
-      /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
-      --cyan-ink: #0e697c;
-      --yellow-ink: #7c5b0e;
-      --card-bg: var(--surface);
-      --card-border: var(--tint-2);
-      --cyan: #00d4ff;
-      --purple: #7c3aed;
-      --pink: #bc155d;
-      --yellow: #ffd166;
-      --green: #06d6a0;
-      --text-main: var(--text);
-      --text-dim: var(--muted);
-      --radius-card: 16px;
-      --radius-btn: 12px;
+      --bg-page: #f1f5f9;
+      --surface-white: #ffffff;
+      --card-border: rgba(0, 0, 0, 0.08);
+      --text-dark: #0f172a;
+      --text-sub: #475569;
+      --text-muted: #64748b;
+      --theme-color: #ff2a85;
+      --theme-soft: #fdf2f8;
+      --theme-shadow: rgba(255, 42, 133, 0.2);
+      --theme-gradient: linear-gradient(135deg, #ff2a85 0%, #8b5cf6 100%);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      padding: 0;   /* 공용 CSS의 body 패딩을 쓰지 않는다 */
-      background-color: var(--bg);
-      color: var(--text-main);
-      font-family: 'Pretendard', sans-serif;
+      background: radial-gradient(circle at 50% 0%, #ffffff 0%, #f1f5f9 100%);
+      color: var(--text-dark);
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
+      align-items: center;
+      padding-bottom: 50px;
+      letter-spacing: -0.02em;
     }
 
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
+    .app-container {
       width: 100%;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      padding: 10px 0;
-    }
-
-    .back-btn {
-      position: absolute;
-      left: 0;
-      background: none;
-      border: none;
-      color: var(--cyan-ink);
-      font-size: 24px;
-      cursor: pointer;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      transition: background 0.2s;
-    }
-
-    .back-btn:hover { background: rgba(0, 212, 255, 0.1); }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 800;
-      background: linear-gradient(90deg, var(--cyan), var(--purple));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      backdrop-filter: blur(10px);
-      border-radius: var(--radius-card);
-      padding: 20px;
+      max-width: 520px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
 
-    .form-group {
+    /* 상단 헤더 바 */
+    .header-bar {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0 8px;
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #334155;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .nav-btn:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+    .header-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
     }
 
-    .sub-label {
-      font-size: 13px;
-      color: var(--text-dim);
-      font-weight: 600;
-      margin-top: 4px;
-    }
-
-    .preset-row {
-      display: flex;
+    /* 모드 탭 (D-Day vs 날짜 세기) */
+    .mode-tab-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .preset-btn {
-      background: var(--tint-1);
+      background: #ffffff;
+      padding: 6px;
+      border-radius: 18px;
       border: 1px solid var(--card-border);
-      color: var(--text-dim);
-      padding: 8px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
-
-    .preset-btn.active {
-      background: rgba(0, 212, 255, 0.15);
-      border-color: var(--cyan);
-      color: var(--cyan-ink);
-    }
-
-    input, select {
-      background: var(--tint-2);
-      border: 1px solid var(--card-border);
-      color: var(--text);
-      padding: 12px 16px;
-      border-radius: var(--radius-btn);
-      font-family: inherit;
+    .mode-tab-btn {
+      padding: 12px;
+      border: none;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--text-muted);
       font-size: 15px;
-      outline: none;
-    }
-
-    input:focus, select:focus { border-color: var(--cyan); }
-
-    .color-picker {
-      display: flex;
-      gap: 10px;
-    }
-
-    .color-dot {
-      width: 32px; height: 32px;
-      border-radius: 50%;
+      font-weight: 700;
       cursor: pointer;
-      border: 2px solid transparent;
-    }
-
-    .color-dot.active { border-color: white; transform: scale(1.1); }
-
-    .bg-upload-btn {
-      background: var(--tint-2);
-      border: 1px dashed var(--card-border);
-      color: var(--text-dim);
-      padding: 10px;
-      border-radius: var(--radius-btn);
-      font-size: 13px;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .dday-banner {
-      background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(255, 0, 110, 0.3));
-      border: 2px solid var(--pink);
-      border-radius: var(--radius-card);
-      padding: 28px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 14px;
-      text-align: center;
-      box-shadow: 0 0 30px rgba(255, 0, 110, 0.14);
+      gap: 2px;
+      transition: all 0.2s ease;
+    }
+    .mode-tab-btn.active {
+      background: var(--theme-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 14px var(--theme-shadow);
+    }
+
+    /* 메인 디데이 카드 (밝고 화사한 화이트 글래스 카드) */
+    .card-display-section {
+      width: 100%;
+    }
+
+    .dday-main-card {
       position: relative;
+      border-radius: 28px;
+      padding: 34px 24px;
+      background: #ffffff;
+      border: 2px solid var(--theme-color);
+      box-shadow: 0 18px 45px -10px var(--theme-shadow), 0 2px 8px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
       overflow: hidden;
+      transition: all 0.3s ease;
     }
 
-    .dday-tag {
+    /* 화사한 상단 파스텔 오라 */
+    .card-ambient-orb {
+      position: absolute;
+      top: -90px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 280px;
+      height: 280px;
+      background: var(--theme-soft);
+      border-radius: 50%;
+      filter: blur(50px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card-tag {
+      position: relative;
+      z-index: 1;
       font-size: 13px;
-      padding: 4px 14px;
-      border-radius: 20px;
-      background: rgba(0, 212, 255, 0.2);
-      color: var(--cyan-ink);
-      font-weight: 700;
-      border: 1px solid var(--cyan);
-    }
-
-    .dday-title {
-      font-size: 24px;
       font-weight: 800;
-      color: var(--text);
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: var(--theme-soft);
+      border: 1px solid var(--theme-color);
+      color: var(--theme-color);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .dday-count-display {
-      font-size: 46px;
+    .card-title {
+      position: relative;
+      z-index: 1;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text-dark);
+      line-height: 1.3;
+      word-break: keep-all;
+    }
+
+    .card-desc {
+      position: relative;
+      z-index: 1;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: -6px;
+    }
+
+    /* 대형 숫자 카운터 */
+    .big-counter-box {
+      position: relative;
+      z-index: 1;
+      margin: 8px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .big-counter-num {
+      font-size: 62px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      background: var(--theme-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 10px var(--theme-shadow));
+      line-height: 1.1;
+    }
+    .big-counter-sub {
+      font-size: 14.5px;
       font-weight: 800;
-      color: var(--yellow-ink);
-      text-shadow: 0 0 20px rgba(255, 209, 102, 0.36);
-      letter-spacing: 2px;
+      color: var(--theme-color);
     }
 
-    .dday-timer-grid {
+    /* 정밀 시/분/초 타이머 */
+    .precise-timer-grid {
+      position: relative;
+      z-index: 1;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       width: 100%;
-      margin-top: 6px;
+      margin-top: 4px;
     }
-
-    .timer-box {
-      background: var(--surface);
+    .time-slot {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
       padding: 10px 4px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-
-    .timer-num {
-      font-size: 22px;
+    .time-val {
+      font-size: 21px;
       font-weight: 800;
-      color: var(--cyan-ink);
+      color: #1e293b;
+      font-variant-numeric: tabular-nums;
     }
-
-    .timer-unit {
+    .time-lbl {
       font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    .action-btn {
-      background: linear-gradient(135deg, var(--cyan), var(--purple));
-      border: none;
-      color: var(--text);
-      padding: 14px;
-      border-radius: var(--radius-btn);
       font-weight: 700;
-      font-size: 16px;
-      cursor: pointer;
+      color: #64748b;
+      margin-top: 2px;
     }
 
-    .preview-container {
-      display: none;
+    /* 목표일/시작일 일자 뱃지 */
+    .target-date-badge {
+      position: relative;
+      z-index: 1;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #475569;
+      background: #f1f5f9;
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* 다가오는 주요 기념일 자동 계산 박스 (날짜 세기 모드 전용) */
+    .milestones-box {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      margin-top: 10px;
+      gap: 10px;
+      text-align: left;
     }
-
-    canvas {
-      max-width: 320px;
-      border-radius: 16px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-    }
-
-    .help-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: var(--tint-2);
-      backdrop-filter: blur(5px);
+    .milestones-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--theme-color);
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      cursor: pointer;
-      border: 1px solid var(--card-border);
-      z-index: 100;
-      color: var(--text);
+      gap: 6px;
+    }
+    .milestones-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .milestone-chip {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .milestone-chip.passed {
+      text-decoration: line-through;
+      color: #94a3b8;
+      background: #f1f5f9;
+    }
+    .milestone-chip.next {
+      background: var(--theme-soft);
+      border-color: var(--theme-color);
+      color: var(--theme-color);
+      font-weight: 800;
+      box-shadow: 0 2px 8px var(--theme-shadow);
     }
 
-    .modal {
+    /* 공유 액션 바 (카드 복사, 링크 복사, 저장) */
+    .share-action-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+    .share-btn {
+      padding: 12px 6px;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      background: #ffffff;
+      color: #1e293b;
+      font-size: 13.5px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s ease;
+    }
+    .share-btn:hover {
+      background: #f8fafc;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+    .share-btn.primary {
+      background: var(--theme-gradient);
+      border-color: transparent;
+      color: #ffffff;
+      box-shadow: 0 4px 16px var(--theme-shadow);
+    }
+    .share-btn.primary:hover {
+      opacity: 0.95;
+    }
+
+    /* 카드 전용 공유 뷰 배너 */
+    .shared-view-banner {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .shared-view-text {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .toggle-edit-btn {
+      background: var(--theme-soft);
+      border: 1px solid var(--theme-color);
+      color: var(--theme-color);
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* 에디터 / 설정 패널 */
+    .editor-card {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 22px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    }
+    .editor-section-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-chip-list {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .preset-chip-list::-webkit-scrollbar { display: none; }
+    .preset-chip {
+      flex-shrink: 0;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .preset-chip.active {
+      background: var(--theme-soft);
+      border-color: var(--theme-color);
+      color: var(--theme-color);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .input-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #334155;
+    }
+    .input-field {
+      width: 100%;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      color: #0f172a;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-field:focus {
+      border-color: var(--theme-color);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px var(--theme-shadow);
+    }
+
+    .theme-palette {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .theme-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .theme-circle.active {
+      border-color: #0f172a;
+      transform: scale(1.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 토스트 알림 */
+    .toast-msg {
+      position: fixed;
+      bottom: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: bottom 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 1000;
+    }
+
+    /* 모바일 길게 눌러 복사용 모달 */
+    .modal-overlay {
       display: none;
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: var(--veil);
-      z-index: 1000;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(5px);
+      z-index: 2000;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
-
-    .modal-content {
-      background: var(--bg);
+    .modal-box {
+      background: #ffffff;
       border: 1px solid var(--card-border);
-      padding: 24px;
-      border-radius: var(--radius-card);
-      max-width: 400px;
+      border-radius: 24px;
+      padding: 22px;
+      max-width: 380px;
       width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+    .modal-img {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     }
 
-    .modal h2 { margin-bottom: 16px; color: var(--cyan-ink); }
-    .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
-    .close-modal { margin-top: 16px; width: 100%; padding: 12px; background: var(--purple); border: none; border-radius: 8px; color: white; cursor: pointer; }
+    /* 도움말 플로팅 버튼 */
+    .help-fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      font-size: 20px;
+      font-weight: 800;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .help-fab:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <a href="../index.html" class="back-btn">←</a>
-      <h1>D-Day & 모임 카운트다운</h1>
-    </header>
+  <div class="app-container">
+    <div class="header-bar">
+      <a href="../index.html" class="nav-btn">← 메인</a>
+      <h1 class="header-title">D-Day & 날짜 세기</h1>
+      <button class="nav-btn" onclick="toggleSharedUrlMode()" id="viewModeToggleBtn" title="링크 공유 카드 뷰 시뮬레이션">
+        🔗 링크 모드
+      </button>
+    </div>
 
-    <div class="card">
-      <div class="form-group">
-        <div class="sub-label">1. 카테고리 프리셋 선택</div>
-        <div class="preset-row">
-          <button class="preset-btn active" onclick="setPreset('🥳 모임 / 파티', '우리들의 네온 파티', '설레는 모임까지 남은 시간', 7, this)">🥳 파티/모임</button>
-          <button class="preset-btn" onclick="setPreset('✈️ 여행 / 휴가', '제주도 힐링 우정 여행', '떠나는 날까지 카운트다운', 14, this)">✈️ 여행/휴가</button>
-          <button class="preset-btn" onclick="setPreset('🎂 생일 / 기념일', 'HAPPY BIRTHDAY PARTY', '특별한 날을 축하해!', 3, this)">🎂 생일/기념일</button>
-          <button class="preset-btn" onclick="setPreset('🎓 종강 / 졸업', '자유를 향한 종강 카운트다운', '시험 끝나고 놀 준비 완료!', 10, this)">🎓 종강/졸업</button>
-          <button class="preset-btn" onclick="setPreset('🎯 목표 D-Day', '목표 달성의 날', '끝까지 파이팅!', 30, this)">🎯 목표/시험</button>
+    <!-- 공유 링크로 접속했을 때 상단 안내 배너 -->
+    <div class="shared-view-banner" id="sharedBanner" style="display:none;">
+      <span class="shared-view-text">💌 공유받은 D-Day 카드예요</span>
+      <button class="toggle-edit-btn" onclick="toggleEditPanel()">✏️ 나도 만들기 / 수정</button>
+    </div>
+
+    <!-- 모드 선택 탭 (D-Day vs 날짜 세기) -->
+    <div class="mode-tab-wrap" id="modeTabs">
+      <button class="mode-tab-btn active" id="tabDday" onclick="switchMode('dday')">
+        <span style="font-size:16px;">⏳ D-Day</span>
+        <span style="font-size:12px; opacity:0.85;">남은 날짜 카운트다운</span>
+      </button>
+      <button class="mode-tab-btn" id="tabCountup" onclick="switchMode('countup')">
+        <span style="font-size:16px;">💖 날짜 세기</span>
+        <span style="font-size:12px; opacity:0.85;">지난 날 / 기념일 계산</span>
+      </button>
+    </div>
+
+    <!-- 1. 핵심 카드 디스플레이 영역 (링크 접속 시 화사하게 뜨는 메인 카드) -->
+    <section class="card-display-section">
+      <div class="dday-main-card" id="mainCard">
+        <div class="card-ambient-orb"></div>
+        <div class="card-tag" id="cardTag">✈️ 설레는 여행</div>
+        <h2 class="card-title" id="cardTitle">후쿠오카 힐링 온천 여행</h2>
+        <p class="card-desc" id="cardDesc">비행기 타러 가는 날까지 남은 시간</p>
+
+        <!-- 중앙 대형 숫자 카운터 -->
+        <div class="big-counter-box">
+          <div class="big-counter-num" id="cardBigCounter">D-12</div>
+          <div class="big-counter-sub" id="cardCounterSub">12일 남음</div>
         </div>
 
-        <div class="sub-label">2. 이벤트 세부 설정</div>
-        <input type="text" id="eventTitle" placeholder="이벤트 / 모임 이름" value="우리들의 네온 파티">
-        <input type="datetime-local" id="eventDate">
-        <input type="text" id="eventDesc" placeholder="부제목 / 한줄 문구" value="설레는 모임까지 남은 시간">
-        
-        <div class="sub-label">3. 테마 컬러 및 배경</div>
-        <div class="color-picker">
-          <div class="color-dot active" style="background:#ff006e" onclick="setTheme('#ff006e', this)"></div>
-          <div class="color-dot" style="background:#00d4ff" onclick="setTheme('#00d4ff', this)"></div>
-          <div class="color-dot" style="background:#ffd166" onclick="setTheme('#ffd166', this)"></div>
-          <div class="color-dot" style="background:#7c3aed" onclick="setTheme('#7c3aed', this)"></div>
-          <div class="color-dot" style="background:#06d6a0" onclick="setTheme('#06d6a0', this)"></div>
+        <!-- 실시간 정밀 시/분/초 타이머 -->
+        <div class="precise-timer-grid">
+          <div class="time-slot">
+            <span class="time-val" id="timeDays">12</span>
+            <span class="time-lbl" id="lblDays">일</span>
+          </div>
+          <div class="time-slot">
+            <span class="time-val" id="timeHours">00</span>
+            <span class="time-lbl">시간</span>
+          </div>
+          <div class="time-slot">
+            <span class="time-val" id="timeMins">00</span>
+            <span class="time-lbl">분</span>
+          </div>
+          <div class="time-slot">
+            <span class="time-val" id="timeSecs">00</span>
+            <span class="time-lbl">초</span>
+          </div>
         </div>
 
-        <label class="bg-upload-btn">
-          📷 커스텀 배경 사진 첨부 (선택)
-          <input type="file" id="bgImgInput" accept="image/*" style="display:none;" onchange="handleBgUpload(event)">
-        </label>
+        <!-- 날짜 표시 -->
+        <div class="target-date-badge" id="cardDateBadge">
+          목표일: 2026. 11. 20 (금)
+        </div>
+
+        <!-- 기념일 계산 박스 (날짜 세기 모드일 때 자동 활성화) -->
+        <div class="milestones-box" id="milestonesBox" style="display:none;">
+          <div class="milestones-title">🎁 다가오는 주요 기념일 자동 계산</div>
+          <div class="milestones-list" id="milestonesList">
+            <!-- 100일, 200일, 1주년 등이 계산되어 들어감 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 공유 액션 바 (카드 이미지 복사, 링크 복사, 이미지 저장) -->
+    <div class="share-action-bar">
+      <button class="share-btn primary" onclick="copyCardImage()">
+        <span style="font-size:18px;">📋</span>
+        <span>카드 복사 (Ctrl+V)</span>
+      </button>
+      <button class="share-btn" onclick="copyCardLink()">
+        <span style="font-size:18px;">🔗</span>
+        <span>링크 복사</span>
+      </button>
+      <button class="share-btn" onclick="downloadCardImage()">
+        <span style="font-size:18px;">📥</span>
+        <span>이미지 저장</span>
+      </button>
+    </div>
+
+    <!-- 3. 상세 편집 패널 (링크 접속 모드일 때는 접혀있고 나도 만들기 시 펼침) -->
+    <div class="editor-card" id="editorCard">
+      <div class="editor-section-title">✨ 카드 설정 & 프리셋</div>
+
+      <div class="preset-chip-list" id="presetList">
+        <!-- 모드에 따라 프리셋 동적 변경 -->
       </div>
 
-      <div class="dday-banner" id="ddayBanner">
-        <div class="dday-tag" id="bannerTag">🥳 모임 / 파티</div>
-        <div class="dday-title" id="bannerTitle">우리들의 네온 파티</div>
-        <div class="dday-count-display" id="bannerCount">D-DAY</div>
-
-        <div class="dday-timer-grid">
-          <div class="timer-box"><span class="timer-num" id="tDays">0</span><span class="timer-unit">일</span></div>
-          <div class="timer-box"><span class="timer-num" id="tHours">0</span><span class="timer-unit">시간</span></div>
-          <div class="timer-box"><span class="timer-num" id="tMins">0</span><span class="timer-unit">분</span></div>
-          <div class="timer-box"><span class="timer-num" id="tSecs">0</span><span class="timer-unit">초</span></div>
-        </div>
+      <div class="input-group">
+        <label class="input-label" for="inputTitle">제목</label>
+        <input type="text" id="inputTitle" class="input-field" placeholder="제목을 입력하세요">
       </div>
 
-      <button class="action-btn" onclick="generateDDayCard()">✨ 네온 D-Day 포스터 카드 생성</button>
+      <div class="input-group">
+        <label class="input-label" id="labelDateInput" for="inputDateTime">기준 날짜 및 시각</label>
+        <input type="datetime-local" id="inputDateTime" class="input-field">
+      </div>
 
-      <div class="preview-container" id="previewContainer">
-        <canvas id="ddayCanvas"></canvas>
-        <button class="action-btn" onclick="downloadDDayCard()" style="width:100%;">📥 D-Day 포스터 카드 다운로드 (PNG)</button>
+      <!-- 날짜 세기 전용 옵션: 당일을 1일로 칠지 0일로 칠지 -->
+      <div id="day1OptionRow" style="display:none; align-items:center; gap:8px; font-size:13.5px; color:#334155; padding:4px 0;">
+        <input type="checkbox" id="checkDay1" checked onchange="updateAll()" style="width:16px; height:16px;">
+        <label for="checkDay1" style="font-weight:700;">시작일을 1일차로 계산 (예: 연애/기념일 방식)</label>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label" for="inputDesc">부제목 / 메시지</label>
+        <input type="text" id="inputDesc" class="input-field" placeholder="응원 문구나 설명을 입력하세요">
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">테마 컬러</label>
+        <div class="theme-palette">
+          <div class="theme-circle active" style="background:#ff2a85;" onclick="selectTheme('#ff2a85', '#fdf2f8', 'linear-gradient(135deg, #ff2a85, #8b5cf6)', this)" title="로맨틱 핑크"></div>
+          <div class="theme-circle" style="background:#0284c7;" onclick="selectTheme('#0284c7', '#f0f9ff', 'linear-gradient(135deg, #0284c7, #06b6d4)', this)" title="오션 블루"></div>
+          <div class="theme-circle" style="background:#f59e0b;" onclick="selectTheme('#f59e0b', '#fffbeb', 'linear-gradient(135deg, #f59e0b, #ef4444)', this)" title="선셋 골드"></div>
+          <div class="theme-circle" style="background:#10b981;" onclick="selectTheme('#10b981', '#ecfdf5', 'linear-gradient(135deg, #10b981, #059669)', this)" title="프레시 민트"></div>
+          <div class="theme-circle" style="background:#8b5cf6;" onclick="selectTheme('#8b5cf6', '#f5f3ff', 'linear-gradient(135deg, #8b5cf6, #ec4899)', this)" title="라벤더 퍼플"></div>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- 도움말 버튼 및 규칙 모달 -->
+  <button class="help-fab" onclick="showHelpModal()" title="게임 방법">?</button>
 
+  <!-- 토스트 알림창 -->
+  <div class="toast-msg" id="toastMsg">알림 메시지</div>
+
+  <!-- 모바일 길게 눌러 복사용 모달 -->
+  <div class="modal-overlay" id="imgModal" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <h3 style="font-size:17px; font-weight:800; color:#0f172a;">🖼️ D-Day 카드 완성</h3>
+      <p style="font-size:13.5px; color:#64748b; text-align:center; line-height:1.4;">
+        아래 이미지를 <b>1초간 길게 눌러 [복사]</b>하시면 카카오톡이나 DM 채팅방에 바로 붙여넣기 하실 수 있습니다!
+      </p>
+      <img id="generatedCardImg" class="modal-img" alt="D-Day 카드">
+      <div style="display:flex; gap:8px; width:100%; margin-top:4px;">
+        <button class="nav-btn" style="flex:1; justify-content:center;" onclick="closeModal()">닫기</button>
+        <button class="nav-btn" style="flex:1; justify-content:center; background:var(--theme-gradient); color:#fff; border:none;" onclick="downloadFromModal()">파일 다운로드</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 인포그래픽 렌더링용 캔버스 (숨김) -->
+  <canvas id="renderCanvas" style="display:none;"></canvas>
 
   <script type="application/json" id="game-rules">
-{
- "title": "D-Day & 모임 카운트다운",
- "players": "1인",
- "time": "1분",
- "goal": "모임이나 기념일까지 남은 날을 세고, 공유할 포스터 카드를 만듭니다.",
- "steps": [
-  "카테고리 프리셋을 고르면 이름과 날짜가 대략 채워집니다.",
-  "이벤트 이름, 목표 날짜와 시각, 한 줄 문구를 입력합니다.",
-  "테마 색을 고르고, 원하면 배경 사진을 첨부합니다.",
-  "「네온 D-Day 포스터 카드 생성」을 누르면 미리보기가 만들어집니다.",
-  "다운로드해서 단톡방이나 SNS에 공유하세요."
- ],
- "tips": [
-  "D-Day는 날짜 차이로 셉니다. 모임이 오전이든 밤이든 같은 날이면 같은 숫자가 나옵니다.",
-  "이미 지난 날짜를 넣으면 며칠 지났는지 D+숫자로 보여줍니다.",
-  "아래 시·분·초는 실제로 남은 시간이라 1초마다 줄어듭니다."
- ]
-}
+  {
+    "title": "D-Day & 날짜 세기",
+    "players": "1인 / 공유",
+    "time": "실시간",
+    "goal": "D-Day 카운트다운과 기념일 날짜 세기를 만들고 카드나 링크로 소중한 사람들과 공유합니다.",
+    "steps": [
+      "상단 탭에서 '⏳ D-Day(남은 날)' 또는 '💖 날짜 세기(지난 날/기념일)'를 선택합니다.",
+      "프리셋을 누르거나 제목, 날짜, 문구를 직접 입력합니다.",
+      "원하는 테마 색상을 선택하면 실시간으로 카드에 반영됩니다.",
+      "'📋 카드 복사'를 누르면 클립보드에 복사되어 카톡 채팅창에 [Ctrl+V]로 바로 전송할 수 있습니다.",
+      "'🔗 링크 복사'를 누르면 상대방이 링크를 열었을 때 바로 전체 화면 카드로 확인할 수 있습니다."
+    ],
+    "tips": [
+      "날짜 세기 모드에서는 100일, 200일, 1주년(365일), 500일 등 다가오는 기념일이 며칠 남았는지 자동으로 계산해 드립니다.",
+      "시작일을 1일차로 칠지(연애 방식) 체크박스로 손쉽게 조정할 수 있습니다."
+    ]
+  }
   </script>
 
   <script>
-    let activeTheme = '#ff006e';
-    let targetTime = null;
-    let customBgImg = null;
+    let currentMode = 'dday'; // 'dday' | 'countup'
+    let currentThemeColor = '#ff2a85';
+    let currentThemeSoft = '#fdf2f8';
+    let currentThemeGrad = 'linear-gradient(135deg, #ff2a85 0%, #8b5cf6 100%)';
+    let isSharedView = false;
+    let cachedDataUrl = null;
 
-    // Set initial target date
-    setPreset('🥳 모임 / 파티', '우리들의 네온 파티', '설레는 모임까지 남은 시간', 7, document.querySelector('.preset-btn'));
+    const PRESETS = {
+      dday: [
+        { tag: '✈️ 설레는 여행', title: '후쿠오카 힐링 온천 여행', desc: '비행기 타러 가는 날까지 남은 시간', days: 12, color: '#ff2a85', soft: '#fdf2f8', grad: 'linear-gradient(135deg, #ff2a85 0%, #8b5cf6 100%)' },
+        { tag: '🎯 시험 / 마감', title: '목표 자격증 시험 D-Day', desc: '합격을 향해 끝까지 파이팅!', days: 30, color: '#0284c7', soft: '#f0f9ff', grad: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)' },
+        { tag: '🥳 생일 파티', title: 'HAPPY BIRTHDAY', desc: '세상에서 가장 특별하고 행복한 하루', days: 5, color: '#f59e0b', soft: '#fffbeb', grad: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' },
+        { tag: '🎓 종강 / 졸업', title: '자유를 향한 종강의 날', desc: '방학까지 딱 이만큼 남았어요', days: 21, color: '#10b981', soft: '#ecfdf5', grad: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+      ],
+      countup: [
+        { tag: '💖 연애 / 커플', title: '우리가 처음 만난 날', desc: '서로를 알게 된 지 이만큼이나 흘렀어요', days: -152, color: '#ff2a85', soft: '#fdf2f8', grad: 'linear-gradient(135deg, #ff2a85 0%, #8b5cf6 100%)' },
+        { tag: '🏢 입사 / 커리어', title: '회사 입사 n일차', desc: '매일 조금씩 성장해가는 중', days: -280, color: '#0284c7', soft: '#f0f9ff', grad: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)' },
+        { tag: '💪 운동 / 습관', title: '오운완 연속 달성', desc: '건강한 습관을 지켜온 시간', days: -45, color: '#10b981', soft: '#ecfdf5', grad: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+        { tag: '👶 아기 성장', title: '세상에 태어난 지', desc: '건강하게 자라나는 소중한 날들', days: -85, color: '#f59e0b', soft: '#fffbeb', grad: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' },
+      ]
+    };
 
-    function setPreset(tag, title, desc, addDays, el) {
-      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-      if (el) el.classList.add('active');
+    function showToast(text) {
+      const toast = document.getElementById('toastMsg');
+      toast.textContent = text;
+      toast.style.bottom = '30px';
+      setTimeout(() => { toast.style.bottom = '-60px'; }, 2500);
+    }
 
-      document.getElementById('bannerTag').textContent = tag;
-      document.getElementById('eventTitle').value = title;
-      document.getElementById('eventDesc').value = desc;
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('tabDday').classList.toggle('active', mode === 'dday');
+      document.getElementById('tabCountup').classList.toggle('active', mode === 'countup');
+      document.getElementById('day1OptionRow').style.display = mode === 'countup' ? 'flex' : 'none';
+      document.getElementById('milestonesBox').style.display = mode === 'countup' ? 'flex' : 'none';
+      document.getElementById('labelDateInput').textContent = mode === 'dday' ? '목표 날짜 및 시각' : '시작한 날짜 (기준일)';
+
+      renderPresets();
+      applyPreset(PRESETS[mode][0]);
+    }
+
+    function renderPresets() {
+      const list = document.getElementById('presetList');
+      list.innerHTML = '';
+      PRESETS[currentMode].forEach((p, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `preset-chip ${idx === 0 ? 'active' : ''}`;
+        btn.textContent = p.tag;
+        btn.onclick = () => {
+          document.querySelectorAll('.preset-chip').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          applyPreset(p);
+        };
+        list.appendChild(btn);
+      });
+    }
+
+    function applyPreset(p) {
+      document.getElementById('cardTag').textContent = p.tag;
+      document.getElementById('inputTitle').value = p.title;
+      document.getElementById('inputDesc').value = p.desc;
 
       const d = new Date();
-      d.setDate(d.getDate() + addDays);
+      d.setDate(d.getDate() + p.days);
       d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-      document.getElementById('eventDate').value = d.toISOString().slice(0, 16);
+      document.getElementById('inputDateTime').value = d.toISOString().slice(0, 16);
 
-      updateTimer();
+      selectTheme(p.color, p.soft, p.grad);
+      updateAll();
     }
 
-    function setTheme(color, el) {
-      activeTheme = color;
-      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-      el.classList.add('active');
+    function selectTheme(color, soft, grad, el) {
+      currentThemeColor = color;
+      currentThemeSoft = soft;
+      currentThemeGrad = grad;
+      document.documentElement.style.setProperty('--theme-color', color);
+      document.documentElement.style.setProperty('--theme-soft', soft);
+      document.documentElement.style.setProperty('--theme-shadow', color + '33');
+      document.documentElement.style.setProperty('--theme-gradient', grad);
 
-      const banner = document.getElementById('ddayBanner');
-      banner.style.borderColor = color;
-      banner.style.boxShadow = `0 0 30px ${color}55`;
+      if (el) {
+        document.querySelectorAll('.theme-circle').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+      }
+      cachedDataUrl = null;
     }
 
-    function handleBgUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      e.target.value = '';
-
-      loadPhotoFile(file, 2000).then(({ dataUrl }) => {
-        const img = new Image();
-        img.onload = () => { customBgImg = img; alert('커스텀 배경 사진이 등록되었습니다!'); };
-        img.src = dataUrl;
-      }).catch(err => alert(err.message));
-    }
-
-    // D-Day는 '며칠 남았나'가 아니라 '날짜가 며칠 차이나나'로 센다.
-    // 밀리초 차이를 내림하면 같은 날짜인데도 모임이 오전이면 D-6, 밤이면 D-7로 갈린다.
-    // 우리는 "9월 20일 모임은 D-7"이라고 말하지, 몇 시인지로 바꿔 부르지 않는다.
-    function dayDiff(target, now) {
+    function calcDayDiff(target, now) {
       const a = new Date(target.getFullYear(), target.getMonth(), target.getDate());
       const b = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      // 자정 기준끼리 빼고 반올림한다. 서머타임 등으로 24시간이 아닌 날이 있어도 안전하다.
       return Math.round((a - b) / 86400000);
     }
 
-    // 남은 날짜 문구. 지난 날은 D+n으로 적는다.
-    // 예전에는 작년 생일을 넣어도 "D - DAY!"라고 표시했다.
-    function ddayLabel(days) {
-      if (days === 0) return 'D - DAY!';
-      return days > 0 ? `D - ${days}` : `D + ${-days}`;
-    }
+    function updateAll() {
+      const title = document.getElementById('inputTitle').value.trim() || '소중한 날';
+      const desc = document.getElementById('inputDesc').value.trim() || '행복한 시간을 카운트해요';
+      const dateVal = document.getElementById('inputDateTime').value;
 
-    function updateTimer() {
-      const dateVal = document.getElementById('eventDate').value;
+      document.getElementById('cardTitle').textContent = title;
+      document.getElementById('cardDesc').textContent = desc;
+
       if (!dateVal) return;
-
-      const target = new Date(dateVal);
-      if (isNaN(target)) return;
+      const targetDate = new Date(dateVal);
+      if (isNaN(targetDate)) return;
 
       const now = new Date();
-      targetTime = target.getTime();
-      const diff = targetTime - now.getTime();
-      const days = dayDiff(target, now);
+      const diffDays = calcDayDiff(targetDate, now);
+      const diffMs = targetDate.getTime() - now.getTime();
 
-      const title = document.getElementById('eventTitle').value.trim() || 'D-Day 이벤트';
-      document.getElementById('bannerTitle').textContent = title;
-      document.getElementById('bannerCount').textContent = ddayLabel(days);
+      const y = targetDate.getFullYear();
+      const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const d = String(targetDate.getDate()).padStart(2, '0');
+      const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+      const dayName = daysOfWeek[targetDate.getDay()];
 
-      if (diff <= 0) {
-        // 이미 지난 시각이면 카운트다운은 멈추되, 며칠 지났는지는 위에 남긴다.
-        document.getElementById('tDays').textContent = days < 0 ? -days : '0';
-        document.getElementById('tHours').textContent = '0';
-        document.getElementById('tMins').textContent = '0';
-        document.getElementById('tSecs').textContent = '0';
-        return;
+      if (currentMode === 'dday') {
+        document.getElementById('cardDateBadge').textContent = `목표일: ${y}. ${m}. ${d} (${dayName})`;
+        document.getElementById('lblDays').textContent = '일';
+
+        if (diffDays === 0) {
+          document.getElementById('cardBigCounter').textContent = 'D - DAY!';
+          document.getElementById('cardCounterSub').textContent = '오늘이 바로 그 날이에요!';
+        } else if (diffDays > 0) {
+          document.getElementById('cardBigCounter').textContent = `D - ${diffDays}`;
+          document.getElementById('cardCounterSub').textContent = `${diffDays}일 남음`;
+        } else {
+          document.getElementById('cardBigCounter').textContent = `D + ${-diffDays}`;
+          document.getElementById('cardCounterSub').textContent = `${-diffDays}일 지남`;
+        }
+
+        if (diffMs > 0) {
+          document.getElementById('timeDays').textContent = diffDays;
+          document.getElementById('timeHours').textContent = String(Math.floor((diffMs % 86400000) / 3600000)).padStart(2, '0');
+          document.getElementById('timeMins').textContent = String(Math.floor((diffMs % 3600000) / 60000)).padStart(2, '0');
+          document.getElementById('timeSecs').textContent = String(Math.floor((diffMs % 60000) / 1000)).padStart(2, '0');
+        } else {
+          document.getElementById('timeDays').textContent = diffDays < 0 ? -diffDays : '0';
+          document.getElementById('timeHours').textContent = '00';
+          document.getElementById('timeMins').textContent = '00';
+          document.getElementById('timeSecs').textContent = '00';
+        }
+      } else {
+        const isDay1 = document.getElementById('checkDay1').checked;
+        const pastDays = -diffDays + (isDay1 ? 1 : 0);
+        document.getElementById('cardDateBadge').textContent = `시작일: ${y}. ${m}. ${d} (${dayName})`;
+        document.getElementById('lblDays').textContent = '일째';
+
+        document.getElementById('cardBigCounter').textContent = `${pastDays}일`;
+        document.getElementById('cardCounterSub').textContent = isDay1 ? `${pastDays}일째 함께하는 중` : `${-diffDays}일 지남`;
+
+        const elapsedMs = Math.max(0, now.getTime() - targetDate.getTime());
+        document.getElementById('timeDays').textContent = pastDays;
+        document.getElementById('timeHours').textContent = String(Math.floor((elapsedMs % 86400000) / 3600000)).padStart(2, '0');
+        document.getElementById('timeMins').textContent = String(Math.floor((elapsedMs % 3600000) / 60000)).padStart(2, '0');
+        document.getElementById('timeSecs').textContent = String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0');
+
+        renderMilestones(targetDate, now, isDay1);
       }
 
-      // 시·분·초는 실제 남은 시간 그대로 보여준다(날짜 칸만 달력 기준).
-      document.getElementById('tDays').textContent = days;
-      document.getElementById('tHours').textContent = Math.floor((diff % 86400000) / 3600000);
-      document.getElementById('tMins').textContent = Math.floor((diff % 3600000) / 60000);
-      document.getElementById('tSecs').textContent = Math.floor((diff % 60000) / 1000);
+      cachedDataUrl = null;
     }
 
-    setInterval(updateTimer, 1000);
-    updateTimer();
+    function renderMilestones(startDate, now, isDay1) {
+      const container = document.getElementById('milestonesList');
+      container.innerHTML = '';
 
-    document.getElementById('eventTitle').addEventListener('input', updateTimer);
-    document.getElementById('eventDate').addEventListener('change', updateTimer);
+      const milestones = [
+        { label: '100일', days: 100 },
+        { label: '200일', days: 200 },
+        { label: '300일', days: 300 },
+        { label: '1주년 (365일)', days: 365 },
+        { label: '500일', days: 500 },
+        { label: '2주년 (730일)', days: 730 },
+        { label: '1000일', days: 1000 },
+      ];
 
-    function generateDDayCard() {
-      const canvas = document.getElementById('ddayCanvas');
-      canvas.width = 600;
-      canvas.height = 850;
+      const startMid = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime();
+      const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const currentPassed = Math.floor((nowMid - startMid) / 86400000) + (isDay1 ? 1 : 0);
+
+      let foundNext = false;
+      milestones.forEach(m => {
+        const remaining = m.days - currentPassed;
+        const chip = document.createElement('div');
+        if (remaining <= 0) {
+          chip.className = 'milestone-chip passed';
+          chip.textContent = `${m.label} ✓`;
+        } else if (!foundNext) {
+          chip.className = 'milestone-chip next';
+          chip.textContent = `⭐ ${m.label} (D-${remaining})`;
+          foundNext = true;
+        } else {
+          chip.className = 'milestone-chip';
+          chip.textContent = `${m.label} (D-${remaining})`;
+        }
+        container.appendChild(chip);
+      });
+    }
+
+    // ── 링크 공유 기능 (URL 파라미터) ──
+    function buildShareUrl() {
+      const title = document.getElementById('inputTitle').value.trim();
+      const desc = document.getElementById('inputDesc').value.trim();
+      const tag = document.getElementById('cardTag').textContent.trim();
+      const date = document.getElementById('inputDateTime').value;
+      const day1 = document.getElementById('checkDay1').checked ? '1' : '0';
+
+      const url = new URL(location.href);
+      url.searchParams.set('v', 'card');
+      url.searchParams.set('m', currentMode);
+      url.searchParams.set('t', title);
+      url.searchParams.set('d', desc);
+      url.searchParams.set('g', tag);
+      url.searchParams.set('dt', date);
+      url.searchParams.set('c', currentThemeColor);
+      url.searchParams.set('d1', day1);
+      return url.toString();
+    }
+
+    function parseShareUrl() {
+      const params = new URLSearchParams(location.search);
+      if (!params.has('v') && !params.has('t')) return false;
+
+      const mode = params.get('m') || 'dday';
+      currentMode = mode;
+      document.getElementById('tabDday').classList.toggle('active', mode === 'dday');
+      document.getElementById('tabCountup').classList.toggle('active', mode === 'countup');
+      document.getElementById('day1OptionRow').style.display = mode === 'countup' ? 'flex' : 'none';
+      document.getElementById('milestonesBox').style.display = mode === 'countup' ? 'flex' : 'none';
+
+      if (params.get('t')) document.getElementById('inputTitle').value = params.get('t');
+      if (params.get('d')) document.getElementById('inputDesc').value = params.get('d');
+      if (params.get('g')) document.getElementById('cardTag').textContent = params.get('g');
+      if (params.get('dt')) document.getElementById('inputDateTime').value = params.get('dt');
+      if (params.get('d1')) document.getElementById('checkDay1').checked = params.get('d1') === '1';
+
+      const color = params.get('c') || '#ff2a85';
+      selectTheme(color, '#fdf2f8', `linear-gradient(135deg, ${color}, #8b5cf6)`);
+
+      setCardOnlyView(true);
+      updateAll();
+      return true;
+    }
+
+    function setCardOnlyView(active) {
+      isSharedView = active;
+      document.getElementById('sharedBanner').style.display = active ? 'flex' : 'none';
+      document.getElementById('modeTabs').style.display = active ? 'none' : 'grid';
+      document.getElementById('editorCard').style.display = active ? 'none' : 'flex';
+      document.getElementById('viewModeToggleBtn').textContent = active ? '✏️ 편집 모드' : '🔗 링크 모드';
+    }
+
+    function toggleSharedUrlMode() {
+      setCardOnlyView(!isSharedView);
+      showToast(isSharedView ? '🔗 링크 접속 시 보이는 카드 전용 화면입니다.' : '✏️ 편집 화면으로 전환되었습니다.');
+    }
+
+    function toggleEditPanel() {
+      setCardOnlyView(false);
+    }
+
+    function copyCardLink() {
+      const url = buildShareUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('🔗 D-Day 카드 링크가 복사되었습니다! (채팅창에 공유하세요)');
+        });
+      } else {
+        prompt('아래 링크를 복사하여 공유하세요:', url);
+      }
+    }
+
+    // ── 화사하고 선명한 인포그래픽 캔버스 생성 (밝은 배경) ──
+    function createInfographicCanvas() {
+      const canvas = document.getElementById('renderCanvas');
+      canvas.width = 720;
+      canvas.height = 1000;
       const ctx = canvas.getContext('2d');
 
-      // 1. Draw Background
-      if (customBgImg) {
-        ctx.drawImage(customBgImg, 0, 0, 600, 850);
-        ctx.fillStyle = 'rgba(11, 11, 26, 0.75)';
-        ctx.fillRect(0, 0, 600, 850);
-      } else {
-        const grad = ctx.createLinearGradient(0, 0, 600, 850);
-        grad.addColorStop(0, '#0b0b1a');
-        grad.addColorStop(0.5, '#181230');
-        grad.addColorStop(1, '#2c1445');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 600, 850);
-
-        // Draw Stars/Particles
-        ctx.fillStyle = '#ffffff';
-        for (let i = 0; i < 40; i++) {
-          const sx = (Math.sin(i * 99) * 0.5 + 0.5) * 600;
-          const sy = (Math.cos(i * 33) * 0.5 + 0.5) * 850;
-          const sr = (i % 3) + 1;
-          ctx.globalAlpha = (i % 5 + 3) / 10;
-          ctx.beginPath();
-          ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-          ctx.fill();
+      function drawRoundedRect(x, y, w, h, r, isFill, isStroke) {
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, y, w, h, r);
+        } else {
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + w - r, y);
+          ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+          ctx.lineTo(x + w, y + h - r);
+          ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+          ctx.lineTo(x + r, y + h);
+          ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+          ctx.lineTo(x, y + r);
+          ctx.quadraticCurveTo(x, y, x + r, y);
+          ctx.closePath();
         }
-        ctx.globalAlpha = 1.0;
+        if (isFill) ctx.fill();
+        if (isStroke) ctx.stroke();
       }
 
-      // 2. Neon Frame Border & Glow
-      ctx.strokeStyle = activeTheme;
-      ctx.lineWidth = 6;
-      ctx.shadowColor = activeTheme;
-      ctx.shadowBlur = 20;
-      ctx.strokeRect(20, 20, 560, 810);
-      ctx.shadowBlur = 0;
+      // 1. 밝고 고급스러운 화이트/소프트 그라데이션 바탕
+      const grad = ctx.createLinearGradient(0, 0, 0, 1000);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.5, '#f8fafc');
+      grad.addColorStop(1, '#f1f5f9');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 720, 1000);
 
-      // 3. Category Tag
-      const tagText = document.getElementById('bannerTag').textContent;
-      ctx.fillStyle = activeTheme;
-      ctx.fillRect(200, 75, 200, 36);
+      // 2. 내부 화이트 카드 & 테두리
+      ctx.save();
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 15px Pretendard, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(tagText, 300, 98);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+      ctx.shadowBlur = 30;
+      ctx.shadowOffsetY = 12;
+      drawRoundedRect(40, 40, 640, 920, 32, true, false);
+      ctx.restore();
 
-      // 4. Title & Subtitle
-      const title = document.getElementById('eventTitle').value.trim() || 'D-Day 이벤트';
-      const desc = document.getElementById('eventDesc').value.trim() || '설레는 모임까지 남은 시간';
+      ctx.save();
+      ctx.strokeStyle = currentThemeColor;
+      ctx.lineWidth = 3;
+      drawRoundedRect(40, 40, 640, 920, 32, false, true);
+      ctx.restore();
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 36px Pretendard, sans-serif';
-      ctx.fillText(title, 300, 185);
-
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '18px Pretendard, sans-serif';
-      ctx.fillText(desc, 300, 235);
-
-      // 5. Main D-Day Big Number Display
-      const dateVal = document.getElementById('eventDate').value;
-      const daysText = dateVal ? ddayLabel(dayDiff(new Date(dateVal), new Date())) : 'D - DAY!';
-
-      ctx.fillStyle = '#ffd166';
-      ctx.font = 'bold 96px Pretendard, sans-serif';
-      ctx.shadowColor = 'rgba(255, 209, 102, 0.9)';
-      ctx.shadowBlur = 35;
-      ctx.fillText(daysText, 300, 410);
-      ctx.shadowBlur = 0;
-
-      // 6. Realtime Detailed Timer Sub-box
-      const hours = document.getElementById('tHours').textContent;
-      const mins = document.getElementById('tMins').textContent;
-      const secs = document.getElementById('tSecs').textContent;
-
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-      ctx.fillRect(70, 510, 460, 130);
-      ctx.strokeStyle = activeTheme;
+      // 3. 상단 태그
+      const tagText = document.getElementById('cardTag').textContent;
+      ctx.fillStyle = currentThemeSoft;
+      ctx.strokeStyle = currentThemeColor;
       ctx.lineWidth = 2;
-      ctx.strokeRect(70, 510, 460, 130);
+      drawRoundedRect(230, 90, 260, 46, 23, true, true);
+      ctx.fillStyle = currentThemeColor;
+      ctx.font = 'bold 18px Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(tagText, 360, 120);
 
-      ctx.fillStyle = '#00d4ff';
-      ctx.font = 'bold 30px Pretendard, sans-serif';
-      ctx.fillText(`${days}일  ${hours}시간  ${mins}분  ${secs}초`, 300, 585);
+      // 4. 제목 & 부제목
+      const title = document.getElementById('cardTitle').textContent;
+      const desc = document.getElementById('cardDesc').textContent;
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '900 38px Pretendard, sans-serif';
+      ctx.fillText(title, 360, 205);
 
-      // 7. Footer
       ctx.fillStyle = '#64748b';
+      ctx.font = '600 20px Pretendard, sans-serif';
+      ctx.fillText(desc, 360, 252);
+
+      // 5. 대형 카운터 숫자
+      const bigNum = document.getElementById('cardBigCounter').textContent;
+      const subTxt = document.getElementById('cardCounterSub').textContent;
+      
+      const numGrad = ctx.createLinearGradient(200, 320, 520, 440);
+      numGrad.addColorStop(0, currentThemeColor);
+      numGrad.addColorStop(1, '#8b5cf6');
+      ctx.fillStyle = numGrad;
+      ctx.font = '900 100px Pretendard, sans-serif';
+      ctx.fillText(bigNum, 360, 430);
+
+      ctx.fillStyle = currentThemeColor;
+      ctx.font = 'bold 24px Pretendard, sans-serif';
+      ctx.fillText(subTxt, 360, 490);
+
+      // 6. 타이머 박스
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 2;
+      drawRoundedRect(80, 540, 560, 140, 20, true, true);
+
+      const d = document.getElementById('timeDays').textContent;
+      const h = document.getElementById('timeHours').textContent;
+      const m = document.getElementById('timeMins').textContent;
+      const s = document.getElementById('timeSecs').textContent;
+      const lblD = document.getElementById('lblDays').textContent;
+
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '900 36px Pretendard, sans-serif';
+      ctx.fillText(`${d}${lblD}  ${h}시간  ${m}분  ${s}초`, 360, 625);
+
+      // 7. 기준 날짜
+      const dateBadge = document.getElementById('cardDateBadge').textContent;
+      ctx.fillStyle = '#475569';
+      ctx.font = '700 19px Pretendard, sans-serif';
+      ctx.fillText(dateBadge, 360, 750);
+
+      // 8. 하단 브랜딩
+      ctx.fillStyle = '#94a3b8';
       ctx.font = 'bold 15px Pretendard, sans-serif';
-      ctx.fillText('MINI GAME PARADISE | NEON D-DAY POSTER', 300, 770);
+      ctx.fillText('MINI GAME PARADISE | D-DAY & CELEBRATION', 360, 890);
 
-      document.getElementById('previewContainer').style.display = 'flex';
-      document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
+      return canvas;
     }
 
-    function downloadDDayCard() {
-      const canvas = document.getElementById('ddayCanvas');
+    async function copyCardImage() {
+      try {
+        const c = createInfographicCanvas();
+        cachedDataUrl = c.toDataURL('image/png');
+
+        if (!navigator.clipboard || !navigator.clipboard.write) {
+          throw new Error('ClipboardItem API not supported');
+        }
+
+        const blob = await new Promise(resolve => c.toBlob(resolve, 'image/png'));
+        const item = new ClipboardItem({ 'image/png': blob });
+        await navigator.clipboard.write([item]);
+
+        alert(`📋 카드가 클립보드에 복사되었습니다!\n\n카카오톡 채팅방, 슬랙 등에 바로 [Ctrl + V] (붙여넣기) 하시면 이미지가 전송됩니다.`);
+      } catch (err) {
+        console.warn('Image clipboard write fallback:', err);
+        previewModalImage();
+      }
+    }
+
+    function downloadCardImage() {
+      const c = createInfographicCanvas();
+      cachedDataUrl = c.toDataURL('image/png');
       const a = document.createElement('a');
-      a.href = canvas.toDataURL('image/png');
-      a.download = `dday_poster_${Date.now()}.png`;
+      a.href = cachedDataUrl;
+      const title = document.getElementById('inputTitle').value.trim() || 'D-Day';
+      a.download = `DDay_카드_${title}_${new Date().toISOString().slice(0,10)}.png`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
     }
+
+    function previewModalImage() {
+      if (!cachedDataUrl) {
+        const c = createInfographicCanvas();
+        cachedDataUrl = c.toDataURL('image/png');
+      }
+      document.getElementById('generatedCardImg').src = cachedDataUrl;
+      document.getElementById('imgModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('imgModal').style.display = 'none';
+    }
+
+    function downloadFromModal() {
+      downloadCardImage();
+      closeModal();
+    }
+
+    function showHelpModal() {
+      if (typeof showRules === 'function') {
+        showRules();
+      } else {
+        alert('D-Day(남은 날) 또는 날짜 세기(지난 날/기념일)를 만들고 카드나 링크로 소중한 사람들과 공유할 수 있습니다.');
+      }
+    }
+
+    // ── 이벤트 바인딩 & 초기화 ──
+    document.getElementById('inputTitle').addEventListener('input', updateAll);
+    document.getElementById('inputDesc').addEventListener('input', updateAll);
+    document.getElementById('inputDateTime').addEventListener('input', updateAll);
+    setInterval(updateAll, 1000);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const hasShared = parseShareUrl();
+      if (!hasShared) {
+        switchMode('dday');
+      }
+    });
   </script>
 </body>
 </html>
