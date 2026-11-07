@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>중간 지점 찾기 (퇴근길 모드) | UI 프로토타입 목업</title>
+  
+  <!-- Pretendard 폰트 -->
+  <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+  
+  <!-- Leaflet 지도 라이브러리 (오픈소스 타일 맵, API 키 필요 없음) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-2: #f1f5f9;
+      --surface-elevated: #ffffff;
+      --line: #e2e8f0;
+      --line-subtle: #f1f5f9;
+      
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-sub: #94a3b8;
+      
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      
+      --work-color: #2563eb;
+      --work-bg: #eff6ff;
+      --home-color: #7c3aed;
+      --home-bg: #f5f3ff;
+      --meet-color: #ea580c;
+      --meet-bg: #fff7ed;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 12px 32px -4px rgba(15, 23, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      letter-spacing: -0.02em;
+      line-height: 1.5;
+      padding: 20px 16px 80px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 580px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 헤더 */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 4px 6px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .header-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #1e1b4b, #4338ca);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .badge-preview {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    /* 세그먼트 모드 전환 탭 */
+    .mode-switch-wrapper {
+      background: var(--surface-2);
+      padding: 4px;
+      border-radius: 16px;
+      display: flex;
+      gap: 4px;
+      border: 1px solid var(--line);
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mode-tab.active {
+      background: var(--surface);
+      color: var(--primary);
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* 배너 안내 */
+    .info-banner {
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border: 1px solid #bbf7d0;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .info-banner-icon { font-size: 1.3rem; line-height: 1; }
+    .info-banner-text {
+      font-size: 0.88rem;
+      color: #166534;
+      line-height: 1.45;
+    }
+    .info-banner-text strong { font-weight: 700; color: #14532d; }
+
+    /* 카드 */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      padding: 22px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 참가자 목록 */
+    .participants-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .participant-card {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+    .participant-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .participant-name-input {
+      font-family: inherit;
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text-main);
+      background: transparent;
+      border: none;
+      outline: none;
+      width: 140px;
+    }
+    .participant-delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-sub);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .participant-delete-btn:hover { color: #ef4444; background: #fee2e2; }
+
+    .stations-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    @media (max-width: 480px) {
+      .stations-row { grid-template-columns: 1fr; }
+    }
+    .station-box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .station-box.work { border-left: 3px solid var(--work-color); }
+    .station-box.home { border-left: 3px solid var(--home-color); }
+    .station-box-label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .station-input {
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-main);
+      border: none;
+      outline: none;
+      background: transparent;
+      padding: 2px 0;
+    }
+    .same-as-work-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      margin-top: 2px;
+    }
+
+    /* 참가자 추가 버튼 */
+    .add-participant-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px dashed #cbd5e1;
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 4px;
+      transition: all 0.2s;
+    }
+    .add-participant-btn:hover { background: #e2e8f0; color: var(--text-main); }
+
+    /* 메인 계산 버튼 */
+    .primary-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .primary-btn:active { transform: scale(0.98); }
+
+    /* 지도 영역 */
+    .map-card {
+      padding: 0;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+    .map-header {
+      padding: 14px 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .map-header-title { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .map-legend { display: flex; gap: 10px; font-size: 0.78rem; font-weight: 600; }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .legend-work { background: var(--work-color); }
+    .legend-home { background: var(--home-color); }
+    .legend-meet { background: var(--meet-color); }
+
+    #realMap {
+      width: 100%;
+      height: 320px;
+      background: #e5e7eb;
+      z-index: 1;
+    }
+
+    /* 정렬 탭 */
+    .sort-tabs-container {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .sort-tabs-container::-webkit-scrollbar { display: none; }
+    .sort-pill {
+      white-space: nowrap;
+      padding: 8px 14px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sort-pill.active {
+      background: var(--text-main);
+      color: #ffffff;
+      border-color: var(--text-main);
+      font-weight: 700;
+    }
+
+    /* 결과 역 카드 */
+    .result-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .result-station-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s;
+    }
+    .result-station-card.top-rank {
+      border: 2px solid #6366f1;
+      background: linear-gradient(to bottom, #ffffff, #fafbff);
+    }
+    .result-top-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #4f46e5;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .station-name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .station-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .line-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 12px;
+      color: #fff;
+    }
+    .line-2 { background: #3cb44a; }
+    .line-9 { background: #bdb092; }
+    .line-shin { background: #d4003b; }
+
+    .ai-summary {
+      font-size: 0.88rem;
+      color: #4338ca;
+      background: #eef2ff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    /* 멤버별 상세 아코디언 */
+    .member-travel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line-subtle);
+    }
+    .member-travel-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.86rem;
+      background: var(--surface-2);
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+    .member-name-time {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+    .member-route-detail {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .route-step {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .share-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .share-btn:hover { background: var(--surface-2); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 헤더 -->
+    <header class="header">
+      <a href="../games/midpoint-finder.html" class="back-btn">← 기존 버전</a>
+      <h1 class="header-title">중간 지점 찾기</h1>
+      <span class="badge-preview">퇴근길 프로토타입</span>
+    </header>
+
+    <!-- 모드 선택 탭 (세그먼트 컨트롤) -->
+    <div class="mode-switch-wrapper">
+      <button class="mode-tab" onclick="setMode('standard')">☀️ 주말 / 일반 모임</button>
+      <button class="mode-tab active" onclick="setMode('afterwork')">🌙 퇴근 후 모임 (회사➔집)</button>
+    </div>
+
+    <!-- 모드 설명 배너 -->
+    <div class="info-banner" id="modeBanner">
+      <div class="info-banner-icon">💡</div>
+      <div class="info-banner-text">
+        <strong>퇴근 후 약속 특화 계산</strong><br>
+        1차 모임 장소로 갈 때(회사➔약속)뿐만 아니라, <strong>술자리 끝나고 집에 가는 길(약속➔집)</strong>의 막차와 이동 시간까지 공평하게 계산합니다.
+      </div>
+    </div>
+
+    <!-- 참가자 입력 카드 -->
+    <div class="card">
+      <div class="card-title">
+        <span>참가자 설정 (3명)</span>
+        <span style="font-size:0.8rem; font-weight:500; color:var(--text-muted)">서울·경기 전철역 기준</span>
+      </div>
+
+      <div class="participants-list" id="participantsList">
+        <!-- 민수 -->
+        <div class="participant-card">
+          <div class="participant-header">
+            <input type="text" class="participant-name-input" value="민수">
+            <button class="participant-delete-btn" title="삭제">×</button>
+          </div>
+          <div class="stations-row">
+            <div class="station-box work">
+              <span class="station-box-label">🏢 회사 (출발)</span>
+              <input type="text" class="station-input" value="역삼역 (2호선)">
+            </div>
+            <div class="station-box home">
+              <span class="station-box-label">🏠 집 (귀가)</span>
+              <input type="text" class="station-input" value="판교역 (신분당선)">
+            </div>
+          </div>
+        </div>
+
+        <!-- 지혜 -->
+        <div class="participant-card">
+          <div class="participant-header">
+            <input type="text" class="participant-name-input" value="지혜">
+            <button class="participant-delete-btn" title="삭제">×</button>
+          </div>
+          <div class="stations-row">
+            <div class="station-box work">
+              <span class="station-box-label">🏢 회사 (출발)</span>
+              <input type="text" class="station-input" value="여의도역 (5·9호선)">
+            </div>
+            <div class="station-box home">
+              <span class="station-box-label">🏠 집 (귀가)</span>
+              <input type="text" class="station-input" value="합정역 (2·6호선)">
+            </div>
+          </div>
+        </div>
+
+        <!-- 준호 -->
+        <div class="participant-card">
+          <div class="participant-header">
+            <input type="text" class="participant-name-input" value="준호">
+            <button class="participant-delete-btn" title="삭제">×</button>
+          </div>
+          <div class="stations-row">
+            <div class="station-box work">
+              <span class="station-box-label">🏢 회사 (출발)</span>
+              <input type="text" class="station-input" value="광화문역 (5호선)">
+            </div>
+            <div class="station-box home" style="background:#f8fafc">
+              <span class="station-box-label">🏠 집 (귀가)</span>
+              <input type="text" class="station-input" value="광화문역 (재택)">
+              <label class="same-as-work-label">
+                <input type="checkbox" checked> 회사와 집 동일(재택)
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="add-participant-btn" onclick="alert('목업 화면에서는 3명 기준 예시 데이터로 렌더링됩니다.')">
+        + 참가자 추가
+      </button>
+
+      <div style="margin-top: 16px;">
+        <button class="primary-btn" onclick="scrollToResults()">
+          <span>🚀 퇴근 맞춤 중간 지점 계산하기</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 결과 화면 (실제 지도 포함) -->
+    <div class="card map-card" id="resultsArea">
+      <div class="map-header">
+        <div class="map-header-title">🗺️ 실제 이동 경로 지도</div>
+        <div class="map-legend">
+          <div class="legend-item"><span class="legend-dot legend-work"></span> 회사</div>
+          <div class="legend-item"><span class="legend-dot legend-meet"></span> 추천지</div>
+          <div class="legend-item"><span class="legend-dot legend-home"></span> 집</div>
+        </div>
+      </div>
+      <!-- 실제 Leaflet OpenStreetMap 지도 타일 -->
+      <div id="realMap"></div>
+    </div>
+
+    <!-- 추천 정렬 필터 -->
+    <div class="sort-tabs-container">
+      <button class="sort-pill active">⚖️ 총 이동시간 공평 (추천)</button>
+      <button class="sort-pill">🌙 귀가 안심 (집 가기 편한 곳)</button>
+      <button class="sort-pill">⚡ 빠른 1차 합류 (퇴근 직행)</button>
+      <button class="sort-pill">🍻 맛집·상권 중심</button>
+    </div>
+
+    <!-- 추천 역 리스트 -->
+    <div class="result-list">
+      
+      <!-- 1위 추천역 -->
+      <div class="result-station-card top-rank">
+        <span class="result-top-badge">🏆 최적 추천 1위</span>
+        <div class="station-name-row">
+          <div class="station-title">
+            신논현역
+            <span class="line-badge line-9">9호선 급행</span>
+            <span class="line-badge line-shin">신분당선</span>
+          </div>
+          <div style="font-size:0.95rem; font-weight:800; color:#4f46e5;">
+            평균 38분 (총 이동)
+          </div>
+        </div>
+
+        <div class="ai-summary">
+          💬 <strong>선정 이유</strong>: 민수(역삼) 10분, 지혜(여의도 9호선 급행) 17분으로 1차 합류가 초고속이며, 술자리 후 민수(판교 신분당선 직결)와 지혜(합정 9호선 급행 당산 환승) 모두 20분대 안전 귀가가 가능합니다.
+        </div>
+
+        <!-- 각 참가자별 이동 상세 (회사->모임 / 모임->집) -->
+        <div class="member-travel-list">
+          <!-- 민수 -->
+          <div class="member-travel-item">
+            <div class="member-name-time">
+              <span>👤 민수 (총 38분)</span>
+              <span style="color:#16a34a">퇴근 직행 + 귀가 최상</span>
+            </div>
+            <div class="member-route-detail">
+              <span class="route-step">🏢 역삼 ➔ 신논현 (12분)</span>
+              <span>|</span>
+              <span class="route-step">🏠 신논현 ➔ 판교 (26분)</span>
+            </div>
+          </div>
+
+          <!-- 지혜 -->
+          <div class="member-travel-item">
+            <div class="member-name-time">
+              <span>👤 지혜 (총 42분)</span>
+              <span style="color:#2563eb">9호선 급행 활용</span>
+            </div>
+            <div class="member-route-detail">
+              <span class="route-step">🏢 여의도 ➔ 신논현 (17분)</span>
+              <span>|</span>
+              <span class="route-step">🏠 신논현 ➔ 합정 (25분)</span>
+            </div>
+          </div>
+
+          <!-- 준호 -->
+          <div class="member-travel-item">
+            <div class="member-name-time">
+              <span>👤 준호 (총 46분)</span>
+              <span style="color:#64748b">광화문 왕복</span>
+            </div>
+            <div class="member-route-detail">
+              <span class="route-step">🏢 광화문 ➔ 신논현 (23분)</span>
+              <span>|</span>
+              <span class="route-step">🏠 신논현 ➔ 광화문 (23분)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2위 추천역 -->
+      <div class="result-station-card">
+        <div class="station-name-row">
+          <div class="station-title">
+            사당역
+            <span class="line-badge line-2">2호선</span>
+            <span class="line-badge" style="background:#00a4e3">4호선</span>
+          </div>
+          <div style="font-size:0.95rem; font-weight:700; color:var(--text-muted);">
+            평균 44분
+          </div>
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px">
+          판교 및 수도권 남부와 도심을 연결하는 전통의 남부 환승 요충지입니다.
+        </p>
+      </div>
+
+      <!-- 3위 추천역 -->
+      <div class="result-station-card">
+        <div class="station-name-row">
+          <div class="station-title">
+            공덕역
+            <span class="line-badge" style="background:#8936e0">5호선</span>
+            <span class="line-badge" style="background:#cd7c2f">6호선</span>
+            <span class="line-badge" style="background:#0090d2">공항</span>
+          </div>
+          <div style="font-size:0.95rem; font-weight:700; color:var(--text-muted);">
+            평균 47분
+          </div>
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px">
+          여의도와 광화문에서 매우 가깝고 경의중앙선/공항철도 이용이 편리합니다.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- 공유 및 저장 버튼 그룹 -->
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <!-- 1순위: 이미지 클립보드 복사 (카톡에 바로 붙여넣기) -->
+      <button class="primary-btn" style="background:linear-gradient(135deg, #4f46e5, #7c3aed); box-shadow:0 4px 14px rgba(79, 70, 229, 0.35);" onclick="copyImageToClipboard()">
+        📋 이미지 클립보드 복사 (카톡에 바로 붙여넣기)
+      </button>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <button class="share-btn" onclick="generateShareImage(true)">
+          💾 이미지 파일 저장
+        </button>
+        <button class="share-btn" onclick="copyShareText()">
+          📝 텍스트로 복사
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 이미지 미리보기 & 저장 모달 -->
+  <div id="imageModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.85); z-index:9999; backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--surface); border-radius:24px; max-width:440px; width:100%; max-height:90vh; overflow-y:auto; padding:20px; box-shadow:var(--shadow-lg); text-align:center; position:relative;">
+      <button onclick="closeModal()" style="position:absolute; top:16px; right:16px; background:var(--surface-2); border:none; width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+      
+      <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:6px;">🖼️ 공유용 이미지 완성</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+        아래 이미지를 <strong>클릭/복사</strong>하여 카카오톡이나 SNS에 바로 붙여넣으세요.
+      </p>
+
+      <div style="border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.15); border:1px solid var(--line); margin-bottom:16px;">
+        <img id="generatedImg" src="" alt="공유 카드" style="width:100%; display:block; height:auto;">
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+        <button class="primary-btn" style="padding:12px; font-size:0.9rem;" onclick="copyImageToClipboard()">
+          📋 이미지 복사
+        </button>
+        <button class="share-btn" style="padding:12px; font-size:0.9rem;" onclick="downloadCurrentImg()">
+          📥 파일 저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Leaflet 실제 지도 초기화
+    let map = null;
+
+    function initMap() {
+      // 신논현역 중심 좌표 (37.5045, 127.0253)
+      map = L.map('realMap', {
+        zoomControl: true,
+        scrollWheelZoom: false
+      }).setView([37.5250, 126.9850], 11);
+
+      // CartoDB Positron 타일 (깔끔하고 세련된 연회색 지도)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(map);
+
+      // 예시 좌표 데이터
+      const locations = {
+        meet: { name: '신논현역 (추천 1위)', lat: 37.5045, lng: 127.0253, type: 'meet' },
+        minsuWork: { name: '민수 회사 (역삼역)', lat: 37.5006, lng: 127.0365, type: 'work' },
+        minsuHome: { name: '민수 집 (판교역)', lat: 37.3948, lng: 127.1111, type: 'home' },
+        jihyeWork: { name: '지혜 회사 (여의도역)', lat: 37.5215, lng: 126.9242, type: 'work' },
+        jihyeHome: { name: '지혜 집 (합정역)', lat: 37.5495, lng: 126.9138, type: 'home' },
+        junhoWork: { name: '준호 회사·집 (광화문역)', lat: 37.5716, lng: 126.9765, type: 'work' }
+      };
+
+      // 커스텀 원형 마커 생성 함수
+      function createCustomMarker(lat, lng, color, icon, label) {
+        const marker = L.circleMarker([lat, lng], {
+          radius: color === '#ea580c' ? 12 : 8,
+          fillColor: color,
+          color: '#ffffff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.9
+        }).addTo(map);
+
+        marker.bindPopup(`<b>${icon} ${label}</b>`);
+        return marker;
+      }
+
+      // 마커 표시
+      createCustomMarker(locations.meet.lat, locations.meet.lng, '#ea580c', '🍻', locations.meet.name).openPopup();
+      createCustomMarker(locations.minsuWork.lat, locations.minsuWork.lng, '#2563eb', '🏢', locations.minsuWork.name);
+      createCustomMarker(locations.minsuHome.lat, locations.minsuHome.lng, '#7c3aed', '🏠', locations.minsuHome.name);
+      createCustomMarker(locations.jihyeWork.lat, locations.jihyeWork.lng, '#2563eb', '🏢', locations.jihyeWork.name);
+      createCustomMarker(locations.jihyeHome.lat, locations.jihyeHome.lng, '#7c3aed', '🏠', locations.jihyeHome.name);
+      createCustomMarker(locations.junhoWork.lat, locations.junhoWork.lng, '#2563eb', '🏢', locations.junhoWork.name);
+
+      // 이동 경로를 점선(Dashed Line)으로 연결
+      // 민수: 역삼 -> 신논현 -> 판교
+      L.polyline([[locations.minsuWork.lat, locations.minsuWork.lng], [locations.meet.lat, locations.meet.lng]], {
+        color: '#2563eb', weight: 3, dashArray: '5, 8', opacity: 0.8
+      }).addTo(map);
+      L.polyline([[locations.meet.lat, locations.meet.lng], [locations.minsuHome.lat, locations.minsuHome.lng]], {
+        color: '#7c3aed', weight: 3, dashArray: '5, 8', opacity: 0.8
+      }).addTo(map);
+
+      // 지혜: 여의도 -> 신논현 -> 합정
+      L.polyline([[locations.jihyeWork.lat, locations.jihyeWork.lng], [locations.meet.lat, locations.meet.lng]], {
+        color: '#2563eb', weight: 3, dashArray: '5, 8', opacity: 0.8
+      }).addTo(map);
+      L.polyline([[locations.meet.lat, locations.meet.lng], [locations.jihyeHome.lat, locations.jihyeHome.lng]], {
+        color: '#7c3aed', weight: 3, dashArray: '5, 8', opacity: 0.8
+      }).addTo(map);
+
+      // 준호: 광화문 -> 신논현
+      L.polyline([[locations.junhoWork.lat, locations.junhoWork.lng], [locations.meet.lat, locations.meet.lng]], {
+        color: '#2563eb', weight: 3, dashArray: '5, 8', opacity: 0.8
+      }).addTo(map);
+    }
+
+    function setMode(mode) {
+      document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      const banner = document.getElementById('modeBanner');
+      if (mode === 'standard') {
+        banner.innerHTML = `<div class="info-banner-icon">☀️</div><div class="info-banner-text"><strong>주말/낮 일반 모임</strong><br>각 참가자의 출발 위치만을 기준으로 모두에게 가장 공평한 중간 역을 찾습니다.</div>`;
+      } else {
+        banner.innerHTML = `<div class="info-banner-icon">💡</div><div class="info-banner-text"><strong>퇴근 후 약속 특화 계산</strong><br>1차 모임 장소로 갈 때(회사➔약속)뿐만 아니라, <strong>술자리 끝나고 집에 가는 길(약속➔집)</strong>의 막차와 이동 시간까지 공평하게 계산합니다.</div>`;
+      }
+    }
+
+    function scrollToResults() {
+      document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    let currentImageDataUrl = '';
+
+    // 인포그래픽 공유 카드 캔버스 렌더링
+    function createShareCardCanvas() {
+      const c = document.createElement('canvas');
+      const w = 680;
+      const h = 880;
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext('2d');
+
+      // 둥근 사각형 유틸
+      function roundRect(x, y, width, height, radius, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        if (fill) ctx.fill();
+        if (stroke) ctx.stroke();
+      }
+
+      // 1. 전체 배경
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, w, h);
+
+      // 상단 감성 그라디언트 바
+      const topGrad = ctx.createLinearGradient(0, 0, w, 0);
+      topGrad.addColorStop(0, '#4f46e5');
+      topGrad.addColorStop(0.5, '#7c3aed');
+      topGrad.addColorStop(1, '#ea580c');
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(0, 0, w, 8);
+
+      // 2. 헤더 영역
+      // 태그 뱃지
+      ctx.fillStyle = '#e0e7ff';
+      roundRect(40, 36, 170, 28, 14, true, false);
+      ctx.fillStyle = '#3730a3';
+      ctx.font = 'bold 13px Pretendard, sans-serif';
+      ctx.fillText('📍 중간 지점 모임 장소', 54, 55);
+
+      // 모드 뱃지
+      ctx.fillStyle = '#fef3c7';
+      roundRect(220, 36, 170, 28, 14, true, false);
+      ctx.fillStyle = '#92400e';
+      ctx.fillText('🌙 퇴근 후 모임 (회사➔집)', 230, 55);
+
+      // 날짜
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 13px Pretendard, sans-serif';
+      ctx.textAlign = 'right';
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+      ctx.fillText(today, w - 40, 55);
+      ctx.textAlign = 'left';
+
+      // 제목
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 26px Pretendard, sans-serif';
+      ctx.fillText('우리 어디서 볼까? 중간 지점 결과', 40, 105);
+
+      // 3. 1위 역 메인 추천 카드 (인디고 그라디언트)
+      const cardGrad = ctx.createLinearGradient(40, 130, 40, 310);
+      cardGrad.addColorStop(0, '#4338ca');
+      cardGrad.addColorStop(1, '#312e81');
+      ctx.fillStyle = cardGrad;
+      roundRect(40, 130, w - 80, 185, 20, true, false);
+
+      // 1위 뱃지
+      ctx.fillStyle = '#f59e0b';
+      roundRect(65, 155, 96, 24, 6, true, false);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px Pretendard, sans-serif';
+      ctx.fillText('🏆 최적 추천 1위', 74, 171);
+
+      // 평균 시간
+      ctx.fillStyle = '#c7d2fe';
+      ctx.font = 'bold 15px Pretendard, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('평균 총 이동 38분', w - 65, 172);
+      ctx.textAlign = 'left';
+
+      // 역 이름
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 34px Pretendard, sans-serif';
+      ctx.fillText('신논현역', 65, 222);
+
+      // 노선 태그
+      ctx.fillStyle = '#bdb092'; // 9호선
+      roundRect(205, 196, 80, 26, 13, true, false);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px Pretendard, sans-serif';
+      ctx.fillText('9호선 급행', 217, 213);
+
+      ctx.fillStyle = '#d4003b'; // 신분당선
+      roundRect(295, 196, 70, 26, 13, true, false);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('신분당선', 308, 213);
+
+      // 한줄 요약 박스
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+      roundRect(65, 245, w - 130, 48, 10, true, false);
+      ctx.fillStyle = '#e0e7ff';
+      ctx.font = '500 13px Pretendard, sans-serif';
+      ctx.fillText('💬 민수(역삼 12분)·지혜(여의도 17분) 빠른 1차 합류 + 판교/합정 안전 귀가!', 80, 274);
+
+      // 4. 참가자별 상세 이동 카드 목록
+      ctx.fillStyle = '#334155';
+      ctx.font = 'bold 16px Pretendard, sans-serif';
+      ctx.fillText('참가자별 삼각 이동 상세', 40, 348);
+
+      const members = [
+        { name: '민수', work: '역삼 (12분)', home: '판교 (26분)', total: '38분', tag: '퇴근 직행 + 귀가 수월' },
+        { name: '지혜', work: '여의도 (17분)', home: '합정 (25분)', total: '42분', tag: '9호선 급행 활용' },
+        { name: '준호', work: '광화문 (23분)', home: '광화문 (23분)', total: '46분', tag: '도심 왕복' }
+      ];
+
+      let startY = 368;
+      members.forEach((m, idx) => {
+        // 멤버 카드 배경
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.04)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 3;
+        roundRect(40, startY, w - 80, 86, 14, true, false);
+        ctx.shadowColor = 'transparent';
+
+        // 테두리
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        roundRect(40, startY, w - 80, 86, 14, false, true);
+
+        // 이름 & 총 시간
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 16px Pretendard, sans-serif';
+        ctx.fillText(`👤 ${m.name}`, 60, startY + 30);
+
+        ctx.fillStyle = '#4f46e5';
+        ctx.font = 'bold 15px Pretendard, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`총 ${m.total}`, w - 60, startY + 30);
+        ctx.textAlign = 'left';
+
+        // 경로 안내: 회사 -> 신논현 -> 집
+        ctx.fillStyle = '#2563eb';
+        ctx.font = 'bold 13px Pretendard, sans-serif';
+        ctx.fillText(`🏢 ${m.work}`, 60, startY + 62);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('➔', 185, startY + 62);
+
+        ctx.fillStyle = '#ea580c';
+        ctx.fillText('🍻 신논현', 210, startY + 62);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('➔', 295, startY + 62);
+
+        ctx.fillStyle = '#7c3aed';
+        ctx.fillText(`🏠 ${m.home}`, 320, startY + 62);
+
+        // 뱃지 태그
+        ctx.fillStyle = '#f1f5f9';
+        roundRect(w - 195, startY + 47, 135, 22, 6, true, false);
+        ctx.fillStyle = '#475569';
+        ctx.font = '500 11px Pretendard, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(m.tag, w - 127, startY + 62);
+        ctx.textAlign = 'left';
+
+        startY += 98;
+      });
+
+      // 5. 2위, 3위 후보 요약 바
+      ctx.fillStyle = '#ffffff';
+      roundRect(40, startY + 10, w - 80, 52, 12, true, false);
+      ctx.strokeStyle = '#e2e8f0';
+      roundRect(40, startY + 10, w - 80, 52, 12, false, true);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'bold 13px Pretendard, sans-serif';
+      ctx.fillText('다른 추천 후보:', 60, startY + 41);
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText('2위 사당역 (평균 44분)', 175, startY + 41);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillText('|', 335, startY + 41);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText('3위 공덕역 (평균 47분)', 355, startY + 41);
+
+      // 6. 하단 푸터
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 12px Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('단톡방 약속 정하기 | 미니게임 천국 중간 지점 찾기', w / 2, h - 30);
+
+      return c;
+    }
+
+    // 이미지 생성 및 모달/다운로드 분기
+    async function generateShareImage(autoDownload = false) {
+      const c = createShareCardCanvas();
+      currentImageDataUrl = c.toDataURL('image/png');
+
+      // 모바일 Web Share API 시도 (파일 공유 지원 시)
+      if (navigator.canShare && navigator.share && autoDownload) {
+        try {
+          const blob = await new Promise(resolve => c.toBlob(resolve, 'image/png'));
+          const file = new File([blob], 'midpoint-meeting.png', { type: 'image/png' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: '중간 지점 모임 장소 추천',
+              text: '우리 퇴근하고 신논현역에서 만나요!'
+            });
+            return;
+          }
+        } catch (err) {
+          console.log('Web share skipped, fallback to modal/download', err);
+        }
+      }
+
+      if (autoDownload) {
+        downloadCurrentImg();
+      }
+      previewShareImage();
+    }
+
+    function previewShareImage() {
+      if (!currentImageDataUrl) {
+        const c = createShareCardCanvas();
+        currentImageDataUrl = c.toDataURL('image/png');
+      }
+      document.getElementById('generatedImg').src = currentImageDataUrl;
+      const modal = document.getElementById('imageModal');
+      modal.style.display = 'flex';
+    }
+
+    function downloadCurrentImg() {
+      if (!currentImageDataUrl) {
+        const c = createShareCardCanvas();
+        currentImageDataUrl = c.toDataURL('image/png');
+      }
+      const a = document.createElement('a');
+      a.href = currentImageDataUrl;
+      a.download = `퇴근길_중간지점_신논현역_${new Date().toISOString().slice(0,10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function closeModal() {
+      document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // 이미지를 클립보드에 바로 복사 (카톡/슬랙 등에서 Ctrl+V로 즉시 붙여넣기 가능)
+    async function copyImageToClipboard() {
+      try {
+        const c = createShareCardCanvas();
+        currentImageDataUrl = c.toDataURL('image/png');
+
+        if (!navigator.clipboard || !navigator.clipboard.write) {
+          throw new Error('Clipboard API not fully supported');
+        }
+
+        const blob = await new Promise(resolve => c.toBlob(resolve, 'image/png'));
+        const item = new ClipboardItem({ 'image/png': blob });
+        await navigator.clipboard.write([item]);
+
+        alert('📋 이미지가 클립보드에 복사되었습니다!\n\n카카오톡 채팅방, 슬랙, SNS에 바로 [Ctrl + V] (또는 붙여넣기) 하시면 이미지가 전송됩니다.');
+      } catch (err) {
+        console.warn('Direct image clipboard copy failed:', err);
+        // 모바일 브라우저나 권한 제한 환경일 경우 미리보기 모달을 띄우고 길게 누르기 안내
+        previewShareImage();
+        alert('💡 이미지가 생성되었습니다!\n\n화면에 뜬 이미지를 [1초간 길게 눌러 복사]를 선택하시면 카톡이나 채팅창에 바로 붙여넣으실 수 있습니다.');
+      }
+    }
+
+    function copyShareText() {
+      const text = `📍 [퇴근길 모임 중간 지점 추천 결과]\n\n🏆 1위: 신논현역 (평균 38분 소요)\n- 민수: 🏢역삼(12분) ➔ 🍻신논현 ➔ 🏠판교(26분) [총 38분]\n- 지혜: 🏢여의도(17분) ➔ 🍻신논현 ➔ 🏠합정(25분) [총 42분]\n- 준호: 🏢광화문(23분) ➔ 🍻신논현 ➔ 🏠광화문(23분) [총 46분]\n\n💬 사유: 퇴근 1차 합류 초고속 + 판교/합정 20분대 안전 귀가 가능!\n(다른 후보: 2위 사당역, 3위 공덕역)`;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        alert('단톡방 공유용 텍스트가 클립보드에 복사되었습니다!\n원하는 채팅방에 붙여넣기(Ctrl+V)하세요.');
+      }).catch(() => {
+        alert(text);
+      });
+    }
+
+    // 페이지 로드 시 맵 렌더링
+    window.addEventListener('DOMContentLoaded', () => {
+      initMap();
+    });
+  </script>
+</body>
+</html>

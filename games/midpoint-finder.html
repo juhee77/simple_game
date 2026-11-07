@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
   <script src="../scripts/game-common.js?v=efdc1560"></script>
   <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
+  <!-- Leaflet 지도 라이브러리 (오픈소스 타일 맵, API 키 필요 없음) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root {
       /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
@@ -526,6 +529,207 @@
     .modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-dim); }
     .close-modal { margin-top: 16px; width: 100%; }
 
+    /* 모드 전환 탭 (세그먼트 컨트롤) */
+    .mode-switch-wrapper {
+      background: var(--surface-2);
+      padding: 4px;
+      border-radius: 16px;
+      display: flex;
+      gap: 4px;
+      border: 1px solid var(--line);
+      margin-bottom: 2px;
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .mode-tab.active {
+      background: var(--surface);
+      color: var(--primary);
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    /* 배너 안내 */
+    .info-banner {
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border: 1px solid #bbf7d0;
+      border-radius: var(--radius-btn);
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .info-banner-icon { font-size: 1.2rem; line-height: 1; }
+    .info-banner-text {
+      font-size: 0.86rem;
+      color: #166534;
+      line-height: 1.45;
+    }
+    .info-banner-text strong { font-weight: 700; color: #14532d; }
+
+    /* 듀얼 입력창 (퇴근길 모드) */
+    .dual-station-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    @media (max-width: 480px) {
+      .dual-station-grid { grid-template-columns: 1fr; }
+    }
+    .station-input-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .station-input-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .same-home-check {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      margin-top: 2px;
+      user-select: none;
+    }
+
+    /* 지도 박스 */
+    .map-box {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .map-box-header {
+      padding: 10px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .map-legend-items {
+      display: flex;
+      gap: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .dot-work { width: 8px; height: 8px; border-radius: 50%; background: #2563eb; }
+    .dot-home { width: 8px; height: 8px; border-radius: 50%; background: #7c3aed; }
+    .dot-meet { width: 8px; height: 8px; border-radius: 50%; background: #ea580c; }
+    #realMap { width: 100%; height: 320px; background: #e2e8f0; z-index: 1; }
+
+    /* 공유 버튼군 */
+    .share-btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .primary-share-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s;
+    }
+    .primary-share-btn:active { transform: scale(0.98); }
+    .sub-share-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .sub-share-btn {
+      padding: 11px;
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .sub-share-btn:hover { background: var(--tint-2); }
+
+    /* 이미지 모달 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.8);
+      z-index: 9999;
+      backdrop-filter: blur(5px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-content {
+      background: var(--surface);
+      border-radius: 20px;
+      max-width: 440px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+      text-align: center;
+      position: relative;
+    }
+    .modal-close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: var(--surface-2);
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: var(--text-dim);
+    }
+
     .toast {
       position: fixed;
       bottom: -50px;
@@ -548,49 +752,140 @@
       <h1>중간 지점 찾기</h1>
     </header>
 
+    <!-- 모드 선택 탭 (세그먼트 컨트롤) -->
+    <div class="mode-switch-wrapper">
+      <button class="mode-tab active" id="tabAfterwork" onclick="switchMode('afterwork')">
+        🌙 퇴근 후 모임 (회사➔집)
+      </button>
+      <button class="mode-tab" id="tabStandard" onclick="switchMode('standard')">
+        ☀️ 주말 / 일반 모임
+      </button>
+    </div>
+
+    <!-- 모드 설명 배너 -->
+    <div class="info-banner" id="modeBanner">
+      <div class="info-banner-icon">💡</div>
+      <div class="info-banner-text">
+        <strong>퇴근 후 약속 특화 모드</strong><br>
+        1차 모임 장소로 갈 때(회사➔약속)뿐만 아니라, <strong>술자리 끝나고 집에 가는 길(약속➔집)</strong>의 막차와 귀가 시간까지 고려하여 공평하게 계산합니다.
+      </div>
+    </div>
+
+    <!-- 참가자 입력 카드 -->
     <div class="card">
       <div class="input-group">
         <input type="text" id="nameInput" placeholder="이름 (예: 철수)" maxlength="10">
-        <div class="input-row">
-          <input type="text" id="stationInput" placeholder="출발역 검색 (예: 강남)" autocomplete="off">
-          <button id="addBtn">추가</button>
+
+        <!-- 퇴근 후 모임 모드 듀얼 입력창 (회사 & 집) -->
+        <div id="dualStationArea" class="dual-station-grid">
+          <div class="station-input-wrap">
+            <span class="station-input-label">🏢 회사 (출발역)</span>
+            <input type="text" id="workStationInput" placeholder="회사 역 검색 (예: 역삼)" autocomplete="off">
+            <div class="autocomplete-list" id="workAutocompleteList"></div>
+          </div>
+          <div class="station-input-wrap">
+            <span class="station-input-label">🏠 집 (귀가역)</span>
+            <input type="text" id="homeStationInput" placeholder="집 역 검색 (예: 판교)" autocomplete="off">
+            <div class="autocomplete-list" id="homeAutocompleteList"></div>
+            <label class="same-home-check">
+              <input type="checkbox" id="sameHomeCheck" onchange="toggleSameHome(this.checked)"> 회사와 집 동일(재택)
+            </label>
+          </div>
         </div>
-        <div class="autocomplete-list" id="autocompleteList"></div>
+
+        <!-- 일반 모드 단일 입력창 -->
+        <div id="singleStationArea" style="display:none; position:relative;">
+          <input type="text" id="stationInput" placeholder="출발역 검색 (예: 강남)" autocomplete="off">
+          <div class="autocomplete-list" id="autocompleteList"></div>
+        </div>
+
+        <button class="add-btn" id="addBtn">+ 참가자 추가</button>
       </div>
-      
+
       <div class="participants" id="participantList">
         <!-- Participants will be added here -->
       </div>
 
-      <div class="empty-hint" id="emptyHint">
-        <p><strong>흩어져 사는 친구들, 어디서 만나죠?</strong></p>
-        <p>각자 출발할 역을 넣으면 모두에게 공평한 역을 찾아 드립니다. 2명부터 되고, 많을수록 좋습니다.</p>
+      <div class="empty-hint" id="emptyHint" style="color:var(--text-dim); font-size:0.88rem; text-align:center; margin-top:14px; line-height:1.5;">
+        <p><strong>흩어져 있는 우리, 어디서 만날까요?</strong></p>
+        <p>2명 이상 추가하면 모두에게 가장 편하고 공평한 중간 역을 찾아 드립니다.</p>
       </div>
 
       <button class="calc-btn" id="calcBtn" disabled>중간 지점 계산하기</button>
     </div>
 
+    <!-- 결과 화면 (실제 지도 포함) -->
     <div class="card results" id="resultsSection">
-      <h2>추천 모임 장소</h2>
-      <p class="calc-note">역 사이 직선거리로 계산한 추정치입니다. 실제 소요 시간은 환승과 배차에 따라 달라집니다.</p>
-      
-      <div class="map-container">
-        <canvas class="stage" id="mapCanvas"></canvas>
+      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <h2 style="font-size:1.15rem; font-weight:800; color:var(--text-main);">추천 모임 장소</h2>
+        <span style="font-size:0.78rem; color:var(--text-dim)">실측 좌표 기반 산출</span>
       </div>
 
-      <div class="sort-tabs">
-        <button class="sort-tab active" data-sort="centroid">📍 지리적 중심 기준</button>
-        <button class="sort-tab" data-sort="fairness">⚖️ 이동격차 최소 (공평함)</button>
-        <button class="sort-tab" data-sort="time">⚡ 평균 이동시간 최소</button>
-        <button class="sort-tab" data-sort="meet">🍻 모이기 좋은 곳</button>
+      <!-- 실제 Leaflet OpenStreetMap 지도 타일 -->
+      <div class="map-box">
+        <div class="map-box-header">
+          <span>🗺️ 실제 이동 경로 지도</span>
+          <div class="map-legend-items">
+            <span class="legend-item"><span class="dot-work"></span> 회사</span>
+            <span class="legend-item"><span class="dot-meet"></span> 모임지</span>
+            <span class="legend-item"><span class="dot-home"></span> 집</span>
+          </div>
+        </div>
+        <div id="realMap"></div>
       </div>
 
+      <!-- 정렬 탭 -->
+      <div class="sort-tabs" id="sortTabs">
+        <button class="sort-tab active" data-sort="fairness">⚖️ 총 이동시간 공평 (추천)</button>
+        <button class="sort-tab" data-sort="homeSafe">🌙 귀가 안심 (집 가기 편한 곳)</button>
+        <button class="sort-tab" data-sort="fastMeet">⚡ 빠른 1차 합류 (퇴근 직행)</button>
+        <button class="sort-tab" data-sort="meet">🍻 모이기 좋은 곳 (상권)</button>
+      </div>
+
+      <!-- 추천 역 리스트 -->
       <div class="station-list" id="recommendedStations">
         <!-- Results here -->
       </div>
-      <button class="share-btn" id="shareBtn">결과 공유 (클립보드 복사)</button>
+
+      <!-- 공유 버튼군 -->
+      <div class="share-btn-group">
+        <button class="primary-share-btn" onclick="copyImageToClipboard()">
+          📋 이미지 클립보드 복사 (카톡에 바로 붙여넣기)
+        </button>
+        <div class="sub-share-row">
+          <button class="sub-share-btn" onclick="generateShareImage(true)">
+            💾 이미지 파일 저장
+          </button>
+          <button class="sub-share-btn" id="shareBtn">
+            📝 텍스트로 복사
+          </button>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- 이미지 미리보기 & 저장 모달 -->
+  <div id="imageModal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close-btn" onclick="closeModal()">&times;</button>
+      <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:6px;">🖼️ 공유용 이미지 완성</h3>
+      <p style="font-size:0.84rem; color:var(--text-dim); margin-bottom:14px;">
+        아래 이미지를 <strong>클릭/복사</strong>하여 카카오톡이나 SNS에 바로 붙여넣으세요.
+      </p>
+
+      <div style="border-radius:14px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.15); border:1px solid var(--line); margin-bottom:14px;">
+        <img id="generatedImg" src="" alt="공유 카드" style="width:100%; display:block; height:auto;">
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+        <button class="primary-share-btn" style="padding:10px; font-size:0.88rem;" onclick="copyImageToClipboard()">
+          📋 이미지 복사
+        </button>
+        <button class="sub-share-btn" style="padding:10px; font-size:0.88rem;" onclick="downloadCurrentImg()">
+          📥 파일 저장
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="toast" id="toast">결과가 복사되었습니다!</div>
@@ -920,33 +1215,90 @@
       }
     }
 
+    let currentMode = 'afterwork'; // 'afterwork' | 'standard'
     let participants = [];
-    let selectedStation = null;
+    let selectedWorkStation = null;
+    let selectedHomeStation = null;
+    let selectedSingleStation = null;
+
     let computedMidpoint = null;
     let recommendedList = [];
-    let currentSort = 'centroid';
+    let currentSort = 'fairness';
     let selectedStationIndex = 0;
-    
+    let leafletMap = null;
+    let mapLayers = [];
+    let currentImageDataUrl = '';
+
     const nameInput = document.getElementById('nameInput');
+    const workStationInput = document.getElementById('workStationInput');
+    const homeStationInput = document.getElementById('homeStationInput');
     const stationInput = document.getElementById('stationInput');
-    const autocompleteList = document.getElementById('autocompleteList');
+    const sameHomeCheck = document.getElementById('sameHomeCheck');
     const addBtn = document.getElementById('addBtn');
     const participantList = document.getElementById('participantList');
     const calcBtn = document.getElementById('calcBtn');
     const resultsSection = document.getElementById('resultsSection');
     const recommendedStations = document.getElementById('recommendedStations');
-    const canvas = document.getElementById('mapCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    function resizeCanvas() {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      if (computedMidpoint) drawMap();
+
+    // 모드 전환
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('tabAfterwork').classList.toggle('active', mode === 'afterwork');
+      document.getElementById('tabStandard').classList.toggle('active', mode === 'standard');
+
+      const banner = document.getElementById('modeBanner');
+      const dualArea = document.getElementById('dualStationArea');
+      const singleArea = document.getElementById('singleStationArea');
+      const sortTabs = document.getElementById('sortTabs');
+
+      if (mode === 'afterwork') {
+        banner.innerHTML = `<div class="info-banner-icon">💡</div><div class="info-banner-text"><strong>퇴근 후 약속 특화 모드</strong><br>1차 모임 장소로 갈 때(회사➔약속)뿐만 아니라, <strong>술자리 끝나고 집에 가는 길(약속➔집)</strong>의 막차와 귀가 시간까지 고려하여 공평하게 계산합니다.</div>`;
+        dualArea.style.display = 'grid';
+        singleArea.style.display = 'none';
+        sortTabs.innerHTML = `
+          <button class="sort-tab active" data-sort="fairness">⚖️ 총 이동시간 공평 (추천)</button>
+          <button class="sort-tab" data-sort="homeSafe">🌙 귀가 안심 (집 가기 편한 곳)</button>
+          <button class="sort-tab" data-sort="fastMeet">⚡ 빠른 1차 합류 (퇴근 직행)</button>
+          <button class="sort-tab" data-sort="meet">🍻 모이기 좋은 곳 (상권)</button>
+        `;
+        currentSort = 'fairness';
+      } else {
+        banner.innerHTML = `<div class="info-banner-icon">☀️</div><div class="info-banner-text"><strong>주말 / 일반 모임</strong><br>각 참가자의 출발 위치만을 기준으로 모두에게 가장 공평한 중간 역을 찾습니다.</div>`;
+        dualArea.style.display = 'none';
+        singleArea.style.display = 'block';
+        sortTabs.innerHTML = `
+          <button class="sort-tab active" data-sort="centroid">📍 지리적 중심 기준</button>
+          <button class="sort-tab" data-sort="fairness">⚖️ 이동격차 최소 (공평함)</button>
+          <button class="sort-tab" data-sort="time">⚡ 평균 이동시간 최소</button>
+          <button class="sort-tab" data-sort="meet">🍻 모이기 좋은 곳</button>
+        `;
+        currentSort = 'centroid';
+      }
+
+      bindSortTabs();
+      updateUI();
+      if (participants.length >= 2 && resultsSection.style.display === 'flex') {
+        calculateAndRender();
+      }
     }
-    window.addEventListener('resize', resizeCanvas);
-    
-    // Haversine distance formula (in km)
+
+    function toggleSameHome(checked) {
+      if (checked) {
+        if (selectedWorkStation) {
+          selectedHomeStation = selectedWorkStation;
+          homeStationInput.value = selectedWorkStation.name;
+        } else if (workStationInput.value.trim()) {
+          homeStationInput.value = workStationInput.value.trim();
+        }
+        homeStationInput.disabled = true;
+        homeStationInput.style.opacity = '0.6';
+      } else {
+        homeStationInput.disabled = false;
+        homeStationInput.style.opacity = '1';
+      }
+    }
+
+    // 거리 및 소요 시간 계산 유틸 (Haversine)
     function getDistance(lat1, lon1, lat2, lon2) {
       const R = 6371; 
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -958,77 +1310,127 @@
       return R * c;
     }
 
-    // Estimate transit travel time in minutes from distance
     function estTravelTime(distKm) {
-      return Math.round(distKm * 2.2 + 3);
+      return Math.max(5, Math.round(distKm * 2.2 + 3));
     }
 
-    // Autocomplete handler
-    stationInput.addEventListener('input', (e) => {
-      const val = e.target.value.trim().toLowerCase();
-      autocompleteList.innerHTML = '';
-      if (!val) {
-        autocompleteList.style.display = 'none';
-        return;
-      }
-      
-      // "강남"을 치면 강남이 강남구청보다 먼저 나와야 한다.
-      const rank = (name) => name === val ? 0 : name.startsWith(val) ? 1 : 2;
-      const matches = STATIONS
-        .filter(s => s.name.toLowerCase().includes(val))
-        .sort((a, b) => {
-          const ra = rank(a.name.toLowerCase()), rb = rank(b.name.toLowerCase());
-          return ra !== rb ? ra - rb : a.name.length - b.name.length;
-        })
-        .slice(0, 8);
-      if (matches.length > 0) {
-        matches.forEach(match => {
+    // 자동완성 셋업 헬퍼
+    function setupAutocomplete(inputEl, listEl, onSelect) {
+      inputEl.addEventListener('input', () => {
+        const val = inputEl.value.trim().toLowerCase();
+        listEl.innerHTML = '';
+        if (!val) { listEl.style.display = 'none'; return; }
+
+        const matches = STATIONS.filter(s => s.name.toLowerCase().includes(val) || s.name.replace(/역$/, '').includes(val)).slice(0, 8);
+        if (matches.length === 0) { listEl.style.display = 'none'; return; }
+
+        matches.forEach(st => {
           const div = document.createElement('div');
           div.className = 'autocomplete-item';
-          div.innerHTML = `${lineBadges(match)} <span class="ac-name">${match.name}</span>`;
+          div.innerHTML = `${lineBadges(st)} <span>${st.name}역</span>`;
           div.addEventListener('click', () => {
-            stationInput.value = match.name;
-            selectedStation = match;
-            autocompleteList.style.display = 'none';
+            inputEl.value = st.name;
+            onSelect(st);
+            listEl.style.display = 'none';
           });
-          autocompleteList.appendChild(div);
+          listEl.appendChild(div);
         });
-        autocompleteList.style.display = 'block';
-      } else {
-        autocompleteList.style.display = 'none';
+        listEl.style.display = 'block';
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!inputEl.contains(e.target) && !listEl.contains(e.target)) {
+          listEl.style.display = 'none';
+        }
+      });
+    }
+
+    setupAutocomplete(workStationInput, document.getElementById('workAutocompleteList'), (st) => {
+      selectedWorkStation = st;
+      if (sameHomeCheck && sameHomeCheck.checked) {
+        selectedHomeStation = st;
+        homeStationInput.value = st.name;
       }
     });
 
-    document.addEventListener('click', (e) => {
-      if (e.target !== stationInput && e.target !== autocompleteList) {
-        autocompleteList.style.display = 'none';
-      }
+    setupAutocomplete(homeStationInput, document.getElementById('homeAutocompleteList'), (st) => {
+      selectedHomeStation = st;
     });
 
-    // Add Participant
+    setupAutocomplete(stationInput, document.getElementById('autocompleteList'), (st) => {
+      selectedSingleStation = st;
+    });
+
+    function findStationByName(name) {
+      if (!name) return null;
+      const clean = name.replace(/역$/, '').trim();
+      return STATIONS.find(s => s.name === clean || s.name === name);
+    }
+
+    // 참가자 추가
     addBtn.addEventListener('click', () => {
       if (participants.length >= 10) {
         alert('최대 10명까지 추가할 수 있습니다.');
         return;
       }
-      
-      const name = nameInput.value.trim() || `참가자${participants.length + 1}`;
-      const stName = stationInput.value.trim();
-      
-      let st = selectedStation;
-      if (!st || st.name !== stName) {
-        st = STATIONS.find(s => s.name === stName);
+
+      const name = nameInput.value.trim() || `참가자 ${participants.length + 1}`;
+
+      if (currentMode === 'afterwork') {
+        const workSt = selectedWorkStation || findStationByName(workStationInput.value);
+        let homeSt = selectedHomeStation || findStationByName(homeStationInput.value);
+
+        if (sameHomeCheck.checked && workSt) homeSt = workSt;
+
+        if (!workSt) {
+          alert('올바른 회사(출발역)를 선택해 주세요.');
+          workStationInput.focus();
+          return;
+        }
+        if (!homeSt) {
+          alert('올바른 집(귀가역)을 선택해 주세요.');
+          homeStationInput.focus();
+          return;
+        }
+
+        participants.push({
+          name,
+          mode: 'afterwork',
+          workStation: workSt,
+          homeStation: homeSt,
+          isSame: workSt.name === homeSt.name,
+          station: workSt
+        });
+
+        workStationInput.value = '';
+        homeStationInput.value = '';
+        selectedWorkStation = null;
+        selectedHomeStation = null;
+        sameHomeCheck.checked = false;
+        homeStationInput.disabled = false;
+        homeStationInput.style.opacity = '1';
+      } else {
+        const singleSt = selectedSingleStation || findStationByName(stationInput.value);
+        if (!singleSt) {
+          alert('올바른 출발역을 선택해 주세요.');
+          stationInput.focus();
+          return;
+        }
+
+        participants.push({
+          name,
+          mode: 'standard',
+          workStation: singleSt,
+          homeStation: singleSt,
+          isSame: true,
+          station: singleSt
+        });
+
+        stationInput.value = '';
+        selectedSingleStation = null;
       }
-      
-      if (!st) {
-        alert('목록에서 올바른 지하철역을 선택해주세요.');
-        return;
-      }
-      
-      participants.push({ name, station: st });
+
       nameInput.value = '';
-      stationInput.value = '';
-      selectedStation = null;
       playSound('add');
       updateUI();
     });
@@ -1044,25 +1446,41 @@
       participants.forEach((p, i) => {
         const div = document.createElement('div');
         div.className = 'participant-card';
+
+        let badgeInfo = '';
+        if (p.mode === 'afterwork') {
+          badgeInfo = `
+            <div class="participant-trip-badge">
+              <span>🏢 ${p.workStation.name}역</span>
+              <span>➔</span>
+              <span>🏠 ${p.homeStation.name}역</span>
+            </div>
+          `;
+        } else {
+          badgeInfo = `
+            <div class="participant-trip-badge">
+              ${lineBadges(p.station)}
+              <span>${p.station.name}역 출발</span>
+            </div>
+          `;
+        }
+
         div.innerHTML = `
           <div class="participant-info">
             <span class="participant-name">${p.name}</span>
-            ${lineBadges(p.station)}
-            <span>${p.station.name}역</span>
+            ${badgeInfo}
           </div>
           <button class="remove-btn" onclick="removeParticipant(${i})">✕</button>
         `;
         participantList.appendChild(div);
       });
-      
-      // 안내문은 아무도 없을 때만. 한 명 넣은 뒤에는 "한 명 더"라고 알려준다.
+
       const hint = document.getElementById('emptyHint');
       if (participants.length === 0) {
-        hint.style.display = '';
-        hint.innerHTML = '<p><strong>흩어져 사는 친구들, 어디서 만나죠?</strong></p>'
-          + '<p>각자 출발할 역을 넣으면 모두에게 공평한 역을 찾아 드립니다. 2명부터 되고, 많을수록 좋습니다.</p>';
+        hint.style.display = 'block';
+        hint.innerHTML = '<p><strong>흩어져 사는 우리, 어디서 만날까요?</strong></p><p>2명 이상 추가하면 모두에게 가장 편하고 공평한 중간 역을 찾아 드립니다.</p>';
       } else if (participants.length === 1) {
-        hint.style.display = '';
+        hint.style.display = 'block';
         hint.innerHTML = '<p>한 명만 더 넣으면 계산할 수 있습니다.</p>';
       } else {
         hint.style.display = 'none';
@@ -1072,162 +1490,238 @@
       resultsSection.style.display = 'none';
     }
 
-    // Calculate Midpoint and all per-participant details
+    // 중간 지점 계산 실행
     calcBtn.addEventListener('click', () => {
       if (participants.length < 2) return;
       playSound('calc');
-      
+      calculateAndRender();
+    });
+
+    function calculateAndRender() {
+      // 1. 가중 중심점 계산
       let sumLat = 0, sumLng = 0;
       participants.forEach(p => {
-        sumLat += p.station.lat;
-        sumLng += p.station.lng;
+        sumLat += p.workStation.lat;
+        sumLng += p.workStation.lng;
       });
-      
       computedMidpoint = {
         lat: sumLat / participants.length,
         lng: sumLng / participants.length
       };
-      
-      // Calculate travel details for every station
+
+      // 2. 모든 역에 대한 소요 시간 및 여정 평가
       const computed = STATIONS.map(st => {
         const distFromMid = getDistance(computedMidpoint.lat, computedMidpoint.lng, st.lat, st.lng);
-        
+
         let sumDist = 0;
         let sumTime = 0;
-        let maxDist = 0;
-        let minDist = Infinity;
-        
+        let sumWorkTime = 0;
+        let sumHomeTime = 0;
+        let sumHomeSafeScore = 0;
+
+        let maxTime = 0;
+        let minTime = Infinity;
+
         const details = participants.map(p => {
-          const d = getDistance(p.station.lat, p.station.lng, st.lat, st.lng);
-          const t = estTravelTime(d);
-          sumDist += d;
-          sumTime += t;
-          if (d > maxDist) maxDist = d;
-          if (d < minDist) minDist = d;
-          return {
-            name: p.name,
-            fromStation: p.station.name,
-            fromLines: p.station.lines,
-            dist: d,
-            time: t
-          };
+          if (p.mode === 'afterwork') {
+            const dWork = getDistance(p.workStation.lat, p.workStation.lng, st.lat, st.lng);
+            const tWork = estTravelTime(dWork);
+            const dHome = getDistance(st.lat, st.lng, p.homeStation.lat, p.homeStation.lng);
+            const tHome = estTravelTime(dHome);
+            const totalDist = dWork + dHome;
+            const totalTime = tWork + tHome;
+
+            sumDist += totalDist;
+            sumTime += totalTime;
+            sumWorkTime += tWork;
+            sumHomeTime += tHome;
+            sumHomeSafeScore += (tWork + tHome * 1.5);
+
+            if (totalTime > maxTime) maxTime = totalTime;
+            if (totalTime < minTime) minTime = totalTime;
+
+            return {
+              name: p.name,
+              workStation: p.workStation.name,
+              homeStation: p.homeStation.name,
+              dWork, tWork,
+              dHome, tHome,
+              totalDist, totalTime,
+              dist: totalDist,
+              time: totalTime
+            };
+          } else {
+            const d = getDistance(p.station.lat, p.station.lng, st.lat, st.lng);
+            const t = estTravelTime(d);
+            sumDist += d;
+            sumTime += t;
+            if (t > maxTime) maxTime = t;
+            if (t < minTime) minTime = t;
+
+            return {
+              name: p.name,
+              fromStation: p.station.name,
+              fromLines: p.station.lines,
+              dist: d,
+              time: t
+            };
+          }
         });
-        
-        const avgDist = sumDist / participants.length;
-        const avgTime = Math.round(sumTime / participants.length);
-        const distGap = maxDist - minDist;
-        const fairnessScore = Math.max(0, Math.round(100 - distGap * 7.5));
-        
+
+        const N = participants.length;
+        const avgDist = sumDist / N;
+        const avgTime = Math.round(sumTime / N);
+        const avgWorkTime = Math.round(sumWorkTime / N);
+        const avgHomeTime = Math.round(sumHomeTime / N);
+        const timeGap = maxTime - minTime;
+        const fairnessScore = Math.max(0, Math.round(100 - timeGap * 2.5));
+        const homeSafeMetric = sumHomeSafeScore / N;
+
         return {
           ...st,
           distFromMid,
           avgDist,
           avgTime,
-          maxDist,
-          minDist,
-          distGap,
+          avgWorkTime,
+          avgHomeTime,
+          maxTime,
+          minTime,
+          timeGap,
           fairnessScore,
+          homeSafeMetric,
           details
         };
       });
-      
-      // Remove duplicate station names across different line entries (take best representative)
+
+      // 중복 역 이름 정리 (최적 라인 선정)
       const uniqueMap = new Map();
       computed.forEach(st => {
         if (!uniqueMap.has(st.name) || uniqueMap.get(st.name).distFromMid > st.distFromMid) {
           uniqueMap.set(st.name, st);
         }
       });
-      
+
       recommendedList = Array.from(uniqueMap.values());
-      sortResults();   // 정렬 규칙은 sortResults() 한 곳에만 둔다
+      sortResults();
       selectedStationIndex = 0;
       renderResults();
-    });
 
-    // Sorting controls
-    document.querySelectorAll('.sort-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.sort-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentSort = tab.dataset.sort;
-        sortResults();
-        renderResults();
-      });
-    });
+      // 결과 영역으로 부드럽게 스크롤
+      resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
 
     function sortResults() {
-      // 상위 후보들은 평균거리가 0.1km 차이로 붙는 일이 흔하다.
-      // 그 정도 차이는 사람이 체감하지 못하므로, 동률로 보고 모임 적합도로 가른다.
-      const TIE = 0.4;   // km
+      const TIE_TIME = 2; // 분
 
-      if (currentSort === 'centroid') {
-        recommendedList.sort((a, b) =>
-          Math.abs(a.distFromMid - b.distFromMid) < TIE
-            ? meetScore(b) - meetScore(a) || a.distFromMid - b.distFromMid
-            : a.distFromMid - b.distFromMid);
-      } else if (currentSort === 'fairness') {
-        recommendedList.sort((a, b) =>
-          Math.abs(a.distGap - b.distGap) < TIE
-            ? meetScore(b) - meetScore(a) || a.distGap - b.distGap
-            : a.distGap - b.distGap);
-      } else if (currentSort === 'time') {
-        recommendedList.sort((a, b) =>
-          Math.abs(a.avgDist - b.avgDist) < TIE
-            ? meetScore(b) - meetScore(a) || a.avgTime - b.avgTime
-            : a.avgTime - b.avgTime || a.avgDist - b.avgDist);
-      } else if (currentSort === 'meet') {
-        // 모임 적합도와 거리를 함께 본다.
-        // 반경으로 자르면 "둘 다 홍대입구 출발인데 1위가 서울역" 같은 결과가 나온다.
-        // 1km 멀어질 때마다 4점을 깎는데, 이는 환승 노선 하나만큼의 값어치다.
-        const value = (x) => meetScore(x) - x.distFromMid * 4;
-        recommendedList.sort((a, b) => value(b) - value(a) || a.avgDist - b.avgDist);
+      if (currentMode === 'afterwork') {
+        if (currentSort === 'fairness') {
+          // 총 시간 편차 최소 (공평함)
+          recommendedList.sort((a, b) => 
+            Math.abs(a.timeGap - b.timeGap) < TIE_TIME
+              ? meetScore(b) - meetScore(a) || a.avgTime - b.avgTime
+              : a.timeGap - b.timeGap
+          );
+        } else if (currentSort === 'homeSafe') {
+          // 귀가 안심 (귀가 시간에 1.5배 가중치)
+          recommendedList.sort((a, b) =>
+            Math.abs(a.homeSafeMetric - b.homeSafeMetric) < TIE_TIME
+              ? meetScore(b) - meetScore(a) || a.avgHomeTime - b.avgHomeTime
+              : a.homeSafeMetric - b.homeSafeMetric
+          );
+        } else if (currentSort === 'fastMeet') {
+          // 빠른 1차 합류 (회사➔약속 최소)
+          recommendedList.sort((a, b) =>
+            Math.abs(a.avgWorkTime - b.avgWorkTime) < TIE_TIME
+              ? meetScore(b) - meetScore(a) || a.avgTime - b.avgTime
+              : a.avgWorkTime - b.avgWorkTime
+          );
+        } else if (currentSort === 'meet') {
+          // 상권 및 환승 편의
+          const score = (x) => meetScore(x) * 2 - x.avgTime;
+          recommendedList.sort((a, b) => score(b) - score(a) || a.avgTime - b.avgTime);
+        }
+      } else {
+        // 일반 모드
+        if (currentSort === 'centroid') {
+          recommendedList.sort((a, b) => a.distFromMid - b.distFromMid);
+        } else if (currentSort === 'fairness') {
+          recommendedList.sort((a, b) => a.timeGap - b.timeGap || a.avgTime - b.avgTime);
+        } else if (currentSort === 'time') {
+          recommendedList.sort((a, b) => a.avgTime - b.avgTime);
+        } else if (currentSort === 'meet') {
+          const value = (x) => meetScore(x) - x.distFromMid * 4;
+          recommendedList.sort((a, b) => value(b) - value(a) || a.avgDist - b.avgDist);
+        }
       }
     }
 
+    function bindSortTabs() {
+      document.querySelectorAll('.sort-tab').forEach(tab => {
+        tab.onclick = () => {
+          document.querySelectorAll('.sort-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentSort = tab.dataset.sort;
+          sortResults();
+          renderResults();
+        };
+      });
+    }
+    bindSortTabs();
+
+    function selectStation(idx) {
+      selectedStationIndex = idx;
+      renderResults();
+    }
+
+    // 결과 렌더링
     function renderResults() {
       resultsSection.style.display = 'flex';
       recommendedStations.innerHTML = '';
-      
+
       const topSpots = recommendedList.slice(0, 5);
-      
+      if (!topSpots.length) return;
+
       topSpots.forEach((st, i) => {
         const item = document.createElement('div');
         item.className = `result-item ${i === selectedStationIndex ? 'selected' : ''}`;
-        
         const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
-        
-        // Find max travel dist for scaling progress bars
-        const maxPdist = Math.max(...st.details.map(d => d.dist), 0.1);
 
         let detailsHtml = '';
-        st.details.forEach(d => {
-          const isMax = d.dist === st.maxDist && st.details.length > 1;
-          const isMin = d.dist === st.minDist && st.details.length > 1;
-          const pct = Math.round((d.dist / maxPdist) * 100);
-          
-          let tagHtml = '';
-          if (isMax) tagHtml = `<span class="tag-max">🚶‍♂️ 최장</span>`;
-          else if (isMin) tagHtml = `<span class="tag-min">🚴‍♀️ 최단</span>`;
-          
-          detailsHtml += `
-            <div class="breakdown-row">
-              <div class="breakdown-top">
-                <div class="p-name-dept">
-                  <strong>${d.name}</strong>
-                  ${lineBadges({ lines: d.fromLines })}
-                  <span>${d.fromStation}역 출발</span>
-                  ${tagHtml}
+
+        if (currentMode === 'afterwork') {
+          st.details.forEach(d => {
+            detailsHtml += `
+              <div class="breakdown-row">
+                <div class="breakdown-top">
+                  <span>👤 <strong>${d.name}</strong></span>
+                  <span style="color:#4f46e5; font-weight:800;">총 ${d.totalTime}분</span>
                 </div>
-                <div class="p-travel-val">${d.dist.toFixed(1)}km (약 ${d.time}분)</div>
+                <div class="breakdown-route">
+                  <span>🏢 ${d.workStation} (${d.tWork}분)</span>
+                  <span>➔</span>
+                  <span style="color:#ea580c; font-weight:700;">🍻 ${st.name}</span>
+                  <span>➔</span>
+                  <span>🏠 ${d.homeStation} (${d.tHome}분)</span>
+                </div>
               </div>
-              <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+            `;
+          });
+        } else {
+          st.details.forEach(d => {
+            detailsHtml += `
+              <div class="breakdown-row">
+                <div class="breakdown-top">
+                  <span>👤 <strong>${d.name}</strong> (${d.fromStation}역)</span>
+                  <span style="color:#4f46e5; font-weight:800;">${d.dist.toFixed(1)}km (약 ${d.time}분)</span>
+                </div>
               </div>
-            </div>
-          `;
-        });
-        
+            `;
+          });
+        }
+
+        const meetBadge = meetLabel(st);
+        const linesCount = (st.lines || [st.line]).length;
+
         item.innerHTML = `
           <div class="result-header" onclick="selectStation(${i})">
             <div class="result-main-row">
@@ -1235,226 +1729,444 @@
                 <span class="rank-badge ${rankClass}">${i+1}위</span>
                 ${lineBadges(st)}
                 <span class="station-name">${st.name}역</span>
-                ${(() => {
-                  const m = meetLabel(st);
-                  const lines = (st.lines || [st.line]).length;
-                  let out = m ? `<span class="spot-badge ${m.cls}">${m.text}</span>` : '';
-                  if (lines > 1) out += `<span class="spot-badge spot-tr">환승 ${lines}개</span>`;
-                  return out;
-                })()}
+                ${meetBadge ? `<span class="spot-badge ${meetBadge.cls}">${meetBadge.text}</span>` : ''}
+                ${linesCount > 1 ? `<span class="spot-badge spot-tr">환승 ${linesCount}개</span>` : ''}
               </div>
-              <div class="avg-info">
-                <div class="avg-dist">평균 ${st.avgDist.toFixed(1)}km</div>
-                <div class="avg-time">약 ${st.avgTime}분</div>
-              </div>
-            </div>
-            <div class="result-sub-row">
-              <div class="fairness-tag">
-                <span>⚖️ 공평도 ${st.fairnessScore}점</span>
-                <span style="font-weight: 400; color: var(--text-dim); font-size: 12px;">(이동격차 ${st.distGap.toFixed(1)}km)</span>
-              </div>
-              <div class="toggle-details-btn" id="toggleBtn-${i}">
-                👤 참가자별 상세 <span>▼</span>
+              <div class="avg-info" style="text-align:right">
+                <div class="avg-time">평균 ${st.avgTime}분</div>
+                <div style="font-size:0.75rem; color:var(--text-dim)">
+                  ${currentMode === 'afterwork' ? `퇴근합류 ${st.avgWorkTime}분 · 귀가 ${st.avgHomeTime}분` : `평균 ${st.avgDist.toFixed(1)}km`}
+                </div>
               </div>
             </div>
           </div>
-          <div class="participant-breakdown" id="breakdown-${i}">
+          <div class="details-accordion" style="display:${i === selectedStationIndex ? 'block' : 'none'}; margin-top:8px;">
             ${detailsHtml}
           </div>
         `;
-        
         recommendedStations.appendChild(item);
       });
-      
-      // Auto open selected breakdown
-      const breakdownEl = document.getElementById(`breakdown-${selectedStationIndex}`);
-      if (breakdownEl) breakdownEl.style.display = 'flex';
-      const toggleEl = document.getElementById(`toggleBtn-${selectedStationIndex}`);
-      if (toggleEl) toggleEl.querySelector('span').textContent = '▲';
 
-      setTimeout(() => {
-        resizeCanvas();
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 50);
+      renderLeafletMap(topSpots[selectedStationIndex]);
     }
 
-    function selectStation(index) {
-      selectedStationIndex = index;
-      const topSpots = recommendedList.slice(0, 5);
-      
-      topSpots.forEach((_, i) => {
-        const breakdownEl = document.getElementById(`breakdown-${i}`);
-        const toggleEl = document.getElementById(`toggleBtn-${i}`);
-        const itemEl = recommendedStations.children[i];
-        
-        if (i === index) {
-          const isOpened = breakdownEl.style.display === 'flex';
-          breakdownEl.style.display = isOpened ? 'none' : 'flex';
-          if (toggleEl) toggleEl.querySelector('span').textContent = isOpened ? '▼' : '▲';
-          if (itemEl) itemEl.classList.add('selected');
-        } else {
-          if (breakdownEl) breakdownEl.style.display = 'none';
-          if (toggleEl) toggleEl.querySelector('span').textContent = '▼';
-          if (itemEl) itemEl.classList.remove('selected');
-        }
-      });
-      
-      drawMap();
-    }
-    
-    function drawMap() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      const topSpots = recommendedList.slice(0, 5);
-      const activeSpot = topSpots[selectedStationIndex] || topSpots[0];
-      
-      let minLat = computedMidpoint.lat, maxLat = computedMidpoint.lat;
-      let minLng = computedMidpoint.lng, maxLng = computedMidpoint.lng;
-      
-      participants.forEach(p => {
-        minLat = Math.min(minLat, p.station.lat);
-        maxLat = Math.max(maxLat, p.station.lat);
-        minLng = Math.min(minLng, p.station.lng);
-        maxLng = Math.max(maxLng, p.station.lng);
-      });
-      
-      topSpots.forEach(st => {
-        minLat = Math.min(minLat, st.lat);
-        maxLat = Math.max(maxLat, st.lat);
-        minLng = Math.min(minLng, st.lng);
-        maxLng = Math.max(maxLng, st.lng);
-      });
-      
-      const padLat = Math.max((maxLat - minLat) * 0.25, 0.05);
-      const padLng = Math.max((maxLng - minLng) * 0.25, 0.05);
-      minLat -= padLat; maxLat += padLat;
-      minLng -= padLng; maxLng += padLng;
-      
-      function getXY(lat, lng) {
-        const x = (lng - minLng) / (maxLng - minLng) * canvas.width;
-        const y = canvas.height - ((lat - minLat) / (maxLat - minLat) * canvas.height);
-        return {x, y};
+    // Leaflet 실제 지도 렌더링
+    function renderLeafletMap(activeSpot) {
+      if (!activeSpot) return;
+
+      if (!leafletMap) {
+        leafletMap = L.map('realMap', {
+          zoomControl: true,
+          scrollWheelZoom: false
+        }).setView([activeSpot.lat, activeSpot.lng], 12);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+          subdomains: 'abcd',
+          maxZoom: 19
+        }).addTo(leafletMap);
       }
-      
-      const midPos = getXY(computedMidpoint.lat, computedMidpoint.lng);
-      const activeSpotPos = activeSpot ? getXY(activeSpot.lat, activeSpot.lng) : midPos;
-      
-      // 1. Draw dashed lines from participants to active selected station spot
+
+      // 이전 마커/레이어 제거
+      mapLayers.forEach(l => leafletMap.removeLayer(l));
+      mapLayers = [];
+
+      const bounds = [];
+
+      // 1. 추천역 마커 (주황 대형)
+      const meetMarker = L.circleMarker([activeSpot.lat, activeSpot.lng], {
+        radius: 12,
+        fillColor: '#ea580c',
+        color: '#ffffff',
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 0.95
+      }).addTo(leafletMap);
+      meetMarker.bindPopup(`<b>🍻 추천 모임 장소: ${activeSpot.name}역</b>`).openPopup();
+      mapLayers.push(meetMarker);
+      bounds.push([activeSpot.lat, activeSpot.lng]);
+
+      // 2. 참가자별 마커 및 점선 연결
       participants.forEach((p, idx) => {
-        const pos = getXY(p.station.lat, p.station.lng);
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(activeSpotPos.x, activeSpotPos.y);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = 'rgba(0, 212, 255, 0.4)';
-        ctx.setLineDash([4, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        // Label distance along the line
-        if (activeSpot) {
-          const midX = (pos.x + activeSpotPos.x) / 2;
-          const midY = (pos.y + activeSpotPos.y) / 2;
-          const distVal = activeSpot.details[idx] ? activeSpot.details[idx].dist.toFixed(1) : '';
-          
-          ctx.fillStyle = 'rgba(11, 11, 26, 0.8)';
-          ctx.fillRect(midX - 18, midY - 9, 36, 16);
-          ctx.fillStyle = '#00d4ff';
-          ctx.font = 'bold 10px Pretendard, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(`${distVal}km`, midX, midY + 3);
+        if (p.mode === 'afterwork') {
+          // 회사 마커 (파랑)
+          const workM = L.circleMarker([p.workStation.lat, p.workStation.lng], {
+            radius: 8,
+            fillColor: '#2563eb',
+            color: '#ffffff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.9
+          }).addTo(leafletMap);
+          workM.bindPopup(`<b>🏢 ${p.name} 회사: ${p.workStation.name}역</b>`);
+          mapLayers.push(workM);
+          bounds.push([p.workStation.lat, p.workStation.lng]);
+
+          // 회사 -> 추천역 점선
+          const line1 = L.polyline([
+            [p.workStation.lat, p.workStation.lng],
+            [activeSpot.lat, activeSpot.lng]
+          ], { color: '#2563eb', weight: 3, dashArray: '5, 8', opacity: 0.75 }).addTo(leafletMap);
+          mapLayers.push(line1);
+
+          // 집 마커 (보라, 회사와 다를 때)
+          if (!p.isSame) {
+            const homeM = L.circleMarker([p.homeStation.lat, p.homeStation.lng], {
+              radius: 8,
+              fillColor: '#7c3aed',
+              color: '#ffffff',
+              weight: 2,
+              opacity: 1,
+              fillOpacity: 0.9
+            }).addTo(leafletMap);
+            homeM.bindPopup(`<b>🏠 ${p.name} 집: ${p.homeStation.name}역</b>`);
+            mapLayers.push(homeM);
+            bounds.push([p.homeStation.lat, p.homeStation.lng]);
+
+            // 추천역 -> 집 점선
+            const line2 = L.polyline([
+              [activeSpot.lat, activeSpot.lng],
+              [p.homeStation.lat, p.homeStation.lng]
+            ], { color: '#7c3aed', weight: 3, dashArray: '5, 8', opacity: 0.75 }).addTo(leafletMap);
+            mapLayers.push(line2);
+          }
+        } else {
+          // 일반 모드
+          const stM = L.circleMarker([p.station.lat, p.station.lng], {
+            radius: 8,
+            fillColor: '#00d4ff',
+            color: '#ffffff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.9
+          }).addTo(leafletMap);
+          stM.bindPopup(`<b>👤 ${p.name} 출발: ${p.station.name}역</b>`);
+          mapLayers.push(stM);
+          bounds.push([p.station.lat, p.station.lng]);
+
+          const line = L.polyline([
+            [p.station.lat, p.station.lng],
+            [activeSpot.lat, activeSpot.lng]
+          ], { color: '#00d4ff', weight: 3, dashArray: '5, 8', opacity: 0.75 }).addTo(leafletMap);
+          mapLayers.push(line);
         }
       });
-      
-      // 2. Draw participant points with staggered labels & background pill
-      participants.forEach((p, idx) => {
-        const pos = getXY(p.station.lat, p.station.lng);
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 7, 0, Math.PI * 2);
-        ctx.fillStyle = '#ff006e';
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
 
-        const labelY = pos.y + (idx % 2 === 0 ? -16 : 22);
-        const text = p.name;
-        ctx.font = 'bold 12px Pretendard, sans-serif';
-        const textWidth = ctx.measureText(text).width;
-
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        ctx.fillRect(pos.x - textWidth / 2 - 4, labelY - 11, textWidth + 8, 16);
-        ctx.strokeStyle = 'rgba(255, 0, 110, 0.5)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(pos.x - textWidth / 2 - 4, labelY - 11, textWidth + 8, 16);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        ctx.fillText(text, pos.x, labelY + 1);
-      });
-
-      // 3. Draw recommended spots with staggered labels & background pill
-      topSpots.forEach((st, i) => {
-        const pos = getXY(st.lat, st.lng);
-        const isSelected = i === selectedStationIndex;
-
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, isSelected ? 10 : 6, 0, Math.PI * 2);
-        ctx.fillStyle = isSelected ? '#ffd166' : i === 0 ? '#00d4ff' : '#7c3aed';
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = isSelected ? 3 : 1.5;
-        ctx.stroke();
-
-        const labelY = pos.y + (i % 2 === 0 ? 22 : -18);
-        const text = `${i+1}위 ${st.name}`;
-        ctx.font = isSelected ? 'bold 13px Pretendard, sans-serif' : '11px Pretendard, sans-serif';
-        const textWidth = ctx.measureText(text).width;
-
-        ctx.fillStyle = isSelected ? 'rgba(15, 23, 42, 0.9)' : 'rgba(15, 23, 42, 0.75)';
-        ctx.fillRect(pos.x - textWidth / 2 - 4, labelY - 11, textWidth + 8, 16);
-        ctx.strokeStyle = isSelected ? '#ffd166' : i === 0 ? '#00d4ff' : 'rgba(124, 58, 237, 0.5)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(pos.x - textWidth / 2 - 4, labelY - 11, textWidth + 8, 16);
-
-        ctx.fillStyle = isSelected ? '#ffd166' : i === 0 ? '#00d4ff' : '#e2e8f0';
-        ctx.textAlign = 'center';
-        ctx.fillText(text, pos.x, labelY + 1);
-      });
+      if (bounds.length > 0) {
+        leafletMap.fitBounds(bounds, { padding: [35, 35], maxZoom: 14 });
+      }
     }
 
-    // Share result to clipboard
+    // ──────────────────────────────────────────
+    // 인포그래픽 공유 카드 캔버스 렌더링 & 클립보드 복사
+    // ──────────────────────────────────────────
+    function createShareCardCanvas() {
+      const topSpots = recommendedList.slice(0, 5);
+      if (!topSpots.length) return null;
+      const top1 = topSpots[selectedStationIndex || 0];
+
+      const c = document.createElement('canvas');
+      const w = 680;
+      const memberCount = top1.details.length;
+      const h = Math.max(860, 480 + memberCount * 96);
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext('2d');
+
+      function roundRect(x, y, width, height, radius, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        if (fill) ctx.fill();
+        if (stroke) ctx.stroke();
+      }
+
+      // 1. 전체 배경
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, w, h);
+
+      // 상단 그라디언트 바
+      const topGrad = ctx.createLinearGradient(0, 0, w, 0);
+      topGrad.addColorStop(0, '#4f46e5');
+      topGrad.addColorStop(0.5, '#7c3aed');
+      topGrad.addColorStop(1, '#ea580c');
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(0, 0, w, 8);
+
+      // 2. 헤더 태그
+      ctx.fillStyle = '#e0e7ff';
+      roundRect(40, 32, 175, 26, 13, true, false);
+      ctx.fillStyle = '#3730a3';
+      ctx.font = 'bold 12px Pretendard, sans-serif';
+      ctx.fillText('📍 중간 지점 모임 장소 추천', 50, 49);
+
+      // 모드 태그
+      ctx.fillStyle = currentMode === 'afterwork' ? '#fef3c7' : '#ecfdf5';
+      roundRect(225, 32, 160, 26, 13, true, false);
+      ctx.fillStyle = currentMode === 'afterwork' ? '#92400e' : '#065f46';
+      ctx.fillText(currentMode === 'afterwork' ? '🌙 퇴근 후 모임(회사➔집)' : '☀️ 주말/일반 모임', 235, 49);
+
+      // 날짜
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 12px Pretendard, sans-serif';
+      ctx.textAlign = 'right';
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+      ctx.fillText(today, w - 40, 50);
+      ctx.textAlign = 'left';
+
+      // 타이틀
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 24px Pretendard, sans-serif';
+      ctx.fillText('우리 어디서 만날까? 중간 지점 결과', 40, 95);
+
+      // 3. 메인 1위 추천 카드
+      const cardGrad = ctx.createLinearGradient(40, 115, 40, 280);
+      cardGrad.addColorStop(0, '#4338ca');
+      cardGrad.addColorStop(1, '#312e81');
+      ctx.fillStyle = cardGrad;
+      roundRect(40, 115, w - 80, 165, 18, true, false);
+
+      ctx.fillStyle = '#f59e0b';
+      roundRect(60, 136, 92, 22, 6, true, false);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px Pretendard, sans-serif';
+      ctx.fillText('🏆 최적 추천 1위', 68, 151);
+
+      ctx.fillStyle = '#c7d2fe';
+      ctx.font = 'bold 14px Pretendard, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`평균 이동 약 ${top1.avgTime}분`, w - 60, 152);
+      ctx.textAlign = 'left';
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 32px Pretendard, sans-serif';
+      ctx.fillText(`${top1.name}역`, 60, 198);
+
+      const lines = top1.lines || [top1.line];
+      let lineBadgeX = 60 + ctx.measureText(`${top1.name}역`).width + 12;
+      lines.slice(0, 3).forEach(line => {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        roundRect(lineBadgeX, 174, 60, 24, 12, true, false);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Pretendard, sans-serif';
+        ctx.fillText(line, lineBadgeX + 10, 190);
+        lineBadgeX += 66;
+      });
+
+      // 안내 문구
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+      roundRect(60, 220, w - 120, 42, 8, true, false);
+      ctx.fillStyle = '#e0e7ff';
+      ctx.font = '500 12px Pretendard, sans-serif';
+      const summaryText = currentMode === 'afterwork'
+        ? `💬 1차 합류 평균 ${top1.avgWorkTime}분 + 귀가 평균 ${top1.avgHomeTime}분으로 모두 안전하게 복귀 가능!`
+        : `💬 지리적 중심 반경 내 최적 접근성 & 편의 시설 밀집`;
+      ctx.fillText(summaryText, 74, 246);
+
+      // 4. 멤버별 상세 이동 목록
+      ctx.fillStyle = '#334155';
+      ctx.font = 'bold 15px Pretendard, sans-serif';
+      ctx.fillText('참가자별 이동 상세', 40, 312);
+
+      let startY = 328;
+      top1.details.forEach(d => {
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.03)';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 2;
+        roundRect(40, startY, w - 80, 84, 12, true, false);
+        ctx.shadowColor = 'transparent';
+
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        roundRect(40, startY, w - 80, 84, 12, false, true);
+
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 15px Pretendard, sans-serif';
+        ctx.fillText(`👤 ${d.name}`, 58, startY + 28);
+
+        ctx.fillStyle = '#4f46e5';
+        ctx.font = 'bold 14px Pretendard, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`총 ${d.time}분`, w - 58, startY + 28);
+        ctx.textAlign = 'left';
+
+        ctx.font = 'bold 12px Pretendard, sans-serif';
+        if (currentMode === 'afterwork') {
+          ctx.fillStyle = '#2563eb';
+          ctx.fillText(`🏢 ${d.workStation} (${d.tWork}분)`, 58, startY + 58);
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillText('➔', 200, startY + 58);
+          ctx.fillStyle = '#ea580c';
+          ctx.fillText(`🍻 ${top1.name}`, 225, startY + 58);
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillText('➔', 305, startY + 58);
+          ctx.fillStyle = '#7c3aed';
+          ctx.fillText(`🏠 ${d.homeStation} (${d.tHome}분)`, 330, startY + 58);
+        } else {
+          ctx.fillStyle = '#0284c7';
+          ctx.fillText(`출발: ${d.fromStation}역`, 58, startY + 58);
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillText('➔', 180, startY + 58);
+          ctx.fillStyle = '#ea580c';
+          ctx.fillText(`도착: ${top1.name}역 (${d.dist.toFixed(1)}km)`, 205, startY + 58);
+        }
+
+        startY += 94;
+      });
+
+      // 5. 기타 후보 요약 바
+      if (topSpots.length > 1) {
+        ctx.fillStyle = '#ffffff';
+        roundRect(40, startY + 6, w - 80, 48, 10, true, false);
+        ctx.strokeStyle = '#e2e8f0';
+        roundRect(40, startY + 6, w - 80, 48, 10, false, true);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 12px Pretendard, sans-serif';
+        ctx.fillText('다른 추천 후보:', 58, startY + 35);
+
+        let candText = topSpots.slice(1, 3).map((st, i) => `${i+2}위 ${st.name}역(${st.avgTime}분)`).join('  |  ');
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText(candText, 175, startY + 35);
+      }
+
+      // 6. 푸터
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 11px Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('단톡방 약속 정하기 | 미니게임 천국 중간 지점 찾기', w / 2, h - 20);
+
+      return c;
+    }
+
+    // 클립보드에 이미지 복사 (Ctrl+V 지원)
+    async function copyImageToClipboard() {
+      try {
+        const c = createShareCardCanvas();
+        if (!c) {
+          alert('먼저 중간 지점을 계산해 주세요!');
+          return;
+        }
+        currentImageDataUrl = c.toDataURL('image/png');
+
+        if (!navigator.clipboard || !navigator.clipboard.write) {
+          throw new Error('ClipboardItem API not supported');
+        }
+
+        const blob = await new Promise(resolve => c.toBlob(resolve, 'image/png'));
+        const item = new ClipboardItem({ 'image/png': blob });
+        await navigator.clipboard.write([item]);
+
+        alert(`📋 이미지가 클립보드에 복사되었습니다!\n\n카카오톡 채팅방, 슬랙, 인스타그램 등 원하는 채팅창에 바로 [Ctrl + V] (붙여넣기) 하시면 이미지가 전송됩니다.`);
+      } catch (err) {
+        console.warn('Image clipboard write failed, opening preview modal:', err);
+        previewShareImage();
+        alert(`💡 이미지가 생성되었습니다!\n\n화면에 뜬 이미지를 [1초간 길게 눌러 복사]를 선택하시면 카톡이나 채팅창에 바로 붙여넣으실 수 있습니다.`);
+      }
+    }
+
+    function generateShareImage(autoDownload = false) {
+      const c = createShareCardCanvas();
+      if (!c) {
+        alert('먼저 중간 지점을 계산해 주세요!');
+        return;
+      }
+      currentImageDataUrl = c.toDataURL('image/png');
+      if (autoDownload) downloadCurrentImg();
+      previewShareImage();
+    }
+
+    function previewShareImage() {
+      if (!currentImageDataUrl) {
+        const c = createShareCardCanvas();
+        if (c) currentImageDataUrl = c.toDataURL('image/png');
+      }
+      if (!currentImageDataUrl) return;
+      document.getElementById('generatedImg').src = currentImageDataUrl;
+      document.getElementById('imageModal').style.display = 'flex';
+    }
+
+    function downloadCurrentImg() {
+      if (!currentImageDataUrl) {
+        const c = createShareCardCanvas();
+        if (c) currentImageDataUrl = c.toDataURL('image/png');
+      }
+      if (!currentImageDataUrl) return;
+      const a = document.createElement('a');
+      a.href = currentImageDataUrl;
+      const topName = recommendedList[selectedStationIndex]?.name || '중간지점';
+      a.download = `퇴근길_중간지점_${topName}_${new Date().toISOString().slice(0,10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function closeModal() {
+      document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // 텍스트 공유 클립보드 복사
     document.getElementById('shareBtn').addEventListener('click', () => {
       const topSpots = recommendedList.slice(0, 5);
       if (!topSpots.length) return;
-      
-      let text = `📍 중간 지점 모임 장소 추천 결과\n\n`;
-      text += `[👥 참가자 출발지]\n`;
+
+      let text = `📍 [중간 지점 모임 장소 추천 결과]
+
+`;
+      text += `[👥 참가자 현황]
+`;
       participants.forEach(p => {
-        text += `- ${p.name}: ${p.station.name}역 (${p.station.line})\n`;
+        if (p.mode === 'afterwork') {
+          text += `- ${p.name}: 🏢 회사(${p.workStation.name}역) ➔ 🏠 집(${p.homeStation.name}역)
+`;
+        } else {
+          text += `- ${p.name}: ${p.station.name}역 출발
+`;
+        }
       });
-      
-      text += `\n[🏆 추천 모임 장소 Top 5]\n`;
+
+      text += `
+[🏆 추천 모임 장소 Top 5]
+`;
       topSpots.forEach((st, i) => {
-        text += `\n${i+1}위: ${st.name}역 (${st.line})\n`;
-        text += `• 평균 이동: ${st.avgDist.toFixed(1)}km (약 ${st.avgTime}분)\n`;
-        text += `• 공평도: ${st.fairnessScore}점 (격차 ${st.distGap.toFixed(1)}km)\n`;
-        text += `* 참가자별 이동:\n`;
-        st.details.forEach(d => {
-          text += `  - ${d.name} (${d.fromStation}역): ${d.dist.toFixed(1)}km (약 ${d.time}분)\n`;
-        });
+        text += `
+${i+1}위: ${st.name}역
+`;
+        text += `• 평균 이동: 약 ${st.avgTime}분 (${st.avgDist.toFixed(1)}km)
+`;
+        if (currentMode === 'afterwork') {
+          text += `• 상세 이동:
+`;
+          st.details.forEach(d => {
+            text += `  - ${d.name}: 🏢 ${d.workStation}(${d.tWork}분) ➔ 🍻 ${st.name} ➔ 🏠 ${d.homeStation}(${d.tHome}분) [총 ${d.totalTime}분]
+`;
+          });
+        } else {
+          text += `• 공평도: ${st.fairnessScore}점 (격차 ${st.timeGap}분)
+`;
+          text += `• 참가자별: ` + st.details.map(d => `${d.name}(${d.time}분)`).join(', ') + `
+`;
+        }
       });
-      
+
       navigator.clipboard.writeText(text).then(() => {
         const toast = document.getElementById('toast');
         toast.style.bottom = '20px';
         setTimeout(() => { toast.style.bottom = '-50px'; }, 2000);
       });
     });
-    
-    // Help Modal
-    helpModal.addEventListener('click', (e) => {
-      if(e.target === helpModal) helpModal.style.display = 'none';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateUI();
     });
   </script>
 </body>
