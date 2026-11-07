@@ -11,6 +11,8 @@
   <!-- Leaflet 지도 라이브러리 (오픈소스 타일 맵, API 키 필요 없음) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Daum 우편번호 & 도로명 주소 검색 서비스 (무료, API 키 불필요) -->
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
   <style>
     :root {
       /* 밝은 바탕에서 읽히도록 어둡게 한 글자색 */
@@ -664,8 +666,58 @@
       color: var(--text-dim);
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 4px;
     }
+    .postcode-btn {
+      background: var(--tint-2);
+      color: #4f46e5;
+      border: 1px solid var(--card-border);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s;
+    }
+    .postcode-btn:hover {
+      background: rgba(79, 70, 229, 0.1);
+      border-color: #6366f1;
+    }
+    .map-nav-btn-group {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .map-nav-btn {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: transform 0.1s, opacity 0.2s;
+      cursor: pointer;
+    }
+    .map-nav-btn.kakao {
+      background: #fee500;
+      color: #191919;
+      border: 1px solid #e6cf00;
+    }
+    .map-nav-btn.naver {
+      background: #03c75a;
+      color: #ffffff;
+      border: 1px solid #02b350;
+    }
+    .map-nav-btn:hover { opacity: 0.92; }
+    .map-nav-btn:active { transform: scale(0.98); }
     .same-home-check {
       font-size: 0.8rem;
       color: var(--text-dim);
@@ -841,13 +893,19 @@
         <!-- 퇴근 후 모임 모드 듀얼 입력창 (회사 & 집) -->
         <div id="dualStationArea" class="dual-station-grid">
           <div class="station-input-wrap">
-            <span class="station-input-label">🏢 회사/출발지 (역 또는 지역)</span>
-            <input type="text" id="workStationInput" placeholder="역 또는 지역·상권 (예: 역삼, 판교, 성수, 여의도)" autocomplete="off">
+            <span class="station-input-label">
+              <span>🏢 회사/출발지</span>
+              <button type="button" class="postcode-btn" onclick="openPostcode('work')">📮 도로명 검색</button>
+            </span>
+            <input type="text" id="workStationInput" placeholder="역 또는 지역·상권 (예: 역삼, 판교, 성수)" autocomplete="off">
             <div class="autocomplete-list" id="workAutocompleteList"></div>
           </div>
           <div class="station-input-wrap">
-            <span class="station-input-label">🏠 집/도착지 (역 또는 지역)</span>
-            <input type="text" id="homeStationInput" placeholder="역 또는 지역·상권 (예: 분당, 일산, 연남동, 송도)" autocomplete="off">
+            <span class="station-input-label">
+              <span>🏠 집/도착지</span>
+              <button type="button" class="postcode-btn" onclick="openPostcode('home')">📮 도로명 검색</button>
+            </span>
+            <input type="text" id="homeStationInput" placeholder="역 또는 지역·상권 (예: 분당, 일산, 송도)" autocomplete="off">
             <div class="autocomplete-list" id="homeAutocompleteList"></div>
             <label class="same-home-check">
               <input type="checkbox" id="sameHomeCheck" onchange="toggleSameHome(this.checked)"> 회사와 집 동일(재택)
@@ -857,6 +915,9 @@
 
         <!-- 일반 모드 단일 입력창 -->
         <div id="singleStationArea" style="display:none; position:relative;">
+          <div style="display:flex; justify-content:flex-end; margin-bottom:4px;">
+            <button type="button" class="postcode-btn" onclick="openPostcode('single')">📮 도로명 주소 검색</button>
+          </div>
           <input type="text" id="stationInput" placeholder="출발역 또는 지역·상권 검색 (예: 강남, 가로수길, 홍대, 판교)" autocomplete="off">
           <div class="autocomplete-list" id="autocompleteList"></div>
         </div>
@@ -1417,8 +1478,126 @@
       return R * c;
     }
 
-    function estTravelTime(distKm) {
+    // 대중교통 이동 시간 추정 유틸 (GTX-A 초고속 가중치 및 신분당선 급행 반영)
+    function estTravelTime(stA, stB, distKm) {
+      if (!distKm || distKm <= 0.3) return 3;
+
+      const linesA = stA && stA.lines ? stA.lines : (stA && stA.line ? [stA.line] : []);
+      const linesB = stB && stB.lines ? stB.lines : (stB && stB.line ? [stB.line] : []);
+
+      const hasGTXA = linesA.includes('GTX-A') && linesB.includes('GTX-A');
+      const oneGTXA = linesA.includes('GTX-A') || linesB.includes('GTX-A');
+      const hasShinbundang = linesA.includes('신분당선') && linesB.includes('신분당선');
+
+      if (hasGTXA) {
+        // GTX 직결 구간 (시속 100~180km 고속 주파: 동탄~수서 28km 약 23분)
+        return Math.max(5, Math.round(distKm * 0.7 + 4));
+      }
+      if (oneGTXA && distKm > 10) {
+        // 한쪽이 GTX역이고 10km 이상 장거리 이동 시 (GTX 고속 주파 + 환승)
+        return Math.max(8, Math.round(distKm * 1.35 + 5));
+      }
+      if (hasShinbundang) {
+        // 신분당선 급행 구간 (시속 50~60km)
+        return Math.max(5, Math.round(distKm * 1.4 + 3));
+      }
+
+      // 일반 지하철/대중교통 (시속 28~32km)
       return Math.max(5, Math.round(distKm * 2.2 + 3));
+    }
+
+    // 다음(카카오) 도로명 주소 검색 서비스 연동
+    function openPostcode(targetType) {
+      if (typeof daum === 'undefined' || !daum.Postcode) {
+        alert('주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+      new daum.Postcode({
+        oncomplete: function(data) {
+          const fullAddr = data.roadAddress || data.jibunAddress || data.address;
+          const bname = data.bname || '';
+          const building = data.buildingName ? ` (${data.buildingName})` : '';
+          const displayAddr = fullAddr + building;
+
+          // OpenStreetMap Nominatim을 이용해 실제 좌표 검색
+          const searchUrl = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=kr&q=${encodeURIComponent(fullAddr)}`;
+
+          const applyStation = (lat, lng, label) => {
+            let nearestStation = null;
+            let minDist = Infinity;
+            STATIONS.forEach(st => {
+              const d = getDistance(lat, lng, st.lat, st.lng);
+              if (d < minDist) {
+                minDist = d;
+                nearestStation = st;
+              }
+            });
+
+            if (nearestStation) {
+              const mappedObj = {
+                ...nearestStation,
+                displayName: label,
+                lat,
+                lng
+              };
+
+              if (targetType === 'work') {
+                selectedWorkStation = mappedObj;
+                workStationInput.value = `${label} [${nearestStation.name}역 인근]`;
+                if (sameHomeCheck && sameHomeCheck.checked) {
+                  selectedHomeStation = mappedObj;
+                  homeStationInput.value = workStationInput.value;
+                }
+              } else if (targetType === 'home') {
+                selectedHomeStation = mappedObj;
+                homeStationInput.value = `${label} [${nearestStation.name}역 인근]`;
+              } else {
+                selectedSingleStation = mappedObj;
+                stationInput.value = `${label} [${nearestStation.name}역 인근]`;
+              }
+            }
+          };
+
+          fetch(searchUrl)
+            .then(res => res.json())
+            .then(results => {
+              if (results && results.length > 0) {
+                const lat = parseFloat(results[0].lat);
+                const lng = parseFloat(results[0].lon);
+                applyStation(lat, lng, data.buildingName || bname || displayAddr);
+              } else {
+                fallbackAddressLookup(data, targetType);
+              }
+            })
+            .catch(() => {
+              fallbackAddressLookup(data, targetType);
+            });
+        }
+      }).open();
+    }
+
+    function fallbackAddressLookup(data, targetType) {
+      const keyword = (data.bname || data.sigungu || data.sido || '').trim();
+      const matchedArea = POPULAR_AREAS.find(a => keyword && a.name.includes(keyword));
+      const targetStationName = matchedArea ? matchedArea.station : (findStationByName(keyword) ? findStationByName(keyword).name : '강남');
+      const st = STATIONS.find(s => s.name === targetStationName) || STATIONS[0];
+      const label = data.buildingName || data.bname || data.roadAddress;
+      const mapped = { ...st, displayName: label };
+
+      if (targetType === 'work') {
+        selectedWorkStation = mapped;
+        workStationInput.value = `${label} [${st.name}역 인근]`;
+        if (sameHomeCheck && sameHomeCheck.checked) {
+          selectedHomeStation = mapped;
+          homeStationInput.value = workStationInput.value;
+        }
+      } else if (targetType === 'home') {
+        selectedHomeStation = mapped;
+        homeStationInput.value = `${label} [${st.name}역 인근]`;
+      } else {
+        selectedSingleStation = mapped;
+        stationInput.value = `${label} [${st.name}역 인근]`;
+      }
     }
 
     // 자동완성 셋업 헬퍼 (일반 지역/상권 + 지하철역 동시 지원)
@@ -1689,9 +1868,9 @@
         const details = participants.map(p => {
           if (p.mode === 'afterwork') {
             const dWork = getDistance(p.workStation.lat, p.workStation.lng, st.lat, st.lng);
-            const tWork = estTravelTime(dWork);
+            const tWork = estTravelTime(p.workStation, st, dWork);
             const dHome = getDistance(st.lat, st.lng, p.homeStation.lat, p.homeStation.lng);
-            const tHome = estTravelTime(dHome);
+            const tHome = estTravelTime(st, p.homeStation, dHome);
             const totalDist = dWork + dHome;
             const totalTime = tWork + tHome;
 
@@ -1706,8 +1885,10 @@
 
             return {
               name: p.name,
-              workStation: p.workStation.name,
-              homeStation: p.homeStation.name,
+              workStation: p.workStation.displayName || `${p.workStation.name}역`,
+              homeStation: p.homeStation.displayName || `${p.homeStation.name}역`,
+              workRaw: p.workStation.name,
+              homeRaw: p.homeStation.name,
               dWork, tWork,
               dHome, tHome,
               totalDist, totalTime,
@@ -1716,7 +1897,7 @@
             };
           } else {
             const d = getDistance(p.station.lat, p.station.lng, st.lat, st.lng);
-            const t = estTravelTime(d);
+            const t = estTravelTime(p.station, st, d);
             sumDist += d;
             sumTime += t;
             if (t > maxTime) maxTime = t;
@@ -1858,6 +2039,7 @@
             const isMax = d.totalTime === st.maxTime && st.maxTime !== st.minTime;
             const isMin = d.totalTime === st.minTime && st.maxTime !== st.minTime;
             const timeTag = isMax ? `<span class="tag-max">최장 이동</span>` : (isMin ? `<span class="tag-min">최단 이동</span>` : '');
+            const kakaoNavUrl = `https://map.kakao.com/?sName=${encodeURIComponent(d.workStation)}&eName=${encodeURIComponent(st.name + '역')}`;
 
             detailsHtml += `
               <div class="breakdown-row">
@@ -1866,7 +2048,10 @@
                     <span>👤 ${d.name}</span>
                     ${timeTag}
                   </div>
-                  <span style="color:#4f46e5; font-weight:800; font-size:0.95rem;">총 ${d.totalTime}분</span>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <a href="${kakaoNavUrl}" target="_blank" rel="noopener noreferrer" style="font-size:0.75rem; color:#4f46e5; text-decoration:none; font-weight:700;">🗺️ 실제 경로</a>
+                    <span style="color:#4f46e5; font-weight:800; font-size:0.95rem;">총 ${d.totalTime}분</span>
+                  </div>
                 </div>
                 <div class="breakdown-route">
                   <span class="route-chip work">🏢 ${d.workStation} (${d.tWork}분)</span>
@@ -1883,6 +2068,7 @@
             const isMax = d.time === st.maxTime && st.maxTime !== st.minTime;
             const isMin = d.time === st.minTime && st.maxTime !== st.minTime;
             const timeTag = isMax ? `<span class="tag-max">최장 이동</span>` : (isMin ? `<span class="tag-min">최단 이동</span>` : '');
+            const kakaoNavUrl = `https://map.kakao.com/?sName=${encodeURIComponent(d.fromStation + '역')}&eName=${encodeURIComponent(st.name + '역')}`;
 
             detailsHtml += `
               <div class="breakdown-row">
@@ -1891,7 +2077,10 @@
                     <span>👤 ${d.name} (${d.fromStation}역)</span>
                     ${timeTag}
                   </div>
-                  <span style="color:#4f46e5; font-weight:800; font-size:0.95rem;">${d.dist.toFixed(1)}km (약 ${d.time}분)</span>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <a href="${kakaoNavUrl}" target="_blank" rel="noopener noreferrer" style="font-size:0.75rem; color:#4f46e5; text-decoration:none; font-weight:700;">🗺️ 실제 경로</a>
+                    <span style="color:#4f46e5; font-weight:800; font-size:0.95rem;">${d.dist.toFixed(1)}km (약 ${d.time}분)</span>
+                  </div>
                 </div>
               </div>
             `;
@@ -1904,6 +2093,13 @@
         const aiSummaryText = currentMode === 'afterwork'
           ? `💡 전원 소요시간 편차가 ${st.timeGap}분으로 균형 잡혀 있으며, 귀가 평균 소요시간은 ${st.avgHomeTime}분입니다.`
           : `💡 모든 출발역과의 평균 소요시간이 약 ${st.avgTime}분으로 가장 대칭적인 위치입니다.`;
+
+        // 대표 길찾기 URL (첫 번째 참가자 기준)
+        const primaryFrom = currentMode === 'afterwork' 
+          ? (st.details[0] ? st.details[0].workStation : '서울역') 
+          : (st.details[0] ? st.details[0].fromStation + '역' : '서울역');
+        const kakaoTransitUrl = `https://map.kakao.com/?sName=${encodeURIComponent(primaryFrom)}&eName=${encodeURIComponent(st.name + '역')}`;
+        const naverTransitUrl = `https://m.map.naver.com/directions/#/publicTransit/list/${encodeURIComponent(primaryFrom)}/${encodeURIComponent(st.name + '역')}`;
 
         item.innerHTML = `
           <div class="result-header" onclick="selectStation(${i})">
@@ -1928,6 +2124,14 @@
           <div class="details-accordion ${isSelected ? 'show' : ''}">
             <div style="font-size:0.8rem; font-weight:700; color:var(--text-dim); margin-bottom:2px;">참가자별 소요 시간 & 이동 경로</div>
             ${detailsHtml}
+            <div class="map-nav-btn-group">
+              <a href="${kakaoTransitUrl}" target="_blank" rel="noopener noreferrer" class="map-nav-btn kakao">
+                🟡 카카오맵 실제 버스·지하철 길찾기
+              </a>
+              <a href="${naverTransitUrl}" target="_blank" rel="noopener noreferrer" class="map-nav-btn naver">
+                🟢 네이버지도 길찾기
+              </a>
+            </div>
           </div>
         `;
         recommendedStations.appendChild(item);
