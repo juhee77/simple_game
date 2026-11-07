@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>D-Day & 날짜 세기 (공유 카드 목업) | 미니게임 천국</title>
+  <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+  <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+  <script src="../scripts/game-common.js?v=efdc1560"></script>
+  <style>
+    :root {
+      --bg: #0d0f18;
+      --card-surface: rgba(26, 31, 49, 0.75);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --theme-color: #ff2a85;
+      --theme-glow: rgba(255, 42, 133, 0.35);
+      --theme-gradient: linear-gradient(135deg, #ff2a85, #8b5cf6);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at top, #1e1b4b 0%, #0d0f18 100%);
+      color: var(--text);
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 40px;
+      letter-spacing: -0.02em;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 520px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* 상단 헤더 */
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0 10px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.2s;
+    }
+    .back-btn:hover { background: rgba(255, 255, 255, 0.12); }
+    .header-title {
+      font-size: 18px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* 모드 전환 탭 (D-Day vs 날짜 세기) */
+    .mode-tab-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 5px;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+    }
+    .mode-tab-btn {
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .mode-tab-btn.active {
+      background: var(--theme-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 16px var(--theme-glow);
+    }
+
+    /* 카드 뷰어 영역 (링크 타고 들어왔을 때 보이는 핵심 카드) */
+    .card-display-section {
+      width: 100%;
+      position: relative;
+    }
+
+    .dday-main-card {
+      position: relative;
+      border-radius: 28px;
+      padding: 32px 24px;
+      background: linear-gradient(165deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1.5px solid var(--theme-color);
+      box-shadow: 0 16px 40px -10px var(--theme-glow), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    /* 은은한 네온 배경 오라 */
+    .card-glow-orb {
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 260px;
+      height: 260px;
+      background: var(--theme-color);
+      opacity: 0.22;
+      filter: blur(70px);
+      pointer-events: none;
+      border-radius: 50%;
+    }
+
+    .card-tag {
+      font-size: 13px;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.3;
+      word-break: keep-all;
+    }
+
+    .card-desc {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: -6px;
+    }
+
+    /* 메인 숫자 표시 (D-15, Day 100 등) */
+    .big-counter-box {
+      margin: 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .big-counter-num {
+      font-size: 58px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      background: linear-gradient(180deg, #ffffff 30%, #e2e8f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 24px var(--theme-glow);
+    }
+    .big-counter-sub {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--theme-color);
+    }
+
+    /* 정밀 카운트다운 타이머 그리드 */
+    .precise-timer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .time-slot {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .time-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+    }
+    .time-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* 목표일/시작일 일자 뱃지 */
+    .target-date-badge {
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* 다가오는 주요 기념일 자동 계산 박스 (날짜 세기 모드 전용) */
+    .milestones-box {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+    }
+    .milestones-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--theme-color);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .milestones-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .milestone-chip {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .milestone-chip.passed {
+      text-decoration: line-through;
+      color: #64748b;
+      opacity: 0.6;
+    }
+    .milestone-chip.next {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid var(--theme-color);
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    /* 공유 버튼 액션 바 */
+    .share-action-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+    .share-btn {
+      padding: 12px 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(30, 41, 59, 0.8);
+      color: #ffffff;
+      font-size: 13.5px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .share-btn:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+    .share-btn.primary {
+      background: var(--theme-gradient);
+      border-color: transparent;
+      box-shadow: 0 4px 14px var(--theme-glow);
+    }
+    .share-btn.primary:hover {
+      opacity: 0.95;
+    }
+
+    /* 카드 전용 보기 모드 안내 배너 */
+    .shared-view-banner {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .shared-view-text {
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    .toggle-edit-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* 에디터 / 설정 패널 (접었다 폈다 가능) */
+    .editor-card {
+      background: var(--card-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      backdrop-filter: blur(10px);
+    }
+    .editor-section-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-chip-list {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .preset-chip-list::-webkit-scrollbar { display: none; }
+    .preset-chip {
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .preset-chip.active {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--theme-color);
+      color: #ffffff;
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-family: inherit;
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: var(--theme-color);
+      box-shadow: 0 0 0 2px var(--theme-glow);
+    }
+
+    .theme-palette {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .theme-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .theme-circle.active {
+      border-color: #ffffff;
+      transform: scale(1.15);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+    }
+
+    /* 토스트 알림 */
+    .toast-msg {
+      position: fixed;
+      bottom: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95);
+      color: #ffffff;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      transition: bottom 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 모달 (이미지 길게 눌러 복사용) */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      padding: 20px;
+      max-width: 360px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .modal-img {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="header-bar">
+      <a href="../index.html" class="back-btn">← 메인</a>
+      <h1 class="header-title">D-Day & 날짜 세기</h1>
+      <button class="back-btn" onclick="toggleSharedUrlMode()" id="viewModeToggleBtn" title="공유 카드 링크 시뮬레이션">
+        🔗 링크 모드
+      </button>
+    </div>
+
+    <!-- 공유 링크로 접속했을 때 뜨는 상단 알림 배너 -->
+    <div class="shared-view-banner" id="sharedBanner" style="display:none;">
+      <span class="shared-view-text">💌 공유받은 카드입니다</span>
+      <button class="toggle-edit-btn" onclick="toggleEditPanel()">✏️ 나도 만들기 / 수정</button>
+    </div>
+
+    <!-- 모드 선택 탭 (D-Day vs 날짜 세기) -->
+    <div class="mode-tab-wrap" id="modeTabs">
+      <button class="mode-tab-btn active" id="tabDday" onclick="switchMode('dday')">
+        <span>⏳ D-Day</span>
+        <span style="font-size:12px; opacity:0.8;">남은 날짜</span>
+      </button>
+      <button class="mode-tab-btn" id="tabCountup" onclick="switchMode('countup')">
+        <span>💖 날짜 세기</span>
+        <span style="font-size:12px; opacity:0.8;">지난 날 / 기념일</span>
+      </button>
+    </div>
+
+    <!-- 1. 핵심 카드 디스플레이 영역 (공유 시 이 카드가 즉시 뜸) -->
+    <section class="card-display-section">
+      <div class="dday-main-card" id="mainCard">
+        <div class="card-glow-orb"></div>
+        <div class="card-tag" id="cardTag">✈️ 설레는 여행</div>
+        <h2 class="card-title" id="cardTitle">후쿠오카 힐링 온천 여행</h2>
+        <p class="card-desc" id="cardDesc">비행기 타러 가는 날까지 남은 시간</p>
+
+        <!-- 중앙 대형 숫자 카운터 -->
+        <div class="big-counter-box">
+          <div class="big-counter-num" id="cardBigCounter">D-12</div>
+          <div class="big-counter-sub" id="cardCounterSub">12일 남음</div>
+        </div>
+
+        <!-- 실시간 정밀 시/분/초 타이머 -->
+        <div class="precise-timer-grid">
+          <div class="time-slot">
+            <span class="time-val" id="timeDays">12</span>
+            <span class="time-lbl" id="lblDays">일</span>
+          </div>
+          <div class="time-slot">
+            <span class="time-val" id="timeHours">00</span>
+            <span class="time-lbl">시간</span>
+          </div>
+          <div class="time-slot">
+            <span class="time-val" id="timeMins">00</span>
+            <span class="time-lbl">분</span>
+          </div>
+          <div class="time-slot">
+            <span class="time-val" id="timeSecs">00</span>
+            <span class="time-lbl">초</span>
+          </div>
+        </div>
+
+        <!-- 날짜 표시 -->
+        <div class="target-date-badge" id="cardDateBadge">
+          목표일: 2026. 11. 20 (금)
+        </div>
+
+        <!-- 기념일 계산 박스 (날짜 세기 모드일 때 자동 활성화) -->
+        <div class="milestones-box" id="milestonesBox" style="display:none;">
+          <div class="milestones-title">🎁 다가오는 기념일 자동 안내</div>
+          <div class="milestones-list" id="milestonesList">
+            <!-- 100일, 200일, 1주년 등이 동적 계산되어 들어감 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 공유 액션 바 (카드 이미지 복사, 링크 복사, 이미지 다운로드) -->
+    <div class="share-action-bar">
+      <button class="share-btn primary" onclick="copyCardImage()">
+        <span style="font-size:18px;">📋</span>
+        <span>카드 복사 (Ctrl+V)</span>
+      </button>
+      <button class="share-btn" onclick="copyCardLink()">
+        <span style="font-size:18px;">🔗</span>
+        <span>링크 복사</span>
+      </button>
+      <button class="share-btn" onclick="downloadCardImage()">
+        <span style="font-size:18px;">📥</span>
+        <span>이미지 저장</span>
+      </button>
+    </div>
+
+    <!-- 3. 상세 편집 패널 (링크 모드일 때는 접혀있고 필요 시 펼침) -->
+    <div class="editor-card" id="editorCard">
+      <div class="editor-section-title">✨ 카드 설정 & 프리셋</div>
+
+      <div class="preset-chip-list" id="presetList">
+        <!-- 모드에 따라 프리셋 동적 변경 -->
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label style="font-size:13px; font-weight:700; color:#cbd5e1;">제목</label>
+        <input type="text" id="inputTitle" class="input-field" placeholder="제목을 입력하세요">
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label style="font-size:13px; font-weight:700; color:#cbd5e1;" id="labelDateInput">기준 날짜 및 시각</label>
+        <input type="datetime-local" id="inputDateTime" class="input-field">
+      </div>
+
+      <!-- 날짜 세기 전용 옵션: 당일을 1일로 칠지 0일로 칠지 -->
+      <div id="day1OptionRow" style="display:none; align-items:center; gap:8px; font-size:13px; color:#cbd5e1;">
+        <input type="checkbox" id="checkDay1" checked onchange="updateAll()">
+        <label for="checkDay1">시작일을 1일차로 계산 (예: 연애/기념일 방식)</label>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label style="font-size:13px; font-weight:700; color:#cbd5e1;">부제목 / 메시지</label>
+        <input type="text" id="inputDesc" class="input-field" placeholder="응원 문구나 설명을 입력하세요">
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label style="font-size:13px; font-weight:700; color:#cbd5e1;">네온 테마 컬러</label>
+        <div class="theme-palette">
+          <div class="theme-circle active" style="background:#ff2a85;" onclick="selectTheme('#ff2a85', 'linear-gradient(135deg, #ff2a85, #8b5cf6)', this)"></div>
+          <div class="theme-circle" style="background:#00d4ff;" onclick="selectTheme('#00d4ff', 'linear-gradient(135deg, #00d4ff, #0072ff)', this)"></div>
+          <div class="theme-circle" style="background:#ffd166;" onclick="selectTheme('#ffd166', 'linear-gradient(135deg, #ffd166, #ff6b6b)', this)"></div>
+          <div class="theme-circle" style="background:#06d6a0;" onclick="selectTheme('#06d6a0', 'linear-gradient(135deg, #06d6a0, #118ab2)', this)"></div>
+          <div class="theme-circle" style="background:#a855f7;" onclick="selectTheme('#a855f7', 'linear-gradient(135deg, #a855f7, #ec4899)', this)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 알림창 -->
+  <div class="toast-msg" id="toastMsg">알림 메시지</div>
+
+  <!-- 모바일 길게 눌러 복사용 모달 -->
+  <div class="modal-overlay" id="imgModal" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <h3 style="font-size:16px; font-weight:800; color:#ffffff;">🖼️ 카드 이미지 완성</h3>
+      <p style="font-size:13px; color:#94a3b8; text-align:center;">
+        아래 이미지를 <b>1초간 길게 눌러 [복사]</b>하시면 카카오톡이나 DM 채팅방에 바로 붙여넣기 하실 수 있습니다!
+      </p>
+      <img id="generatedCardImg" class="modal-img" alt="D-Day 카드">
+      <div style="display:flex; gap:8px; width:100%;">
+        <button class="back-btn" style="flex:1; justify-content:center;" onclick="closeModal()">닫기</button>
+        <button class="back-btn" style="flex:1; justify-content:center; background:var(--theme-gradient); color:#fff; border:none;" onclick="downloadFromModal()">파일 다운로드</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 인포그래픽 렌더링용 캔버스 (숨김) -->
+  <canvas id="renderCanvas" style="display:none;"></canvas>
+
+  <script>
+    let currentMode = 'dday'; // 'dday' | 'countup'
+    let currentThemeColor = '#ff2a85';
+    let currentThemeGrad = 'linear-gradient(135deg, #ff2a85, #8b5cf6)';
+    let isSharedView = false;
+    let cachedDataUrl = null;
+
+    const PRESETS = {
+      dday: [
+        { tag: '✈️ 설레는 여행', title: '후쿠오카 힐링 온천 여행', desc: '비행기 타러 가는 날까지 남은 시간', days: 12, color: '#ff2a85', grad: 'linear-gradient(135deg, #ff2a85, #8b5cf6)' },
+        { tag: '🎯 시험 / 마감', title: '자격증 시험 D-Day', desc: '합격을 위해 끝까지 파이팅!', days: 30, color: '#00d4ff', grad: 'linear-gradient(135deg, #00d4ff, #0072ff)' },
+        { tag: '🥳 생일 파티', title: '생일 카운트다운', desc: '행복하고 특별한 하루를 맞이해요', days: 5, color: '#ffd166', grad: 'linear-gradient(135deg, #ffd166, #ff6b6b)' },
+        { tag: '🎓 종강 / 졸업', title: '자유를 향한 종강의 날', desc: '방학까지 딱 이만큼 남았어요', days: 21, color: '#06d6a0', grad: 'linear-gradient(135deg, #06d6a0, #118ab2)' },
+      ],
+      countup: [
+        { tag: '💖 연애 / 커플', title: '우리가 처음 만난 날', desc: '서로를 알게 된 지 이만큼이나 흘렀어요', days: -152, color: '#ff2a85', grad: 'linear-gradient(135deg, #ff2a85, #8b5cf6)' },
+        { tag: '🏢 입사 / 커리어', title: '회사 입사 n일차', desc: '매일 조금씩 성장해가는 중', days: -280, color: '#00d4ff', grad: 'linear-gradient(135deg, #00d4ff, #0072ff)' },
+        { tag: '💪 운동 / 습관', title: '오운완 연속 달성', desc: '건강한 습관을 지켜온 시간', days: -45, color: '#06d6a0', grad: 'linear-gradient(135deg, #06d6a0, #118ab2)' },
+        { tag: '👶 아기 성장', title: '세상에 태어난 지', desc: '건강하게 자라나는 소중한 날들', days: -85, color: '#ffd166', grad: 'linear-gradient(135deg, #ffd166, #ff6b6b)' },
+      ]
+    };
+
+    function showToast(text) {
+      const toast = document.getElementById('toastMsg');
+      toast.textContent = text;
+      toast.style.bottom = '30px';
+      setTimeout(() => { toast.style.bottom = '-60px'; }, 2500);
+    }
+
+    // 모드 전환 (D-Day vs 날짜 세기)
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('tabDday').classList.toggle('active', mode === 'dday');
+      document.getElementById('tabCountup').classList.toggle('active', mode === 'countup');
+      document.getElementById('day1OptionRow').style.display = mode === 'countup' ? 'flex' : 'none';
+      document.getElementById('milestonesBox').style.display = mode === 'countup' ? 'flex' : 'none';
+      document.getElementById('labelDateInput').textContent = mode === 'dday' ? '목표 날짜 및 시각' : '시작한 날짜 (기준일)';
+
+      renderPresets();
+      applyPreset(PRESETS[mode][0]);
+    }
+
+    function renderPresets() {
+      const list = document.getElementById('presetList');
+      list.innerHTML = '';
+      PRESETS[currentMode].forEach((p, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `preset-chip ${idx === 0 ? 'active' : ''}`;
+        btn.textContent = p.tag;
+        btn.onclick = () => {
+          document.querySelectorAll('.preset-chip').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          applyPreset(p);
+        };
+        list.appendChild(btn);
+      });
+    }
+
+    function applyPreset(p) {
+      document.getElementById('cardTag').textContent = p.tag;
+      document.getElementById('inputTitle').value = p.title;
+      document.getElementById('inputDesc').value = p.desc;
+
+      const d = new Date();
+      d.setDate(d.getDate() + p.days);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      document.getElementById('inputDateTime').value = d.toISOString().slice(0, 16);
+
+      selectTheme(p.color, p.grad);
+      updateAll();
+    }
+
+    function selectTheme(color, grad, el) {
+      currentThemeColor = color;
+      currentThemeGrad = grad;
+      document.documentElement.style.setProperty('--theme-color', color);
+      document.documentElement.style.setProperty('--theme-glow', color + '44');
+      document.documentElement.style.setProperty('--theme-gradient', grad);
+
+      if (el) {
+        document.querySelectorAll('.theme-circle').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+      }
+      cachedDataUrl = null;
+    }
+
+    // 날짜 차이 계산
+    function calcDayDiff(target, now) {
+      const a = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+      const b = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return Math.round((a - b) / 86400000);
+    }
+
+    function updateAll() {
+      const title = document.getElementById('inputTitle').value.trim() || '소중한 날';
+      const desc = document.getElementById('inputDesc').value.trim() || '행복한 시간을 카운트해요';
+      const dateVal = document.getElementById('inputDateTime').value;
+
+      document.getElementById('cardTitle').textContent = title;
+      document.getElementById('cardDesc').textContent = desc;
+
+      if (!dateVal) return;
+      const targetDate = new Date(dateVal);
+      if (isNaN(targetDate)) return;
+
+      const now = new Date();
+      const diffDays = calcDayDiff(targetDate, now);
+      const diffMs = targetDate.getTime() - now.getTime();
+
+      const y = targetDate.getFullYear();
+      const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const d = String(targetDate.getDate()).padStart(2, '0');
+      const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+      const dayName = daysOfWeek[targetDate.getDay()];
+
+      if (currentMode === 'dday') {
+        // D-Day 모드
+        document.getElementById('cardDateBadge').textContent = `목표일: ${y}. ${m}. ${d} (${dayName})`;
+        document.getElementById('lblDays').textContent = '일';
+
+        if (diffDays === 0) {
+          document.getElementById('cardBigCounter').textContent = 'D - DAY!';
+          document.getElementById('cardCounterSub').textContent = '오늘이 바로 그 날이에요!';
+        } else if (diffDays > 0) {
+          document.getElementById('cardBigCounter').textContent = `D - ${diffDays}`;
+          document.getElementById('cardCounterSub').textContent = `${diffDays}일 남음`;
+        } else {
+          document.getElementById('cardBigCounter').textContent = `D + ${-diffDays}`;
+          document.getElementById('cardCounterSub').textContent = `${-diffDays}일 지남`;
+        }
+
+        if (diffMs > 0) {
+          document.getElementById('timeDays').textContent = diffDays;
+          document.getElementById('timeHours').textContent = String(Math.floor((diffMs % 86400000) / 3600000)).padStart(2, '0');
+          document.getElementById('timeMins').textContent = String(Math.floor((diffMs % 3600000) / 60000)).padStart(2, '0');
+          document.getElementById('timeSecs').textContent = String(Math.floor((diffMs % 60000) / 1000)).padStart(2, '0');
+        } else {
+          document.getElementById('timeDays').textContent = diffDays < 0 ? -diffDays : '0';
+          document.getElementById('timeHours').textContent = '00';
+          document.getElementById('timeMins').textContent = '00';
+          document.getElementById('timeSecs').textContent = '00';
+        }
+      } else {
+        // 날짜 세기 (카운트업) 모드
+        const isDay1 = document.getElementById('checkDay1').checked;
+        const pastDays = -diffDays + (isDay1 ? 1 : 0);
+        document.getElementById('cardDateBadge').textContent = `시작일: ${y}. ${m}. ${d} (${dayName})`;
+        document.getElementById('lblDays').textContent = '일째';
+
+        document.getElementById('cardBigCounter').textContent = `${pastDays}일`;
+        document.getElementById('cardCounterSub').textContent = isDay1 ? `${pastDays}일째 함께하는 중` : `${-diffDays}일 지남`;
+
+        const elapsedMs = Math.max(0, now.getTime() - targetDate.getTime());
+        document.getElementById('timeDays').textContent = pastDays;
+        document.getElementById('timeHours').textContent = String(Math.floor((elapsedMs % 86400000) / 3600000)).padStart(2, '0');
+        document.getElementById('timeMins').textContent = String(Math.floor((elapsedMs % 3600000) / 60000)).padStart(2, '0');
+        document.getElementById('timeSecs').textContent = String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0');
+
+        renderMilestones(targetDate, now, isDay1);
+      }
+
+      cachedDataUrl = null;
+    }
+
+    // 다가오는 기념일 (100일, 200일, 1주년, 500일 등) 계산
+    function renderMilestones(startDate, now, isDay1) {
+      const container = document.getElementById('milestonesList');
+      container.innerHTML = '';
+
+      const milestones = [
+        { label: '100일', days: 100 },
+        { label: '200일', days: 200 },
+        { label: '300일', days: 300 },
+        { label: '1주년 (365일)', days: 365 },
+        { label: '500일', days: 500 },
+        { label: '2주년 (730일)', days: 730 },
+        { label: '1000일', days: 1000 },
+      ];
+
+      const startMid = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime();
+      const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const currentPassed = Math.floor((nowMid - startMid) / 86400000) + (isDay1 ? 1 : 0);
+
+      let foundNext = false;
+      milestones.forEach(m => {
+        const remaining = m.days - currentPassed;
+        const chip = document.createElement('div');
+        if (remaining <= 0) {
+          chip.className = 'milestone-chip passed';
+          chip.textContent = `${m.label} ✓`;
+        } else if (!foundNext) {
+          chip.className = 'milestone-chip next';
+          chip.textContent = `⭐ ${m.label} (D-${remaining})`;
+          foundNext = true;
+        } else {
+          chip.className = 'milestone-chip';
+          chip.textContent = `${m.label} (D-${remaining})`;
+        }
+        container.appendChild(chip);
+      });
+    }
+
+    // ── 링크 공유 기능 (URL 파라미터 인코딩 / 디코딩) ──
+    function buildShareUrl() {
+      const title = document.getElementById('inputTitle').value.trim();
+      const desc = document.getElementById('inputDesc').value.trim();
+      const tag = document.getElementById('cardTag').textContent.trim();
+      const date = document.getElementById('inputDateTime').value;
+      const day1 = document.getElementById('checkDay1').checked ? '1' : '0';
+
+      const url = new URL(location.href);
+      url.searchParams.set('v', 'card'); // 카드 전용 모드로 띄우기
+      url.searchParams.set('m', currentMode);
+      url.searchParams.set('t', title);
+      url.searchParams.set('d', desc);
+      url.searchParams.set('g', tag);
+      url.searchParams.set('dt', date);
+      url.searchParams.set('c', currentThemeColor);
+      url.searchParams.set('d1', day1);
+      return url.toString();
+    }
+
+    function parseShareUrl() {
+      const params = new URLSearchParams(location.search);
+      if (!params.has('v') && !params.has('t')) return false;
+
+      const mode = params.get('m') || 'dday';
+      currentMode = mode;
+      document.getElementById('tabDday').classList.toggle('active', mode === 'dday');
+      document.getElementById('tabCountup').classList.toggle('active', mode === 'countup');
+      document.getElementById('day1OptionRow').style.display = mode === 'countup' ? 'flex' : 'none';
+      document.getElementById('milestonesBox').style.display = mode === 'countup' ? 'flex' : 'none';
+
+      if (params.get('t')) document.getElementById('inputTitle').value = params.get('t');
+      if (params.get('d')) document.getElementById('inputDesc').value = params.get('d');
+      if (params.get('g')) document.getElementById('cardTag').textContent = params.get('g');
+      if (params.get('dt')) document.getElementById('inputDateTime').value = params.get('dt');
+      if (params.get('d1')) document.getElementById('checkDay1').checked = params.get('d1') === '1';
+
+      const color = params.get('c') || '#ff2a85';
+      selectTheme(color, `linear-gradient(135deg, ${color}, #8b5cf6)`);
+
+      // 카드 전용 뷰 활성화
+      setCardOnlyView(true);
+      updateAll();
+      return true;
+    }
+
+    function setCardOnlyView(active) {
+      isSharedView = active;
+      document.getElementById('sharedBanner').style.display = active ? 'flex' : 'none';
+      document.getElementById('modeTabs').style.display = active ? 'none' : 'grid';
+      document.getElementById('editorCard').style.display = active ? 'none' : 'flex';
+      document.getElementById('viewModeToggleBtn').textContent = active ? '✏️ 편집 모드' : '🔗 링크 모드';
+    }
+
+    function toggleSharedUrlMode() {
+      setCardOnlyView(!isSharedView);
+      showToast(isSharedView ? '🔗 링크 접속 시 보이는 카드 전용 화면입니다.' : '✏️ 편집 화면으로 전환되었습니다.');
+    }
+
+    function toggleEditPanel() {
+      setCardOnlyView(false);
+    }
+
+    function copyCardLink() {
+      const url = buildShareUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('🔗 D-Day 카드 링크가 복사되었습니다! (채팅창에 공유하세요)');
+        });
+      } else {
+        prompt('아래 링크를 복사하여 공유하세요:', url);
+      }
+    }
+
+    // ── 인포그래픽 캔버스 생성 및 이미지 복사 (Ctrl+V) ──
+    function createInfographicCanvas() {
+      const canvas = document.getElementById('renderCanvas');
+      canvas.width = 720;
+      canvas.height = 1000;
+      const ctx = canvas.getContext('2d');
+
+      // 1. 배경 그라데이션
+      const grad = ctx.createLinearGradient(0, 0, 720, 1000);
+      grad.addColorStop(0, '#0f172a');
+      grad.addColorStop(0.5, '#1e1b4b');
+      grad.addColorStop(1, '#0d0f18');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 720, 1000);
+
+      function drawRoundedRect(x, y, w, h, r, isFill, isStroke) {
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, y, w, h, r);
+        } else {
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + w - r, y);
+          ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+          ctx.lineTo(x + w, y + h - r);
+          ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+          ctx.lineTo(x + r, y + h);
+          ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+          ctx.lineTo(x, y + r);
+          ctx.quadraticCurveTo(x, y, x + r, y);
+          ctx.closePath();
+        }
+        if (isFill) ctx.fill();
+        if (isStroke) ctx.stroke();
+      }
+
+      // 2. 네온 테두리 & 글로우
+      ctx.save();
+      ctx.strokeStyle = currentThemeColor;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = currentThemeColor;
+      ctx.shadowBlur = 24;
+      drawRoundedRect(30, 30, 660, 940, 28, false, true);
+      ctx.restore();
+
+      // 3. 상단 태그
+      const tagText = document.getElementById('cardTag').textContent;
+      ctx.fillStyle = currentThemeColor;
+      drawRoundedRect(240, 80, 240, 42, 21, true, false);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(tagText, 360, 107);
+
+      // 4. 제목 & 부제목
+      const title = document.getElementById('cardTitle').textContent;
+      const desc = document.getElementById('cardDesc').textContent;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px Pretendard, sans-serif';
+      ctx.fillText(title, 360, 190);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '18px Pretendard, sans-serif';
+      ctx.fillText(desc, 360, 235);
+
+      // 5. 대형 카운터 숫자
+      const bigNum = document.getElementById('cardBigCounter').textContent;
+      const subTxt = document.getElementById('cardCounterSub').textContent;
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 96px Pretendard, sans-serif';
+      ctx.shadowColor = currentThemeColor;
+      ctx.shadowBlur = 30;
+      ctx.fillText(bigNum, 360, 420);
+      ctx.restore();
+
+      ctx.fillStyle = currentThemeColor;
+      ctx.font = 'bold 22px Pretendard, sans-serif';
+      ctx.fillText(subTxt, 360, 480);
+
+      // 6. 타이머 박스
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1.5;
+      drawRoundedRect(80, 530, 560, 140, 20, true, true);
+
+      const d = document.getElementById('timeDays').textContent;
+      const h = document.getElementById('timeHours').textContent;
+      const m = document.getElementById('timeMins').textContent;
+      const s = document.getElementById('timeSecs').textContent;
+      const lblD = document.getElementById('lblDays').textContent;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 34px Pretendard, sans-serif';
+      ctx.fillText(`${d}${lblD}  ${h}시간  ${m}분  ${s}초`, 360, 615);
+
+      // 7. 기준 날짜
+      const dateBadge = document.getElementById('cardDateBadge').textContent;
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '600 18px Pretendard, sans-serif';
+      ctx.fillText(dateBadge, 360, 740);
+
+      // 8. 하단 브랜딩
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'bold 15px Pretendard, sans-serif';
+      ctx.fillText('MINI GAME PARADISE | D-DAY & COUNTDOWN', 360, 900);
+
+      return canvas;
+    }
+
+    async function copyCardImage() {
+      try {
+        const c = createInfographicCanvas();
+        cachedDataUrl = c.toDataURL('image/png');
+
+        if (!navigator.clipboard || !navigator.clipboard.write) {
+          throw new Error('ClipboardItem API not supported');
+        }
+
+        const blob = await new Promise(resolve => c.toBlob(resolve, 'image/png'));
+        const item = new ClipboardItem({ 'image/png': blob });
+        await navigator.clipboard.write([item]);
+
+        alert(`📋 카드가 클립보드에 복사되었습니다!\n\n카카오톡 채팅방, 슬랙 등에 바로 [Ctrl + V] (붙여넣기) 하시면 이미지가 전송됩니다.`);
+      } catch (err) {
+        console.warn('Image clipboard write fallback:', err);
+        previewModalImage();
+      }
+    }
+
+    function downloadCardImage() {
+      const c = createInfographicCanvas();
+      cachedDataUrl = c.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = cachedDataUrl;
+      const title = document.getElementById('inputTitle').value.trim() || 'D-Day';
+      a.download = `DDay_카드_${title}_${new Date().toISOString().slice(0,10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function previewModalImage() {
+      if (!cachedDataUrl) {
+        const c = createInfographicCanvas();
+        cachedDataUrl = c.toDataURL('image/png');
+      }
+      document.getElementById('generatedCardImg').src = cachedDataUrl;
+      document.getElementById('imgModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('imgModal').style.display = 'none';
+    }
+
+    function downloadFromModal() {
+      downloadCardImage();
+      closeModal();
+    }
+
+    // ── 이벤트 바인딩 & 초기화 ──
+    document.getElementById('inputTitle').addEventListener('input', updateAll);
+    document.getElementById('inputDesc').addEventListener('input', updateAll);
+    document.getElementById('inputDateTime').addEventListener('input', updateAll);
+    setInterval(updateAll, 1000);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const hasShared = parseShareUrl();
+      if (!hasShared) {
+        switchMode('dday');
+      }
+    });
+  </script>
+</body>
+</html>
