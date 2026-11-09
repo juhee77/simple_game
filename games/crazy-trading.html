@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>광기의 떡상 떡락 | 1분 주식·코인 단타 파티</title>
+    <link rel="stylesheet" href="../css/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../css/game-common.css?v=2187f848">
+    <style>
+        :root {
+            --bg-dark: #070a12;
+            --panel-bg: rgba(15, 23, 42, 0.85);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.4);
+            --accent-red: #f43f5e;
+            --accent-red-glow: rgba(244, 63, 94, 0.4);
+            --accent-blue: #06b6d4;
+            --accent-gold: #f59e0b;
+            --accent-purple: #a855f7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(244, 63, 94, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-back:active {
+            transform: scale(0.92);
+        }
+
+        .header-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sound-toggle-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        /* 뷰 컨테이너 */
+        .view-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .view-section {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            flex: 1;
+        }
+
+        .view-section.active {
+            display: flex;
+        }
+
+        /* 세팅 화면 */
+        .hero-banner {
+            text-align: center;
+            padding: 24px 12px;
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.4) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: linear-gradient(90deg, #10b981, #06b6d4);
+            color: #042f2e;
+            font-size: 0.75rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+            letter-spacing: 0.05em;
+        }
+
+        .hero-title {
+            font-size: 1.7rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 40%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(8px);
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .mode-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-main);
+        }
+
+        .mode-btn.active {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+        }
+
+        .mode-btn .icon {
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+        }
+
+        .mode-btn .title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .mode-btn .desc {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .player-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .player-chip {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .player-chip .remove-btn {
+            color: var(--accent-red);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .player-add-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .player-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .player-input:focus {
+            border-color: var(--accent-green);
+        }
+
+        .btn-add-player {
+            background: var(--accent-green);
+            color: #042f2e;
+            font-weight: 800;
+            border: none;
+            border-radius: 10px;
+            padding: 0 16px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .time-select-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .time-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 0.88rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .time-btn.active {
+            background: rgba(6, 182, 212, 0.2);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            font-size: 1.15rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: auto;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-start:active {
+            transform: scale(0.98);
+        }
+
+        /* ------------------ 게임 플레이 화면 ------------------ */
+        .game-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+        }
+
+        .market-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 800;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            animation: pulse-dot 1s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .game-timer-badge {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--accent-gold);
+            font-variant-numeric: tabular-nums;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .game-timer-badge.urgent {
+            color: var(--accent-red);
+            animation: shake 0.3s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        /* 차트 영역 */
+        .chart-box {
+            position: relative;
+            background: #0b1120;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .chart-top-info {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .coin-name {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .current-price-val {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.1s;
+        }
+
+        .price-change-badge {
+            font-size: 0.85rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .price-change-badge.up, .current-price-val.up {
+            color: var(--accent-green);
+        }
+        .price-change-badge.down, .current-price-val.down {
+            color: var(--accent-red);
+        }
+
+        #chartCanvas {
+            width: 100%;
+            height: 180px;
+            display: block;
+        }
+
+        /* 뉴스 속보 티커 */
+        .news-ticker-bar {
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #fecdd3;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            min-height: 38px;
+            transition: all 0.2s;
+        }
+
+        .news-ticker-bar.pump {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+            color: #a7f3d0;
+        }
+
+        .news-tag {
+            background: var(--accent-red);
+            color: #fff;
+            font-size: 0.68rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .news-ticker-bar.pump .news-tag {
+            background: var(--accent-green);
+            color: #042f2e;
+        }
+
+        .news-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 동시 난투 모드 플레이어 패널 그리드 */
+        .battle-panels-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .player-battle-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player-battle-card.liquidated {
+            border-color: var(--accent-red);
+            background: rgba(244, 63, 94, 0.1);
+        }
+
+        .pcard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .pcard-name {
+            font-size: 0.85rem;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90px;
+        }
+
+        .pcard-pos-badge {
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .pcard-pos-badge.long {
+            background: rgba(16, 185, 129, 0.25);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+
+        .pcard-pos-badge.short {
+            background: rgba(244, 63, 94, 0.25);
+            color: var(--accent-red);
+            border: 1px solid rgba(244, 63, 94, 0.5);
+        }
+
+        .pcard-wealth {
+            margin-bottom: 8px;
+        }
+
+        .pcard-total {
+            font-size: 1.05rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pcard-yield {
+            font-size: 0.78rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pcard-yield.plus { color: var(--accent-green); }
+        .pcard-yield.minus { color: var(--accent-red); }
+
+        .pcard-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .pcard-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 4px;
+            font-size: 0.8rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform 0.08s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .pcard-btn:active {
+            transform: scale(0.92);
+        }
+
+        .btn-trade-long {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+        }
+
+        .btn-trade-short {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: #fff;
+        }
+
+        .btn-trade-close {
+            grid-column: span 2;
+            background: rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px;
+        }
+
+        .btn-trade-close:active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* 릴레이 모드 단독 패널 */
+        .solo-turn-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .solo-player-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .solo-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .solo-action-btn {
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .solo-action-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 결과 화면 */
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            flex: 1;
+        }
+
+        .winner-spotlight {
+            text-align: center;
+            padding: 22px 14px;
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.2) 0%, rgba(15, 23, 42, 0.6) 100%);
+            border: 2px solid var(--accent-gold);
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
+        }
+
+        .winner-crown {
+            font-size: 3rem;
+            margin-bottom: 6px;
+            animation: bounce 1.5s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .winner-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            letter-spacing: 0.05em;
+        }
+
+        .winner-name {
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin: 4px 0;
+        }
+
+        .winner-return {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--accent-green);
+        }
+
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rank-item {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .rank-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rank-num {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--text-muted);
+            width: 24px;
+        }
+
+        .rank-badge-name {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rank-name {
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .rank-tag {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .rank-item-right {
+            text-align: right;
+        }
+
+        .rank-assets {
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .rank-yield {
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .btn-action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 10px;
+        }
+
+        .btn-sub {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-sub:active {
+            transform: scale(0.97);
+        }
+
+        .btn-restart {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* 엿보기 방지 안내 팝업 (릴레이 모드용) */
+        .overlay-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .overlay-modal.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: #0f172a;
+            border: 2px solid var(--accent-blue);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(6, 182, 212, 0.3);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .modal-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: var(--accent-blue);
+            color: #082f49;
+            font-size: 1rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 20px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* 토스트 알림 */
+        .toast-box {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 200;
+        }
+        .toast-box.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <header>
+        <div class="header-left">
+            <a href="../index.html" class="btn-back" title="메인으로">‹</a>
+            <div class="header-title">
+                <span>📈</span> 광기의 떡상 떡락
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="sound-toggle-btn" id="soundBtn" title="효과음 토글">🔊</button>
+        </div>
+    </header>
+
+    <div class="view-container">
+        <!-- 1. 게임 세팅 뷰 -->
+        <section class="view-section active" id="setupView">
+            <div class="hero-banner">
+                <span class="hero-badge">⚡ 60 SECONDS CRYPTO BATTLE</span>
+                <h1 class="hero-title">광기의 떡상 떡락</h1>
+                <p class="hero-desc">실시간 롤러코스터 차트에서 터지는 초단타 매매!<br>워런 버핏의 영광인가, 깡통 마진콜의 비극인가?</p>
+            </div>
+
+            <div class="card">
+                <div class="card-label">
+                    <span>🎮 플레이 방식</span>
+                </div>
+                <div class="mode-selector">
+                    <div class="mode-btn active" data-mode="party" id="modePartyBtn">
+                        <div class="icon">👥</div>
+                        <div class="title">한 폰 동시 난투</div>
+                        <div class="desc">2~4명이 폰 하나를 함께 보며 실시간 동시 매매!</div>
+                    </div>
+                    <div class="mode-btn" data-mode="relay" id="modeRelayBtn">
+                        <div class="icon">🔄</div>
+                        <div class="title">릴레이 챌린지</div>
+                        <div class="desc">각자 60초간 단독 플레이 후 수익률 랭킹 대결!</div>
+                    </div>
+                </div>
+
+                <div class="card-label">
+                    <span>참가 플레이어 (<span id="playerCountLabel">4</span>명)</span>
+                    <span style="font-size:0.75rem; color:var(--accent-blue)">시드머니 각 1,000만 원</span>
+                </div>
+                <div class="player-chips" id="playerChipsContainer">
+                    <!-- 플레이어 목록 동적 삽입 -->
+                </div>
+                <div class="player-add-box">
+                    <input type="text" class="player-input" id="newPlayerInput" placeholder="플레이어 이름 입력" maxlength="8">
+                    <button class="btn-add-player" id="addPlayerBtn">추가</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">
+                    <span>⏱️ 게임 제한 시간</span>
+                </div>
+                <div class="time-select-row">
+                    <button class="time-btn" data-time="30">30초 (스피드)</button>
+                    <button class="time-btn active" data-time="60">60초 (표준)</button>
+                    <button class="time-btn" data-time="90">90초 (치열)</button>
+                </div>
+            </div>
+
+            <button class="btn-start" id="startGameBtn">
+                <span>🚀 1,000만 원 들고 시장 진입!</span>
+            </button>
+        </section>
+
+        <!-- 2. 게임 플레이 뷰 -->
+        <section class="view-section" id="gameView">
+            <div class="game-header-bar">
+                <div class="market-badge">
+                    <div class="live-dot"></div>
+                    <span id="marketName">DOPAMINE/KRW</span>
+                </div>
+                <div class="game-timer-badge" id="gameTimerBadge">
+                    ⏱️ <span id="timerVal">60</span>s
+                </div>
+            </div>
+
+            <!-- 실시간 시세 차트 -->
+            <div class="chart-box">
+                <div class="chart-top-info">
+                    <div>
+                        <div class="coin-name" id="coinSymbolDisplay">DOPA COIN</div>
+                        <div class="current-price-val" id="priceDisplay">10,000 KRW</div>
+                    </div>
+                    <div>
+                        <div class="price-change-badge up" id="priceChangeDisplay">+0.00%</div>
+                    </div>
+                </div>
+                <canvas id="chartCanvas"></canvas>
+            </div>
+
+            <!-- 돌발 뉴스 속보 바 -->
+            <div class="news-ticker-bar" id="newsTicker">
+                <span class="news-tag">속보</span>
+                <span class="news-text" id="newsText">도파민 코인 메인넷 론칭 임박! 글로벌 자금 유입 시작</span>
+            </div>
+
+            <!-- 모드 1: 한 폰 동시 난투 패널 그리드 -->
+            <div class="battle-panels-grid" id="battlePanelsGrid">
+                <!-- 플레이어별 매매 패널 동적 생성 -->
+            </div>
+
+            <!-- 모드 2: 릴레이 챌린지 1인 패널 -->
+            <div class="solo-turn-box" id="soloTurnBox" style="display:none;">
+                <div class="solo-player-status">
+                    <div>
+                        <span style="font-size:0.8rem; color:var(--text-muted)">현재 주자</span>
+                        <h2 style="font-size:1.3rem; font-weight:900;" id="soloPlayerName">플레이어 1</h2>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-size:0.8rem; color:var(--text-muted)">포지션</span>
+                        <div id="soloPosBadge" class="pcard-pos-badge">현금 관망 💤</div>
+                    </div>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:12px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="font-size:0.8rem; color:var(--text-muted)">총 평가 자산</span>
+                        <span style="font-size:1.15rem; font-weight:900;" id="soloTotalWealth">10,000,000 원</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="font-size:0.8rem; color:var(--text-muted)">현재 수익률</span>
+                        <span style="font-size:0.95rem; font-weight:800;" id="soloYieldVal">+0.00%</span>
+                    </div>
+                </div>
+
+                <div class="solo-actions-grid">
+                    <button class="solo-action-btn btn-trade-long" id="soloBtnLong">
+                        <span>🛒 풀매수 (롱)</span>
+                        <span style="font-size:0.75rem; opacity:0.85;">상승 시 수익 극대화</span>
+                    </button>
+                    <button class="solo-action-btn btn-trade-short" id="soloBtnShort">
+                        <span>🔻 공매도 (숏 2X)</span>
+                        <span style="font-size:0.75rem; opacity:0.85;">하락 시 2배 수익</span>
+                    </button>
+                    <button class="solo-action-btn btn-trade-close" style="grid-column:span 2;" id="soloBtnClose">
+                        <span>💰 전량 청산 (현금화)</span>
+                        <span style="font-size:0.75rem; opacity:0.85;">익절 & 손절 후 포지션 종료</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 게임 결과 뷰 -->
+        <section class="view-section" id="resultView">
+            <div class="results-container">
+                <div class="winner-spotlight">
+                    <div class="winner-crown">🏆</div>
+                    <div class="winner-title">WARREN BUFFETT OF THE NIGHT</div>
+                    <div class="winner-name" id="winnerName">플레이어 1</div>
+                    <div class="winner-return" id="winnerReturn">+145.2% (2,452만 원)</div>
+                </div>
+
+                <div class="rank-list" id="rankListContainer">
+                    <!-- 순위 리스트 동적 삽입 -->
+                </div>
+
+                <div class="btn-action-row">
+                    <button class="btn-sub" id="btnShareKakao">
+                        <span>💬</span> 결과 카톡 복사
+                    </button>
+                    <button class="btn-sub" id="btnSaveCard">
+                        <span>🖼️</span> 성적표 이미지 저장
+                    </button>
+                    <button class="btn-restart" id="btnRestart">
+                        <span>🔄</span> 새로운 종목으로 한 판 더!
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 릴레이 모드 넘겨주기 팝업 -->
+    <div class="overlay-modal" id="relayModal">
+        <div class="modal-card">
+            <div class="modal-icon">📱</div>
+            <h3 class="modal-title"><span id="nextPlayerName">플레이어 2</span>님의 차례!</h3>
+            <p class="modal-desc">
+                폰을 넘겨받아 준비가 되면 시작하세요.<br>
+                제한 시간 동안 당신만의 초단타 매매를 펼쳐보세요!
+            </p>
+            <button class="modal-btn" id="btnStartTurn">매매 스타트! 🚀</button>
+        </div>
+    </div>
+
+    <!-- 토스트 알림 -->
+    <div class="toast-box" id="toast">알림 메시지</div>
+
+    <!-- 사운드 신시사이저 & 게임 엔진 스크립트 -->
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <script>
+    (function() {
+        // --- 1. Web Audio API 신시사이저 ---
+        let audioCtx = null;
+        let isMuted = false;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        const Sound = {
+            play(type) {
+                if (isMuted) return;
+                try {
+                    const ctx = getAudioContext();
+                    if (!ctx) return;
+                    const now = ctx.currentTime;
+
+                    if (type === 'buy') {
+                        // 경쾌한 매수음 (상승 차임)
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(440, now);
+                        osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.12);
+                    } else if (type === 'sell') {
+                        // 잭팟/코인 찰랑음 (매도 익절)
+                        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.value = freq;
+                            const start = now + (i * 0.05);
+                            gain.gain.setValueAtTime(0.18, start);
+                            gain.gain.linearRampToValueAtTime(0.001, start + 0.2);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(start);
+                            osc.stop(start + 0.2);
+                        });
+                    } else if (type === 'short') {
+                        // 날카로운 숏 베팅 레이저음
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(800, now);
+                        osc.frequency.exponentialRampToValueAtTime(250, now + 0.15);
+                        gain.gain.setValueAtTime(0.15, now);
+                        gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.15);
+                    } else if (type === 'news') {
+                        // 사이렌 비프
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(880, now);
+                        osc.frequency.setValueAtTime(1174, now + 0.08);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.2);
+                    } else if (type === 'tick') {
+                        // 초침 째깍음
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(900, now);
+                        gain.gain.setValueAtTime(0.08, now);
+                        gain.gain.linearRampToValueAtTime(0.001, now + 0.03);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.03);
+                    } else if (type === 'margin') {
+                        // 마진콜 청산 폭발음
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(180, now);
+                        osc.frequency.exponentialRampToValueAtTime(40, now + 0.4);
+                        gain.gain.setValueAtTime(0.3, now);
+                        gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.4);
+                    } else if (type === 'fanfare') {
+                        // 최종 우승 팡파르
+                        const notes = [523.25, 659.25, 783.99, 1046.5];
+                        notes.forEach((freq, idx) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.value = freq;
+                            const t = now + idx * 0.12;
+                            gain.gain.setValueAtTime(0.25, t);
+                            gain.gain.linearRampToValueAtTime(0.001, t + (idx === notes.length - 1 ? 0.6 : 0.2));
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(t);
+                            osc.stop(t + (idx === notes.length - 1 ? 0.6 : 0.2));
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Audio play error:', e);
+                }
+            }
+        };
+
+        // --- 2. 게임 상태 관리 ---
+        const INITIAL_SEED = 10000000; // 1,000만 원
+        let players = ['불개미1', '워런버핏', '코인왕', '한강수온'];
+        let gameMode = 'party'; // 'party' (한폰 동시) or 'relay' (릴레이 챌린지)
+        let gameDuration = 60; // 30, 60, 90
+        let currentRelayIdx = 0;
+        let relayResults = [];
+
+        let currentPrice = 10000;
+        let baseStartPrice = 10000;
+        let priceHistory = [];
+        let isGameRunning = false;
+        let gameTimeLeft = 60;
+        let timerInterval = null;
+        let priceInterval = null;
+        let newsInterval = null;
+
+        // 플레이어별 트레이딩 상태 (동시 난투용)
+        let playerStates = [];
+
+        // 뉴스 속보 데이터 풀
+        const NEWS_EVENTS = [
+            { text: "🚀 일론 머스크 '화성 우주선 결제에 채택' 기습 트윗!", effect: 1.6, type: 'pump' },
+            { text: "⚡ 바이낸스 기습 상장 공지 발표! 매수세 폭발!", effect: 1.45, type: 'pump' },
+            { text: "🐳 월가 거대 헤지펀드 5,000억 원 어치 현물 쓸어담기 포착!", effect: 1.35, type: 'pump' },
+            { text: "🤖 글로벌 AI 기업, 핵심 결제 토큰으로 전격 제휴!", effect: 1.25, type: 'pump' },
+            { text: "🚨 [비보] 글로벌 거래소 전격 출금 중단 및 FBI 압수수색 루머!", effect: 0.55, type: 'dump' },
+            { text: "⚠️ 미 연준(Fed), 기준금리 75bp 기습 자이언트 스텝 단행!", effect: 0.65, type: 'dump' },
+            { text: "💣 개발팀 핵심 지갑에서 300억 원 어치 전량 매도 러그풀 의혹!", effect: 0.5, type: 'dump' },
+            { text: "📉 유명 인플루언서 '전량 숏 베팅' 인증글 화제!", effect: 0.75, type: 'dump' },
+            { text: "🛡️ 고래들의 치열한 10,000원 지지선 방어전 격돌 중!", effect: 1.1, type: 'pump' },
+            { text: "🔥 코인 50% 소각 단행 공시! 공급 쇼크 발생!", effect: 1.3, type: 'pump' }
+        ];
+
+        // --- 3. DOM 요소 바인딩 ---
+        const soundBtn = document.getElementById('soundBtn');
+        const setupView = document.getElementById('setupView');
+        const gameView = document.getElementById('gameView');
+        const resultView = document.getElementById('resultView');
+        const playerChipsContainer = document.getElementById('playerChipsContainer');
+        const playerCountLabel = document.getElementById('playerCountLabel');
+        const newPlayerInput = document.getElementById('newPlayerInput');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const modePartyBtn = document.getElementById('modePartyBtn');
+        const modeRelayBtn = document.getElementById('modeRelayBtn');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const timerVal = document.getElementById('timerVal');
+        const gameTimerBadge = document.getElementById('gameTimerBadge');
+        const priceDisplay = document.getElementById('priceDisplay');
+        const priceChangeDisplay = document.getElementById('priceChangeDisplay');
+        const newsTicker = document.getElementById('newsTicker');
+        const newsText = document.getElementById('newsText');
+        const battlePanelsGrid = document.getElementById('battlePanelsGrid');
+        const soloTurnBox = document.getElementById('soloTurnBox');
+        const soloPlayerName = document.getElementById('soloPlayerName');
+        const soloPosBadge = document.getElementById('soloPosBadge');
+        const soloTotalWealth = document.getElementById('soloTotalWealth');
+        const soloYieldVal = document.getElementById('soloYieldVal');
+        const soloBtnLong = document.getElementById('soloBtnLong');
+        const soloBtnShort = document.getElementById('soloBtnShort');
+        const soloBtnClose = document.getElementById('soloBtnClose');
+        const chartCanvas = document.getElementById('chartCanvas');
+        const ctx2d = chartCanvas.getContext('2d');
+        const relayModal = document.getElementById('relayModal');
+        const nextPlayerName = document.getElementById('nextPlayerName');
+        const btnStartTurn = document.getElementById('btnStartTurn');
+        const winnerName = document.getElementById('winnerName');
+        const winnerReturn = document.getElementById('winnerReturn');
+        const rankListContainer = document.getElementById('rankListContainer');
+        const btnShareKakao = document.getElementById('btnShareKakao');
+        const btnSaveCard = document.getElementById('btnSaveCard');
+        const btnRestart = document.getElementById('btnRestart');
+        const toast = document.getElementById('toast');
+
+        // 사운드 토글
+        soundBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            soundBtn.textContent = isMuted ? '🔇' : '🔊';
+            showToast(isMuted ? '효과음이 꺼졌습니다.' : '효과음이 켜졌습니다.');
+        });
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // --- 4. 초기 세팅 뷰 핸들링 ---
+        function renderPlayerChips() {
+            playerChipsContainer.innerHTML = '';
+            players.forEach((p, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'player-chip';
+                chip.innerHTML = `
+                    <span>${p}</span>
+                    ${players.length > 2 ? `<span class="remove-btn" data-idx="${idx}">&times;</span>` : ''}
+                `;
+                playerChipsContainer.appendChild(chip);
+            });
+            playerCountLabel.textContent = players.length;
+
+            // 삭제 바인딩
+            playerChipsContainer.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.target.dataset.idx, 10);
+                    if (players.length > 2) {
+                        players.splice(idx, 1);
+                        renderPlayerChips();
+                    }
+                });
+            });
+        }
+
+        addPlayerBtn.addEventListener('click', () => {
+            const name = newPlayerInput.value.trim();
+            if (!name) return;
+            if (players.length >= 8) {
+                showToast('최대 8명까지 참가할 수 있습니다.');
+                return;
+            }
+            if (players.includes(name)) {
+                showToast('이미 존재하는 이름입니다.');
+                return;
+            }
+            players.push(name);
+            newPlayerInput.value = '';
+            renderPlayerChips();
+        });
+
+        newPlayerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addPlayerBtn.click();
+        });
+
+        // 모드 전환
+        modePartyBtn.addEventListener('click', () => {
+            gameMode = 'party';
+            modePartyBtn.classList.add('active');
+            modeRelayBtn.classList.remove('active');
+            if (players.length > 4) {
+                players = players.slice(0, 4);
+                renderPlayerChips();
+                showToast('한 폰 동시 난투는 최대 4인까지 지원됩니다.');
+            }
+        });
+
+        modeRelayBtn.addEventListener('click', () => {
+            gameMode = 'relay';
+            modeRelayBtn.classList.add('active');
+            modePartyBtn.classList.remove('active');
+        });
+
+        // 시간 선택
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameDuration = parseInt(btn.dataset.time, 10);
+            });
+        });
+
+        // --- 5. 캔버스 롤러코스터 차트 엔진 ---
+        function initCanvasSize() {
+            const rect = chartCanvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            chartCanvas.width = rect.width * dpr;
+            chartCanvas.height = rect.height * dpr;
+            ctx2d.scale(dpr, dpr);
+        }
+
+        window.addEventListener('resize', () => {
+            if (isGameRunning) initCanvasSize();
+        });
+
+        function renderChart() {
+            const rect = chartCanvas.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+
+            ctx2d.clearRect(0, 0, w, h);
+
+            if (priceHistory.length < 2) return;
+
+            const minPrice = Math.min(...priceHistory) * 0.95;
+            const maxPrice = Math.max(...priceHistory) * 1.05;
+            const priceRange = Math.max(maxPrice - minPrice, 100);
+
+            // 그리드 선 그리기
+            ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx2d.lineWidth = 1;
+            for (let i = 1; i <= 3; i++) {
+                const y = (h / 4) * i;
+                ctx2d.beginPath();
+                ctx2d.moveTo(0, y);
+                ctx2d.lineTo(w, y);
+                ctx2d.stroke();
+            }
+
+            // 기준 시작가 점선
+            const baseStartRate = (baseStartPrice - minPrice) / priceRange;
+            const baseY = h - (baseStartRate * h);
+            ctx2d.setLineDash([4, 4]);
+            ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx2d.beginPath();
+            ctx2d.moveTo(0, baseY);
+            ctx2d.lineTo(w, baseY);
+            ctx2d.stroke();
+            ctx2d.setLineDash([]);
+
+            // 차트 라인 경로 생성
+            const stepX = w / Math.max(priceHistory.length - 1, 1);
+            const isUptrend = currentPrice >= baseStartPrice;
+            const themeColor = isUptrend ? '#10b981' : '#f43f5e';
+
+            ctx2d.beginPath();
+            priceHistory.forEach((p, idx) => {
+                const x = idx * stepX;
+                const yRate = (p - minPrice) / priceRange;
+                const y = h - (yRate * (h - 20)) - 10;
+                if (idx === 0) ctx2d.moveTo(x, y);
+                else ctx2d.lineTo(x, y);
+            });
+
+            // 그라디언트 영역 채우기
+            const lastIdx = priceHistory.length - 1;
+            const lastX = lastIdx * stepX;
+            const lastYRate = (currentPrice - minPrice) / priceRange;
+            const lastY = h - (lastYRate * (h - 20)) - 10;
+
+            const fillGradient = ctx2d.createLinearGradient(0, 0, 0, h);
+            if (isUptrend) {
+                fillGradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+                fillGradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+            } else {
+                fillGradient.addColorStop(0, 'rgba(244, 63, 94, 0.35)');
+                fillGradient.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+            }
+
+            ctx2d.save();
+            const fillPath = new Path2D();
+            priceHistory.forEach((p, idx) => {
+                const x = idx * stepX;
+                const y = h - (((p - minPrice) / priceRange) * (h - 20)) - 10;
+                if (idx === 0) fillPath.moveTo(x, y);
+                else fillPath.lineTo(x, y);
+            });
+            fillPath.lineTo(lastX, h);
+            fillPath.lineTo(0, h);
+            fillPath.closePath();
+            ctx2d.fillStyle = fillGradient;
+            ctx2d.fill(fillPath);
+            ctx2d.restore();
+
+            // 네온 라인 스트로크
+            ctx2d.strokeStyle = themeColor;
+            ctx2d.lineWidth = 3;
+            ctx2d.shadowColor = themeColor;
+            ctx2d.shadowBlur = 12;
+            ctx2d.stroke();
+            ctx2d.shadowBlur = 0;
+
+            // 현재가 펄스 포인트 렌더링
+            ctx2d.fillStyle = themeColor;
+            ctx2d.beginPath();
+            ctx2d.arc(lastX, lastY, 5, 0, Math.PI * 2);
+            ctx2d.fill();
+
+            ctx2d.strokeStyle = '#fff';
+            ctx2d.lineWidth = 2;
+            ctx2d.beginPath();
+            ctx2d.arc(lastX, lastY, 7, 0, Math.PI * 2);
+            ctx2d.stroke();
+        }
+
+        // --- 6. 트레이딩 로직 및 가격 변동 시뮬레이터 ---
+        function formatKRW(val) {
+            const v = Math.round(val);
+            if (Math.abs(v) >= 100000000) {
+                return (v / 100000000).toFixed(2) + '억 원';
+            } else if (Math.abs(v) >= 10000) {
+                return (v / 10000).toLocaleString() + '만 원';
+            }
+            return v.toLocaleString() + '원';
+        }
+
+        function formatNumber(val) {
+            return Math.round(val).toLocaleString();
+        }
+
+        function updatePriceTick() {
+            if (!isGameRunning) return;
+
+            // 랜덤 워크 + 모멘텀 물리 시뮬레이션
+            const volatility = 0.035; // 기본 3.5% 흔들림
+            const randomFactor = (Math.random() - 0.49) * 2; // -1.0 ~ +1.0
+            const changePercent = randomFactor * volatility;
+            
+            let nextPrice = currentPrice * (1 + changePercent);
+            // 최저가 보정 (500원 이하 붕괴 방지)
+            nextPrice = Math.max(nextPrice, 500);
+            currentPrice = Math.round(nextPrice);
+
+            priceHistory.push(currentPrice);
+            if (priceHistory.length > 50) {
+                priceHistory.shift();
+            }
+
+            // 시세 UI 업데이트
+            priceDisplay.textContent = `${formatNumber(currentPrice)} KRW`;
+            const diffPct = ((currentPrice - baseStartPrice) / baseStartPrice) * 100;
+            const isUp = diffPct >= 0;
+            priceChangeDisplay.textContent = `${isUp ? '+' : ''}${diffPct.toFixed(2)}%`;
+            priceChangeDisplay.className = `price-change-badge ${isUp ? 'up' : 'down'}`;
+            priceDisplay.className = `current-price-val ${isUp ? 'up' : 'down'}`;
+
+            // 플레이어 포지션 평가 업데이트
+            if (gameMode === 'party') {
+                updateAllBattlePlayers();
+            } else {
+                updateSoloPlayer();
+            }
+
+            renderChart();
+        }
+
+        function triggerRandomNews() {
+            if (!isGameRunning) return;
+            const news = NEWS_EVENTS[Math.floor(Math.random() * NEWS_EVENTS.length)];
+            
+            // 시세 충격 반영
+            currentPrice = Math.round(currentPrice * news.effect);
+            priceHistory.push(currentPrice);
+            if (priceHistory.length > 50) priceHistory.shift();
+
+            newsText.textContent = news.text;
+            newsTicker.className = `news-ticker-bar ${news.type}`;
+            Sound.play('news');
+        }
+
+        // --- 7. 플레이어 행동 처리 (동시 난투 & 릴레이 공통) ---
+        function executeTrade(state, action) {
+            if (!isGameRunning) return;
+
+            if (action === 'long') {
+                // 이미 롱이면 추가/유지, 숏이면 먼저 청산 후 롱
+                if (state.pos === 'short') {
+                    closePosition(state);
+                }
+                if (state.cash > 1000) {
+                    state.pos = 'long';
+                    state.entryPrice = currentPrice;
+                    state.units = state.cash / currentPrice;
+                    state.cash = 0;
+                    state.tradesCount++;
+                    Sound.play('buy');
+                }
+            } else if (action === 'short') {
+                // 2X 레버리지 숏: 코인 하락 시 2배 이익
+                if (state.pos === 'long') {
+                    closePosition(state);
+                }
+                if (state.cash > 1000) {
+                    state.pos = 'short';
+                    state.entryPrice = currentPrice;
+                    state.shortMargin = state.cash; // 담보금
+                    state.cash = 0;
+                    state.tradesCount++;
+                    Sound.play('short');
+                }
+            } else if (action === 'close') {
+                if (state.pos !== 'none') {
+                    closePosition(state);
+                    Sound.play('sell');
+                }
+            }
+        }
+
+        function closePosition(state) {
+            if (state.pos === 'long') {
+                state.cash = state.units * currentPrice;
+                state.units = 0;
+                state.pos = 'none';
+                state.entryPrice = 0;
+            } else if (state.pos === 'short') {
+                // 숏 정산: 손익 = 담보금 * (1 + 2 * (entryPrice - currentPrice) / entryPrice)
+                const priceDiffPct = (state.entryPrice - currentPrice) / state.entryPrice;
+                let returnVal = state.shortMargin * (1 + 2 * priceDiffPct);
+                if (returnVal <= 0) {
+                    returnVal = 0; // 마진콜 전액 청산
+                }
+                state.cash = returnVal;
+                state.shortMargin = 0;
+                state.pos = 'none';
+                state.entryPrice = 0;
+            }
+        }
+
+        function getPlayerTotalWealth(state) {
+            if (state.pos === 'none') {
+                return state.cash;
+            } else if (state.pos === 'long') {
+                return state.units * currentPrice;
+            } else if (state.pos === 'short') {
+                const priceDiffPct = (state.entryPrice - currentPrice) / state.entryPrice;
+                const wealth = state.shortMargin * (1 + 2 * priceDiffPct);
+                return Math.max(wealth, 0);
+            }
+            return state.cash;
+        }
+
+        // --- 8. 동시 난투 패널 렌더링 & 제어 ---
+        function setupBattlePanels() {
+            battlePanelsGrid.innerHTML = '';
+            playerStates = players.map(name => ({
+                name,
+                cash: INITIAL_SEED,
+                pos: 'none', // 'none', 'long', 'short'
+                entryPrice: 0,
+                units: 0,
+                shortMargin: 0,
+                tradesCount: 0,
+                isLiquidated: false
+            }));
+
+            playerStates.forEach((st, idx) => {
+                const card = document.createElement('div');
+                card.className = 'player-battle-card';
+                card.id = `pcard-${idx}`;
+                card.innerHTML = `
+                    <div class="pcard-header">
+                        <span class="pcard-name">${st.name}</span>
+                        <span class="pcard-pos-badge" id="pbadge-${idx}">관망 💤</span>
+                    </div>
+                    <div class="pcard-wealth">
+                        <div class="pcard-total" id="ptotal-${idx}">1,000만 원</div>
+                        <div class="pcard-yield" id="pyield-${idx}">+0.00%</div>
+                    </div>
+                    <div class="pcard-actions">
+                        <button class="pcard-btn btn-trade-long" data-idx="${idx}" data-act="long">
+                            <span>🛒 풀매수</span>
+                            <span>롱</span>
+                        </button>
+                        <button class="pcard-btn btn-trade-short" data-idx="${idx}" data-act="short">
+                            <span>🔻 2X 공매도</span>
+                            <span>숏</span>
+                        </button>
+                        <button class="pcard-btn btn-trade-close" data-idx="${idx}" data-act="close">
+                            <span>💰 전량 청산 (현금화)</span>
+                        </button>
+                    </div>
+                `;
+                battlePanelsGrid.appendChild(card);
+            });
+
+            battlePanelsGrid.querySelectorAll('.pcard-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.currentTarget;
+                    const idx = parseInt(target.dataset.idx, 10);
+                    const act = target.dataset.act;
+                    executeTrade(playerStates[idx], act);
+                    updateAllBattlePlayers();
+                });
+            });
+        }
+
+        function updateAllBattlePlayers() {
+            playerStates.forEach((st, idx) => {
+                const wealth = getPlayerTotalWealth(st);
+                const yieldPct = ((wealth - INITIAL_SEED) / INITIAL_SEED) * 100;
+                
+                // 마진콜 판정 (숏 담보금 손실 90% 이상 시 강제 청산)
+                if (st.pos === 'short' && wealth < INITIAL_SEED * 0.1 && !st.isLiquidated) {
+                    st.isLiquidated = true;
+                    closePosition(st);
+                    Sound.play('margin');
+                    const card = document.getElementById(`pcard-${idx}`);
+                    if (card) card.classList.add('liquidated');
+                    showToast(`⚡ ${st.name}님 마진콜 강제 청산!`);
+                }
+
+                const totalEl = document.getElementById(`ptotal-${idx}`);
+                const yieldEl = document.getElementById(`pyield-${idx}`);
+                const badgeEl = document.getElementById(`pbadge-${idx}`);
+
+                if (totalEl) totalEl.textContent = formatKRW(wealth);
+                if (yieldEl) {
+                    const isPlus = yieldPct >= 0;
+                    yieldEl.textContent = `${isPlus ? '+' : ''}${yieldPct.toFixed(1)}%`;
+                    yieldEl.className = `pcard-yield ${isPlus ? 'plus' : 'minus'}`;
+                }
+                if (badgeEl) {
+                    if (st.pos === 'none') {
+                        badgeEl.textContent = '현금 관망 💤';
+                        badgeEl.className = 'pcard-pos-badge';
+                    } else if (st.pos === 'long') {
+                        badgeEl.textContent = '롱 보유 중 🛒';
+                        badgeEl.className = 'pcard-pos-badge long';
+                    } else if (st.pos === 'short') {
+                        badgeEl.textContent = '2X 숏 베팅 🔻';
+                        badgeEl.className = 'pcard-pos-badge short';
+                    }
+                }
+            });
+        }
+
+        // --- 9. 릴레이 챌린지 핸들링 ---
+        let soloState = null;
+
+        function startRelayTurn(idx) {
+            currentRelayIdx = idx;
+            soloState = {
+                name: players[idx],
+                cash: INITIAL_SEED,
+                pos: 'none',
+                entryPrice: 0,
+                units: 0,
+                shortMargin: 0,
+                tradesCount: 0,
+                isLiquidated: false
+            };
+            soloPlayerName.textContent = soloState.name;
+            relayModal.classList.remove('active');
+            startMarketSession();
+        }
+
+        function updateSoloPlayer() {
+            if (!soloState) return;
+            const wealth = getPlayerTotalWealth(soloState);
+            const yieldPct = ((wealth - INITIAL_SEED) / INITIAL_SEED) * 100;
+
+            if (soloState.pos === 'short' && wealth < INITIAL_SEED * 0.1 && !soloState.isLiquidated) {
+                soloState.isLiquidated = true;
+                closePosition(soloState);
+                Sound.play('margin');
+                showToast(`⚡ 마진콜로 강제 청산되었습니다!`);
+            }
+
+            soloTotalWealth.textContent = formatKRW(wealth);
+            const isPlus = yieldPct >= 0;
+            soloYieldVal.textContent = `${isPlus ? '+' : ''}${yieldPct.toFixed(2)}%`;
+            soloYieldVal.style.color = isPlus ? 'var(--accent-green)' : 'var(--accent-red)';
+
+            if (soloState.pos === 'none') {
+                soloPosBadge.textContent = '현금 관망 💤';
+                soloPosBadge.className = 'pcard-pos-badge';
+            } else if (soloState.pos === 'long') {
+                soloPosBadge.textContent = '롱 보유 중 🛒';
+                soloPosBadge.className = 'pcard-pos-badge long';
+            } else if (soloState.pos === 'short') {
+                soloPosBadge.textContent = '2X 숏 베팅 🔻';
+                soloPosBadge.className = 'pcard-pos-badge short';
+            }
+        }
+
+        soloBtnLong.addEventListener('click', () => {
+            if (soloState) {
+                executeTrade(soloState, 'long');
+                updateSoloPlayer();
+            }
+        });
+
+        soloBtnShort.addEventListener('click', () => {
+            if (soloState) {
+                executeTrade(soloState, 'short');
+                updateSoloPlayer();
+            }
+        });
+
+        soloBtnClose.addEventListener('click', () => {
+            if (soloState) {
+                executeTrade(soloState, 'close');
+                updateSoloPlayer();
+            }
+        });
+
+        // --- 10. 세션 시작 및 종료 타이머 ---
+        function startMarketSession() {
+            isGameRunning = true;
+            gameTimeLeft = gameDuration;
+            timerVal.textContent = gameTimeLeft;
+            gameTimerBadge.classList.remove('urgent');
+
+            currentPrice = 10000;
+            baseStartPrice = 10000;
+            priceHistory = [10000];
+
+            initCanvasSize();
+            renderChart();
+
+            // 타이머 인터벌
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                gameTimeLeft--;
+                timerVal.textContent = gameTimeLeft;
+
+                if (gameTimeLeft <= 10) {
+                    gameTimerBadge.classList.add('urgent');
+                    Sound.play('tick');
+                }
+
+                if (gameTimeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endMarketSession();
+                }
+            }, 1000);
+
+            // 가격 틱 인터벌 (0.2초마다)
+            clearInterval(priceInterval);
+            priceInterval = setInterval(updatePriceTick, 200);
+
+            // 뉴스 돌발 이벤트 인터벌 (8~12초 간격)
+            clearInterval(newsInterval);
+            newsInterval = setInterval(triggerRandomNews, 9000);
+            triggerRandomNews();
+        }
+
+        function endMarketSession() {
+            isGameRunning = false;
+            clearInterval(priceInterval);
+            clearInterval(newsInterval);
+
+            // 남아있는 포지션 강제 청산
+            if (gameMode === 'party') {
+                playerStates.forEach(st => closePosition(st));
+                updateAllBattlePlayers();
+                finishAllGames(playerStates);
+            } else {
+                closePosition(soloState);
+                updateSoloPlayer();
+                relayResults.push({
+                    name: soloState.name,
+                    finalWealth: soloState.cash,
+                    tradesCount: soloState.tradesCount
+                });
+
+                if (currentRelayIdx + 1 < players.length) {
+                    // 다음 플레이어 준비
+                    nextPlayerName.textContent = players[currentRelayIdx + 1];
+                    relayModal.classList.add('active');
+                } else {
+                    // 전 플레이어 종료
+                    finishAllGames(relayResults);
+                }
+            }
+        }
+
+        btnStartTurn.addEventListener('click', () => {
+            startRelayTurn(currentRelayIdx + 1);
+        });
+
+        // --- 11. 게임 시작 트리거 ---
+        startGameBtn.addEventListener('click', () => {
+            getAudioContext();
+            setupView.classList.remove('active');
+            gameView.classList.add('active');
+
+            if (gameMode === 'party') {
+                battlePanelsGrid.style.display = 'grid';
+                soloTurnBox.style.display = 'none';
+                setupBattlePanels();
+                startMarketSession();
+            } else {
+                battlePanelsGrid.style.display = 'none';
+                soloTurnBox.style.display = 'flex';
+                relayResults = [];
+                startRelayTurn(0);
+            }
+        });
+
+        // --- 12. 최종 결과 발표 & 시상식 ---
+        let finalRankingData = [];
+
+        function finishAllGames(data) {
+            gameView.classList.remove('active');
+            resultView.classList.add('active');
+            Sound.play('fanfare');
+
+            // 랭킹 정렬 (수익률 내림차순)
+            finalRankingData = data.map(p => {
+                const wealth = p.finalWealth !== undefined ? p.finalWealth : p.cash;
+                const yieldPct = ((wealth - INITIAL_SEED) / INITIAL_SEED) * 100;
+                return {
+                    name: p.name,
+                    wealth,
+                    yieldPct,
+                    trades: p.tradesCount
+                };
+            }).sort((a, b) => b.wealth - a.wealth);
+
+            // 1등 워런 버핏 표시
+            const winner = finalRankingData[0];
+            winnerName.textContent = winner.name;
+            const winYield = winner.yieldPct >= 0 ? `+${winner.yieldPct.toFixed(1)}%` : `${winner.yieldPct.toFixed(1)}%`;
+            winnerReturn.textContent = `${winYield} (${formatKRW(winner.wealth)})`;
+
+            // 랭킹 리스트 생성
+            rankListContainer.innerHTML = '';
+            finalRankingData.forEach((r, idx) => {
+                let badgeTag = '📉 일반 투자자';
+                if (idx === 0) badgeTag = '👑 워런 버핏 (수익 1위)';
+                else if (idx === 1) badgeTag = '📈 여의도 불개미';
+                else if (r.yieldPct <= -50) badgeTag = '🪓 깡통 마진콜 (한강 수온)';
+
+                const item = document.createElement('div');
+                item.className = 'rank-item';
+                item.innerHTML = `
+                    <div class="rank-item-left">
+                        <div class="rank-num">${idx + 1}</div>
+                        <div class="rank-badge-name">
+                            <span class="rank-name">${r.name}</span>
+                            <span class="rank-tag">${badgeTag} · ${r.trades}회 매매</span>
+                        </div>
+                    </div>
+                    <div class="rank-item-right">
+                        <div class="rank-assets">${formatKRW(r.wealth)}</div>
+                        <div class="rank-yield" style="color:${r.yieldPct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                            ${r.yieldPct >= 0 ? '+' : ''}${r.yieldPct.toFixed(1)}%
+                        </div>
+                    </div>
+                `;
+                rankListContainer.appendChild(item);
+            });
+        }
+
+        // --- 13. 공유 및 캔버스 성적표 저장 ---
+        btnShareKakao.addEventListener('click', () => {
+            if (!finalRankingData.length) return;
+            const top = finalRankingData[0];
+            const worst = finalRankingData[finalRankingData.length - 1];
+
+            const text = `[📈 광기의 떡상 떡락 1분 단타 배틀 결과]\n` +
+                `👑 워런 버핏(1위): ${top.name} (${top.yieldPct >= 0 ? '+' : ''}${top.yieldPct.toFixed(1)}%, ${formatKRW(top.wealth)})\n` +
+                `🪓 마진콜 희생자: ${worst.name} (${worst.yieldPct.toFixed(1)}%)\n\n` +
+                `전체 순위:\n` +
+                finalRankingData.map((r, i) => `${i + 1}위. ${r.name}: ${r.yieldPct >= 0 ? '+' : ''}${r.yieldPct.toFixed(1)}% (${formatKRW(r.wealth)})`).join('\n') +
+                `\n\n모임에서 한판 더? 👉 ${window.location.href}`;
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('결과가 클립보드에 복사되었습니다! 카톡에 붙여넣기 하세요.');
+                }).catch(() => {
+                    showToast('복사에 실패했습니다.');
+                });
+            } else {
+                showToast('클립보드를 지원하지 않는 환경입니다.');
+            }
+        });
+
+        btnSaveCard.addEventListener('click', () => {
+            if (!finalRankingData.length) return;
+
+            // 2D 캔버스 성적표 렌더링
+            const c = document.createElement('canvas');
+            c.width = 800;
+            c.height = 1000;
+            const ctx = c.getContext('2d');
+
+            // 배경 그라디언트
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, 1000);
+            bgGrad.addColorStop(0, '#070a12');
+            bgGrad.addColorStop(1, '#0f172a');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, 800, 1000);
+
+            // 네온 장식 테두리
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(20, 20, 760, 960);
+
+            // 헤더 텍스트
+            ctx.fillStyle = '#10b981';
+            ctx.font = 'bold 24px Pretendard, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚡ 60 SECONDS CRYPTO TRADING BATTLE', 400, 80);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 44px Pretendard, sans-serif';
+            ctx.fillText('광기의 떡상 떡락 최종 성적표', 400, 140);
+
+            // 1위 하이라이트 박스
+            const top = finalRankingData[0];
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.roundRect ? ctx.roundRect(60, 180, 680, 160, 16) : ctx.rect(60, 180, 680, 160);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 22px Pretendard, sans-serif';
+            ctx.fillText('🏆 오늘의 워런 버핏 (1위)', 400, 225);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 42px Pretendard, sans-serif';
+            ctx.fillText(top.name, 400, 275);
+
+            ctx.fillStyle = '#10b981';
+            ctx.font = 'bold 28px Pretendard, sans-serif';
+            ctx.fillText(`${top.yieldPct >= 0 ? '+' : ''}${top.yieldPct.toFixed(1)}% (${formatKRW(top.wealth)})`, 400, 315);
+
+            // 전체 랭킹 테이블
+            let startY = 390;
+            ctx.textAlign = 'left';
+            ctx.font = 'bold 20px Pretendard, sans-serif';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('순위', 70, startY);
+            ctx.fillText('플레이어', 150, startY);
+            ctx.textAlign = 'right';
+            ctx.fillText('최종 자산', 580, startY);
+            ctx.fillText('수익률', 730, startY);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(60, startY + 12);
+            ctx.lineTo(740, startY + 12);
+            ctx.stroke();
+
+            startY += 45;
+            finalRankingData.forEach((r, idx) => {
+                ctx.textAlign = 'left';
+                ctx.font = 'bold 24px Pretendard, sans-serif';
+                ctx.fillStyle = idx === 0 ? '#f59e0b' : '#ffffff';
+                ctx.fillText(`${idx + 1}`, 75, startY);
+
+                ctx.font = 'bold 22px Pretendard, sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(r.name, 150, startY);
+
+                ctx.textAlign = 'right';
+                ctx.font = 'bold 22px Pretendard, sans-serif';
+                ctx.fillStyle = '#cbd5e1';
+                ctx.fillText(formatKRW(r.wealth), 580, startY);
+
+                ctx.fillStyle = r.yieldPct >= 0 ? '#10b981' : '#f43f5e';
+                ctx.fillText(`${r.yieldPct >= 0 ? '+' : ''}${r.yieldPct.toFixed(1)}%`, 730, startY);
+
+                startY += 42;
+            });
+
+            // 푸터
+            ctx.textAlign = 'center';
+            ctx.font = '16px Pretendard, sans-serif';
+            ctx.fillStyle = '#64748b';
+            ctx.fillText('단 한 번의 타이밍이 운명을 바꾼다 · simple_game', 400, 930);
+
+            c.toBlob((blob) => {
+                if (!blob) return;
+                if (typeof window.saveToGallery === 'function') {
+                    window.saveToGallery(blob, 'crazy-trading-result.png');
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `crazy-trading-result-${Date.now()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+                showToast('성적표 이미지가 저장되었습니다!');
+            });
+        });
+
+        btnRestart.addEventListener('click', () => {
+            resultView.classList.remove('active');
+            setupView.classList.add('active');
+        });
+
+        // 초기 렌더링
+        renderPlayerChips();
+    })();
+    </script>
+
+    <!-- 프로젝트 표준 Game Rules JSON Block -->
+    <script type="application/json" id="game-rules">
+    {
+        "title": "광기의 떡상 떡락 (1분 주식·코인 단타 파티)",
+        "goal": "요동치는 60초 실시간 시세 차트에서 풀매수, 공매도, 익절 청산으로 최고 수익률을 달성해 워런 버핏에 등극하세요.",
+        "steps": [
+            "플레이 방식을 선택합니다: [👥 한 폰 동시 난투] (2~4인이 폰 하나를 두고 실시간 동시 매매) 또는 [🔄 릴레이 챌린지] (각자 60초간 단독 플레이).",
+            "각 플레이어에게 시작 시드머니 1,000만 원이 지급되고 60초 타이머와 함께 네온 시세 차트가 급등락하기 시작합니다.",
+            "차트의 흐름을 보며 [🛒 풀매수(롱)], [🔻 2X 공매도(숏)], [💰 전량 청산(현금화)] 버튼을 타이밍 맞게 탭합니다.",
+            "중간중간 터지는 '일론 머스크 트윗', 'FBI 압수수색 루머', '코인 소각' 등 돌발 속보에 따라 폭등과 폭락이 교차합니다.",
+            "숏 포지션은 하락 시 2배의 이익을 주지만, 급등할 경우 담보금이 증발하는 마진콜 강제 청산 위험이 있습니다.",
+            "제한 시간이 종료되면 남아있는 포지션이 자동 청산되며, 최종 수익률 1위가 오늘의 워런 버핏으로 시상대에 오릅니다.",
+            "모임 결과표를 2D 이미지로 저장하거나 카카오톡으로 즉시 공유할 수 있습니다."
+        ],
+        "tips": [
+            "끝없는 상승은 없습니다! 급등 뉴스 직후에는 욕심부리지 말고 [💰 전량 청산]으로 현금을 확보하세요.",
+            "폭락장 조짐이 보일 때는 [🔻 2X 공매도]로 역전 대박을 노려볼 수 있습니다."
+        ],
+        "players": "1~8인 (한 폰 동시 난투 2~4인)",
+        "time": "약 1~3분"
+    }
+    </script>
+</body>
+</html>
