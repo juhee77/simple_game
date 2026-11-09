@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>시한폭탄 핫 포테이토 | 자이로 센서 폭탄 패스</title>
+    <link rel="stylesheet" href="../css/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../css/game-common.css?v=2187f848">
+    <style>
+        :root {
+            --bg-dark: #0a0808;
+            --panel-bg: rgba(24, 16, 16, 0.85);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --bomb-red: #ef4444;
+            --bomb-red-glow: rgba(239, 68, 68, 0.4);
+            --spark-orange: #f97316;
+            --spark-yellow: #fde047;
+            --safe-blue: #06b6d4;
+            --text-main: #f8fafc;
+            --text-muted: #a8a29e;
+            --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 50% 30%, rgba(239, 68, 68, 0.15) 0%, transparent 60%),
+                radial-gradient(circle at 10% 80%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 90%, rgba(220, 38, 38, 0.12) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(24, 16, 16, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-back:active {
+            transform: scale(0.92);
+        }
+
+        .header-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sound-toggle-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        .view-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .view-section {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            flex: 1;
+        }
+
+        .view-section.active {
+            display: flex;
+        }
+
+        /* 1. 세팅 화면 */
+        .hero-banner {
+            text-align: center;
+            padding: 24px 16px;
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.2) 0%, rgba(24, 16, 16, 0.6) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: linear-gradient(90deg, #ef4444, #f97316);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+            letter-spacing: 0.05em;
+        }
+
+        .hero-title {
+            font-size: 1.65rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 40%, #ef4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(8px);
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .player-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .player-chip {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .player-chip .remove-btn {
+            color: var(--bomb-red);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .player-add-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .player-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .player-input:focus {
+            border-color: var(--bomb-red);
+        }
+
+        .btn-add-player {
+            background: var(--bomb-red);
+            color: #fff;
+            font-weight: 800;
+            border: none;
+            border-radius: 10px;
+            padding: 0 16px;
+            cursor: pointer;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 12px 10px;
+            color: var(--text-main);
+            font-weight: 800;
+            font-size: 0.88rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .option-btn.active {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--bomb-red);
+            color: #fca5a5;
+        }
+
+        .sensor-status-box {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #a5f3fc;
+            margin-bottom: 16px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: auto;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-start:active {
+            transform: scale(0.98);
+        }
+
+        /* 2. 게임 플레이 화면 */
+        .game-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: rgba(24, 16, 16, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 10px 14px;
+        }
+
+        .current-holder-tag {
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #fca5a5;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pass-counter-badge {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-muted);
+        }
+
+        /* 미션 제시어 카드 */
+        .mission-card {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(24, 16, 16, 0.9) 100%);
+            border: 2px solid var(--spark-orange);
+            border-radius: 18px;
+            padding: 18px;
+            text-align: center;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.2);
+            position: relative;
+        }
+
+        .mission-label {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--spark-orange);
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .mission-topic {
+            font-size: 1.55rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+            word-break: keep-all;
+        }
+
+        .mission-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .btn-skip-mission {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-muted);
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* 메인 폭탄 비주얼 영역 */
+        .bomb-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 240px;
+        }
+
+        .bomb-container {
+            position: relative;
+            width: 170px;
+            height: 170px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bomb-sphere {
+            width: 130px;
+            height: 130px;
+            background: radial-gradient(circle at 35% 35%, #44403c 0%, #1c1917 70%, #0c0a09 100%);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), inset 0 2px 8px rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse-bomb 1s infinite alternate;
+        }
+
+        @keyframes pulse-bomb {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.04); }
+        }
+
+        .bomb-sphere.urgent {
+            animation: pulse-urgent 0.25s infinite alternate;
+            box-shadow: 0 0 40px var(--bomb-red-glow);
+        }
+
+        @keyframes pulse-urgent {
+            0% { transform: scale(1) rotate(-2deg); }
+            100% { transform: scale(1.08) rotate(2deg); }
+        }
+
+        .bomb-skull {
+            font-size: 3rem;
+            opacity: 0.8;
+            filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5));
+        }
+
+        /* 타들어가는 도화선 */
+        .fuse-canvas-wrap {
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 60px;
+            pointer-events: none;
+        }
+
+        #fuseCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 흔들림 충격 게이지 */
+        .shake-meter-card {
+            background: rgba(24, 16, 16, 0.9);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+        }
+
+        .shake-meter-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .shake-bar-bg {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .shake-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 60%, #ef4444 100%);
+            border-radius: 999px;
+            transition: width 0.1s;
+        }
+
+        .shake-warning-text {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--bomb-red);
+            text-align: center;
+            margin-top: 6px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .shake-warning-text.show {
+            opacity: 1;
+        }
+
+        /* 패스 액션 버튼 */
+        .btn-pass-bomb {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            font-size: 1.25rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.1s;
+        }
+
+        .btn-pass-bomb:active {
+            transform: scale(0.96);
+        }
+
+        /* 폭발 특수효과 오버레이 */
+        .explosion-overlay {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            z-index: 200;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.05s;
+        }
+
+        .explosion-overlay.flash {
+            opacity: 1;
+            background: radial-gradient(circle, #fde047 10%, #ef4444 60%, #000 100%);
+        }
+
+        .screen-crack-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 201;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* 3. 폭발 결과 화면 */
+        .exploded-card {
+            text-align: center;
+            padding: 24px 16px;
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.25) 0%, rgba(24, 16, 16, 0.8) 100%);
+            border: 2px solid var(--bomb-red);
+            border-radius: 20px;
+            box-shadow: 0 0 35px var(--bomb-red-glow);
+            margin-bottom: 16px;
+        }
+
+        .boom-icon {
+            font-size: 3.5rem;
+            margin-bottom: 6px;
+            animation: shake-boom 0.5s;
+        }
+
+        @keyframes shake-boom {
+            0%, 100% { transform: scale(1); }
+            20%, 60% { transform: scale(1.2) rotate(-5deg); }
+            40%, 80% { transform: scale(1.2) rotate(5deg); }
+        }
+
+        .boom-title {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #fca5a5;
+            margin-bottom: 4px;
+        }
+
+        .victim-name {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .penalty-mission-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px dashed rgba(239, 68, 68, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .penalty-label {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--spark-yellow);
+            margin-bottom: 4px;
+        }
+
+        .penalty-text {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .btn-action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-sub {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-sub:active {
+            transform: scale(0.97);
+        }
+
+        .btn-restart {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* 토스트 */
+        .toast-box {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(24, 16, 16, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 300;
+        }
+        .toast-box.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <header>
+        <div class="header-left">
+            <a href="../index.html" class="btn-back" title="메인으로">‹</a>
+            <div class="header-title">
+                <span>💣</span> 시한폭탄 핫 포테이토
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="sound-toggle-btn" id="soundBtn" title="효과음 토글">🔊</button>
+        </div>
+    </header>
+
+    <div class="view-container">
+        <!-- 1. 세팅 화면 -->
+        <section class="view-section active" id="setupView">
+            <div class="hero-banner">
+                <span class="hero-badge">🔥 GYRO SENSOR HOT POTATO</span>
+                <h1 class="hero-title">시한폭탄 핫 포테이토</h1>
+                <p class="hero-desc">제시어를 외치고 살며시 폰을 패스하라!<br>흔들면 도화선이 폭주하고, 터진 사람은 벌칙 당첨!</p>
+            </div>
+
+            <div class="card">
+                <div class="card-label">
+                    <span>참가 플레이어 (<span id="playerCountLabel">4</span>명)</span>
+                    <span style="font-size:0.75rem; color:var(--spark-orange)">원형으로 둘러앉기</span>
+                </div>
+                <div class="player-chips" id="playerChipsContainer"></div>
+                <div class="player-add-box">
+                    <input type="text" class="player-input" id="newPlayerInput" placeholder="플레이어 이름 입력" maxlength="8">
+                    <button class="btn-add-player" id="addPlayerBtn">추가</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">
+                    <span>⚡ 센서 민감도 설정</span>
+                </div>
+                <div class="option-grid">
+                    <button class="option-btn active" data-sens="normal">보통 (파티 추천)</button>
+                    <button class="option-btn" data-sens="hard">극악 (수전증 금지)</button>
+                </div>
+            </div>
+
+            <div class="sensor-status-box" id="sensorStatusBox">
+                <span>📱 물리 자이로/가속도 센서 준비됨</span>
+                <span id="sensorTag" style="font-weight:900;">ON</span>
+            </div>
+
+            <button class="btn-start" id="startGameBtn">
+                <span>💥 도화선 점화 & 게임 시작!</span>
+            </button>
+        </section>
+
+        <!-- 2. 게임 플레이 화면 -->
+        <section class="view-section" id="gameView">
+            <div class="game-status-header">
+                <div class="current-holder-tag">
+                    <span>💣 폭탄 소지자:</span>
+                    <span id="currentHolderName" style="font-size:1.1rem; color:#fff;">플레이어 1</span>
+                </div>
+                <div class="pass-counter-badge">
+                    패스 <span id="passCountVal" style="color:#fff; font-weight:900;">0</span>회
+                </div>
+            </div>
+
+            <!-- 미션 주제어 -->
+            <div class="mission-card">
+                <button class="btn-skip-mission" id="btnSkipMission">단어 변경 ↻</button>
+                <div class="mission-label">MISSION WORD TOPIC</div>
+                <div class="mission-topic" id="missionTopic">걸그룹 이름 대기!</div>
+                <div class="mission-sub">단어를 크게 외치고 다음 사람에게 조심스럽게 넘기세요!</div>
+            </div>
+
+            <!-- 폭탄 비주얼 스테이지 -->
+            <div class="bomb-stage">
+                <div class="fuse-canvas-wrap">
+                    <canvas id="fuseCanvas"></canvas>
+                </div>
+                <div class="bomb-container">
+                    <div class="bomb-sphere" id="bombSphere">
+                        <div class="bomb-skull">💀</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 안티 셰이크 센서 게이지 -->
+            <div class="shake-meter-card">
+                <div class="shake-meter-header">
+                    <span>⚠️ 움직임 충격 감지 (조심조심 넘기세요!)</span>
+                    <span id="shakeValText">안정</span>
+                </div>
+                <div class="shake-bar-bg">
+                    <div class="shake-bar-fill" id="shakeBarFill"></div>
+                </div>
+                <div class="shake-warning-text" id="shakeWarningText">💥 격렬한 흔들림 감지! 도화선 가속 연소 중!</div>
+            </div>
+
+            <!-- 전달 패스 버튼 -->
+            <button class="btn-pass-bomb" id="btnPassBomb">
+                <span>👋 말하고 다음 사람에게 패스!</span>
+            </button>
+        </section>
+
+        <!-- 3. 폭발 결과 화면 -->
+        <section class="view-section" id="resultView">
+            <div class="exploded-card">
+                <div class="boom-icon">💥</div>
+                <div class="boom-title">KABOOM! 폭탄이 터졌습니다!</div>
+                <div class="victim-name" id="victimName">플레이어 2</div>
+
+                <div class="penalty-mission-box">
+                    <div class="penalty-label">오늘의 벌칙 미션</div>
+                    <div class="penalty-text" id="penaltyText">시원하게 음료수 1잔 원샷하기!</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-val" id="statPassCount">14회</div>
+                    <div class="stat-label">총 패스 횟수</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" id="statSurvivalTime">28초</div>
+                    <div class="stat-label">폭탄 생존 시간</div>
+                </div>
+            </div>
+
+            <div class="btn-action-row">
+                <button class="btn-sub" id="btnShareKakao">
+                    <span>💬</span> 결과 카톡 복사
+                </button>
+                <button class="btn-sub" id="btnSaveCard">
+                    <span>🖼️</span> 벌칙 증명서 저장
+                </button>
+                <button class="btn-restart" id="btnRestart">
+                    <span>🔄</span> 폭탄 재점화! 한 판 더
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- 폭발 특수효과 -->
+    <div class="explosion-overlay" id="explosionOverlay"></div>
+    <canvas class="screen-crack-canvas" id="crackCanvas"></canvas>
+    <div class="toast-box" id="toast">알림</div>
+
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <script>
+    (function() {
+        // --- 1. Web Audio 신시사이저 ---
+        let audioCtx = null;
+        let isMuted = false;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        const Sound = {
+            play(type) {
+                if (isMuted) return;
+                try {
+                    const ctx = getAudioContext();
+                    if (!ctx) return;
+                    const now = ctx.currentTime;
+
+                    if (type === 'tick') {
+                        // 빨라지는 메트로놈 째깍음
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(1200, now);
+                        osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+                        gain.gain.setValueAtTime(0.12, now);
+                        gain.gain.linearRampToValueAtTime(0.001, now + 0.03);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.03);
+                    } else if (type === 'pass') {
+                        // 패스 휘슬음
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(587.33, now);
+                        osc.frequency.linearRampToValueAtTime(880, now + 0.08);
+                        gain.gain.setValueAtTime(0.18, now);
+                        gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.1);
+                    } else if (type === 'warn') {
+                        // 흔들림 경보 비프
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(1400, now);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.08);
+                    } else if (type === 'boom') {
+                        // 강력한 폭발음 (화이트 노이즈 + 저음 사우투스)
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(160, now);
+                        osc.frequency.exponentialRampToValueAtTime(20, now + 0.8);
+                        gain.gain.setValueAtTime(0.5, now);
+                        gain.gain.linearRampToValueAtTime(0.01, now + 0.8);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.8);
+
+                        // 폭발 충격파 진동 (모바일 브라우저)
+                        if (navigator.vibrate) {
+                            navigator.vibrate([200, 100, 400]);
+                        }
+                    }
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
+        };
+
+        // --- 2. 150+ 다양한 카테고리 풀 & 벌칙 풀 ---
+        const TOPICS = [
+            "치킨 브랜드 이름", "걸그룹 멤버 이름", "편의점 컵라면 이름", "한국 지하철 1~9호선 역 이름",
+            "보이그룹 멤버 이름", "넷플릭스 오리지널 드라마", "신조어 / 줄임말 (예: 알잘딱깔센)",
+            "노래방 애창곡 1위~50위", "프랜차이즈 카페 브랜드", "과일 / 채소 이름",
+            "동물원 동물 이름", "수도 이름 (국가 수도)", "천만 관객 영화 제목",
+            "ㄱ으로 시작하는 3글자 단어", "ㄴ으로 시작하는 음식", "ㄷ으로 시작하는 명사",
+            "ㄹ이 들어가는 단어", "ㅁ으로 시작하는 감정", "ㅂ으로 시작하는 물건",
+            "ㅅ으로 시작하는 장소", "ㅇ으로 끝나는 말", "ㅈ으로 시작하는 연예인",
+            "술자리 건배사 구호", "라면 브랜드 (봉지라면)", "국내 대학교 이름",
+            "스마트폰 앱 이름", "디즈니 애니메이션 제목", "운동 종목 / 스포츠",
+            "피자 토핑 종류", "맥주 브랜드 이름", "아이스크림 이름", "해외 여행 가고 싶은 도시"
+        ];
+
+        const PENALTIES = [
+            "오늘의 첫 음료수 시원하게 원샷하기!",
+            "옆 사람에게 영혼을 담은 30초 칭찬 릴레이하기!",
+            "최근 앨범의 5번째 사진 테이블에 공개하기!",
+            "다음에 마실 음료/물 한 턱 쏘기!",
+            "귀여운 표정으로 5초 동안 셀카 찍고 단톡방에 올리기!",
+            "엉덩이로 이름 3글자 정성스럽게 쓰기!",
+            "자리에서 일어나 최신 댄스 5초 보여주기!",
+            "술자리 잔 채워주는 일일 바텐더 당첨!"
+        ];
+
+        // --- 3. 게임 상태 변수 ---
+        let players = ['준호', '서연', '민재', '지우'];
+        let currentHolderIdx = 0;
+        let passCount = 0;
+        let isGameRunning = false;
+        let bombTimer = 0; // 초 단위 잔여 시간
+        let maxBombDuration = 30;
+        let gameStartTime = 0;
+        let sensitivity = 'normal'; // 'normal' (14 m/s²), 'hard' (9 m/s²)
+        let lastAcceleration = { x: 0, y: 0, z: 0 };
+        let shakeIntensity = 0;
+        let animationFrameId = null;
+
+        // --- 4. DOM 바인딩 ---
+        const setupView = document.getElementById('setupView');
+        const gameView = document.getElementById('gameView');
+        const resultView = document.getElementById('resultView');
+        const playerChipsContainer = document.getElementById('playerChipsContainer');
+        const playerCountLabel = document.getElementById('playerCountLabel');
+        const newPlayerInput = document.getElementById('newPlayerInput');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const soundBtn = document.getElementById('soundBtn');
+        const currentHolderName = document.getElementById('currentHolderName');
+        const passCountVal = document.getElementById('passCountVal');
+        const missionTopic = document.getElementById('missionTopic');
+        const btnSkipMission = document.getElementById('btnSkipMission');
+        const bombSphere = document.getElementById('bombSphere');
+        const fuseCanvas = document.getElementById('fuseCanvas');
+        const shakeBarFill = document.getElementById('shakeBarFill');
+        const shakeValText = document.getElementById('shakeValText');
+        const shakeWarningText = document.getElementById('shakeWarningText');
+        const btnPassBomb = document.getElementById('btnPassBomb');
+        const explosionOverlay = document.getElementById('explosionOverlay');
+        const crackCanvas = document.getElementById('crackCanvas');
+        const victimName = document.getElementById('victimName');
+        const penaltyText = document.getElementById('penaltyText');
+        const statPassCount = document.getElementById('statPassCount');
+        const statSurvivalTime = document.getElementById('statSurvivalTime');
+        const btnShareKakao = document.getElementById('btnShareKakao');
+        const btnSaveCard = document.getElementById('btnSaveCard');
+        const btnRestart = document.getElementById('btnRestart');
+        const toast = document.getElementById('toast');
+
+        // 사운드 토글
+        soundBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            soundBtn.textContent = isMuted ? '🔇' : '🔊';
+            showToast(isMuted ? '효과음이 꺼졌습니다.' : '효과음이 켜졌습니다.');
+        });
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // --- 5. 플레이어 목록 렌더링 ---
+        function renderPlayerChips() {
+            playerChipsContainer.innerHTML = '';
+            players.forEach((p, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'player-chip';
+                chip.innerHTML = `
+                    <span>${p}</span>
+                    ${players.length > 2 ? `<span class="remove-btn" data-idx="${idx}">&times;</span>` : ''}
+                `;
+                playerChipsContainer.appendChild(chip);
+            });
+            playerCountLabel.textContent = players.length;
+
+            playerChipsContainer.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.target.dataset.idx, 10);
+                    if (players.length > 2) {
+                        players.splice(idx, 1);
+                        renderPlayerChips();
+                    }
+                });
+            });
+        }
+
+        addPlayerBtn.addEventListener('click', () => {
+            const name = newPlayerInput.value.trim();
+            if (!name) return;
+            if (players.length >= 12) {
+                showToast('최대 12명까지 참가할 수 있습니다.');
+                return;
+            }
+            if (players.includes(name)) {
+                showToast('이미 등록된 이름입니다.');
+                return;
+            }
+            players.push(name);
+            newPlayerInput.value = '';
+            renderPlayerChips();
+        });
+
+        newPlayerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addPlayerBtn.click();
+        });
+
+        // 민감도 토글
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                sensitivity = btn.dataset.sens;
+            });
+        });
+
+        // --- 6. 물리 가속도/자이로 센서 리스너 ---
+        let motionAvailable = false;
+
+        function initMotionSensor() {
+            if (typeof DeviceMotionEvent !== 'undefined') {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    // iOS 13+ 권한 요청
+                    DeviceMotionEvent.requestPermission().then(resp => {
+                        if (resp === 'granted') {
+                            window.addEventListener('devicemotion', handleMotion);
+                            motionAvailable = true;
+                        }
+                    }).catch(console.warn);
+                } else {
+                    window.addEventListener('devicemotion', handleMotion);
+                    motionAvailable = true;
+                }
+            }
+        }
+
+        function handleMotion(e) {
+            if (!isGameRunning) return;
+            const acc = e.accelerationIncludingGravity || e.acceleration;
+            if (!acc) return;
+
+            const dx = Math.abs(acc.x - lastAcceleration.x);
+            const dy = Math.abs(acc.y - lastAcceleration.y);
+            const dz = Math.abs(acc.z - lastAcceleration.z);
+            const totalG = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+            lastAcceleration = { x: acc.x || 0, y: acc.y || 0, z: acc.z || 0 };
+
+            const threshold = sensitivity === 'hard' ? 7 : 12;
+            if (totalG > threshold) {
+                // 흔들림 감지 패널티: 도화선 가속 연소!
+                shakeIntensity = Math.min(shakeIntensity + 30, 100);
+                bombTimer -= 0.35; // 시간 단축
+                Sound.play('warn');
+                shakeWarningText.classList.add('show');
+            } else {
+                shakeIntensity = Math.max(shakeIntensity - 3, 0);
+                if (shakeIntensity < 15) shakeWarningText.classList.remove('show');
+            }
+
+            shakeBarFill.style.width = `${shakeIntensity}%`;
+            shakeValText.textContent = shakeIntensity > 40 ? '⚠️ 위험!' : '안정';
+        }
+
+        // --- 7. 도화선 캔버스 렌더링 ---
+        function initFuseCanvas() {
+            const rect = fuseCanvas.getBoundingClientRect();
+            fuseCanvas.width = rect.width;
+            fuseCanvas.height = rect.height;
+        }
+
+        function drawFuse(remainingRatio) {
+            const ctx = fuseCanvas.getContext('2d');
+            const w = fuseCanvas.width;
+            const h = fuseCanvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            // 곡선 도화선 경로 (우측 상단 불꽃 -> 중앙 하단 폭탄 주둥이)
+            const startX = w * 0.85;
+            const startY = 10;
+            const endX = w * 0.5;
+            const endY = h - 5;
+            const cpX = w * 0.9;
+            const cpY = h * 0.6;
+
+            // 도화선 기본 밧줄
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.quadraticCurveTo(cpX, cpY, startX, startY);
+            ctx.strokeStyle = '#78716c';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // 남은 도화선 비율에 따른 불꽃 위치 계산 (t: 0 ~ 1)
+            const t = Math.max(0, Math.min(remainingRatio, 1));
+            // 베지에 곡선 좌표: (1-t)^2*P0 + 2(1-t)t*P1 + t^2*P2
+            const currentX = (1 - t) * (1 - t) * endX + 2 * (1 - t) * t * cpX + t * t * startX;
+            const currentY = (1 - t) * (1 - t) * endY + 2 * (1 - t) * t * cpY + t * t * startY;
+
+            // 불꽃 스파크 애니메이션
+            ctx.save();
+            ctx.fillStyle = '#fde047';
+            ctx.shadowColor = '#f97316';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, 5 + Math.random() * 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 튀는 불똥 입자
+            for (let i = 0; i < 3; i++) {
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(
+                    currentX + (Math.random() - 0.5) * 14,
+                    currentY + (Math.random() - 0.5) * 14,
+                    1.5 + Math.random() * 2,
+                    0, Math.PI * 2
+                );
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // --- 8. 게임 루프 & 폭발 시뮬레이션 ---
+        let lastTickTime = 0;
+
+        function gameLoop(timestamp) {
+            if (!isGameRunning) return;
+
+            if (!lastTickTime) lastTickTime = timestamp;
+            const deltaSec = (timestamp - lastTickTime) / 1000;
+            lastTickTime = timestamp;
+
+            bombTimer -= deltaSec;
+            const ratio = bombTimer / maxBombDuration;
+
+            drawFuse(ratio);
+
+            // 긴급 상태 연출
+            if (bombTimer <= 5) {
+                bombSphere.classList.add('urgent');
+            } else {
+                bombSphere.classList.remove('urgent');
+            }
+
+            // 째깍음 재생 (주기: 시간이 줄어들수록 빨라짐)
+            const tickInterval = Math.max(0.15, ratio * 1.0);
+            if (!window._lastSoundTick || timestamp - window._lastSoundTick > tickInterval * 1000) {
+                Sound.play('tick');
+                window._lastSoundTick = timestamp;
+            }
+
+            // 폭탄 폭발 판정!
+            if (bombTimer <= 0) {
+                triggerExplosion();
+                return;
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function pickNewTopic() {
+            const rand = TOPICS[Math.floor(Math.random() * TOPICS.length)];
+            missionTopic.textContent = rand;
+        }
+
+        btnSkipMission.addEventListener('click', () => {
+            pickNewTopic();
+        });
+
+        // 패스 버튼
+        btnPassBomb.addEventListener('click', () => {
+            if (!isGameRunning) return;
+            passCount++;
+            passCountVal.textContent = passCount;
+            currentHolderIdx = (currentHolderIdx + 1) % players.length;
+            currentHolderName.textContent = players[currentHolderIdx];
+            Sound.play('pass');
+            showToast(`${players[currentHolderIdx]}님에게 폭탄 패스!`);
+        });
+
+        // --- 9. 폭발 효과 및 크랙 캔버스 ---
+        function triggerExplosion() {
+            isGameRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            Sound.play('boom');
+
+            // 화면 플래시 & 흔들림
+            explosionOverlay.classList.add('flash');
+            setTimeout(() => {
+                explosionOverlay.classList.remove('flash');
+            }, 300);
+
+            // 화면 크랙 그리기
+            drawScreenCracks();
+
+            setTimeout(() => {
+                crackCanvas.style.display = 'none';
+                gameView.classList.remove('active');
+                resultView.classList.add('active');
+
+                // 결과 정보 표시
+                const victim = players[currentHolderIdx];
+                victimName.textContent = victim;
+                const randPenalty = PENALTIES[Math.floor(Math.random() * PENALTIES.length)];
+                penaltyText.textContent = randPenalty;
+                statPassCount.textContent = `${passCount}회`;
+                const elapsed = Math.round((Date.now() - gameStartTime) / 1000);
+                statSurvivalTime.textContent = `${elapsed}초`;
+            }, 1200);
+        }
+
+        function drawScreenCracks() {
+            crackCanvas.style.display = 'block';
+            crackCanvas.width = window.innerWidth;
+            crackCanvas.height = window.innerHeight;
+            const ctx = crackCanvas.getContext('2d');
+            ctx.clearRect(0, 0, crackCanvas.width, crackCanvas.height);
+
+            const centerX = crackCanvas.width / 2;
+            const centerY = crackCanvas.height / 2;
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 4;
+
+            // 방사형 거미줄 크랙 선 그리기
+            for (let i = 0; i < 12; i++) {
+                const angle = (Math.PI * 2 / 12) * i + (Math.random() - 0.5) * 0.3;
+                let curX = centerX;
+                let curY = centerY;
+                ctx.beginPath();
+                ctx.moveTo(curX, curY);
+
+                const segments = 5 + Math.floor(Math.random() * 5);
+                for (let s = 0; s < segments; s++) {
+                    const dist = 30 + Math.random() * 40;
+                    curX += Math.cos(angle) * dist + (Math.random() - 0.5) * 20;
+                    curY += Math.sin(angle) * dist + (Math.random() - 0.5) * 20;
+                    ctx.lineTo(curX, curY);
+                }
+                ctx.stroke();
+            }
+        }
+
+        // --- 10. 게임 시작 및 재시작 ---
+        startGameBtn.addEventListener('click', () => {
+            getAudioContext();
+            initMotionSensor();
+
+            setupView.classList.remove('active');
+            gameView.classList.add('active');
+
+            currentHolderIdx = 0;
+            passCount = 0;
+            passCountVal.textContent = '0';
+            currentHolderName.textContent = players[currentHolderIdx];
+            pickNewTopic();
+
+            // 랜덤 타이머: 18초 ~ 40초 사이 비밀 시간
+            maxBombDuration = 18 + Math.floor(Math.random() * 22);
+            bombTimer = maxBombDuration;
+            gameStartTime = Date.now();
+            isGameRunning = true;
+            lastTickTime = 0;
+
+            initFuseCanvas();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        });
+
+        btnRestart.addEventListener('click', () => {
+            resultView.classList.remove('active');
+            setupView.classList.add('active');
+        });
+
+        // --- 11. 결과 공유 및 2D 캔버스 벌칙증명서 ---
+        btnShareKakao.addEventListener('click', () => {
+            const victim = players[currentHolderIdx];
+            const penalty = penaltyText.textContent;
+            const text = `[💣 시한폭탄 핫 포테이토 폭발 결과]\n` +
+                `💥 폭발 피해자: ${victim}\n` +
+                `🎯 총 패스 횟수: ${passCount}회\n` +
+                `🍺 당첨 벌칙: ${penalty}\n\n` +
+                `다음 폭탄 피하기 배틀 도전 👉 ${window.location.href}`;
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('결과가 클립보드에 복사되었습니다! 카톡에 붙여넣기 하세요.');
+                });
+            }
+        });
+
+        btnSaveCard.addEventListener('click', () => {
+            const c = document.createElement('canvas');
+            c.width = 800;
+            c.height = 1000;
+            const ctx = c.getContext('2d');
+
+            // 배경
+            const grad = ctx.createLinearGradient(0, 0, 0, 1000);
+            grad.addColorStop(0, '#1c1917');
+            grad.addColorStop(1, '#0c0a09');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 800, 1000);
+
+            // 테두리
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(20, 20, 760, 960);
+
+            // 헤더
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'bold 24px Pretendard, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('💣 GYRO SENSOR HOT POTATO BOMB', 400, 80);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 44px Pretendard, sans-serif';
+            ctx.fillText('시한폭탄 폭발 피해 증명서', 400, 140);
+
+            // 폭탄 아이콘
+            ctx.font = '70px Pretendard, sans-serif';
+            ctx.fillText('💥💀💥', 400, 240);
+
+            // 피해자 박스
+            const victim = players[currentHolderIdx];
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.roundRect ? ctx.roundRect(60, 290, 680, 180, 16) : ctx.rect(60, 290, 680, 180);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#fca5a5';
+            ctx.font = 'bold 22px Pretendard, sans-serif';
+            ctx.fillText('폭발 당첨자 (벌칙 수행자)', 400, 335);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 46px Pretendard, sans-serif';
+            ctx.fillText(victim, 400, 400);
+
+            // 벌칙 박스
+            ctx.fillStyle = 'rgba(249, 115, 22, 0.15)';
+            ctx.strokeStyle = '#f97316';
+            ctx.roundRect ? ctx.roundRect(60, 500, 680, 160, 16) : ctx.rect(60, 500, 680, 160);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#fde047';
+            ctx.font = 'bold 22px Pretendard, sans-serif';
+            ctx.fillText('지정 벌칙 미션', 400, 545);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px Pretendard, sans-serif';
+            ctx.fillText(penaltyText.textContent, 400, 610);
+
+            // 통계 정보
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#a8a29e';
+            ctx.font = 'bold 22px Pretendard, sans-serif';
+            ctx.fillText(`• 총 폭탄 패스 횟수: ${passCount}회`, 100, 740);
+            ctx.fillText(`• 생존 제한 시간: ${statSurvivalTime.textContent}`, 100, 790);
+            ctx.fillText(`• 센서 난이도: ${sensitivity === 'hard' ? '극악 (수전증 금지)' : '보통'}`, 100, 840);
+
+            ctx.textAlign = 'center';
+            ctx.font = '16px Pretendard, sans-serif';
+            ctx.fillStyle = '#78716c';
+            ctx.fillText('손을 조심스럽게 넘겨라 · simple_game', 400, 930);
+
+            c.toBlob((blob) => {
+                if (!blob) return;
+                if (typeof window.saveToGallery === 'function') {
+                    window.saveToGallery(blob, 'gyro-bomb-result.png');
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `gyro-bomb-result-${Date.now()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+                showToast('벌칙 증명서 이미지가 저장되었습니다!');
+            });
+        });
+
+        // 초기화
+        renderPlayerChips();
+    })();
+    </script>
+
+    <!-- 프로젝트 표준 Game Rules JSON Block -->
+    <script type="application/json" id="game-rules">
+    {
+        "title": "시한폭탄 핫 포테이토 (자이로 센서 폭탄 패스)",
+        "goal": "제시어에 맞는 정답을 외치고 스마트폰을 부드럽게 옆 사람에게 넘겨 폭탄이 내 손에서 터지지 않게 하세요.",
+        "steps": [
+            "플레이어들이 원형으로 둘러앉고 참가자 이름을 등록한 후 점화 버튼을 누릅니다.",
+            "화면에 카테고리 미션(예: '치킨 브랜드', 'ㄱ으로 시작하는 3글자')이 제시되며 시한폭탄 도화선이 타들어갑니다.",
+            "폭탄을 쥐고 있는 사람은 미션에 맞는 정답 단어를 크게 외친 후 [패스] 버튼을 누르고 옆 사람에게 조심스럽게 폰을 넘깁니다.",
+            "안티 셰이크(Anti-Shake) 물리 센서가 작동하므로, 폰을 급하게 흔들거나 충격을 주면 도화선이 폭주하여 가속 연소됩니다.",
+            "폭탄은 18초~40초 사이의 비밀 랜덤 타이머로 작동하며, 언제 터질지 아무도 알 수 없습니다.",
+            "폭탄이 터지는 순간 화면에 크랙이 가며 폭발음과 함께 진동이 울립니다.",
+            "내 손에서 폭탄이 터진 최종 소지자가 벌칙에 당첨되며, 벌칙 증명서를 이미지로 저장하거나 카카오톡으로 공유할 수 있습니다."
+        ],
+        "tips": [
+            "손을 덜덜 떨거나 당황해서 급하게 건네면 센서 경보음과 함께 폭탄이 바로 터질 수 있습니다. 최대한 부드럽게 넘기세요!",
+            "떠오르는 단어가 도저히 없을 때는 [단어 변경 ↻]을 눌러 주제를 바꿀 수 있습니다."
+        ],
+        "players": "2~12인",
+        "time": "약 1~2분"
+    }
+    </script>
+</body>
+</html>
