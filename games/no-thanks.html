@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>노 땡스! | 벌점 카드 폭탄 돌리기 옥션</title>
+    <link rel="stylesheet" href="../css/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../css/game-common.css?v=2187f848">
+    <style>
+        :root {
+            --bg-dark: #061912;
+            --table-felt: #064e3b;
+            --panel-bg: rgba(6, 44, 34, 0.85);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --gold-chip: #f59e0b;
+            --gold-glow: rgba(245, 158, 11, 0.4);
+            --penalty-red: #ef4444;
+            --penalty-glow: rgba(239, 68, 68, 0.4);
+            --straight-green: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 50% 20%, rgba(6, 78, 59, 0.4) 0%, transparent 60%),
+                radial-gradient(circle at 10% 90%, rgba(245, 158, 11, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 90%, rgba(239, 68, 68, 0.12) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(6, 44, 34, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-back:active {
+            transform: scale(0.92);
+        }
+
+        .header-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sound-toggle-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        .view-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            max-width: 520px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .view-section {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            flex: 1;
+        }
+
+        .view-section.active {
+            display: flex;
+        }
+
+        /* 1. 세팅 화면 */
+        .hero-banner {
+            text-align: center;
+            padding: 24px 16px;
+            background: linear-gradient(180deg, rgba(6, 78, 59, 0.4) 0%, rgba(6, 25, 18, 0.7) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+            letter-spacing: 0.05em;
+        }
+
+        .hero-title {
+            font-size: 1.7rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 40%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(8px);
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .player-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .player-chip {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .player-chip .remove-btn {
+            color: var(--penalty-red);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .player-add-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .player-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .player-input:focus {
+            border-color: var(--gold-chip);
+        }
+
+        .btn-add-player {
+            background: var(--gold-chip);
+            color: #000;
+            font-weight: 800;
+            border: none;
+            border-radius: 10px;
+            padding: 0 16px;
+            cursor: pointer;
+        }
+
+        .rule-notice-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 0.82rem;
+            color: #fde68a;
+            line-height: 1.6;
+        }
+
+        .rule-notice-box strong {
+            color: #fff;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: auto;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-start:active {
+            transform: scale(0.98);
+        }
+
+        /* 2. 게임 플레이 화면 */
+        .game-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(6, 44, 34, 0.9);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+        }
+
+        .deck-left-badge {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .deck-count-num {
+            color: var(--straight-green);
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .current-turn-badge {
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: var(--gold-chip);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 중앙 카드 및 칩 옥션 테이블 */
+        .auction-table-area {
+            background: radial-gradient(circle at 50% 50%, #064e3b 0%, #042f24 80%, #021a14 100%);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 24px;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 14px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .penalty-card-display {
+            width: 130px;
+            height: 180px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 3px solid var(--penalty-red);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.35);
+            position: relative;
+            animation: card-appear 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes card-appear {
+            0% { transform: scale(0.8) translateY(-10px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .card-corner-val {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--penalty-red);
+            align-self: flex-start;
+        }
+
+        .card-center-val {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.04em;
+            text-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+        }
+
+        .card-center-sub {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--penalty-red);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* 카드 위에 쌓인 칩 더미 */
+        .chips-pot-display {
+            margin-top: 16px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1.5px solid var(--gold-chip);
+            border-radius: 30px;
+            padding: 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+
+        .chip-icon {
+            font-size: 1.6rem;
+            animation: pulse-chip 1.5s infinite;
+        }
+
+        @keyframes pulse-chip {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+        }
+
+        .chips-count-text {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #fef08a;
+        }
+
+        /* 현재 플레이어 상태 패널 */
+        .current-player-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }
+
+        .panel-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .player-turn-name {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .my-chips-badge {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid var(--gold-chip);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #fde68a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .my-chips-badge.empty {
+            border-color: var(--penalty-red);
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .my-cards-label {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .my-cards-scroll {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 38px;
+            align-items: center;
+        }
+
+        .card-tag {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .card-tag.exempt {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--straight-green);
+            color: #a7f3d0;
+            text-decoration: line-through;
+            opacity: 0.75;
+        }
+
+        .card-tag.straight-start {
+            background: rgba(16, 185, 129, 0.3);
+            border: 1.5px solid var(--straight-green);
+            color: #6ee7b7;
+            font-weight: 900;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        /* 옥션 액션 버튼 */
+        .action-buttons-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-action {
+            border: none;
+            border-radius: 16px;
+            padding: 18px 12px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 900;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn-action:active {
+            transform: scale(0.96);
+        }
+
+        .btn-no-thanks {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-no-thanks:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #475569;
+            box-shadow: none;
+        }
+
+        .btn-take-card {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #000;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        /* 다른 플레이어 카드 현황 모달 / 토글 */
+        .table-overview-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 8px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        /* 3. 결과 화면 */
+        .winner-card {
+            text-align: center;
+            padding: 24px 16px;
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.25) 0%, rgba(6, 44, 34, 0.8) 100%);
+            border: 2px solid var(--straight-green);
+            border-radius: 20px;
+            box-shadow: 0 0 35px rgba(16, 185, 129, 0.3);
+            margin-bottom: 16px;
+        }
+
+        .winner-trophy {
+            font-size: 3.2rem;
+            margin-bottom: 6px;
+        }
+
+        .winner-sub {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #6ee7b7;
+            letter-spacing: 0.05em;
+        }
+
+        .winner-name-text {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+            margin: 4px 0;
+        }
+
+        .winner-score-badge {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #fde047;
+        }
+
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .rank-row {
+            background: var(--panel-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rank-row-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-idx {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--text-muted);
+            width: 24px;
+        }
+
+        .rank-pname {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .rank-details {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .rank-row-right {
+            text-align: right;
+        }
+
+        .rank-final-score {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: var(--penalty-red);
+        }
+
+        .rank-final-score.good {
+            color: var(--straight-green);
+        }
+
+        .btn-action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-sub {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-sub:active {
+            transform: scale(0.97);
+        }
+
+        .btn-restart {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* 엿보기 방지 턴 전환 팝업 */
+        .overlay-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .overlay-modal.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: #062c22;
+            border: 2px solid var(--gold-chip);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(245, 158, 11, 0.3);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .modal-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: var(--gold-chip);
+            color: #000;
+            font-size: 1.05rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 20px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* 전체 상황판 모달 */
+        .table-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 90;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .table-modal.active {
+            display: flex;
+        }
+
+        .table-card-inner {
+            background: #04241b;
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 20px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* 토스트 */
+        .toast-box {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(6, 44, 34, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 300;
+        }
+        .toast-box.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <header>
+        <div class="header-left">
+            <a href="../index.html" class="btn-back" title="메인으로">‹</a>
+            <div class="header-title">
+                <span>🛑</span> 노 땡스! (No Thanks!)
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="sound-toggle-btn" id="soundBtn" title="효과음 토글">🔊</button>
+        </div>
+    </header>
+
+    <div class="view-container">
+        <!-- 1. 세팅 화면 -->
+        <section class="view-section active" id="setupView">
+            <div class="hero-banner">
+                <span class="hero-badge">💎 LEGENDARY CARD AUCTION</span>
+                <h1 class="hero-title">노 땡스! (No Thanks!)</h1>
+                <p class="hero-desc">칩을 바치며 폭탄 카드를 피하라!<br>연속된 숫자를 모으면 기적의 0점 면제 역전승!</p>
+            </div>
+
+            <div class="card">
+                <div class="card-label">
+                    <span>참가 플레이어 (<span id="playerCountLabel">4</span>명)</span>
+                    <span style="font-size:0.75rem; color:var(--gold-chip)">3~7인 권장 (비밀 칩 11개씩)</span>
+                </div>
+                <div class="player-chips" id="playerChipsContainer"></div>
+                <div class="player-add-box">
+                    <input type="text" class="player-input" id="newPlayerInput" placeholder="플레이어 이름 입력" maxlength="8">
+                    <button class="btn-add-player" id="addPlayerBtn">추가</button>
+                </div>
+            </div>
+
+            <div class="rule-notice-box">
+                <strong>💡 노 땡스 핵심 룰 가이드</strong><br>
+                • <strong>벌점 카드:</strong> 3~35번 중 무작위 24장 사용 (9장은 비밀 제외).<br>
+                • <strong>선택 1:</strong> [노 땡스!] 칩 1개를 얹고 다음 사람에게 넘김.<br>
+                • <strong>선택 2:</strong> [가져가기] 카드와 쌓인 칩을 몽땅 획득!<br>
+                • <strong>스트레이트 면제:</strong> 연속 숫자(예: 21, 22, 23)는 가장 낮은 21만 벌점!
+            </div>
+
+            <button class="btn-start" id="startGameBtn">
+                <span>🎲 칩 11개씩 받고 게임 시작!</span>
+            </button>
+        </section>
+
+        <!-- 2. 게임 플레이 화면 -->
+        <section class="view-section" id="gameView">
+            <div class="game-top-bar">
+                <div class="deck-left-badge">
+                    <span>🃏 덱 잔여:</span>
+                    <span class="deck-count-num" id="deckCountNum">24</span>장
+                </div>
+                <div class="current-turn-badge">
+                    <span>👉</span> <span id="turnPlayerName">플레이어 1</span>의 턴
+                </div>
+            </div>
+
+            <!-- 중앙 경매 테이블 -->
+            <div class="auction-table-area">
+                <div class="penalty-card-display" id="penaltyCardDisplay">
+                    <div class="card-corner-val" id="cardCornerVal">28</div>
+                    <div class="card-center-val" id="cardCenterVal">28</div>
+                    <div class="card-center-sub">PENALTY CARD</div>
+                </div>
+
+                <div class="chips-pot-display">
+                    <span class="chip-icon">🟡</span>
+                    <span class="chips-count-text">누적 보너스 칩 <span id="chipsPotVal">0</span>개</span>
+                </div>
+            </div>
+
+            <!-- 현재 플레이어 상태 패널 -->
+            <div class="current-player-panel">
+                <div class="panel-top-row">
+                    <div class="player-turn-name" id="currentPanelPlayerName">플레이어 1</div>
+                    <div class="my-chips-badge" id="myChipsBadge">
+                        <span>🟡 보유 칩:</span>
+                        <span id="myChipsCount">11</span>개
+                    </div>
+                </div>
+
+                <div class="my-cards-label">
+                    <span>내가 모은 벌점 카드</span>
+                    <span id="myCurrentPenaltyText" style="color:#fca5a5;">유효 벌점: 0점</span>
+                </div>
+                <div class="my-cards-scroll" id="myCardsContainer">
+                    <span style="font-size:0.8rem; color:var(--text-muted);">아직 인수한 카드가 없습니다.</span>
+                </div>
+
+                <button class="table-overview-btn" id="btnOpenOverview">
+                    📋 전체 플레이어 현황 보기
+                </button>
+            </div>
+
+            <!-- 옥션 선택 버튼 -->
+            <div class="action-buttons-row">
+                <button class="btn-action btn-no-thanks" id="btnNoThanks">
+                    <span>🛑 노 땡스!</span>
+                    <span style="font-size:0.75rem; opacity:0.85;">칩 1개 지출하고 패스</span>
+                </button>
+                <button class="btn-action btn-take-card" id="btnTakeCard">
+                    <span>📥 카드 가져가기</span>
+                    <span style="font-size:0.75rem; opacity:0.85;">벌점 카드 + 쌓인 칩 획득</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. 결과 화면 -->
+        <section class="view-section" id="resultView">
+            <div class="winner-card">
+                <div class="winner-trophy">🏆</div>
+                <div class="winner-sub">NO THANKS AUCTION CHAMPION</div>
+                <div class="winner-name-text" id="winnerNameText">플레이어 1</div>
+                <div class="winner-score-badge" id="winnerScoreBadge">최종 벌점: 8점 (최저점 승리!)</div>
+            </div>
+
+            <div class="rank-list" id="rankListContainer"></div>
+
+            <div class="btn-action-row">
+                <button class="btn-sub" id="btnShareKakao">
+                    <span>💬</span> 결과 카톡 복사
+                </button>
+                <button class="btn-sub" id="btnSaveCard">
+                    <span>🖼️</span> 성적표 영수증 저장
+                </button>
+                <button class="btn-restart" id="btnRestart">
+                    <span>🔄</span> 덱 새로 섞고 한 판 더!
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- 엿보기 방지 패스 모달 -->
+    <div class="overlay-modal" id="passTurnModal">
+        <div class="modal-card">
+            <div class="modal-icon">📱</div>
+            <h3 class="modal-title"><span id="nextTurnPlayerName">플레이어 2</span>님의 차례!</h3>
+            <p class="modal-desc">
+                폰을 넘겨받아 본인만 화면을 확인하세요.<br>
+                비밀 칩을 지키며 카드를 피할 것인가, 먹을 것인가?
+            </p>
+            <button class="modal-btn" id="btnConfirmPass">턴 확인 & 시작! 🎲</button>
+        </div>
+    </div>
+
+    <!-- 전체 현황 모달 -->
+    <div class="table-modal" id="overviewModal">
+        <div class="table-card-inner">
+            <h3 style="font-size:1.15rem; font-weight:900; margin-bottom:14px; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+                <span>📋 전체 플레이어 카드 현황</span>
+                <span id="btnCloseOverview" style="cursor:pointer; font-size:1.4rem;">&times;</span>
+            </h3>
+            <div id="overviewListContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+    </div>
+
+    <div class="toast-box" id="toast">알림</div>
+
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <script>
+    (function() {
+        // --- 1. Web Audio 신시사이저 ---
+        let audioCtx = null;
+        let isMuted = false;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        const Sound = {
+            play(type) {
+                if (isMuted) return;
+                try {
+                    const ctx = getAudioContext();
+                    if (!ctx) return;
+                    const now = ctx.currentTime;
+
+                    if (type === 'chip') {
+                        // 칩 놓는 소리 (짤랑)
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(1400, now);
+                        osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.linearRampToValueAtTime(0.001, now + 0.05);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.05);
+                    } else if (type === 'take') {
+                        // 카드 및 대량 칩 획득음
+                        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.value = freq;
+                            const t = now + idx * 0.06;
+                            gain.gain.setValueAtTime(0.2, t);
+                            gain.gain.linearRampToValueAtTime(0.01, t + 0.15);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(t);
+                            osc.stop(t + 0.15);
+                        });
+                    } else if (type === 'warn') {
+                        // 칩 부족 경보
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(250, now);
+                        gain.gain.setValueAtTime(0.25, now);
+                        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.2);
+                    } else if (type === 'fanfare') {
+                        // 최종 승리 팡파르
+                        const notes = [523.25, 659.25, 783.99, 1046.5];
+                        notes.forEach((freq, idx) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.value = freq;
+                            const t = now + idx * 0.12;
+                            gain.gain.setValueAtTime(0.25, t);
+                            gain.gain.linearRampToValueAtTime(0.001, t + (idx === notes.length - 1 ? 0.6 : 0.2));
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(t);
+                            osc.stop(t + (idx === notes.length - 1 ? 0.6 : 0.2));
+                        });
+                    }
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
+        };
+
+        // --- 2. 게임 상태 데이터 ---
+        const INITIAL_CHIPS = 11;
+        let players = ['민수', '유진', '지훈', '하은'];
+        let playerStates = [];
+        let deck = [];
+        let currentCard = 0;
+        let chipsOnCard = 0;
+        let currentTurnIdx = 0;
+        let isGameRunning = false;
+
+        // --- 3. DOM 바인딩 ---
+        const soundBtn = document.getElementById('soundBtn');
+        const setupView = document.getElementById('setupView');
+        const gameView = document.getElementById('gameView');
+        const resultView = document.getElementById('resultView');
+        const playerChipsContainer = document.getElementById('playerChipsContainer');
+        const playerCountLabel = document.getElementById('playerCountLabel');
+        const newPlayerInput = document.getElementById('newPlayerInput');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const deckCountNum = document.getElementById('deckCountNum');
+        const turnPlayerName = document.getElementById('turnPlayerName');
+        const penaltyCardDisplay = document.getElementById('penaltyCardDisplay');
+        const cardCornerVal = document.getElementById('cardCornerVal');
+        const cardCenterVal = document.getElementById('cardCenterVal');
+        const chipsPotVal = document.getElementById('chipsPotVal');
+        const currentPanelPlayerName = document.getElementById('currentPanelPlayerName');
+        const myChipsBadge = document.getElementById('myChipsBadge');
+        const myChipsCount = document.getElementById('myChipsCount');
+        const myCurrentPenaltyText = document.getElementById('myCurrentPenaltyText');
+        const myCardsContainer = document.getElementById('myCardsContainer');
+        const btnNoThanks = document.getElementById('btnNoThanks');
+        const btnTakeCard = document.getElementById('btnTakeCard');
+        const passTurnModal = document.getElementById('passTurnModal');
+        const nextTurnPlayerName = document.getElementById('nextTurnPlayerName');
+        const btnConfirmPass = document.getElementById('btnConfirmPass');
+        const btnOpenOverview = document.getElementById('btnOpenOverview');
+        const overviewModal = document.getElementById('overviewModal');
+        const btnCloseOverview = document.getElementById('btnCloseOverview');
+        const overviewListContainer = document.getElementById('overviewListContainer');
+        const winnerNameText = document.getElementById('winnerNameText');
+        const winnerScoreBadge = document.getElementById('winnerScoreBadge');
+        const rankListContainer = document.getElementById('rankListContainer');
+        const btnShareKakao = document.getElementById('btnShareKakao');
+        const btnSaveCard = document.getElementById('btnSaveCard');
+        const btnRestart = document.getElementById('btnRestart');
+        const toast = document.getElementById('toast');
+
+        // 사운드 토글
+        soundBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            soundBtn.textContent = isMuted ? '🔇' : '🔊';
+            showToast(isMuted ? '효과음이 꺼졌습니다.' : '효과음이 켜졌습니다.');
+        });
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // --- 4. 플레이어 관리 ---
+        function renderPlayerChips() {
+            playerChipsContainer.innerHTML = '';
+            players.forEach((p, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'player-chip';
+                chip.innerHTML = `
+                    <span>${p}</span>
+                    ${players.length > 3 ? `<span class="remove-btn" data-idx="${idx}">&times;</span>` : ''}
+                `;
+                playerChipsContainer.appendChild(chip);
+            });
+            playerCountLabel.textContent = players.length;
+
+            playerChipsContainer.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.target.dataset.idx, 10);
+                    if (players.length > 3) {
+                        players.splice(idx, 1);
+                        renderPlayerChips();
+                    }
+                });
+            });
+        }
+
+        addPlayerBtn.addEventListener('click', () => {
+            const name = newPlayerInput.value.trim();
+            if (!name) return;
+            if (players.length >= 7) {
+                showToast('최대 7명까지 참가할 수 있습니다.');
+                return;
+            }
+            if (players.includes(name)) {
+                showToast('이미 등록된 이름입니다.');
+                return;
+            }
+            players.push(name);
+            newPlayerInput.value = '';
+            renderPlayerChips();
+        });
+
+        newPlayerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addPlayerBtn.click();
+        });
+
+        // --- 5. 덱 생성 및 스트레이트 계산 알고리즘 ---
+        function buildDeck() {
+            // 3번부터 35번까지 33장 생성
+            const fullDeck = [];
+            for (let i = 3; i <= 35; i++) {
+                fullDeck.push(i);
+            }
+            // 셔플 (Fisher-Yates)
+            for (let i = fullDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [fullDeck[i], fullDeck[j]] = [fullDeck[j], fullDeck[i]];
+            }
+            // 9장 비밀 제외, 24장만 플레이 덱으로 사용!
+            return fullDeck.slice(0, 24);
+        }
+
+        // 연속된 숫자 스트레이트 그룹화 및 유효 벌점 계산
+        function calculatePenalty(cards) {
+            if (!cards || cards.length === 0) return { totalPenalty: 0, groups: [] };
+            const sorted = [...cards].sort((a, b) => a - b);
+            const groups = [];
+            let currentGroup = [sorted[0]];
+
+            for (let i = 1; i < sorted.length; i++) {
+                if (sorted[i] === sorted[i - 1] + 1) {
+                    currentGroup.push(sorted[i]);
+                } else {
+                    groups.push(currentGroup);
+                    currentGroup = [sorted[i]];
+                }
+            }
+            groups.push(currentGroup);
+
+            // 각 그룹의 최저 숫자만 유효 벌점
+            let totalPenalty = 0;
+            groups.forEach(g => {
+                totalPenalty += g[0];
+            });
+
+            return { totalPenalty, groups };
+        }
+
+        // --- 6. 턴 진행 및 렌더링 ---
+        function updateTurnUI() {
+            const st = playerStates[currentTurnIdx];
+            turnPlayerName.textContent = st.name;
+            currentPanelPlayerName.textContent = st.name;
+            myChipsCount.textContent = st.chips;
+            deckCountNum.textContent = deck.length;
+
+            if (st.chips <= 0) {
+                myChipsBadge.classList.add('empty');
+                btnNoThanks.disabled = true;
+                btnNoThanks.innerHTML = `<span>🛑 노 땡스 불가!</span><span style="font-size:0.75rem;">칩 0개 (인수 필수)</span>`;
+            } else {
+                myChipsBadge.classList.remove('empty');
+                btnNoThanks.disabled = false;
+                btnNoThanks.innerHTML = `<span>🛑 노 땡스!</span><span style="font-size:0.75rem; opacity:0.85;">칩 1개 지출하고 패스</span>`;
+            }
+
+            // 중앙 카드 및 팟 칩 업데이트
+            cardCornerVal.textContent = currentCard;
+            cardCenterVal.textContent = currentCard;
+            chipsPotVal.textContent = chipsOnCard;
+
+            // 현재 플레이어 카드 목록 및 스트레이트 뱃지 렌더링
+            renderPlayerCards(st, myCardsContainer, myCurrentPenaltyText);
+        }
+
+        function renderPlayerCards(st, container, penaltyLabelEl) {
+            container.innerHTML = '';
+            if (st.cards.length === 0) {
+                container.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">아직 인수한 카드가 없습니다.</span>`;
+                if (penaltyLabelEl) penaltyLabelEl.textContent = '유효 벌점: 0점';
+                return;
+            }
+
+            const { totalPenalty, groups } = calculatePenalty(st.cards);
+            if (penaltyLabelEl) {
+                penaltyLabelEl.textContent = `유효 벌점: ${totalPenalty}점`;
+            }
+
+            groups.forEach(group => {
+                group.forEach((cardVal, idx) => {
+                    const tag = document.createElement('span');
+                    if (idx === 0) {
+                        tag.className = group.length > 1 ? 'card-tag straight-start' : 'card-tag';
+                        tag.textContent = cardVal;
+                    } else {
+                        tag.className = 'card-tag exempt';
+                        tag.textContent = `${cardVal} (면제)`;
+                    }
+                    container.appendChild(tag);
+                });
+            });
+        }
+
+        // --- 7. 플레이어 액션: 노 땡스 vs 카드 가져가기 ---
+        btnNoThanks.addEventListener('click', () => {
+            if (!isGameRunning) return;
+            const st = playerStates[currentTurnIdx];
+            if (st.chips <= 0) {
+                Sound.play('warn');
+                showToast('칩이 없어 카드를 반드시 가져가야 합니다!');
+                return;
+            }
+
+            st.chips--;
+            chipsOnCard++;
+            Sound.play('chip');
+
+            // 다음 사람에게 턴 넘김
+            currentTurnIdx = (currentTurnIdx + 1) % playerStates.length;
+            showPassTurnModal();
+        });
+
+        btnTakeCard.addEventListener('click', () => {
+            if (!isGameRunning) return;
+            const st = playerStates[currentTurnIdx];
+
+            // 카드 및 칩 인수
+            st.cards.push(currentCard);
+            st.chips += chipsOnCard;
+            chipsOnCard = 0;
+            Sound.play('take');
+            showToast(`${st.name}님이 ${currentCard}번 카드와 보너스 칩을 가져갔습니다!`);
+
+            // 다음 카드가 있는지 체크
+            if (deck.length > 0) {
+                currentCard = deck.pop();
+                // 카드를 가져간 플레이어가 다음 카드를 계속 결정함 (공식 룰)
+                updateTurnUI();
+            } else {
+                // 덱 소진: 게임 종료
+                endGame();
+            }
+        });
+
+        function showPassTurnModal() {
+            const nextPlayer = playerStates[currentTurnIdx];
+            nextTurnPlayerName.textContent = nextPlayer.name;
+            passTurnModal.classList.add('active');
+        }
+
+        btnConfirmPass.addEventListener('click', () => {
+            passTurnModal.classList.remove('active');
+            updateTurnUI();
+        });
+
+        // 전체 플레이어 현황 모달
+        btnOpenOverview.addEventListener('click', () => {
+            overviewListContainer.innerHTML = '';
+            playerStates.forEach((st, idx) => {
+                const { totalPenalty } = calculatePenalty(st.cards);
+                const row = document.createElement('div');
+                row.style.background = 'rgba(255,255,255,0.06)';
+                row.style.padding = '10px 12px';
+                row.style.borderRadius = '10px';
+                row.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                        <span style="font-weight:800; color:#fff;">${st.name} ${idx === currentTurnIdx ? '👉' : ''}</span>
+                        <span style="font-size:0.85rem; color:#fca5a5; font-weight:800;">유효 벌점 ${totalPenalty}점</span>
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;" id="ov-cards-${idx}"></div>
+                `;
+                overviewListContainer.appendChild(row);
+                renderPlayerCards(st, row.querySelector(`#ov-cards-${idx}`));
+            });
+            overviewModal.classList.add('active');
+        });
+
+        btnCloseOverview.addEventListener('click', () => {
+            overviewModal.classList.remove('active');
+        });
+
+        // --- 8. 게임 종료 및 최종 점수 계산 ---
+        let finalRankData = [];
+
+        function endGame() {
+            isGameRunning = false;
+            gameView.classList.remove('active');
+            resultView.classList.add('active');
+            Sound.play('fanfare');
+
+            // 최종 벌점 = (카드 유효 벌점) - (보유 칩)
+            finalRankData = playerStates.map(st => {
+                const { totalPenalty } = calculatePenalty(st.cards);
+                const finalScore = totalPenalty - st.chips;
+                return {
+                    name: st.name,
+                    cardPenalty: totalPenalty,
+                    chips: st.chips,
+                    finalScore,
+                    cards: st.cards
+                };
+            }).sort((a, b) => a.finalScore - b.finalScore); // 최저점 승리
+
+            const winner = finalRankData[0];
+            winnerNameText.textContent = winner.name;
+            winnerScoreBadge.textContent = `최종 점수: ${winner.finalScore}점 (최저점 승리!)`;
+
+            rankListContainer.innerHTML = '';
+            finalRankData.forEach((r, idx) => {
+                const row = document.createElement('div');
+                row.className = 'rank-row';
+                row.innerHTML = `
+                    <div class="rank-row-left">
+                        <div class="rank-idx">${idx + 1}</div>
+                        <div>
+                            <div class="rank-pname">${r.name} ${idx === 0 ? '👑' : ''}</div>
+                            <div class="rank-details">벌점 ${r.cardPenalty}점 - 칩 ${r.chips}개</div>
+                        </div>
+                    </div>
+                    <div class="rank-row-right">
+                        <div class="rank-final-score ${r.finalScore <= 15 ? 'good' : ''}">${r.finalScore}점</div>
+                    </div>
+                `;
+                rankListContainer.appendChild(row);
+            });
+        }
+
+        // --- 9. 결과 공유 및 2D 캔버스 성적표 영수증 ---
+        btnShareKakao.addEventListener('click', () => {
+            if (!finalRankData.length) return;
+            const top = finalRankData[0];
+            const text = `[🛑 노 땡스! 벌점 카드 폭탄 돌리기 결과]\n` +
+                `👑 1위 우승자: ${top.name} (최종 점수: ${top.finalScore}점)\n\n` +
+                `전체 순위 (벌점 - 칩):\n` +
+                finalRankData.map((r, i) => `${i + 1}위. ${r.name}: ${r.finalScore}점 (벌점 ${r.cardPenalty} - 칩 ${r.chips})`).join('\n') +
+                `\n\n모임에서 한판 더? 👉 ${window.location.href}`;
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('결과가 클립보드에 복사되었습니다! 카톡에 붙여넣기 하세요.');
+                });
+            }
+        });
+
+        btnSaveCard.addEventListener('click', () => {
+            if (!finalRankData.length) return;
+            const c = document.createElement('canvas');
+            c.width = 800;
+            c.height = 1000;
+            const ctx = c.getContext('2d');
+
+            // 배경
+            const grad = ctx.createLinearGradient(0, 0, 0, 1000);
+            grad.addColorStop(0, '#04241b');
+            grad.addColorStop(1, '#061912');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 800, 1000);
+
+            // 테두리
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(20, 20, 760, 960);
+
+            // 헤더
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 24px Pretendard, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🛑 NO THANKS! CARD AUCTION BATTLE', 400, 80);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 44px Pretendard, sans-serif';
+            ctx.fillText('노 땡스! 최종 정산 성적표', 400, 140);
+
+            // 1위 박스
+            const top = finalRankData[0];
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2;
+            ctx.roundRect ? ctx.roundRect(60, 180, 680, 160, 16) : ctx.rect(60, 180, 680, 160);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#10b981';
+            ctx.font = 'bold 22px Pretendard, sans-serif';
+            ctx.fillText('🏆 오늘의 노 땡스 챔피언 (최저 벌점 1위)', 400, 225);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 42px Pretendard, sans-serif';
+            ctx.fillText(top.name, 400, 275);
+
+            ctx.fillStyle = '#fde047';
+            ctx.font = 'bold 26px Pretendard, sans-serif';
+            ctx.fillText(`최종 점수: ${top.finalScore}점 (카드 벌점 ${top.cardPenalty} - 칩 ${top.chips})`, 400, 315);
+
+            // 테이블 헤더
+            let startY = 390;
+            ctx.textAlign = 'left';
+            ctx.font = 'bold 20px Pretendard, sans-serif';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('순위', 70, startY);
+            ctx.fillText('플레이어', 150, startY);
+            ctx.textAlign = 'right';
+            ctx.fillText('카드벌점 - 잔여칩', 580, startY);
+            ctx.fillText('최종점수', 730, startY);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(60, startY + 12);
+            ctx.lineTo(740, startY + 12);
+            ctx.stroke();
+
+            startY += 45;
+            finalRankData.forEach((r, idx) => {
+                ctx.textAlign = 'left';
+                ctx.font = 'bold 24px Pretendard, sans-serif';
+                ctx.fillStyle = idx === 0 ? '#10b981' : '#ffffff';
+                ctx.fillText(`${idx + 1}`, 75, startY);
+
+                ctx.font = 'bold 22px Pretendard, sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(r.name, 150, startY);
+
+                ctx.textAlign = 'right';
+                ctx.font = 'bold 22px Pretendard, sans-serif';
+                ctx.fillStyle = '#cbd5e1';
+                ctx.fillText(`${r.cardPenalty} - ${r.chips}`, 580, startY);
+
+                ctx.fillStyle = r.finalScore <= 15 ? '#10b981' : '#ef4444';
+                ctx.fillText(`${r.finalScore}점`, 730, startY);
+
+                startY += 42;
+            });
+
+            ctx.textAlign = 'center';
+            ctx.font = '16px Pretendard, sans-serif';
+            ctx.fillStyle = '#6ee7b7';
+            ctx.fillText('스트레이트 면제의 미학 · simple_game', 400, 930);
+
+            c.toBlob((blob) => {
+                if (!blob) return;
+                if (typeof window.saveToGallery === 'function') {
+                    window.saveToGallery(blob, 'no-thanks-result.png');
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `no-thanks-result-${Date.now()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+                showToast('성적표 이미지가 저장되었습니다!');
+            });
+        });
+
+        // --- 10. 게임 시작 및 재시작 ---
+        startGameBtn.addEventListener('click', () => {
+            getAudioContext();
+            setupView.classList.remove('active');
+            gameView.classList.add('active');
+
+            // 플레이어 초기화
+            playerStates = players.map(name => ({
+                name,
+                chips: INITIAL_CHIPS,
+                cards: []
+            }));
+
+            deck = buildDeck();
+            chipsOnCard = 0;
+            currentTurnIdx = 0;
+            isGameRunning = true;
+            currentCard = deck.pop();
+
+            updateTurnUI();
+        });
+
+        btnRestart.addEventListener('click', () => {
+            resultView.classList.remove('active');
+            setupView.classList.add('active');
+        });
+
+        // 초기화
+        renderPlayerChips();
+    })();
+    </script>
+
+    <!-- 프로젝트 표준 Game Rules JSON Block -->
+    <script type="application/json" id="game-rules">
+    {
+        "title": "노 땡스! (No Thanks! 벌점 카드 폭탄 돌리기)",
+        "goal": "비밀 칩을 아끼고 연속된 스트레이트 카드를 모아 벌점을 면제받아 최종 최저 점수를 기록하세요.",
+        "steps": [
+            "각 플레이어에게 시작 칩 11개씩을 비밀리에 지급합니다.",
+            "3~35번 카드 중 9장을 무작위로 제외하고 24장을 덱으로 구성하여 테이블 중앙에 첫 벌점 카드를 공개합니다.",
+            "내 차례가 오면 둘 중 하나를 선택합니다: [🛑 노 땡스!] (칩 1개를 카드 위에 얹고 다음 사람에게 넘김) 또는 [📥 카드 가져가기] (카드와 카드 위에 쌓인 칩 전액 획득).",
+            "보유한 칩이 0개가 되면 [노 땡스!]를 외칠 수 없으므로 카드를 무조건 강제로 인수해야 합니다.",
+            "핵심 역전 룰 '스트레이트 면제': 내가 모은 카드 중 연속된 숫자(예: 21, 22, 23)가 있다면 가장 낮은 숫자(21)만 벌점이 되고 나머지는 0점 면제 처리됩니다.",
+            "덱의 모든 카드가 소진되면 게임이 종료되며, [유효 벌점 총합 - 보유한 칩 개수]로 최종 점수를 매깁니다.",
+            "최종 벌점 점수가 가장 낮은 플레이어가 우승하며, 성적표 영수증을 이미지로 저장하거나 카카오톡으로 공유할 수 있습니다."
+        ],
+        "tips": [
+            "내가 이미 29번 카드를 가지고 있다면 30번 카드는 나에게 0점짜리 카드입니다! 칩이 많이 쌓일 때까지 버티다가 기습 인수하세요.",
+            "칩이 바닥나면 원치 않는 35점 폭탄 카드를 강제로 먹게 되므로 최소 2~3개의 칩은 항상 비축해 두세요."
+        ],
+        "players": "3~7인",
+        "time": "약 3~5분"
+    }
+    </script>
+</body>
+</html>
