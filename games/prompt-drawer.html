@@ -346,7 +346,7 @@
             display: flex;
             flex-direction: column;
             border-radius: var(--r-lg) var(--r-lg) 0 0;
-            background: var(--surface);
+            background: #ffffff;
             box-shadow: var(--shadow-lg);
             animation: sheet-up .22s ease-out;
         }
@@ -475,6 +475,12 @@
             font-weight: 800;
         }
 
+        .preview-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .preview-label button {
             border: none;
             background: none;
@@ -482,6 +488,13 @@
             font-size: .82rem;
             font-weight: 700;
             cursor: pointer;
+            padding: 3px 6px;
+            border-radius: 6px;
+            transition: background .15s;
+        }
+
+        .preview-label button:hover {
+            background: var(--surface-3);
         }
 
         .preview {
@@ -506,8 +519,15 @@
             border-top: 1px solid var(--line);
         }
 
+        .sheet-foot .btn-ghost {
+            flex: 1;
+            padding: 10px 6px;
+            font-size: .88rem;
+            white-space: nowrap;
+        }
+
         .sheet-foot .btn-primary {
-            flex: 2;
+            flex: 1.6;
         }
 
         /* ── 알림 ── */
@@ -586,12 +606,16 @@
                 <div class="fields" id="fields"></div>
                 <div class="preview-label">
                     <span>완성된 프롬프트</span>
-                    <button type="button" id="reset-btn">빈칸 비우기</button>
+                    <div class="preview-actions">
+                        <button type="button" id="fill-sample-btn" title="기본 예시값으로 빈칸을 채웁니다">🎲 예시 채우기</button>
+                        <button type="button" id="reset-btn">비우기</button>
+                    </div>
                 </div>
                 <pre class="preview" id="preview"></pre>
             </div>
             <div class="sheet-foot">
                 <button class="btn btn-ghost" id="share-btn" type="button">🔗 링크</button>
+                <button class="btn btn-ghost" id="chatgpt-btn" type="button" title="프롬프트 복사 후 ChatGPT 바로 열기">🤖 ChatGPT</button>
                 <button class="btn btn-primary" id="copy-btn" type="button">📋 복사하기</button>
             </div>
         </div>
@@ -610,17 +634,19 @@
 
         // 맨 위 시즌 배너. 시즌이 끝나면 title을 ''로 비우면 사라져요.
         const SEASON = {
-            title: '2026 연말 시즌 모음',
-            text: '연말 카드 그림, 올해 회고, 새해 계획까지. 빈칸만 채우면 바로 쓸 수 있어요.'
+            title: '✨ 실전 킬러 프롬프트 & 연말연시 컬렉션',
+            text: '업무 치트키부터 모임·술자리, 이미지 생성, 연말연시 계획까지. 빈칸만 채우면 바로 쓸 수 있어요.'
         };
 
         // 분류. 프롬프트의 cat 값과 id가 맞아야 해요.
         const CATEGORIES = [
-            { id: 'image', label: '🎨 이미지 만들기' },
+            { id: 'work', label: '💼 일잘러·업무' },
+            { id: 'party', label: '🎉 모임·파티' },
+            { id: 'image', label: '🎨 이미지 생성' },
+            { id: 'life', label: '🌱 일상·라이프' },
             { id: 'retro', label: '📝 올해 회고' },
             { id: 'greeting', label: '💌 연말 인사' },
-            { id: 'plan', label: '🗓️ 새해 계획' },
-            { id: 'party', label: '🎉 모임·파티' }
+            { id: 'plan', label: '🗓️ 새해 계획' }
         ];
 
         // ── 프롬프트 목록 ─────────────────────────────────────────
@@ -643,7 +669,204 @@
         //   예시에 줄바꿈이 있으면 여러 줄 입력칸이 나와요.`
         //   },
         const PROMPTS = [
-            // 🎨 이미지 만들기
+            // 💼 일잘러·업무
+            {
+                id: 'business-refusal-mail', cat: 'work', kind: 'chat', emoji: '✉️',
+                title: '정중하지만 단호한 거절·연기 메일',
+                desc: '부탁, 납기 연장, 일정 변경을 상대 기분 상하지 않게 완곡한 비즈니스 어투로',
+                tip: '상대방과의 관계와 원하는 해결책(대안)을 구체적으로 적을수록 자연스러워요.',
+                date: '2026-11-13',
+                prompt: `직장에서 비즈니스 메일이나 메신저로 보낼 정중하지만 확실한 메시지를 작성해 줘.
+
+- 수신자: {{받는 분(직급/관계)|김 부장님}}
+- 내가 처한 상황: {{현재 상황 및 이유|연말 결산 프로젝트 마감이 겹쳐 이번 주 내로 추가 보고서를 작성하기 어렵습니다.}}
+- 전하고 싶은 핵심 요점: {{전하고 싶은 결론|이번 요청은 기한 내 수용이 어려우며, 일정 조정이나 업무 분담이 필요합니다.}}
+- 제시할 수 있는 현실적 대안: {{제시할 대안/타협점|다음 주 수요일까지 초안을 먼저 전달드리거나, 1차 요약본만 먼저 공유드릴 수 있습니다.}}
+- 톤앤매너: 상대방의 노고에 감사하면서도 프로페셔널하고 단호하며, 감정적이지 않은 비즈니스 한국어 어조
+
+상황에 맞게 복사해서 바로 보낼 수 있도록 [메일 제목]과 [본문], 그리고 조금 더 캐주얼한 [사내 메신저용 슬랙/잔디 버전] 2가지로 작성해 줘.`
+            },
+            {
+                id: 'article-summary-todo', cat: 'work', kind: 'chat', emoji: '📑',
+                title: '긴 글·보고서 3줄 요약 & To-Do 추출',
+                desc: '장문의 기사나 회의록에서 핵심 요약과 내가 할 일만 쏙쏙',
+                tip: '요약하고 싶은 본문을 맨 아래에 그대로 복사해서 붙여넣으세요.',
+                date: '2026-11-13',
+                prompt: `아래 전달하는 글을 읽고, 바쁜 직장인을 위해 핵심만 일목요연하게 정리해 줘.
+
+1. 【3줄 핵심 요약】: 전체 맥락을 관통하는 가장 중요한 사실 3가지 (각 문장 1줄)
+2. 【핵심 인사이트 & 시사점】: 왜 이것이 중요한지, 놓치지 말아야 할 포인트 2~3가지
+3. 【즉시 실행 액션 플랜(To-Do)】: 내가 지금 당장 확인하거나 실천해야 할 구체적 행동 체크리스트
+4. 【비유로 쉽게 한 줄 풀이】: {{이해를 돕는 비유 타깃|비전공 신입사원}}도 단번에 이해할 수 있는 쉬운 한 줄 비유
+
+글 분야: {{글의 성격/분야|IT 기술 및 비즈니스 트렌드}}
+---
+[분석할 본문]:
+{{요약할 글 본문이나 회의록을 여기에 붙여넣으세요|인공지능과 클라우드 네이티브 기술이 가속화되면서 기업들의 레거시 시스템 전환이 필수 과제로 부상하고 있다. 내년도 예산 편성 시 인프라 비용 절감과 보안 규제 준수가 핵심 평가 지표가 될 예정이다.}}`
+            },
+            {
+                id: 'brainstorm-10-ideas', cat: 'work', kind: 'chat', emoji: '💡',
+                title: '아이디어 10가지 브레인스토밍',
+                desc: '뻔한 생각 말고 당장 실행 가능한 참신한 기획안 10개 도출',
+                tip: '타깃 고객과 우리가 가진 자원을 알려주면 훨씬 뾰족한 아이디어가 나와요.',
+                date: '2026-11-13',
+                prompt: `새로운 기획을 위한 창의적이고 실전적인 브레인스토밍 파트너가 되어 줘.
+
+- 주제/목적: {{해결하고 싶은 문제나 목표|2030 직장인을 위한 주말 취미 모임 신규 프로그램 기획}}
+- 주요 타깃층: {{타깃 대상|퇴근 후 혼자만의 힐링과 느슨한 네트워킹을 원하는 2030 직장인}}
+- 제약 조건 또는 예산: {{예산이나 제약|큰 초기 자본 없이 즉시 파일럿 테스트가 가능한 규모}}
+- 차별화 포인트: 뻔하고 식상한 아이디어는 제외하고, 최신 트렌드와 결합된 신선한 각도
+
+다음 형식으로 번호를 매겨 【10가지 차별화된 아이디어】를 제안해 줘:
+- 아이디어 한 줄 제목
+- 핵심 컨셉 및 매력 포인트
+- 왜 사람들이 반응할지 (바이럴/참여 트리거)
+- 가장 먼저 검증해 볼 수 있는 첫 단계 실행법`
+            },
+
+            // 🎉 모임·파티
+            {
+                id: 'menu-recommender', cat: 'party', kind: 'chat', emoji: '🍕',
+                title: '선택 장애 종결! 맞춤 점심·회식 메뉴 추천',
+                desc: '예산, 인원, 못 먹는 음식, 분위기까지 다 맞춘 완벽한 후보 3선',
+                tip: '비선호 음식이나 알레르기 유발 재료를 꼭 적어주세요.',
+                date: '2026-11-13',
+                prompt: `모임에서 모두가 만족할 수 있는 최적의 식사/회식 메뉴 3가지를 엄선해서 추천해 줘.
+
+- 모임 유형: {{모임 종류|팀 점심 회식}}
+- 참가 인원: {{인원수|5명}}
+- 1인당 예산: {{예산 범위|1인당 15,000원~20,000원 선}}
+- 제외할 음식/비선호: {{제외 음식|너무 매운 음식, 생선회, 기름진 중식}}
+- 원하는 분위기: {{분위기|대화하기 적당히 조용하고 회전율이 빠른 곳}}
+
+추천해 줄 3가지 메뉴 각각에 대해 아래 내용을 적어 줘:
+1. 추천 메뉴명 및 장르
+2. 왜 이 모임 조건에 최적인지 이유
+3. 호불호가 갈리지 않게 주문하는 꿀팁 (추천 조합, 맵기 조절 등)
+4. 만약 아무도 못 고를 때 결정할 수 있는 '최종 1픽 투표 멘트'`
+            },
+            {
+                id: 'gift-recommender', cat: 'party', kind: 'chat', emoji: '🎁',
+                title: '센스 만점 취향 저격 선물 추천 5선',
+                desc: '가격대와 상대방 라이프스타일에 딱 맞춘 감동 선물 리스트',
+                tip: '상대방이 최근에 자주 말하는 고민이나 취미를 적으면 적중률이 올라가요.',
+                date: '2026-11-13',
+                prompt: `센스 있고 실용적이면서 감동을 줄 수 있는 맞춤 선물 5가지를 추천해 줘.
+
+- 받는 사람: {{받는 분(관계/성별/나이)|30대 초반 친한 직장 동료 (여성)}}
+- 선물하는 이유/기념일: {{선물 목적|생일 축하 및 최근 이직 성공 축하}}
+- 상대방의 취미 및 관심사: {{취미 및 라이프스타일|커피와 홈카페를 좋아하고, 최근 필라테스를 시작함}}
+- 예산 범위: {{예산|5만 원~10만 원 안팎}}
+- 피하고 싶은 선물: {{비선호/흔한 선물|너무 흔한 텀블러나 핸드크림, 향이 강한 화장품}}
+
+다음 구성으로 5가지를 추천해 줘:
+- 선물 아이템 이름 (브랜드나 제품군 예시 포함)
+- 대략적인 가격대
+- 왜 이 사람에게 딱 맞는지 센스 있는 이유
+- 선물과 함께 건넬 짧고 감동적인 2줄 손편지 카드 문구 예시`
+            },
+            {
+                id: 'balance-game-generator', cat: 'party', kind: 'chat', emoji: '⚖️',
+                title: '술자리 밸런스 게임 극악 난제 생성기',
+                desc: '한쪽으로 쏠리지 않고 50:50으로 피 터지게 토론하는 킬러 질문 5개',
+                tip: '모임 성격(친구, 직장동료, 커플, 대학동기)을 정하면 분위기가 확 살아요.',
+                date: '2026-11-13',
+                prompt: `모임 술자리나 파티에서 분위기를 단번에 후끈 달아오르게 만들 밸런스 게임 질문 5개를 만들어 줘.
+
+- 모임 멤버: {{모임 구성원|2030 친한 동네 친구들}}
+- 원하는 수위/분위기: {{질문 테마/수위|현실적인 직장 생활 vs 인간관계, 적당히 매콤하고 웃긴 질문}}
+- 핵심 원칙:
+  - 어느 한쪽이 압도적으로 유리하지 않고 반드시 50:50으로 갈려 열띤 논쟁이 일어날 것
+  - 둘 다 싫거나 둘 다 너무 좋은 극단적인 딜레마를 줄 것
+  - 대답 후 "너 왜 그거 골랐어?" 하며 끝없이 대화가 이어질 수 있을 것
+
+각 질문마다 [A 선택지] vs [B 선택지]를 제시하고, 그 질문에서 나올 수 있는 재미있는 반론 포인트를 한 줄씩 덧붙여 줘.`
+            },
+
+            // 🎨 이미지 생성
+            {
+                id: 'clay-profile-avatar', cat: 'image', kind: 'image', attach: true, emoji: '📱',
+                title: '3D 클레이·픽사 스타일 캐릭터 프로필',
+                desc: '내 사진이나 특징을 넣어 귀여운 3D 점토 애니메이션 아바타로',
+                tip: '정면 얼굴 사진을 먼저 첨부하고 프롬프트를 넣으면 내 닮은꼴로 생성돼요.',
+                date: '2026-11-13',
+                prompt: `첨부한 사진 속 인물의 이목구비와 분위기를 살려서, 픽사 애니메이션 스타일의 귀여운 3D 점토(Claymation) 캐릭터 프로필 이미지를 만들어 줘.
+
+- 캐릭터 특징: 동글동글하고 매끄러운 3D 클레이 질감, 크고 생동감 넘치는 눈동자, 기분 좋은 미소
+- 의상 및 소품: {{의상 및 손에 든 소품|포근한 파스텔톤 후드티를 입고 따뜻한 머그컵을 든 모습}}
+- 헤어스타일: 사진 속 헤어스타일과 색상을 둥글고 귀여운 클레이 볼륨감으로 표현
+- 배경: {{배경 스타일|따뜻하고 부드러운 단색 파스텔 스튜디오 조명 배경, 미세한 블러 효과}}
+- 분위기: 사랑스럽고 트렌디한 모바일 메신저/인스타그램 프로필 사진용
+정사각형 1:1 비율로 정면 상반신 클로즈업 구도로 렌더링해 줘.`
+            },
+            {
+                id: 'pixel-art-wallpaper', cat: 'image', kind: 'image', emoji: '☕',
+                title: '레트로 감성 픽셀아트 배경화면',
+                desc: '90년대 16비트 도트 그래픽 느낌의 포근한 휴식 풍경',
+                tip: '스마트폰 잠금화면이나 데스크톱 배경화면으로 쓰기 좋아요.',
+                date: '2026-11-13',
+                prompt: `16비트 슈퍼패미컴/도스 게임 그래픽 스타일의 아늑하고 감성적인 레트로 픽셀아트(Pixel Art) 일러스트를 만들어 줘.
+
+- 장소/장면: {{배경 장소|비 내리는 늦은 밤, 불이 켜진 작은 골목길 북카페 창가 자리}}
+- 인물 또는 동물: {{주인공/소품|창틀 위에서 곤히 잠든 줄무늬 고양이와 김이 피어오르는 커피잔}}
+- 날씨와 시간대: {{시간대/날씨|가로등이 촉촉하게 빛나는 한밤중, 부드러운 보라빛 밤하늘}}
+- 아트 스타일: 정교한 픽셀 도트 질감, 따뜻한 네온빛 조명, 로우파이(Lo-fi) 감성, 차분한 색감 팔레트
+스마트폰 세로 배경화면으로 쓰기 좋게 세로 9:16 비율로 선명하게 그려 줘.`
+            },
+            {
+                id: 'minimal-goods-sticker', cat: 'image', kind: 'image', emoji: '🏷️',
+                title: '모임·굿즈용 미니멀 로고 & 원형 스티커',
+                desc: '노트북, 텀블러, 다이어리에 붙이기 좋은 깔끔한 벡터 그래픽',
+                tip: '단순하고 상징적인 키워드를 적어야 스티커로 인쇄했을 때 예뻐요.',
+                date: '2026-11-13',
+                prompt: `노트북이나 텀블러에 붙일 수 있는 트렌디하고 감각적인 원형 다이컷(Die-cut) 스티커 디자인을 만들어 줘.
+
+- 모임/브랜드 이름: "{{스티커에 들어갈 영문/한글 이름|MIDNIGHT CLUB}}"
+- 핵심 모티브 심볼: {{중심 그래픽 심볼|초승달과 작은 모닥불}}
+- 디자인 스타일: 깔끔한 라인아트와 미니멀한 플랫 벡터 일러스트, 굵은 외곽선
+- 컬러 조합: {{색상 조합|진한 네이비와 빈티지 오렌지, 크림 아이보리}} 3가지 색상 이내
+- 레이아웃: 흰색 여백의 원형 스티커 테두리 안에 심볼과 영문 텍스트가 조화롭게 배치된 형태
+정사각형 1:1 비율, 그래픽이 돋보이도록 깔끔한 단색 연회색 바닥 위에 놓인 렌더링.`
+            },
+
+            // 🌱 일상·라이프
+            {
+                id: 'travel-itinerary-packing', cat: 'life', kind: 'chat', emoji: '✈️',
+                title: '3박 4일 맞춤 여행 동선 & 짐싸기 체크리스트',
+                desc: '동선 낭비 없는 알짜배기 일정표와 빼먹기 쉬운 준비물 완벽 정리',
+                tip: '뚜벅이인지 렌터카인지, 쉬는 여행인지 액티브한지 꼭 적어주세요.',
+                date: '2026-11-13',
+                prompt: `여행 전문가로서 알차고 피로도 없는 최적의 여행 계획표를 세워 줘.
+
+- 여행지: {{여행 목적지|제주도 동쪽 & 서귀포}}
+- 일정: {{여행 기간|3박 4일}}
+- 동행인: {{동행자|연인과 함께 (2인)}}
+- 이동 수단: {{이동 수단|렌터카 운전}}
+- 선호 스타일: {{여행 테마|너무 빡빡하지 않은 감성 카페 투어 + 바다 산책 + 로컬 흑돼지/해산물 맛집}}
+
+아래 형식으로 출력해 줘:
+1. 【일자별 동선 및 타임테이블】: 오전 / 점심 / 오후 / 저녁으로 나누어 이동 경로가 효율적인 동선 추천
+2. 【현지인 추천 꿀팁】: 관광객 붐비는 시간 피하는 법, 예약 필수 장소
+3. 【맞춤형 짐싸기 체크리스트】: 필수품, 이 여행지 특성상 안 챙기면 후회하는 꿀템 3가지`
+            },
+            {
+                id: 'explain-like-five', cat: 'life', kind: 'chat', emoji: '📚',
+                title: '5살 어린이도 이해하는 쉬운 개념 설명기',
+                desc: '어려운 IT, 경제, 과학 용어를 귀에 쏙쏙 박히는 일상 비유로',
+                tip: '이해하기 어려웠던 전문 용어나 최신 기술 이름을 넣어보세요.',
+                date: '2026-11-13',
+                prompt: `복잡하고 어려운 전문 개념을 5살 어린이나 비전공자도 단번에 "아, 그거였어?" 하고 무릎을 치게 설명해 줘.
+
+- 설명이 필요한 용어/개념: {{궁금한 어려운 개념|블록체인(Blockchain)과 탈중앙화}}
+- 비유에 사용할 일상적인 소재: {{친숙한 일상 소재|동네 친구들과 함께 쓰는 비밀 일기장이나 놀이터 규칙}}
+
+다음 3단계로 나누어 재미있고 명쾌하게 설명해 줘:
+1. 【한 문장 핵심 비유】: "○○이란 사실 △△와 같아요."
+2. 【동화 같은 일상 스토리 설명】: 전문 용어(알고리즘, 노드, 해시 등)는 일체 쓰지 않고 일상에서 벌어지는 일로 치환하여 2~3문단으로 설명
+3. 【왜 지금 중요할까?】: 이 개념이 왜 세상에서 주목받는지 우리 삶과 연결해서 1줄 요약`
+            },
+
+            // 🎨 이미지 만들기 (시즌)
             {
                 id: 'family-xmas-card', cat: 'image', kind: 'image', attach: true, emoji: '🎅',
                 title: '우리 가족 동화책 크리스마스 카드',
@@ -1073,6 +1296,7 @@
             }).join('');
             $('fields').hidden = holes.length === 0;
             $('reset-btn').hidden = holes.length === 0;
+            $('fill-sample-btn').hidden = holes.length === 0;
 
             updatePreview();
             $('sheet-backdrop').hidden = false;
@@ -1257,16 +1481,53 @@
                 updatePreview();
             });
 
+            $('fill-sample-btn').addEventListener('click', () => {
+                if (!state.openId) return;
+                const p = PROMPTS.find((x) => x.id === state.openId);
+                if (!p) return;
+                const holes = holesOf(p.prompt);
+                const inputs = $('fields').querySelectorAll('[data-label]');
+                holes.forEach((h) => {
+                    for (const inp of inputs) {
+                        if (inp.dataset.label === h.label && h.hint) {
+                            inp.value = h.hint;
+                            break;
+                        }
+                    }
+                });
+                saved[state.openId] = currentValues();
+                persist();
+                updatePreview();
+                buzz();
+                toast('🎲 예시값으로 모두 채웠어요!');
+            });
+
             $('reset-btn').addEventListener('click', () => {
                 if (!state.openId) return;
                 $('fields').querySelectorAll('[data-label]').forEach((el) => { el.value = ''; });
                 delete saved[state.openId];
                 persist();
                 updatePreview();
+                buzz();
+                toast('빈칸을 모두 비웠어요');
             });
 
             $('copy-btn').addEventListener('click', () => copyPrompt(state.openId, currentValues()));
             $('share-btn').addEventListener('click', () => sharePrompt(state.openId));
+
+            $('chatgpt-btn').addEventListener('click', async () => {
+                if (!state.openId) return;
+                const p = PROMPTS.find((x) => x.id === state.openId);
+                if (!p) return;
+                const text = fillText(p.prompt, currentValues());
+                await copyText(text);
+                buzz();
+                toast('복사 완료! ChatGPT로 이동합니다 🚀');
+                const targetUrl = 'https://chatgpt.com/?q=' + encodeURIComponent(text);
+                setTimeout(() => {
+                    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                }, 350);
+            });
             $('sheet-close').addEventListener('click', closeSheet);
             $('sheet-backdrop').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeSheet(); });
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.openId) closeSheet(); });
@@ -1285,8 +1546,8 @@
  "goal": "AI에 넣을 프롬프트를 골라 빈칸만 채워 복사합니다.",
  "steps": [
   "분류나 검색으로 쓰고 싶은 프롬프트를 고릅니다.",
-  "'빈칸 채우기'를 눌러 이름·장소 같은 칸을 채웁니다. 비워 둔 칸은 [ ]로 남아요.",
-  "'복사하기'를 누르고 사용하는 AI 채팅창에 붙여 넣습니다.",
+  "'빈칸 채우기'를 눌러 빈칸을 채웁니다. '🎲 예시 채우기'로 한 번에 채울 수도 있어요.",
+  "'복사하기'를 누르거나 '🤖 ChatGPT'를 눌러 복사와 동시에 바로 이동할 수 있어요.",
   "📎 사진 첨부 표시가 있으면 사진을 먼저 올린 뒤 붙여 넣으세요.",
   "'링크'로 프롬프트를 친구에게 바로 공유할 수 있어요."
  ],
