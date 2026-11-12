@@ -1,0 +1,2623 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>송년회 진행 키트 - 미니게임 천국</title>
+    <meta name="description" content="올해의 상 투표, 우리 모임 올해의 검색어, 누구의 다짐 맞히기까지 송년회를 한 번에 진행하는 키트">
+    <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
+    <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <script src="../scripts/room-client.js?v=94195755"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            /* 이 페이지만의 연말 색 */
+            --gold: #f5b83d;
+            --gold-ink: #8a5a00;
+            --berry: #c2263b;
+            --berry-soft: #fdecee;
+            --pine: #1f7a4d;
+        }
+
+        body {
+            padding-top: max(1.5rem, env(safe-area-inset-top));
+            padding-bottom: max(5rem, env(safe-area-inset-bottom));
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-left: max(1rem, env(safe-area-inset-left));
+                padding-right: max(1rem, env(safe-area-inset-right));
+                padding-top: max(1rem, env(safe-area-inset-top));
+            }
+        }
+
+        .kit {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .kit .game-header {
+            margin-bottom: 1.25rem;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .panel {
+            padding: 18px;
+            margin-bottom: 14px;
+            border: 1px solid var(--line);
+            border-radius: var(--r-lg);
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .panel h2,
+        .panel h3 {
+            margin: 0 0 6px;
+            font-size: 1.08rem;
+            font-weight: 800;
+        }
+
+        .hint {
+            margin: 0 0 12px;
+            font-size: .88rem;
+            color: var(--text-2);
+            line-height: 1.5;
+        }
+
+        .error {
+            min-height: 1.2em;
+            margin: 6px 0 0;
+            font-size: .9rem;
+            font-weight: 700;
+            color: var(--bad);
+        }
+
+        .note {
+            font-size: .85rem;
+            color: var(--muted);
+            line-height: 1.55;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 13px 18px;
+            border: none;
+            border-radius: var(--r-md);
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .btn:not(:disabled):active {
+            transform: scale(.98);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--on-accent);
+        }
+
+        .btn-festive {
+            background: var(--berry);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-row .btn {
+            flex: 1 1 140px;
+        }
+
+        .text-btn {
+            border: none;
+            background: none;
+            padding: 6px;
+            color: var(--accent-ink);
+            font-size: .9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        input.txt,
+        textarea.txt {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--r-md);
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        textarea.txt {
+            min-height: 96px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        /* ── 처음 화면 ── */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        @media (min-width: 640px) {
+            .mode-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .mode {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+            padding: 20px;
+            border: 2px solid var(--line);
+            border-radius: var(--r-lg);
+            background: var(--surface);
+            color: var(--text);
+            text-align: left;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .mode:hover:not(:disabled) {
+            border-color: var(--accent);
+        }
+
+        .mode:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .mode .mode-emoji {
+            font-size: 2rem;
+        }
+
+        .mode strong {
+            font-size: 1.15rem;
+        }
+
+        .mode small {
+            font-size: .9rem;
+            color: var(--text-2);
+            line-height: 1.45;
+        }
+
+        .mode .flag {
+            margin-top: 4px;
+            padding: 3px 8px;
+            border-radius: var(--r-sm);
+            background: var(--warn-soft);
+            color: var(--warn);
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+        .rounds-intro {
+            display: grid;
+            gap: 10px;
+        }
+
+        .rounds-intro div {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .rounds-intro .e {
+            font-size: 1.6rem;
+            line-height: 1;
+        }
+
+        .rounds-intro b {
+            display: block;
+        }
+
+        .rounds-intro span {
+            font-size: .88rem;
+            color: var(--text-2);
+        }
+
+        .resume {
+            border-color: var(--gold);
+            background: #fffaf0;
+        }
+
+        /* ── 준비 화면 ── */
+        .toggle-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: var(--r-md);
+            background: var(--surface-2);
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .toggle input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent);
+        }
+
+        .toggle small {
+            display: block;
+            font-weight: 500;
+            color: var(--text-2);
+        }
+
+        .chip-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            padding: 9px 13px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--r-pill);
+            background: var(--surface);
+            color: var(--text);
+            font-size: .92rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .chip[aria-pressed="true"] {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--on-accent);
+        }
+
+        .chip .x {
+            margin-left: 4px;
+            opacity: .7;
+        }
+
+        .add-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .add-row .txt {
+            flex: 1;
+        }
+
+        .add-row .btn {
+            flex: none;
+            padding: 12px 16px;
+        }
+
+        /* ── 입력 폼 ── */
+        .form-block {
+            margin-bottom: 18px;
+        }
+
+        .form-block h3 {
+            margin: 0 0 4px;
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+
+        .vote-row {
+            padding: 12px 0;
+            border-top: 1px solid var(--line);
+        }
+
+        .vote-title {
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .kw-inputs {
+            display: grid;
+            gap: 8px;
+        }
+
+        .kw-inputs label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .kw-inputs label span {
+            flex: none;
+            width: 1.6em;
+            color: var(--muted);
+            font-weight: 800;
+        }
+
+        /* ── 폰 넘기기 ── */
+        .pass-cover {
+            padding: 36px 20px;
+            text-align: center;
+            border-radius: var(--r-lg);
+            background: linear-gradient(160deg, #1a2140, #2a1530);
+            color: #fff;
+        }
+
+        .pass-cover .big {
+            font-size: 3.5rem;
+        }
+
+        .pass-cover h2 {
+            margin: 10px 0 6px;
+            font-size: 1.6rem;
+        }
+
+        .pass-cover p {
+            margin: 0 0 20px;
+            color: #d8dcef;
+        }
+
+        .pass-cover .btn {
+            width: 100%;
+            max-width: 340px;
+            margin: 4px auto;
+        }
+
+        .pass-cover .text-btn {
+            color: #c7d2fe;
+        }
+
+        .progress-line {
+            margin-top: 14px;
+            font-size: .9rem;
+            color: #c7cbe0;
+        }
+
+        .people {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .people li {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 11px;
+            border-radius: var(--r-pill);
+            background: var(--surface-2);
+            font-size: .9rem;
+            font-weight: 700;
+        }
+
+        .people li.done {
+            background: var(--ok-soft);
+            color: var(--ok);
+        }
+
+        .people li.me {
+            outline: 2px solid var(--accent);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--line-strong);
+        }
+
+        .dot.on {
+            background: var(--ok);
+        }
+
+        /* ── 방 ── */
+        .status-line {
+            min-height: 1.3em;
+            margin: 0 0 10px;
+            font-size: .88rem;
+            font-weight: 700;
+            color: var(--warn);
+            text-align: center;
+        }
+
+        .qr-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #ol-qr {
+            padding: 12px;
+            border-radius: var(--r-md);
+            background: #fff;
+        }
+
+        #ol-qr img,
+        #ol-qr canvas {
+            display: block;
+            width: min(240px, 60vw) !important;
+            height: auto !important;
+        }
+
+        .link-text {
+            max-width: 100%;
+            font-size: .8rem;
+            color: var(--muted);
+            word-break: break-all;
+            text-align: center;
+        }
+
+        .room-foot {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* ── 무대 ── */
+        .stage-wrap {
+            position: relative;
+        }
+
+        /* 발표 중에는 제목을 접어 무대와 버튼이 한 화면에 들어오게 한다 */
+        body.on-stage .kit .game-header {
+            display: none;
+        }
+
+        body.on-stage .back-button {
+            margin-bottom: .75rem;
+        }
+
+        .stage-screen {
+            position: relative;
+            min-height: min(64vh, 560px);
+            min-height: min(64dvh, 560px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 20px;
+            border-radius: var(--r-lg);
+            overflow: hidden;
+            text-align: center;
+            background:
+                radial-gradient(circle at 15% 10%, rgba(245, 184, 61, .18), transparent 40%),
+                radial-gradient(circle at 85% 90%, rgba(194, 38, 59, .22), transparent 45%),
+                var(--stage-bg);
+            color: var(--stage-text);
+        }
+
+        .stage-wrap:fullscreen {
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            background: var(--stage-bg);
+        }
+
+        .stage-wrap:fullscreen .stage-screen {
+            flex: 1;
+            font-size: 1.35em;
+        }
+
+        .st {
+            width: 100%;
+            max-width: 680px;
+        }
+
+        .st-kicker {
+            margin-bottom: 10px;
+            font-size: .95rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            color: var(--gold);
+        }
+
+        .st h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.6rem, 6vw, 2.6rem);
+            font-weight: 900;
+            line-height: 1.25;
+            word-break: keep-all;
+        }
+
+        .st p {
+            margin: 0;
+            color: var(--stage-text-2);
+            line-height: 1.55;
+        }
+
+        .st-emoji {
+            font-size: clamp(3rem, 12vw, 5rem);
+            line-height: 1.1;
+            margin-bottom: 8px;
+        }
+
+        .st-sub {
+            margin-top: 16px !important;
+            font-size: 1rem;
+        }
+
+        .drum {
+            display: inline-block;
+            font-size: clamp(3.5rem, 14vw, 6rem);
+            animation: drum .18s ease-in-out infinite alternate;
+        }
+
+        @keyframes drum {
+            from {
+                transform: rotate(-8deg) scale(1);
+            }
+
+            to {
+                transform: rotate(8deg) scale(1.06);
+            }
+        }
+
+        .trophy {
+            font-size: clamp(3.5rem, 14vw, 6rem);
+            animation: pop .6s cubic-bezier(.2, 1.6, .4, 1) both;
+        }
+
+        .winner {
+            margin: 6px 0 10px;
+            font-size: clamp(2.2rem, 10vw, 4rem);
+            font-weight: 900;
+            color: var(--gold);
+            line-height: 1.15;
+            word-break: keep-all;
+            animation: pop .7s .15s cubic-bezier(.2, 1.6, .4, 1) both;
+        }
+
+        @keyframes pop {
+            from {
+                transform: scale(.3);
+                opacity: 0;
+            }
+        }
+
+        .board {
+            display: grid;
+            gap: 8px;
+            margin: 18px auto 0;
+            padding: 0;
+            max-width: 520px;
+            list-style: none;
+            text-align: left;
+        }
+
+        .board li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: var(--r-md);
+            background: var(--stage-surface-2);
+            animation: rise .45s var(--d, 0s) ease-out both;
+        }
+
+        .board li:first-child {
+            background: linear-gradient(90deg, rgba(245, 184, 61, .35), var(--stage-surface-2));
+        }
+
+        @keyframes rise {
+            from {
+                transform: translateY(14px);
+                opacity: 0;
+            }
+        }
+
+        .board .rk {
+            width: 1.8em;
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: var(--gold);
+            text-align: center;
+        }
+
+        .board .kw {
+            flex: 1;
+            font-weight: 800;
+            font-size: 1.08rem;
+            word-break: break-all;
+        }
+
+        .board .cnt {
+            flex: none;
+            font-size: .82rem;
+            font-weight: 800;
+            color: #fb7185;
+        }
+
+        .board .cnt.new {
+            color: #4ade80;
+        }
+
+        .kw-chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 8px 0 6px;
+        }
+
+        .kw-chips span {
+            padding: 10px 16px;
+            border-radius: var(--r-pill);
+            background: var(--stage-surface-3);
+            font-size: clamp(1.1rem, 4.5vw, 1.6rem);
+            font-weight: 900;
+            animation: pop .5s calc(var(--i, 0) * .15s) both;
+        }
+
+        .quote {
+            margin: 6px 0 4px;
+            padding: 18px 20px;
+            border-radius: var(--r-lg);
+            background: var(--stage-surface-2);
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            font-weight: 800;
+            line-height: 1.45;
+            word-break: keep-all;
+            animation: pop .5s both;
+        }
+
+        .reveal-name {
+            margin-top: 18px;
+            font-size: 1.1rem;
+            color: var(--stage-text-2);
+        }
+
+        .reveal-name strong {
+            display: block;
+            margin-top: 4px;
+            font-size: clamp(2rem, 9vw, 3.4rem);
+            font-weight: 900;
+            color: var(--gold);
+            animation: pop .6s both;
+        }
+
+        .answered {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .answered span {
+            padding: 4px 10px;
+            border-radius: var(--r-pill);
+            background: var(--stage-surface-3);
+            font-size: .85rem;
+            font-weight: 700;
+        }
+
+        .answered span.ok {
+            background: rgba(74, 222, 128, .25);
+            color: #bbf7d0;
+        }
+
+        .mark-row {
+            margin-top: 18px;
+        }
+
+        .mark-row p {
+            margin-bottom: 8px !important;
+            font-size: .92rem;
+        }
+
+        .mark-row .chip-wrap {
+            justify-content: center;
+        }
+
+        .mark-row .chip {
+            background: var(--stage-surface-2);
+            border-color: var(--stage-line);
+            color: var(--stage-text);
+        }
+
+        .mark-row .chip[aria-pressed="true"] {
+            background: #16a34a;
+            border-color: #16a34a;
+            color: #fff;
+        }
+
+        .end-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+            text-align: left;
+        }
+
+        @media (min-width: 640px) {
+            .end-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .end-grid .wide {
+                grid-column: 1 / -1;
+            }
+        }
+
+        .end-card {
+            padding: 14px 16px;
+            border-radius: var(--r-md);
+            background: var(--stage-surface-2);
+        }
+
+        .end-card h3 {
+            margin: 0 0 8px;
+            font-size: 1rem;
+            color: var(--gold);
+        }
+
+        .end-card ul,
+        .end-card ol {
+            margin: 0;
+            padding-left: 1.2em;
+            display: grid;
+            gap: 4px;
+            line-height: 1.45;
+        }
+
+        .end-card b {
+            color: #fff;
+        }
+
+        .stage-screen.calm * {
+            animation: none !important;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .stage-screen * {
+                animation: none !important;
+            }
+        }
+
+        .stage-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .stage-controls .btn-next {
+            flex: 1;
+            padding: 16px;
+            font-size: 1.08rem;
+        }
+
+        .stage-controls .btn-ghost {
+            flex: none;
+        }
+
+        .step-count {
+            flex: none;
+            min-width: 3.5em;
+            font-size: .85rem;
+            font-weight: 800;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .stage-tools {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+
+        /* 수상 소감 타이머 */
+        .timer {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: var(--r-lg);
+            background: rgba(11, 16, 32, .92);
+            color: #fff;
+            text-align: center;
+        }
+
+        .timer .num {
+            font-size: clamp(4rem, 20vw, 8rem);
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            color: var(--gold);
+        }
+
+        .timer .num.low {
+            color: #fb7185;
+        }
+
+        /* ── 참가자 폰 ── */
+        .phone-card {
+            padding: 24px 18px;
+            border-radius: var(--r-lg);
+            background: linear-gradient(165deg, #182040, #261632);
+            color: #fff;
+            text-align: center;
+        }
+
+        .phone-card .big {
+            font-size: 3rem;
+        }
+
+        .phone-card h2 {
+            margin: 8px 0;
+            font-size: 1.4rem;
+            word-break: keep-all;
+        }
+
+        .phone-card p {
+            margin: 0;
+            color: #d3d8ee;
+            line-height: 1.5;
+        }
+
+        .phone-card .gold {
+            color: var(--gold);
+            font-size: 1.8rem;
+            font-weight: 900;
+        }
+
+        .phone-card .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .phone-card .opt {
+            padding: 14px 8px;
+            border: 2px solid rgba(255, 255, 255, .18);
+            border-radius: var(--r-md);
+            background: rgba(255, 255, 255, .06);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .phone-card .opt[aria-pressed="true"] {
+            border-color: var(--gold);
+            background: rgba(245, 184, 61, .25);
+        }
+
+        .phone-card .kw-chips span,
+        .phone-card .quote {
+            background: rgba(255, 255, 255, .1);
+            font-size: 1.1rem;
+        }
+
+        .phone-card .board li {
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .result-good {
+            color: #4ade80 !important;
+            font-weight: 900;
+        }
+
+        .confetti {
+            position: fixed;
+            inset: 0;
+            z-index: 10002;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="kit">
+        <a href="../index.html" class="back-button">← 메인</a>
+
+        <header class="game-header">
+            <h1 class="game-title">🎄 송년회 진행 키트</h1>
+            <p class="game-description">올해의 상 · 우리 모임 올해의 검색어 · 누구의 다짐?</p>
+        </header>
+
+        <!-- 처음 화면 -->
+        <section id="v-home">
+            <div class="panel resume" id="resume-box" hidden>
+                <h3>⏯️ 하던 송년회가 있어요</h3>
+                <p class="hint" id="resume-text"></p>
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="resume-go" type="button">이어서 하기</button>
+                    <button class="btn btn-ghost" id="resume-drop" type="button">지우고 새로</button>
+                </div>
+            </div>
+
+            <p class="status-line" id="home-message"></p>
+
+            <div class="mode-grid">
+                <button class="mode" id="mode-online" type="button">
+                    <span class="mode-emoji">📱</span>
+                    <strong>각자 폰으로</strong>
+                    <small>QR로 들어와서 동시에 입력하고, 맞히기도 각자 폰으로 해요. 진행자 화면을 TV에 띄우면 좋아요.</small>
+                    <span class="flag" id="online-flag" hidden>방 서버 준비 중이라 지금은 쓸 수 없어요</span>
+                </button>
+                <button class="mode" id="mode-offline" type="button">
+                    <span class="mode-emoji">🔄</span>
+                    <strong>폰 한 대로</strong>
+                    <small>한 명씩 폰을 돌려 몰래 입력하고, 발표는 다 같이 한 화면으로 봐요. 인터넷이 없어도 돼요.</small>
+                </button>
+            </div>
+
+            <div class="panel">
+                <h3>이렇게 진행돼요</h3>
+                <div class="rounds-intro">
+                    <div><span class="e">🏆</span><p><b>올해의 상</b><span>"올해의 지각왕" 같은 상을 몰래 투표하고, 드럼롤과 함께 하나씩 발표해요.</span></p></div>
+                    <div><span class="e">📈</span><p><b>우리 모임 올해의 검색어</b><span>각자 적은 올해 키워드 3개로 순위판을 만들고, 누구 키워드인지 맞혀요.</span></p></div>
+                    <div><span class="e">🔮</span><p><b>누구의 다짐?</b><span>내년 다짐을 하나씩 공개하고 주인을 맞혀요. 많이 맞힌 사람이 눈치왕!</span></p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 준비 -->
+        <section id="v-setup" hidden>
+            <div class="panel" id="setup-host">
+                <h3>👑 진행자</h3>
+                <p class="hint">방을 만들면 QR과 링크가 나와요. 한 방에 최대 12명까지 들어올 수 있어요.</p>
+                <input class="txt" id="host-nick" maxlength="20" placeholder="내 닉네임" autocomplete="off">
+                <label class="toggle" style="margin-top:10px">
+                    <input type="checkbox" id="host-plays" checked>
+                    <span>나도 참여하기<small>끄면 진행만 해요. 노트북을 TV에 연결해 진행할 때 좋아요.</small></span>
+                </label>
+            </div>
+
+            <div class="panel" id="setup-players">
+                <h3>👥 참가자</h3>
+                <p class="hint">이름을 한 줄에 하나씩 (또는 쉼표로) 적어 주세요. 3~20명.</p>
+                <textarea class="txt" id="player-names" placeholder="민수&#10;지은&#10;현우"></textarea>
+            </div>
+
+            <div class="panel">
+                <h3>🎬 라운드</h3>
+                <div class="toggle-list">
+                    <label class="toggle"><input type="checkbox" id="r-awards" checked><span>🏆 올해의 상</span></label>
+                    <label class="toggle"><input type="checkbox" id="r-keywords" checked><span>📈 우리 모임 올해의 검색어</span></label>
+                    <label class="toggle"><input type="checkbox" id="r-resolutions" checked><span>🔮 누구의 다짐?</span></label>
+                </div>
+            </div>
+
+            <div class="panel" id="setup-awards">
+                <h3>🏆 시상할 상</h3>
+                <p class="hint">눌러서 켜고 끄세요. 직접 만들 수도 있어요. (최대 10개)</p>
+                <div class="chip-wrap" id="award-chips"></div>
+                <div class="add-row">
+                    <input class="txt" id="award-new" maxlength="24" placeholder="새 상 이름 (예: 올해의 야근왕)" autocomplete="off">
+                    <button class="btn btn-ghost" id="award-add" type="button">추가</button>
+                </div>
+            </div>
+
+            <p class="error" id="setup-error"></p>
+            <div class="btn-row">
+                <button class="btn btn-ghost" id="setup-back" type="button">← 뒤로</button>
+                <button class="btn btn-festive" id="setup-go" type="button">시작하기</button>
+            </div>
+        </section>
+
+        <!-- 폰 넘기기 입력 -->
+        <section id="v-pass" hidden>
+            <div id="pass-body"></div>
+            <div id="pass-form-wrap" hidden>
+                <div class="panel">
+                    <h2 id="pass-form-title"></h2>
+                    <div id="pass-form"></div>
+                    <button class="btn btn-festive" id="pass-submit" type="button" style="width:100%">✅ 제출하고 화면 가리기</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 방: 닉네임 -->
+        <section id="v-join" hidden>
+            <div class="panel">
+                <h2 id="join-title">🎄 송년회 방에 초대받았어요</h2>
+                <p class="hint">닉네임을 적고 들어가세요. 다른 사람과 겹치지 않게!</p>
+                <input class="txt" id="join-nick" maxlength="20" placeholder="닉네임" autocomplete="off">
+                <p class="error" id="join-error"></p>
+                <div class="btn-row">
+                    <button class="btn btn-ghost" id="join-cancel" type="button">취소</button>
+                    <button class="btn btn-festive" id="join-go" type="button">들어가기</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 방: 대기실 -->
+        <section id="v-lobby" hidden>
+            <p class="status-line" data-ol-status></p>
+            <div class="panel">
+                <div class="qr-box" id="lobby-qr-box">
+                    <h2>📱 QR을 찍고 들어오세요</h2>
+                    <div id="ol-qr"></div>
+                    <div class="link-text" id="ol-link"></div>
+                    <div class="btn-row" style="width:100%">
+                        <button class="btn btn-ghost" id="ol-copy" type="button">🔗 링크 복사</button>
+                        <button class="btn btn-ghost" id="ol-share" type="button">📤 공유</button>
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <h3>들어온 사람 <span id="ol-count"></span></h3>
+                <ul class="people" id="ol-members"></ul>
+                <p class="hint" id="lobby-hint" style="margin:12px 0 0"></p>
+            </div>
+            <button class="btn btn-festive" id="ol-start" type="button" style="width:100%" hidden>✍️ 입력 시작</button>
+            <div class="room-foot"><button class="text-btn" data-ol-leave type="button"></button></div>
+        </section>
+
+        <!-- 방: 입력 -->
+        <section id="v-input" hidden>
+            <p class="status-line" data-ol-status></p>
+            <div class="panel" id="input-progress">
+                <h3>✍️ 제출 현황 <span id="input-count"></span></h3>
+                <ul class="people" id="input-people"></ul>
+                <p class="hint" id="input-hint" style="margin:12px 0 0"></p>
+            </div>
+            <div class="panel" id="input-form-panel" hidden>
+                <h2 id="input-form-title">내 답 쓰기</h2>
+                <div id="input-form"></div>
+                <button class="btn btn-festive" id="input-submit" type="button" style="width:100%">✅ 제출하기</button>
+            </div>
+            <div class="phone-card" id="input-done" hidden></div>
+            <button class="btn btn-primary" id="input-close" type="button" style="width:100%;margin-top:12px" hidden>🎬 마감하고 발표 시작</button>
+            <div class="room-foot"><button class="text-btn" data-ol-leave type="button"></button></div>
+        </section>
+
+        <!-- 발표 무대 (진행자) -->
+        <section id="v-stage" hidden>
+            <p class="status-line" data-ol-status></p>
+            <div class="stage-wrap" id="stage-wrap">
+                <div class="stage-screen" id="stage"></div>
+                <div class="timer" id="timer" hidden>
+                    <div>🎤 수상 소감</div>
+                    <div class="num" id="timer-num">30</div>
+                    <button class="btn btn-ghost" id="timer-stop" type="button">그만</button>
+                </div>
+                <div class="stage-controls" id="controls">
+                    <button class="btn btn-ghost" id="btn-prev" type="button" aria-label="이전">◀</button>
+                    <span class="step-count" id="step-count"></span>
+                    <button class="btn btn-festive btn-next" id="btn-next" type="button">다음</button>
+                </div>
+            </div>
+            <div class="stage-tools">
+                <button class="text-btn" id="btn-full" type="button">⛶ 크게 보기</button>
+                <button class="text-btn" id="btn-quit" type="button"></button>
+            </div>
+        </section>
+
+        <!-- 발표 중 참가자 폰 -->
+        <section id="v-phone" hidden>
+            <p class="status-line" data-ol-status></p>
+            <div id="phone-body"></div>
+            <div class="room-foot"><button class="text-btn" data-ol-leave type="button"></button></div>
+        </section>
+    </div>
+
+    <script>
+        // ════════════════════════════════════════════════════════════
+        //  송년회 진행 키트
+        //  - 폰 한 대로(Offline): 이 기기 하나가 진행자이자 입력판이다.
+        //  - 각자 폰으로(Online): 방 서버(scripts/room-client.js)를 쓴다. 방장 폰이 진행자다.
+        //    답·투표·누가 무엇을 썼는지는 방장 기기에만 있고, 각자는 자기 답만 방장에게 귓속말(sendTo)로 보낸다.
+        //    모두가 받는 공유 상태에는 단계와 지금 무대에 띄운 내용만 올린다 (비밀을 넣으면 안 된다).
+        //  두 방식 모두 같은 발표 엔진(buildPlan → makeView → stageHtml)을 쓴다.
+        // ════════════════════════════════════════════════════════════
+
+        const $ = (id) => document.getElementById(id);
+        const esc = (v) => escapeHtml(v);
+        const Store = {
+            get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
+            set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* 저장 못 해도 진행은 된다 */ } },
+            del(k) { try { localStorage.removeItem(k); } catch { /* 무시 */ } }
+        };
+        const rid = () => Math.random().toString(36).slice(2, 10);
+        const shuffle = (arr) => {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        };
+        // 한 번도 화면을 누르지 않은 탭에서는 브라우저가 진동을 막으므로 그때는 부르지 않는다
+        const buzz = (p = 30) => {
+            if (!('vibrate' in navigator) || navigator.userActivation?.hasBeenActive === false) return;
+            try { navigator.vibrate(p); } catch { /* 무시 */ }
+        };
+
+        // 1월에 하는 송년회는 지난해 것으로 친다
+        const YEAR = (() => { const d = new Date(); return d.getMonth() === 0 ? d.getFullYear() - 1 : d.getFullYear(); })();
+
+        const PRESET_AWARDS = [
+            ['⏰ 올해의 지각왕', true],
+            ['💬 단톡방 MVP', true],
+            ['🎉 분위기 메이커', true],
+            ['🤲 은근히 챙겨 주는 사람', true],
+            ['🚀 내년이 더 기대되는 사람', true],
+            ['👻 갑자기 사라지는 상', false],
+            ['🍜 맛집 탐험가', false],
+            ['🦋 올해 가장 많이 변한 사람', false],
+            ['☕ 월요병 극복상', false],
+            ['📸 인생 사진 장인', false]
+        ];
+        const MAX_AWARDS = 10;
+        const LIMIT = { kw: 20, res: 80, name: 10 };
+
+        const ROUND_INFO = {
+            awards: { e: '🏆', name: '올해의 상', desc: '몰래 한 투표를 하나씩 공개합니다. 수상자는 소감 한마디!' },
+            keywords: { e: '📈', name: `우리 모임 ${YEAR} 올해의 검색어`, desc: '모두가 적은 올해 키워드로 순위판을 만들고, 누구의 키워드인지 맞혀요.' },
+            resolutions: { e: '🔮', name: '누구의 다짐?', desc: `${YEAR + 1}년 다짐을 보고 주인을 맞혀요.` }
+        };
+        const ROUND_ORDER = ['awards', 'keywords', 'resolutions'];
+
+        // ── 소리 ─────────────────────────────────────────────────
+        // 오디오는 첫 터치 때 깨운다 (자동재생 제한)
+        const Sound = (() => {
+            let ctx = null;
+            let noise = null;
+            let drumNodes = [];
+            function ac() {
+                if (!ctx) {
+                    const C = window.AudioContext || window.webkitAudioContext;
+                    if (!C) return null;
+                    try { ctx = new C(); } catch { return null; }
+                }
+                if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+                return ctx;
+            }
+            function noiseBuffer(c) {
+                if (noise) return noise;
+                noise = c.createBuffer(1, Math.floor(c.sampleRate * 0.6), c.sampleRate);
+                const d = noise.getChannelData(0);
+                for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+                return noise;
+            }
+            function hit(c, t, vol, len = 0.08, freq = 1600) {
+                const s = c.createBufferSource();
+                s.buffer = noiseBuffer(c);
+                const f = c.createBiquadFilter();
+                f.type = 'bandpass';
+                f.frequency.value = freq;
+                const g = c.createGain();
+                g.gain.setValueAtTime(vol, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + len);
+                s.connect(f).connect(g).connect(c.destination);
+                s.start(t);
+                s.stop(t + len + 0.02);
+                return s;
+            }
+            function tone(c, t, freq, len, vol = 0.18, type = 'triangle') {
+                const o = c.createOscillator();
+                const g = c.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, t + len);
+                o.connect(g).connect(c.destination);
+                o.start(t);
+                o.stop(t + len + 0.05);
+            }
+            return {
+                wake() { ac(); },
+                drum() {
+                    const c = ac();
+                    if (!c) return;
+                    this.stopDrum();
+                    const start = c.currentTime + 0.02;
+                    const dur = 8;
+                    for (let t = 0; t < dur; t += 0.06) {
+                        drumNodes.push(hit(c, start + t, 0.08 + 0.32 * Math.min(1, t / 4), 0.07));
+                    }
+                },
+                stopDrum() {
+                    drumNodes.forEach((n) => { try { n.stop(); } catch { /* 이미 멈춤 */ } });
+                    drumNodes = [];
+                },
+                fanfare() {
+                    const c = ac();
+                    if (!c) return;
+                    this.stopDrum();
+                    const t = c.currentTime + 0.02;
+                    hit(c, t, 0.6, 0.9, 5000);
+                    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(c, t + i * 0.11, f, 0.5 + (i === 3 ? 0.6 : 0)));
+                },
+                ding() {
+                    const c = ac();
+                    if (!c) return;
+                    const t = c.currentTime + 0.02;
+                    tone(c, t, 880, 0.35, 0.2, 'sine');
+                    tone(c, t + 0.12, 1318.5, 0.6, 0.2, 'sine');
+                },
+                tick(high = false) {
+                    const c = ac();
+                    if (!c) return;
+                    tone(c, c.currentTime + 0.01, high ? 1200 : 700, 0.12, 0.12, 'square');
+                }
+            };
+        })();
+        document.addEventListener('pointerdown', () => Sound.wake(), { once: true });
+
+        function confetti() {
+            if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const cv = document.createElement('canvas');
+            cv.className = 'confetti';
+            const dpr = Math.min(2, window.devicePixelRatio || 1);
+            cv.width = innerWidth * dpr;
+            cv.height = innerHeight * dpr;
+            document.body.appendChild(cv);
+            const g = cv.getContext('2d');
+            g.scale(dpr, dpr);
+            const colors = ['#f5b83d', '#c2263b', '#1f9d5f', '#ffffff', '#818cf8'];
+            const parts = Array.from({ length: 140 }, () => ({
+                x: innerWidth / 2 + (Math.random() - 0.5) * 120,
+                y: innerHeight * 0.45,
+                vx: (Math.random() - 0.5) * 14,
+                vy: -Math.random() * 14 - 4,
+                s: 5 + Math.random() * 6,
+                r: Math.random() * Math.PI,
+                vr: (Math.random() - 0.5) * 0.3,
+                c: colors[Math.floor(Math.random() * colors.length)]
+            }));
+            const t0 = performance.now();
+            (function frame(now) {
+                const t = now - t0;
+                g.clearRect(0, 0, innerWidth, innerHeight);
+                parts.forEach((p) => {
+                    p.vy += 0.35;
+                    p.vx *= 0.99;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.r += p.vr;
+                    g.save();
+                    g.translate(p.x, p.y);
+                    g.rotate(p.r);
+                    g.globalAlpha = Math.max(0, 1 - t / 2600);
+                    g.fillStyle = p.c;
+                    g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+                    g.restore();
+                });
+                if (t < 2600) requestAnimationFrame(frame);
+                else cv.remove();
+            })(t0);
+        }
+
+        // ════════════════════════════════════════════════════════════
+        //  발표 엔진 (두 방식 공용)
+        // ════════════════════════════════════════════════════════════
+        // data = {
+        //   sid, mode: 'offline'|'online', phase: 'lobby'|'input'|'show',
+        //   players: [{id, name}], awards: [이름], rounds: {awards, keywords, resolutions},
+        //   answers: {playerId: {votes: {상번호: playerId}, keywords: [], resolution}},
+        //   plan: [단계], at: 지금 단계, sub: 단계 안의 세부 단계,
+        //   guesses: {문제키: {playerId: 고른 playerId}}   ← 각자 폰으로 맞힌 것 (온라인)
+        //   marks:   {문제키: [맞힌 playerId]}             ← 진행자가 눌러 준 정답자 (오프라인)
+        // }
+
+        function sanitizeAnswers(raw, ctx) {
+            const out = { votes: {}, keywords: [], resolution: '' };
+            if (!raw || typeof raw !== 'object') return out;
+            const ids = new Set(ctx.players.map((p) => p.id));
+            if (ctx.rounds.awards && raw.votes && typeof raw.votes === 'object') {
+                ctx.awards.forEach((_, i) => {
+                    const v = raw.votes[i];
+                    if (typeof v === 'string' && ids.has(v) && v !== ctx.self) out.votes[i] = v;
+                });
+            }
+            if (ctx.rounds.keywords && Array.isArray(raw.keywords)) {
+                out.keywords = raw.keywords
+                    .filter((k) => typeof k === 'string')
+                    .map((k) => k.replace(/\s+/g, ' ').trim().replace(/^#/, '').slice(0, LIMIT.kw))
+                    .filter((k, i, all) => k && all.findIndex((x) => kwKey(x) === kwKey(k)) === i)   // 같은 걸 두 번 적으면 하나만
+                    .slice(0, 3);
+            }
+            if (ctx.rounds.resolutions && typeof raw.resolution === 'string') {
+                out.resolution = raw.resolution.replace(/\s+/g, ' ').trim().slice(0, LIMIT.res);
+            }
+            return out;
+        }
+
+        function validateAnswers(ans, ctx) {
+            if (ctx.rounds.awards && ctx.awards.length) {
+                const missing = ctx.awards.findIndex((_, i) => !ans.votes[i]);
+                if (missing >= 0) return `"${ctx.awards[missing]}" 투표를 골라 주세요.`;
+            }
+            if (ctx.rounds.keywords && !ans.keywords.length) return '올해 키워드를 하나 이상 적어 주세요.';
+            if (ctx.rounds.resolutions && !ans.resolution) return `${YEAR + 1}년 다짐을 적어 주세요.`;
+            return '';
+        }
+
+        const kwKey = (k) => k.toLowerCase().replace(/\s+/g, '');
+        const kwText = (list) => list.join(' · ');
+
+        function keywordBoard(data) {
+            const map = new Map();
+            let order = 0;
+            data.players.forEach((p) => {
+                const seen = new Set();
+                (data.answers[p.id]?.keywords || []).forEach((k) => {
+                    const key = kwKey(k);
+                    if (seen.has(key)) return;   // 한 사람이 같은 걸 두 번 적어도 한 번만 센다
+                    seen.add(key);
+                    if (!map.has(key)) map.set(key, { text: k, count: 0, order: order++ });
+                    map.get(key).count += 1;
+                });
+            });
+            return [...map.values()]
+                .sort((a, b) => b.count - a.count || a.order - b.order)
+                .slice(0, 10)
+                .map(({ text, count }) => ({ text, count }));
+        }
+
+        function tallyAward(data, i) {
+            const counts = {};
+            let votes = 0;
+            Object.values(data.answers).forEach((a) => {
+                const v = a.votes?.[i];
+                if (v) { counts[v] = (counts[v] || 0) + 1; votes++; }
+            });
+            const top = Math.max(0, ...Object.values(counts));
+            const winners = top > 0 ? Object.keys(counts).filter((id) => counts[id] === top) : [];
+            return { winners, top, votes };
+        }
+
+        function buildPlan(data) {
+            const plan = [];
+            const answered = data.players.filter((p) => data.answers[p.id]);
+            if (data.rounds.awards && data.awards.length) {
+                plan.push({ t: 'title', round: 'awards' });
+                data.awards.forEach((_, i) => plan.push({ t: 'award', i }));
+            }
+            if (data.rounds.keywords) {
+                const items = answered.filter((p) => data.answers[p.id].keywords.length);
+                if (items.length) {
+                    plan.push({ t: 'title', round: 'keywords' });
+                    plan.push({ t: 'board' });
+                    shuffle(items).forEach((p) => plan.push({ t: 'guess', kind: 'kw', key: rid(), author: p.id, text: kwText(data.answers[p.id].keywords) }));
+                }
+            }
+            if (data.rounds.resolutions) {
+                const items = answered.filter((p) => data.answers[p.id].resolution);
+                if (items.length) {
+                    plan.push({ t: 'title', round: 'resolutions' });
+                    shuffle(items).forEach((p) => plan.push({ t: 'guess', kind: 'res', key: rid(), author: p.id, text: data.answers[p.id].resolution }));
+                }
+            }
+            plan.push({ t: 'end' });
+            return plan;
+        }
+
+        const firstSub = (step) => (step?.t === 'award' ? 'drum' : step?.t === 'guess' ? 'ask' : '');
+
+        // 맞히기 점수 (진행자는 문제를 다 보므로 온라인에서는 맞히기에서 빠진다)
+        function correctOf(data, step) {
+            if (data.mode === 'online') {
+                const g = data.guesses[step.key] || {};
+                return Object.keys(g).filter((pid) => g[pid] === step.author);
+            }
+            return (data.marks[step.key] || []).filter((pid) => pid !== step.author);
+        }
+
+        function scoresOf(data) {
+            const s = {};
+            data.players.forEach((p) => { s[p.id] = 0; });
+            (data.plan || []).forEach((step, idx) => {
+                if (step.t !== 'guess') return;
+                // 아직 정답을 공개하지 않은 문제는 세지 않는다
+                if (idx > data.at || (idx === data.at && data.sub !== 'answer')) return;
+                correctOf(data, step).forEach((pid) => { if (pid in s) s[pid] += 1; });
+            });
+            return s;
+        }
+
+        function roundNumber(data, round) {
+            return ROUND_ORDER.filter((r) => data.plan.some((s) => s.t === 'title' && s.round === r)).indexOf(round) + 1;
+        }
+
+        // 무대와 참가자 폰이 함께 쓰는 '지금 화면' (비밀은 공개할 때만 담는다)
+        function makeView(data) {
+            const step = data.plan[data.at];
+            const base = { at: data.at, total: data.plan.length, sub: data.sub };
+            if (!step) return { ...base, t: 'end' };
+            if (step.t === 'title') return { ...base, t: 'title', round: step.round, n: roundNumber(data, step.round) };
+            if (step.t === 'award') {
+                const v = { ...base, t: 'award', i: step.i, title: data.awards[step.i], count: data.awards.length };
+                if (data.sub === 'reveal') Object.assign(v, tallyAward(data, step.i));
+                return v;
+            }
+            if (step.t === 'board') return { ...base, t: 'board', items: keywordBoard(data) };
+            if (step.t === 'guess') {
+                const v = { ...base, t: 'guess', kind: step.kind, key: step.key, text: step.text };
+                if (data.mode === 'online') {
+                    const g = data.guesses[step.key] || {};
+                    v.answered = Object.keys(g);
+                    v.eligible = data.players.filter((p) => p.id !== step.author && p.id !== data.hostId).length;
+                }
+                if (data.sub === 'answer') {
+                    v.answer = step.author;
+                    v.correct = correctOf(data, step);
+                }
+                return v;
+            }
+            // end
+            const scores = scoresOf(data);
+            return {
+                ...base,
+                t: 'end',
+                awards: data.rounds.awards ? data.awards.map((title, i) => ({ title, winners: tallyAward(data, i).winners })) : [],
+                keywords: data.rounds.keywords ? keywordBoard(data).slice(0, 3) : [],
+                scores,
+                hasGuess: data.plan.some((s) => s.t === 'guess')
+            };
+        }
+
+        function advance(data, dir) {
+            const step = data.plan[data.at];
+            if (dir > 0) {
+                if (step?.t === 'award' && data.sub === 'drum') { data.sub = 'reveal'; return 'reveal'; }
+                if (step?.t === 'guess' && data.sub === 'ask') { data.sub = 'answer'; return 'answer'; }
+                if (data.at < data.plan.length - 1) {
+                    data.at += 1;
+                    data.sub = firstSub(data.plan[data.at]);
+                    return data.sub === 'drum' ? 'drum' : 'step';
+                }
+                return '';
+            }
+            if (step?.t === 'award' && data.sub === 'reveal') { data.sub = 'drum'; return 'back'; }
+            if (step?.t === 'guess' && data.sub === 'answer') { data.sub = 'ask'; return 'back'; }
+            if (data.at > 0) {
+                data.at -= 1;
+                const prev = data.plan[data.at];
+                data.sub = prev.t === 'award' ? 'reveal' : prev.t === 'guess' ? 'answer' : '';
+                return 'back';
+            }
+            return '';
+        }
+
+        function nextLabel(view) {
+            if (view.t === 'title') return '시작 ▶';
+            if (view.t === 'award') return view.sub === 'drum' ? '🥁 발표!' : (view.i + 1 < view.count ? '다음 상 ▶' : '다음 ▶');
+            if (view.t === 'guess') return view.sub === 'ask' ? '🔓 정답 공개' : '다음 문제 ▶';
+            if (view.t === 'end') return '';
+            return '다음 ▶';
+        }
+
+        const namesOf = (ids, players) => ids.map((id) => players.find((p) => p.id === id)?.name || '?');
+
+        // ── 무대 화면 ───────────────────────────────────────────
+        function boardHtml(items) {
+            if (!items.length) return '<p>키워드가 없어요</p>';
+            const n = items.length;
+            return `<ol class="board">${items.map((it, i) => `
+                <li style="--d:${((n - 1 - i) * 0.32).toFixed(2)}s">
+                    <span class="rk">${i + 1}</span>
+                    <span class="kw">${esc(it.text)}</span>
+                    <span class="cnt ${it.count > 1 ? '' : 'new'}">${it.count > 1 ? `▲ ${it.count}명` : 'NEW'}</span>
+                </li>`).join('')}</ol>`;
+        }
+
+        function questionHtml(view) {
+            if (view.kind === 'kw') {
+                return `<div class="st-kicker">🔍 누구의 ${YEAR} 검색어?</div>
+                    <div class="kw-chips">${view.text.split(' · ').map((k, i) => `<span style="--i:${i}">#${esc(k)}</span>`).join('')}</div>`;
+            }
+            return `<div class="st-kicker">🔮 누구의 ${YEAR + 1} 다짐?</div><div class="quote">“${esc(view.text)}”</div>`;
+        }
+
+        function stageHtml(view, players, opts = {}) {
+            if (view.t === 'title') {
+                const info = ROUND_INFO[view.round];
+                return `<div class="st">
+                    <div class="st-emoji">${info.e}</div>
+                    <div class="st-kicker">ROUND ${view.n}</div>
+                    <h2>${esc(info.name)}</h2>
+                    <p>${esc(info.desc)}</p></div>`;
+            }
+            if (view.t === 'award') {
+                if (view.sub === 'drum') {
+                    return `<div class="st">
+                        <div class="st-kicker">${view.i + 1}번째 상 · ${view.count}개 중</div>
+                        <h2>${esc(view.title)}</h2>
+                        <div class="drum">🥁</div>
+                        <p class="st-sub">두구두구두구…</p></div>`;
+                }
+                const names = namesOf(view.winners, players);
+                return `<div class="st">
+                    <div class="st-kicker">${esc(view.title)}</div>
+                    <div class="trophy">🏆</div>
+                    ${names.length
+                        ? `<div class="winner">${names.map(esc).join(' · ')}</div><p>${view.top}표 / 전체 ${view.votes}표${names.length > 1 ? ' · 공동 수상!' : ''}</p>`
+                        : '<div class="winner">수상자 없음 🙈</div><p>아무도 표를 받지 못했어요</p>'}
+                    ${names.length && opts.host ? '<p class="st-sub"><button class="btn btn-ghost" data-act="timer" type="button">🎤 수상 소감 30초</button></p>' : ''}
+                    </div>`;
+            }
+            if (view.t === 'board') {
+                return `<div class="st"><div class="st-kicker">📈 실시간 급상승</div><h2>우리 모임 ${YEAR} 올해의 검색어</h2>${boardHtml(view.items)}</div>`;
+            }
+            if (view.t === 'guess') {
+                let foot = '';
+                if (view.sub === 'ask') {
+                    foot = opts.online
+                        ? `<p class="st-sub">각자 폰에서 골라 주세요 · <b>${view.answered.length}/${view.eligible}명</b> 답함</p>
+                           <div class="answered">${namesOf(view.answered, players).map((n) => `<span>✔ ${esc(n)}</span>`).join('')}</div>`
+                        : '<p class="st-sub">다 같이 맞혀 보세요! 다 골랐으면 정답 공개 👉</p>';
+                } else {
+                    const author = namesOf([view.answer], players)[0];
+                    foot = `<div class="reveal-name">정답은…<strong>${esc(author)}</strong></div>`;
+                    if (opts.online) {
+                        const ok = namesOf(view.correct, players);
+                        foot += `<div class="answered">${ok.length ? ok.map((n) => `<span class="ok">🎯 ${esc(n)}</span>`).join('') : '<span>아무도 못 맞혔어요! 완벽한 위장 🕶️</span>'}</div>`;
+                    } else if (opts.host) {
+                        foot += `<div class="mark-row"><p>맞힌 사람을 눌러 주세요 (눈치왕 점수)</p><div class="chip-wrap">${players
+                            .filter((p) => p.id !== view.answer)
+                            .map((p) => `<button type="button" class="chip" data-mark="${esc(p.id)}" aria-pressed="${view.correct.includes(p.id)}">${esc(p.name)}</button>`)
+                            .join('')}</div></div>`;
+                    }
+                }
+                return `<div class="st">${questionHtml(view)}${foot}</div>`;
+            }
+            return endHtml(view, players, opts);
+        }
+
+        function rankingOf(view, players) {
+            return players
+                .map((p) => ({ name: p.name, id: p.id, score: view.scores?.[p.id] || 0 }))
+                .filter((r) => r.score > 0)
+                .sort((a, b) => b.score - a.score);
+        }
+
+        function endHtml(view, players, opts) {
+            const awards = view.awards.map((a) => `<li>${esc(a.title)} <b>${a.winners.length ? namesOf(a.winners, players).map(esc).join(' · ') : '—'}</b></li>`).join('');
+            const ranking = rankingOf(view, players).slice(0, 3);
+            const medals = ['🥇', '🥈', '🥉'];
+            return `<div class="st">
+                <div class="st-emoji">🎊</div>
+                <h2>${YEAR} 송년회 결과</h2>
+                <p>올 한 해 다들 고생 많았어요. ${YEAR + 1}년에도 잘 부탁해요!</p>
+                <div class="end-grid">
+                    ${awards ? `<div class="end-card wide"><h3>🏆 올해의 상</h3><ul>${awards}</ul></div>` : ''}
+                    ${view.hasGuess ? `<div class="end-card"><h3>🔍 눈치왕</h3>${ranking.length ? `<ol>${ranking.map((r, i) => `<li>${medals[i]} <b>${esc(r.name)}</b> ${r.score}개</li>`).join('')}</ol>` : '<p>아무도 못 맞혔어요 🙈</p>'}</div>` : ''}
+                    ${view.keywords.length ? `<div class="end-card"><h3>📈 올해의 검색어</h3><ol>${view.keywords.map((k) => `<li><b>${esc(k.text)}</b>${k.count > 1 ? ` · ${k.count}명` : ''}</li>`).join('')}</ol></div>` : ''}
+                </div>
+                ${opts.host ? `<div class="btn-row" style="margin-top:18px"><button class="btn btn-festive" data-act="image" type="button">🖼️ 결과 이미지 저장</button></div>` : ''}
+            </div>`;
+        }
+
+        // ── 결과 이미지 ─────────────────────────────────────────
+        function resultImage(view, players) {
+            const W = 1080;
+            const H = 1350;
+            const cv = document.createElement('canvas');
+            cv.width = W;
+            cv.height = H;
+            const g = cv.getContext('2d');
+            const bg = g.createLinearGradient(0, 0, W, H);
+            bg.addColorStop(0, '#0b1020');
+            bg.addColorStop(1, '#2a1530');
+            g.fillStyle = bg;
+            g.fillRect(0, 0, W, H);
+            // 반짝이 점
+            for (let i = 0; i < 70; i++) {
+                g.fillStyle = `rgba(255,255,255,${(Math.random() * 0.35 + 0.05).toFixed(2)})`;
+                g.beginPath();
+                g.arc(Math.random() * W, Math.random() * H, Math.random() * 2.5 + 0.5, 0, Math.PI * 2);
+                g.fill();
+            }
+            const font = (w, s) => `${w} ${s}px Pretendard, -apple-system, sans-serif`;
+            const fit = (text, max) => {
+                let t = text;
+                while (g.measureText(t).width > max && t.length > 1) t = t.slice(0, -1);
+                return t === text ? t : `${t}…`;
+            };
+            g.textAlign = 'center';
+            g.fillStyle = '#f5b83d';
+            g.font = font(800, 34);
+            g.fillText('🎄 YEAR-END PARTY', W / 2, 110);
+            g.fillStyle = '#ffffff';
+            g.font = font(900, 76);
+            g.fillText(`${YEAR} 송년회 결과`, W / 2, 200);
+
+            let y = 290;
+            const section = (title) => {
+                g.textAlign = 'left';
+                g.fillStyle = '#f5b83d';
+                g.font = font(800, 38);
+                g.fillText(title, 90, y);
+                y += 58;
+            };
+            const line = (left, right) => {
+                g.textAlign = 'left';
+                g.fillStyle = '#cbd5e1';
+                g.font = font(600, 34);
+                g.fillText(fit(left, 520), 110, y);
+                g.textAlign = 'right';
+                g.fillStyle = '#ffffff';
+                g.font = font(800, 36);
+                g.fillText(fit(right, 360), W - 100, y);
+                y += 54;
+            };
+            if (view.awards.length) {
+                section('🏆 올해의 상');
+                view.awards.forEach((a) => line(a.title, a.winners.length ? namesOf(a.winners, players).join(' · ') : '—'));
+                y += 24;
+            }
+            const ranking = rankingOf(view, players).slice(0, 3);
+            if (view.hasGuess && ranking.length && y < H - 260) {
+                section('🔍 눈치왕');
+                ranking.forEach((r, i) => line(`${['🥇', '🥈', '🥉'][i]} ${i + 1}위`, `${r.name} · ${r.score}개`));
+                y += 24;
+            }
+            if (view.keywords.length && y < H - 200) {
+                section('📈 올해의 검색어');
+                view.keywords.forEach((k, i) => { if (y < H - 110) line(`${i + 1}위`, `#${k.text}`); });
+            }
+            g.textAlign = 'center';
+            g.fillStyle = '#94a3b8';
+            g.font = font(600, 26);
+            g.fillText('미니게임 천국 · 송년회 진행 키트', W / 2, H - 56);
+            return new Promise((res) => cv.toBlob(res, 'image/png'));
+        }
+
+        async function saveResultImage(view, players) {
+            const blob = await resultImage(view, players);
+            if (!blob) return;
+            await saveToGallery(blob, `${YEAR}-year-end-party.png`);
+        }
+
+        // ── 무대 컨트롤러 ───────────────────────────────────────
+        // 진행자 기기에서 무대를 그린다. commit()은 방식마다 다르다 (오프라인: 저장 / 온라인: 저장 + 공유 상태 올리기)
+        const Stage = (() => {
+            let data = null;
+            let commit = () => {};
+            let quit = () => {};
+            let lastSig = '';
+            let timerId = null;
+
+            function bind(d, opts) {
+                if (data === d) return;   // 같은 기록이면 다시 묶지 않는다 (타이머·등장 효과 유지)
+                data = d;
+                commit = opts.commit;
+                quit = opts.quit;
+                $('btn-quit').textContent = opts.quitLabel;
+                lastSig = '';
+                stopTimer();
+            }
+
+            function render() {
+                if (!data || data.phase !== 'show') return;
+                const view = makeView(data);
+                const sig = `${view.at}:${view.sub}`;
+                const stage = $('stage');
+                stage.classList.toggle('calm', sig === lastSig);   // 같은 화면을 다시 그릴 때는 등장 효과를 생략
+                stage.innerHTML = stageHtml(view, data.players, { online: data.mode === 'online', host: true });
+                lastSig = sig;
+                $('step-count').textContent = `${view.at + 1} / ${view.total}`;
+                const label = nextLabel(view);
+                $('btn-next').textContent = label;
+                $('btn-next').hidden = !label;
+                $('btn-prev').disabled = view.at === 0 && !view.sub.match(/reveal|answer/);
+            }
+
+            function go(dir) {
+                if (!data) return;
+                stopTimer();
+                const what = advance(data, dir);
+                if (!what) return;
+                if (what === 'drum') Sound.drum();
+                else Sound.stopDrum();
+                if (what === 'reveal') { Sound.fanfare(); confetti(); buzz([40, 60, 40]); }
+                if (what === 'answer') Sound.ding();
+                commit();
+            }
+
+            function startTimer() {
+                stopTimer();
+                let left = 30;
+                $('timer').hidden = false;
+                const draw = () => {
+                    $('timer-num').textContent = left;
+                    $('timer-num').classList.toggle('low', left <= 5);
+                };
+                draw();
+                timerId = setInterval(() => {
+                    left -= 1;
+                    if (left <= 0) { stopTimer(); Sound.ding(); return; }
+                    if (left <= 5) Sound.tick(left === 1);
+                    draw();
+                }, 1000);
+            }
+
+            function stopTimer() {
+                clearInterval(timerId);
+                timerId = null;
+                $('timer').hidden = true;
+            }
+
+            function init() {
+                $('btn-next').addEventListener('click', () => go(1));
+                $('btn-prev').addEventListener('click', () => go(-1));
+                $('timer-stop').addEventListener('click', stopTimer);
+                $('btn-quit').addEventListener('click', () => quit());
+                $('btn-full').addEventListener('click', () => {
+                    const el = $('stage-wrap');
+                    if (document.fullscreenElement) document.exitFullscreen?.();
+                    else el.requestFullscreen?.().catch(() => {});
+                });
+                if (!document.documentElement.requestFullscreen) $('btn-full').hidden = true;
+                $('stage').addEventListener('click', (e) => {
+                    const act = e.target.closest('[data-act]')?.dataset.act;
+                    if (act === 'timer') startTimer();
+                    if (act === 'image') saveResultImage(makeView(data), data.players);
+                    const mark = e.target.closest('[data-mark]')?.dataset.mark;
+                    if (mark && data.mode === 'offline') {
+                        const step = data.plan[data.at];
+                        const list = new Set(data.marks[step.key] || []);
+                        if (list.has(mark)) list.delete(mark); else list.add(mark);
+                        data.marks[step.key] = [...list];
+                        commit();
+                    }
+                });
+                document.addEventListener('keydown', (e) => {
+                    if ($('v-stage').hidden || e.target.closest('input, textarea')) return;
+                    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                        if (e.target.closest('button') && e.key !== 'ArrowRight') return;
+                        e.preventDefault();
+                        go(1);
+                    }
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+                });
+            }
+
+            return { bind, render, init, stopTimer };
+        })();
+
+        // ════════════════════════════════════════════════════════════
+        //  화면 전환 · 입력 폼 · 준비 화면 (공용)
+        // ════════════════════════════════════════════════════════════
+        const VIEWS = ['v-home', 'v-setup', 'v-pass', 'v-join', 'v-lobby', 'v-input', 'v-stage', 'v-phone'];
+        function show(id) {
+            VIEWS.forEach((v) => { $(v).hidden = v !== id; });
+            document.body.classList.toggle('on-stage', id === 'v-stage' || id === 'v-phone');
+            if (id !== 'v-stage') { Stage.stopTimer(); Sound.stopDrum(); }
+        }
+
+        // 답 입력 폼. 투표는 버튼, 키워드 3칸, 다짐 1칸
+        function answerFormHtml(ctx, draft = {}) {
+            const candidates = ctx.players.filter((p) => p.id !== ctx.self);
+            let h = '';
+            if (ctx.rounds.awards && ctx.awards.length) {
+                h += `<div class="form-block"><h3>🏆 올해의 상 투표</h3><p class="hint">상마다 한 명씩 골라 주세요. 나는 고를 수 없어요. 아무도 몰라요 🤫</p>`;
+                ctx.awards.forEach((a, i) => {
+                    h += `<div class="vote-row" data-award="${i}"><div class="vote-title">${esc(a)}</div><div class="chip-wrap">${candidates
+                        .map((c) => `<button type="button" class="chip" data-pick="${esc(c.id)}" aria-pressed="${draft.votes?.[i] === c.id}">${esc(c.name)}</button>`)
+                        .join('')}</div></div>`;
+                });
+                h += '</div>';
+            }
+            if (ctx.rounds.keywords) {
+                const k = draft.keywords || [];
+                h += `<div class="form-block"><h3>📈 나의 ${YEAR} 키워드 3개</h3><p class="hint">올해 나를 설명하는 단어. 다른 사람이 맞혀야 하니 너무 뻔하지 않게!</p><div class="kw-inputs">${[0, 1, 2]
+                    .map((i) => `<label><span>#${i + 1}</span><input class="txt" data-kw="${i}" maxlength="${LIMIT.kw}" value="${esc(k[i] || '')}" placeholder="${['예) 이직', '예) 러닝', '예) 고양이'][i]}" autocomplete="off"></label>`)
+                    .join('')}</div></div>`;
+            }
+            if (ctx.rounds.resolutions) {
+                h += `<div class="form-block"><h3>🔮 ${YEAR + 1}년 다짐 한 줄</h3><p class="hint">나중에 공개돼요. 누구 건지 맞히기 어렵게 써도 좋아요.</p><textarea class="txt" data-res maxlength="${LIMIT.res}" placeholder="예) 내년엔 꼭 혼자 해외여행 가기">${esc(draft.resolution || '')}</textarea></div>`;
+            }
+            h += '<p class="error" data-form-error></p>';
+            return h;
+        }
+
+        function readForm(el) {
+            const votes = {};
+            el.querySelectorAll('[data-award]').forEach((row) => {
+                const on = row.querySelector('[data-pick][aria-pressed="true"]');
+                if (on) votes[row.dataset.award] = on.dataset.pick;
+            });
+            return {
+                votes,
+                keywords: [...el.querySelectorAll('[data-kw]')].map((i) => i.value),
+                resolution: el.querySelector('[data-res]')?.value || ''
+            };
+        }
+
+        // 폼 상자 하나에 한 번만 건다 (안의 내용은 몇 번이고 다시 그려도 된다)
+        function wireForm(el, onChange) {
+            el.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-pick]');
+                if (!btn) return;
+                const row = btn.closest('[data-award]');
+                const was = btn.getAttribute('aria-pressed') === 'true';
+                row.querySelectorAll('[data-pick]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+                btn.setAttribute('aria-pressed', String(!was));
+                onChange?.();
+            });
+            el.addEventListener('input', () => onChange?.());
+        }
+
+        function formError(el, msg) {
+            const box = el.querySelector('[data-form-error]');
+            if (box) box.textContent = msg;
+            if (msg) box?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // 준비 화면
+        const Setup = (() => {
+            let mode = 'offline';
+            let awards = PRESET_AWARDS.map(([t, on]) => ({ t, on }));
+
+            function renderAwards() {
+                $('award-chips').innerHTML = awards.map((a, i) =>
+                    `<button type="button" class="chip" data-i="${i}" aria-pressed="${a.on}">${esc(a.t)}${a.custom ? '<span class="x" aria-hidden="true">✕</span>' : ''}</button>`
+                ).join('');
+            }
+
+            function open(m) {
+                mode = m;
+                $('setup-host').hidden = m !== 'online';
+                $('setup-players').hidden = m !== 'offline';
+                $('setup-go').textContent = m === 'online' ? '📱 방 만들기' : '🔄 입력 시작';
+                $('setup-error').textContent = '';
+                if (m === 'online') $('host-nick').value = Store.get('yek-nickname') || '';
+                const last = Store.get('yek-last-setup');
+                if (last) {
+                    if (Array.isArray(last.awards) && last.awards.length) awards = last.awards;
+                    if (m === 'offline' && last.names && !$('player-names').value) $('player-names').value = last.names;
+                }
+                syncAwardsVisibility();
+                renderAwards();
+                show('v-setup');
+            }
+
+            function syncAwardsVisibility() {
+                $('setup-awards').hidden = !$('r-awards').checked;
+            }
+
+            function parseNames() {
+                return $('player-names').value.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
+            }
+
+            function collect() {
+                const rounds = { awards: $('r-awards').checked, keywords: $('r-keywords').checked, resolutions: $('r-resolutions').checked };
+                if (!rounds.awards && !rounds.keywords && !rounds.resolutions) return { error: '라운드를 하나 이상 골라 주세요.' };
+                const list = awards.filter((a) => a.on).map((a) => a.t);
+                if (rounds.awards && !list.length) return { error: '시상할 상을 하나 이상 골라 주세요.' };
+                const cfg = { rounds, awards: rounds.awards ? list : [] };
+                if (mode === 'offline') {
+                    const names = parseNames();
+                    if (names.length < 3) return { error: '참가자를 3명 이상 적어 주세요.' };
+                    if (names.length > 20) return { error: '참가자는 20명까지예요.' };
+                    const long = names.find((n) => n.length > LIMIT.name);
+                    if (long) return { error: `이름은 ${LIMIT.name}자까지예요: ${long}` };
+                    const dup = names.find((n, i) => names.indexOf(n) !== i);
+                    if (dup) return { error: `같은 이름이 있어요: ${dup} (뒤에 숫자를 붙여 주세요)` };
+                    cfg.names = names;
+                } else {
+                    const nick = $('host-nick').value.trim();
+                    if (!nick) return { error: '닉네임을 적어 주세요.' };
+                    cfg.nickname = nick;
+                    cfg.hostPlays = $('host-plays').checked;
+                }
+                Store.set('yek-last-setup', { awards, names: mode === 'offline' ? $('player-names').value : Store.get('yek-last-setup')?.names });
+                return { cfg };
+            }
+
+            function addAward() {
+                const raw = $('award-new').value.trim();
+                if (!raw) return;
+                const t = /^\p{Extended_Pictographic}/u.test(raw) ? raw : `🏅 ${raw}`;
+                if (awards.some((a) => a.t === t)) { $('setup-error').textContent = '이미 있는 상이에요.'; return; }
+                if (awards.filter((a) => a.on).length >= MAX_AWARDS) { $('setup-error').textContent = `상은 ${MAX_AWARDS}개까지 켤 수 있어요.`; return; }
+                awards.push({ t, on: true, custom: true });
+                $('award-new').value = '';
+                $('setup-error').textContent = '';
+                renderAwards();
+            }
+
+            function init() {
+                $('award-chips').addEventListener('click', (e) => {
+                    const chip = e.target.closest('[data-i]');
+                    if (!chip) return;
+                    const a = awards[Number(chip.dataset.i)];
+                    if (a.custom && e.target.closest('.x')) {
+                        awards.splice(Number(chip.dataset.i), 1);
+                    } else {
+                        if (!a.on && awards.filter((x) => x.on).length >= MAX_AWARDS) {
+                            $('setup-error').textContent = `상은 ${MAX_AWARDS}개까지 켤 수 있어요.`;
+                            return;
+                        }
+                        a.on = !a.on;
+                    }
+                    $('setup-error').textContent = '';
+                    renderAwards();
+                });
+                $('award-add').addEventListener('click', addAward);
+                $('award-new').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addAward(); } });
+                $('r-awards').addEventListener('change', syncAwardsVisibility);
+                $('setup-back').addEventListener('click', () => show('v-home'));
+                $('setup-go').addEventListener('click', () => {
+                    const { cfg, error } = collect();
+                    $('setup-error').textContent = error || '';
+                    if (!cfg) return;
+                    if (mode === 'offline') Offline.start(cfg);
+                    else Online.host(cfg);
+                });
+            }
+
+            return { open, init };
+        })();
+
+        // ════════════════════════════════════════════════════════════
+        //  폰 한 대로 (오프라인)
+        // ════════════════════════════════════════════════════════════
+        const Offline = (() => {
+            const KEY = 'yek-offline';
+            let data = null;
+            let covered = true;   // 다음 사람에게 넘길 때 늘 가림 화면부터
+
+            const save = () => Store.set(KEY, data);
+            const current = () => data.players.find((p) => !data.answers[p.id] && !data.skipped.includes(p.id));
+            const ctxFor = (p) => ({ players: data.players, awards: data.awards, rounds: data.rounds, self: p.id });
+
+            function start(cfg) {
+                data = {
+                    sid: rid(), mode: 'offline', phase: 'input',
+                    players: cfg.names.map((name, i) => ({ id: `p${i + 1}`, name })),
+                    awards: cfg.awards, rounds: cfg.rounds,
+                    answers: {}, skipped: [], plan: null, at: 0, sub: '', guesses: {}, marks: {}
+                };
+                covered = true;
+                save();
+                render();
+            }
+
+            function resume() {
+                data = Store.get(KEY);
+                covered = true;
+                if (data) render();
+            }
+
+            function saved() {
+                const d = Store.get(KEY);
+                return d && d.mode === 'offline' && Array.isArray(d.players) ? d : null;
+            }
+
+            function drop() {
+                Store.del(KEY);
+                data = null;
+            }
+
+            function render() {
+                if (data.phase === 'show') {
+                    Stage.bind(data, { commit: () => { save(); Stage.render(); }, quit, quitLabel: '처음으로' });
+                    show('v-stage');
+                    Stage.render();
+                    return;
+                }
+                show('v-pass');
+                const p = current();
+                const done = Object.keys(data.answers).length;
+                const total = data.players.length;
+                $('pass-form-wrap').hidden = true;
+                if (!p) {
+                    $('pass-body').innerHTML = `<div class="pass-cover"><div class="big">🎉</div><h2>모두 입력했어요!</h2>
+                        <p>이제 화면을 다 같이 볼 수 있게 놓고 발표를 시작하세요.<br>TV나 큰 화면에 연결하면 더 좋아요.</p>
+                        <button class="btn btn-festive" data-pass="show" type="button">🎬 발표 시작</button>
+                        <div class="progress-line">${done}/${total}명 입력${data.skipped.length ? ` · ${data.skipped.length}명 건너뜀` : ''}</div></div>`;
+                    return;
+                }
+                if (covered) {
+                    $('pass-body').innerHTML = `<div class="pass-cover"><div class="big">🎅</div>
+                        <h2>${esc(p.name)}님 차례예요</h2>
+                        <p>폰을 ${esc(p.name)}님에게 넘겨 주세요.<br>다른 사람은 화면을 보지 말아 주세요!</p>
+                        <button class="btn btn-festive" data-pass="open" type="button">제가 ${esc(p.name)}이에요 · 시작</button>
+                        <button class="text-btn" data-pass="skip" type="button">오늘 빠진 사람이에요 (건너뛰기)</button>
+                        ${done >= 2 ? '<button class="text-btn" data-pass="early" type="button">지금까지 입력한 사람만으로 발표 시작</button>' : ''}
+                        <div class="progress-line">${done}/${total}명 완료</div></div>`;
+                    return;
+                }
+                $('pass-body').innerHTML = '';
+                $('pass-form-title').textContent = `✍️ ${p.name}님의 답`;
+                $('pass-form').innerHTML = answerFormHtml(ctxFor(p));
+                $('pass-form-wrap').hidden = false;
+                window.scrollTo({ top: 0 });
+            }
+
+            function submit() {
+                const p = current();
+                if (!p) return;
+                const ctx = ctxFor(p);
+                const ans = sanitizeAnswers(readForm($('pass-form')), ctx);
+                const err = validateAnswers(ans, ctx);
+                if (err) { formError($('pass-form'), err); return; }
+                data.answers[p.id] = ans;
+                covered = true;
+                buzz();
+                save();
+                render();
+            }
+
+            function begin() {
+                if (Object.keys(data.answers).length < 2) return;
+                data.plan = buildPlan(data);
+                data.at = 0;
+                data.sub = firstSub(data.plan[0]);
+                data.phase = 'show';
+                save();
+                render();
+            }
+
+            function quit() {
+                if (!confirm('처음 화면으로 갈까요? 지금 송년회 기록은 지워져요.')) return;
+                drop();
+                show('v-home');
+                Home.refresh();
+            }
+
+            function init() {
+                wireForm($('pass-form'));
+                $('pass-submit').addEventListener('click', submit);
+                $('pass-body').addEventListener('click', (e) => {
+                    const act = e.target.closest('[data-pass]')?.dataset.pass;
+                    if (!act) return;
+                    const p = current();
+                    if (act === 'open') { covered = false; render(); }
+                    if (act === 'skip' && p && confirm(`${p.name}님을 건너뛸까요? 투표 후보에는 그대로 남아요.`)) { data.skipped.push(p.id); save(); render(); }
+                    if (act === 'early' && confirm('아직 입력 안 한 사람은 빼고 발표를 시작할까요?')) begin();
+                    if (act === 'show') begin();
+                });
+            }
+
+            return { start, resume, saved, drop, init };
+        })();
+
+        // ════════════════════════════════════════════════════════════
+        //  각자 폰으로 (방 서버)
+        // ════════════════════════════════════════════════════════════
+        const Online = (() => {
+            const GAME = 'year-end-kit';
+            const KEY = { nick: 'yek-nickname', host: 'yek-host:', state: 'yek-state:', mine: 'yek-mine:', guess: 'yek-guess:', pending: 'yek-pending' };
+            let roomId = null;
+            let conn = null;
+            let me = null;
+            let members = [];
+            let state = null;     // 공유 상태 (모두가 받음)
+            let data = null;      // 방장만: 전체 기록
+            let mine = null;      // 참가자: 내 답 {sid, answers, submitted, draft}
+            let guesses = {};     // 참가자: 내가 고른 답 {문제키: playerId}
+            let qrFor = null;
+            let formFor = '';
+            let buzzedFor = '';
+
+            const available = () => typeof RoomClient !== 'undefined' && RoomClient.isAvailable();
+            const isHost = () => Boolean(me?.host);
+            const hostId = () => members.find((m) => m.host)?.id;
+            const players = () => state?.players || [];
+            const isPlayer = () => players().some((p) => p.id === me?.id);
+            const ctxForMe = () => ({ players: players(), awards: state.awards, rounds: state.rounds, self: me.id });
+
+            // ── 방 만들기 · 들어가기 ──
+            async function host(cfg) {
+                const btn = $('setup-go');
+                btn.disabled = true;
+                try {
+                    const res = await RoomClient.create(GAME, cfg.nickname, `${YEAR} 송년회`);
+                    roomId = res.room.id;
+                    Store.set(KEY.nick, cfg.nickname);
+                    data = {
+                        sid: rid(), mode: 'online', phase: 'lobby', hostId: res.you.id, hostPlays: cfg.hostPlays,
+                        players: [], awards: cfg.awards, rounds: cfg.rounds,
+                        answers: {}, plan: null, at: 0, sub: '', guesses: {}, marks: {}
+                    };
+                    Store.set(KEY.host + roomId, data);
+                    history.replaceState(null, '', `#room=${roomId}`);
+                    connect();
+                } catch (e) {
+                    $('setup-error').textContent = e.message;
+                } finally {
+                    btn.disabled = false;
+                }
+            }
+
+            function enter(id) {
+                roomId = id;
+                if (RoomClient.hasJoined(id)) { connect(); return; }
+                $('join-nick').value = Store.get(KEY.nick) || '';
+                $('join-error').textContent = '';
+                show('v-join');
+                $('join-nick').focus();
+            }
+
+            async function submitJoin() {
+                const nickname = $('join-nick').value.trim();
+                if (!nickname) { $('join-error').textContent = '닉네임을 적어 주세요.'; return; }
+                const btn = $('join-go');
+                btn.disabled = true;
+                try {
+                    await RoomClient.join(roomId, nickname);
+                    Store.set(KEY.nick, nickname);
+                    connect();
+                } catch (e) {
+                    $('join-error').textContent = e.message;
+                } finally {
+                    btn.disabled = false;
+                }
+            }
+
+            function connect() {
+                mine = Store.get(KEY.mine + roomId);
+                guesses = Store.get(KEY.guess + roomId) || {};
+                data = Store.get(KEY.host + roomId);
+                formFor = '';
+                status('연결하는 중…');
+                show('v-lobby');
+                conn = RoomClient.connect(roomId, { onWelcome, onState, onMessage, onMembers, onStatus, onError: flash });
+            }
+
+            // ── 서버에서 온 것 ──
+            function onWelcome(msg) {
+                me = msg.you;
+                members = msg.room.members;
+                state = msg.state;
+                if (isHost()) {
+                    if (!data) data = Store.get(KEY.host + roomId);
+                    // 끊긴 동안 바뀐 것까지, 또는 서버가 다시 떠서 비어 버린 공유 상태를 방장 기록으로 맞춘다
+                    if (data) { publish(); return; }
+                }
+                resend();
+                render();
+            }
+
+            function onState(next) {
+                state = next;
+                resend();
+                render();
+            }
+
+            function onMembers(msg) {
+                if (msg.type === 'member_joined') members = [...members.filter((m) => m.id !== msg.member.id), msg.member];
+                if (msg.type === 'member_left') members = members.filter((m) => m.id !== msg.memberId);
+                if (msg.type === 'presence') {
+                    members = members.map((m) => (m.id === msg.memberId ? { ...m, online: msg.online } : m));
+                    if (msg.online && msg.memberId === hostId()) resend();   // 방장이 돌아오면 못 받았을 답을 다시 보낸다
+                }
+                render();
+            }
+
+            function onMessage(msg, from) {
+                if (!isHost() || !data || !msg || typeof msg !== 'object' || msg.sid !== data.sid) return;
+                const player = data.players.find((p) => p.id === from);
+                if (!player) return;
+                if (msg.kind === 'answers' && data.phase === 'input') {
+                    data.answers[from] = sanitizeAnswers(msg.answers, { players: data.players, awards: data.awards, rounds: data.rounds, self: from });
+                    publish();
+                }
+                if (msg.kind === 'guess' && data.phase === 'show') {
+                    const step = data.plan[data.at];
+                    if (step?.t !== 'guess' || data.sub !== 'ask' || step.key !== msg.key || from === step.author) return;
+                    if (!data.players.some((p) => p.id === msg.guess)) return;
+                    data.guesses[step.key] = { ...(data.guesses[step.key] || {}), [from]: msg.guess };
+                    publish();
+                }
+            }
+
+            const STATUS = { connecting: '연결하는 중…', offline: '연결이 끊겼어요. 다시 연결하는 중…', online: '' };
+            const ENDED = {
+                replaced: '다른 화면에서 이 방에 다시 들어와서 여기는 연결을 끊었어요.',
+                left: '방에서 나왔어요.',
+                unauthorized: '방 정보가 맞지 않아요. 링크로 다시 들어와 주세요.',
+                room_closed: '방이 닫혔어요. 즐거운 송년회였어요! 🎄'
+            };
+
+            function status(text) {
+                document.querySelectorAll('[data-ol-status]').forEach((el) => { el.textContent = text; });
+            }
+
+            function flash(text) {
+                status(text);
+                setTimeout(() => { if (document.querySelector('[data-ol-status]')?.textContent === text) status(''); }, 3000);
+            }
+
+            function onStatus(s, reason) {
+                if (s !== 'ended') { status(STATUS[s] ?? ''); return; }
+                if (reason !== 'replaced') [KEY.host, KEY.state, KEY.mine, KEY.guess].forEach((k) => Store.del(k + roomId));
+                conn = null; me = null; members = []; state = null; data = null; mine = null; guesses = {}; qrFor = null; roomId = null;
+                history.replaceState(null, '', location.pathname);
+                show('v-home');
+                Home.refresh();
+                $('home-message').textContent = ENDED[reason] || '방 연결이 끝났어요.';
+            }
+
+            // ── 방장: 공유 상태 올리기 ──
+            function publicState() {
+                return {
+                    v: 1, sid: data.sid, phase: data.phase,
+                    players: data.players, awards: data.awards, rounds: data.rounds,
+                    submitted: Object.keys(data.answers),
+                    view: data.phase === 'show' ? makeView(data) : null
+                };
+            }
+
+            function publish() {
+                Store.set(KEY.host + roomId, data);
+                state = publicState();
+                conn?.setState(state);
+                Store.set(KEY.state + roomId, state);
+                render();
+            }
+
+            function startInput() {
+                const list = members
+                    .filter((m) => m.online && (m.id !== data.hostId || data.hostPlays))
+                    .map((m) => ({ id: m.id, name: m.nickname }));
+                if (list.length < 3) { flash('참가자가 3명 이상이어야 시작할 수 있어요.'); return; }
+                data.players = list;
+                data.phase = 'input';
+                publish();
+            }
+
+            function closeInput() {
+                const n = Object.keys(data.answers).length;
+                if (n < 2) { flash('2명 이상 제출해야 발표할 수 있어요.'); return; }
+                const missing = data.players.length - n;
+                if (missing > 0 && !confirm(`아직 ${missing}명이 제출하지 않았어요. 그래도 마감할까요?`)) return;
+                data.plan = buildPlan(data);
+                data.at = 0;
+                data.sub = firstSub(data.plan[0]);
+                data.phase = 'show';
+                publish();
+            }
+
+            // ── 참가자: 내 답·내 선택 보내기 ──
+            function submitMine() {
+                const ctx = ctxForMe();
+                const ans = sanitizeAnswers(readForm($('input-form')), ctx);
+                const err = validateAnswers(ans, ctx);
+                if (err) { formError($('input-form'), err); return; }
+                mine = { sid: state.sid, answers: ans, submitted: true };
+                Store.set(KEY.mine + roomId, mine);
+                buzz();
+                if (isHost()) {
+                    data.answers[me.id] = ans;
+                    publish();
+                } else {
+                    conn?.sendTo(hostId(), { kind: 'answers', sid: state.sid, answers: ans });
+                    render();
+                }
+            }
+
+            function saveDraft() {
+                if (!state || mine?.submitted) return;
+                mine = { sid: state.sid, draft: readForm($('input-form')), submitted: false };
+                Store.set(KEY.mine + roomId, mine);
+            }
+
+            function pick(guess) {
+                const v = state?.view;
+                if (!v || v.t !== 'guess' || v.sub !== 'ask') return;
+                guesses[v.key] = guess;
+                Store.set(KEY.guess + roomId, guesses);
+                conn?.sendTo(hostId(), { kind: 'guess', sid: state.sid, key: v.key, guess });
+                buzz(15);
+                render();
+            }
+
+            // 끊겼다 붙은 동안 사라졌을 수 있는 내 답·선택을 다시 보낸다
+            function resend() {
+                if (!state || !me || isHost() || !conn) return;
+                const host = hostId();
+                if (!host) return;
+                if (state.phase === 'input' && mine?.submitted && mine.sid === state.sid && !state.submitted.includes(me.id)) {
+                    conn.sendTo(host, { kind: 'answers', sid: state.sid, answers: mine.answers });
+                }
+                const v = state.view;
+                if (state.phase === 'show' && v?.t === 'guess' && v.sub === 'ask' && guesses[v.key] && !v.answered.includes(me.id)) {
+                    conn.sendTo(host, { kind: 'guess', sid: state.sid, key: v.key, guess: guesses[v.key] });
+                }
+            }
+
+            async function leave() {
+                if (!roomId) return;
+                try {
+                    if (isHost()) {
+                        if (!confirm('방을 닫을까요? 모두의 연결이 끊겨요.')) return;
+                        await RoomClient.closeRoom(roomId);
+                    } else {
+                        if (!confirm('방에서 나갈까요?')) return;
+                        await RoomClient.leave(roomId);
+                    }
+                } catch (e) {
+                    flash(e.message);
+                }
+            }
+
+            // ── 화면 ──
+            function render() {
+                if (!me) return;
+                document.querySelectorAll('[data-ol-leave]').forEach((b) => { b.textContent = isHost() ? '방 닫기' : '방 나가기'; });
+                const phase = state?.phase || 'lobby';
+                if (phase === 'lobby') return renderLobby();
+                if (phase === 'input') return renderInput();
+                if (isHost()) {
+                    Stage.bind(data, { commit: publish, quit: leave, quitLabel: '방 닫기' });
+                    show('v-stage');
+                    Stage.render();
+                    return;
+                }
+                renderPhone();
+            }
+
+            function renderLobby() {
+                show('v-lobby');
+                const url = RoomClient.shareUrl(roomId);
+                $('ol-link').textContent = url;
+                $('lobby-qr-box').hidden = false;
+                if (qrFor !== url && typeof QRCode !== 'undefined') {
+                    $('ol-qr').innerHTML = '';
+                    new QRCode($('ol-qr'), { text: url, width: 480, height: 480, correctLevel: QRCode.CorrectLevel.M });
+                    qrFor = url;
+                }
+                $('ol-share').hidden = !navigator.share;
+                const online = members.filter((m) => m.online);
+                $('ol-count').textContent = `(${online.length}명 접속 · 최대 12명)`;
+                $('ol-members').innerHTML = members.map((m) =>
+                    `<li class="${m.id === me.id ? 'me' : ''}"><span class="dot ${m.online ? 'on' : ''}"></span>${m.host ? '👑 ' : ''}${esc(m.nickname)}</li>`
+                ).join('');
+                const playing = online.filter((m) => !m.host || data?.hostPlays).length;
+                $('ol-start').hidden = !isHost();
+                $('ol-start').disabled = playing < 3;
+                $('lobby-hint').textContent = isHost()
+                    ? (playing < 3 ? `참가자가 3명 이상 들어오면 시작할 수 있어요. (지금 ${playing}명)` : '다 들어왔으면 입력을 시작하세요! 시작할 때 접속해 있는 사람만 참여해요.')
+                    : '진행자가 시작하기를 기다리고 있어요. 이 화면을 켜 두세요 🎄';
+            }
+
+            function renderInput() {
+                show('v-input');
+                const submitted = new Set(state.submitted);
+                const ps = players();
+                $('input-count').textContent = `${submitted.size}/${ps.length}`;
+                $('input-people').innerHTML = ps.map((p) =>
+                    `<li class="${submitted.has(p.id) ? 'done' : ''} ${p.id === me.id ? 'me' : ''}">${submitted.has(p.id) ? '✅' : '⌛'} ${esc(p.name)}</li>`
+                ).join('');
+                $('input-close').hidden = !isHost();
+                $('input-close').disabled = submitted.size < 2;
+                $('input-hint').textContent = isHost()
+                    ? '제출이 다 모이면 마감하세요. 제출하지 않은 사람은 맞히기 문제에서 빠지고, 투표 후보에는 남아요.'
+                    : '모두 제출하면 진행자가 발표를 시작해요.';
+
+                const done = $('input-done');
+                const panel = $('input-form-panel');
+                if (!isPlayer()) {
+                    panel.hidden = true;
+                    done.hidden = false;
+                    done.innerHTML = isHost()
+                        ? '<div class="big">🎬</div><h2>진행만 하는 중</h2><p>제출 현황을 보고 마감해 주세요.</p>'
+                        : '<div class="big">👀</div><h2>이번엔 구경해요</h2><p>시작한 뒤에 들어와서 답은 못 내지만, 발표는 같이 볼 수 있어요.</p>';
+                    formFor = '';
+                    return;
+                }
+                const sent = mine?.submitted && mine.sid === state.sid;
+                if (sent) {
+                    panel.hidden = true;
+                    done.hidden = false;
+                    done.innerHTML = `<div class="big">✅</div><h2>제출했어요!</h2><p>${submitted.has(me.id) ? '진행자가 받았어요.' : '진행자에게 보내는 중…'} 다른 사람을 기다려 주세요.</p>
+                        <p style="margin-top:12px"><button class="text-btn" data-act="edit" type="button" style="color:#c7d2fe">답 고치기</button></p>`;
+                    formFor = '';
+                    return;
+                }
+                done.hidden = true;
+                panel.hidden = false;
+                // 다른 사람이 제출할 때마다 폼을 다시 그리면 쓰던 글이 날아가므로, 처음 한 번만 그린다
+                const sig = `${state.sid}:${me.id}`;
+                if (formFor !== sig) {
+                    const draft = mine?.sid === state.sid ? (mine.draft || mine.answers || {}) : {};
+                    $('input-form').innerHTML = answerFormHtml(ctxForMe(), draft);
+                    formFor = sig;
+                }
+            }
+
+            function renderPhone() {
+                show('v-phone');
+                const v = state.view;
+                const ps = players();
+                const name = (id) => ps.find((p) => p.id === id)?.name || '?';
+                let h = '';
+                if (!v) h = '<div class="big">⏳</div><h2>잠시만요</h2>';
+                else if (v.t === 'title') {
+                    const info = ROUND_INFO[v.round];
+                    h = `<div class="big">${info.e}</div><p>ROUND ${v.n}</p><h2>${esc(info.name)}</h2><p>${esc(info.desc)}</p>`;
+                } else if (v.t === 'award') {
+                    if (v.sub === 'drum') h = `<div class="big">🥁</div><p>${v.i + 1}번째 상</p><h2>${esc(v.title)}</h2><p>무대 화면을 봐 주세요!</p>`;
+                    else {
+                        const won = v.winners.includes(me.id);
+                        h = `<div class="big">🏆</div><p>${esc(v.title)}</p><div class="gold">${v.winners.length ? v.winners.map((id) => esc(name(id))).join(' · ') : '수상자 없음'}</div>
+                            ${won ? '<p class="result-good" style="margin-top:10px">🎉 축하해요! 수상 소감 한마디 준비!</p>' : ''}`;
+                        // 다른 사람이 답할 때마다 다시 그려지므로 진동은 이 발표에서 한 번만
+                        const sig = `${state.sid}:${v.at}:won`;
+                        if (won && buzzedFor !== sig) { buzzedFor = sig; buzz([60, 40, 60]); }
+                    }
+                } else if (v.t === 'board') {
+                    h = `<p>📈 실시간 급상승</p><h2>우리 모임 ${YEAR} 올해의 검색어</h2>${boardHtml(v.items)}`;
+                } else if (v.t === 'guess') {
+                    h = questionHtml(v);
+                    const isMine = mine?.answers && (v.kind === 'kw' ? kwText(mine.answers.keywords) === v.text : mine.answers.resolution === v.text);
+                    if (v.sub === 'ask') {
+                        if (!isPlayer()) h += '<p style="margin-top:14px">👀 구경 중이에요</p>';
+                        else if (isMine) h += '<p style="margin-top:14px">🤫 이건 내 거예요!<br>모른 척 표정 관리 해 주세요.</p>';
+                        else {
+                            const chosen = guesses[v.key];
+                            h += `<p style="margin-top:14px">누구일까요? ${chosen ? '(바꿀 수 있어요)' : ''}</p><div class="options">${ps
+                                .filter((p) => p.id !== me.id)
+                                .map((p) => `<button type="button" class="opt" data-guess="${esc(p.id)}" aria-pressed="${chosen === p.id}">${esc(p.name)}</button>`)
+                                .join('')}</div>`;
+                        }
+                    } else {
+                        h += `<p style="margin-top:14px">정답은</p><div class="gold">${esc(name(v.answer))}</div>`;
+                        if (isMine) h += '<p style="margin-top:8px">내 거였어요! 😎</p>';
+                        else if (isPlayer()) {
+                            const chosen = guesses[v.key];
+                            h += v.correct.includes(me.id)
+                                ? '<p class="result-good" style="margin-top:8px">🎯 맞혔어요! +1</p>'
+                                : `<p style="margin-top:8px">${chosen ? `아쉬워요! (내 선택: ${esc(name(chosen))})` : '이번엔 못 골랐어요'}</p>`;
+                        }
+                    }
+                } else if (v.t === 'end') {
+                    const won = v.awards.filter((a) => a.winners.includes(me.id)).map((a) => a.title);
+                    const score = v.scores?.[me.id] || 0;
+                    h = `<div class="big">🎊</div><h2>${YEAR} 송년회 끝!</h2>
+                        ${won.length ? `<p>🏆 내가 받은 상</p><div class="gold" style="font-size:1.2rem">${won.map(esc).join('<br>')}</div>` : ''}
+                        ${v.hasGuess && isPlayer() ? `<p style="margin-top:12px">🔍 내가 맞힌 문제: <b>${score}개</b></p>` : ''}
+                        <p style="margin-top:12px">${YEAR + 1}년에도 잘 부탁해요!</p>`;
+                }
+                $('phone-body').innerHTML = `<div class="phone-card">${h}</div>`;
+            }
+
+            function init() {
+                $('join-go').addEventListener('click', submitJoin);
+                $('join-nick').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitJoin(); });
+                $('join-cancel').addEventListener('click', () => { roomId = null; history.replaceState(null, '', location.pathname); show('v-home'); });
+                $('ol-start').addEventListener('click', startInput);
+                $('input-close').addEventListener('click', closeInput);
+                $('input-submit').addEventListener('click', submitMine);
+                wireForm($('input-form'), saveDraft);
+                $('input-done').addEventListener('click', (e) => {
+                    if (e.target.closest('[data-act="edit"]') && mine?.answers) {
+                        mine = { sid: mine.sid, draft: mine.answers, submitted: false };
+                        Store.set(KEY.mine + roomId, mine);
+                        formFor = '';
+                        render();
+                    }
+                });
+                $('phone-body').addEventListener('click', (e) => {
+                    const g = e.target.closest('[data-guess]')?.dataset.guess;
+                    if (g) pick(g);
+                });
+                document.querySelectorAll('[data-ol-leave]').forEach((b) => b.addEventListener('click', leave));
+                $('ol-copy').addEventListener('click', async () => {
+                    const url = RoomClient.shareUrl(roomId);
+                    try { await navigator.clipboard.writeText(url); flash('링크를 복사했어요. 단톡방에 붙여 넣어 주세요.'); } catch { prompt('이 링크를 복사해 주세요', url); }
+                });
+                $('ol-share').addEventListener('click', () => {
+                    navigator.share?.({ title: '송년회 진행 키트', text: '🎄 송년회 방에 들어와요! 링크를 열고 닉네임만 적으면 돼요.', url: RoomClient.shareUrl(roomId) }).catch(() => {});
+                });
+            }
+
+            return { available, host, enter, init };
+        })();
+
+        // ════════════════════════════════════════════════════════════
+        //  처음 화면
+        // ════════════════════════════════════════════════════════════
+        const Home = (() => {
+            function refresh() {
+                const d = Offline.saved();
+                $('resume-box').hidden = !d;
+                if (d) {
+                    const done = Object.keys(d.answers || {}).length;
+                    $('resume-text').textContent = d.phase === 'show'
+                        ? `폰 한 대로 하던 발표가 있어요 (${d.players.length}명, ${d.at + 1}/${d.plan?.length || 0} 단계).`
+                        : `폰 한 대로 입력하던 중이에요 (${d.players.length}명 중 ${done}명 입력).`;
+                }
+                const ok = Online.available();
+                $('mode-online').disabled = !ok;
+                $('online-flag').hidden = ok;
+            }
+
+            function init() {
+                $('mode-offline').addEventListener('click', () => {
+                    if (Offline.saved() && !confirm('하던 송년회 기록이 지워져요. 새로 시작할까요?')) return;
+                    Offline.drop();
+                    $('home-message').textContent = '';
+                    Setup.open('offline');
+                });
+                $('mode-online').addEventListener('click', () => { $('home-message').textContent = ''; Setup.open('online'); });
+                $('resume-go').addEventListener('click', () => Offline.resume());
+                $('resume-drop').addEventListener('click', () => {
+                    if (!confirm('하던 송년회 기록을 지울까요?')) return;
+                    Offline.drop();
+                    refresh();
+                });
+                refresh();
+            }
+
+            return { refresh, init };
+        })();
+
+        Stage.init();
+        Setup.init();
+        Offline.init();
+        Online.init();
+        Home.init();
+
+        // 초대 링크(#room=...)로 들어왔으면 바로 방으로
+        (() => {
+            const id = typeof RoomClient !== 'undefined' ? RoomClient.roomIdFromHash() : null;
+            if (!id) return;
+            if (!Online.available()) {
+                $('home-message').textContent = '방 서버가 아직 준비되지 않아서 각자 폰으로 하기는 쓸 수 없어요. 폰 한 대로 해 주세요.';
+                return;
+            }
+            Online.enter(id);
+        })();
+    </script>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "송년회 진행 키트",
+ "goal": "올해의 상, 우리 모임 올해의 검색어, 누구의 다짐 맞히기로 송년회를 진행합니다.",
+ "steps": [
+  "진행 방식을 고릅니다. 📱 각자 폰으로(방 서버 필요) 또는 🔄 폰 한 대로.",
+  "라운드와 시상할 상을 고르고 시작합니다. 상은 직접 만들 수도 있어요.",
+  "각자 몰래 입력합니다: 상마다 한 명 투표, 올해 키워드 3개, 내년 다짐 한 줄.",
+  "진행자 화면(TV에 띄우면 좋아요)으로 하나씩 발표합니다. 다음 버튼이나 → 키로 넘겨요.",
+  "🏆 상은 드럼롤 뒤 수상자를 공개하고, 30초 수상 소감 타이머를 쓸 수 있어요.",
+  "📈 키워드는 순위판을 본 뒤 한 명씩 누구 건지 맞히고, 🔮 다짐도 주인을 맞혀요.",
+  "마지막에 결과를 이미지로 저장해 단톡방에 올리세요."
+ ],
+ "tips": [
+  "각자 폰으로 하면 맞히기 점수가 자동으로 계산돼요. 진행자는 답을 다 보니 맞히기에서 빠져요.",
+  "폰 한 대로 하면 정답 공개 뒤 맞힌 사람을 눌러 눈치왕 점수를 줄 수 있어요.",
+  "입력한 답은 진행하는 기기에만 저장되고, 새로고침해도 이어서 할 수 있어요."
+ ],
+ "players": "3~20인 (각자 폰은 최대 12명)",
+ "time": "약 30~60분"
+}
+    </script>
+</body>
+
+</html>
