@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const FAV_KEY = 'favGames';
     const RECENT_KEY = 'recentGames';
     const RECENT_MAX = 16;
-    const TABS = ['all', 'multi', 'pass', 'duo', 'classic', 'solo', 'sim', 'utility'];
+    const TABS = ['all', 'new', 'multi', 'pass', 'duo', 'classic', 'solo', 'sim', 'utility'];
 
     // 인원 필터: 게임이 지원하는 인원 구간과 겹치면 보여 준다
     const PLAYER_RANGES = { '1': [1, 1], '2': [2, 2], '3-5': [3, 5], '6+': [6, Infinity] };
@@ -49,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = card.querySelector('.game-title')?.textContent.trim() || '';
         const desc = card.querySelector('.game-description')?.textContent.trim() || '';
         const badgeEl = card.querySelector('.game-badge');
-        const badge = badgeEl?.textContent.trim() || '';
         const icon = card.querySelector('.game-icon')?.textContent.trim() || '🎮';
 
         const addedDate = card.dataset.date || '';
@@ -81,20 +80,25 @@ document.addEventListener('DOMContentLoaded', () => {
         card.appendChild(meta);
 
         // 뱃지 처리: 7일 이내 신규 게임이면 NEW 뱃지 표시, 7일 경과 시 자동 제거/숨김
+        let badge = '';
         if (badgeEl) {
             if (isNew) {
                 badgeEl.textContent = 'NEW';
                 badgeEl.classList.add('is-new');
                 badgeEl.hidden = false;
+                badge = 'NEW';
             } else {
                 badgeEl.classList.remove('is-new');
                 badgeEl.hidden = true; // 7일 지난 게임이나 일반 분류명 텍스트는 숨김 (검색어엔 유지)
+                badge = badgeEl.textContent.trim();
+                if (badge.toUpperCase() === 'NEW') badge = ''; // 과거 하드코딩된 NEW 뱃지 텍스트는 검색어에서 제외
             }
         } else if (isNew) {
             const newBadge = document.createElement('div');
             newBadge.className = 'game-badge is-new';
             newBadge.textContent = 'NEW';
             card.appendChild(newBadge);
+            badge = 'NEW';
         }
 
         const star = document.createElement('button');
@@ -103,8 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
         star.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>';
         wrap.appendChild(star);
 
-        const haystack = `${title} ${desc} ${badge}`.toLowerCase();
-        return { slug, wrap, card, star, min, max, time, cats, title, desc, icon, haystack };
+        const newKeywords = isNew ? 'new 신규 최신' : '';
+        const haystack = `${title} ${desc} ${badge} ${newKeywords}`.toLowerCase();
+        return { slug, wrap, card, star, min, max, time, cats, title, desc, icon, haystack, isNew };
     });
 
     function playersText(min, max) {
@@ -150,7 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let title = '';
         if (q) {
             // 검색은 탭·보기와 상관없이 전체에서 찾는다
-            list = items.filter((it) => it.haystack.includes(q));
+            const isNewQuery = q === 'new' || q === '신규' || q === '최신';
+            list = items.filter((it) => it.haystack.includes(q) || (isNewQuery && it.isNew));
             title = `‘${q}’ 검색 결과`;
         } else if (state.view === 'favorites') {
             list = items.filter((it) => favs.has(it.slug));
@@ -159,6 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const order = new Map(recent.map((s, i) => [s, i]));
             list = items.filter((it) => order.has(it.slug)).sort((a, b) => order.get(a.slug) - order.get(b.slug));
             title = '🕘 최근에 연 게임';
+        } else if (state.tab === 'new') {
+            list = items.filter((it) => it.isNew);
         } else {
             list = state.tab === 'all' ? items : items.filter((it) => it.cats.includes(state.tab));
         }
@@ -189,6 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (!q && state.view === 'recent' && !recent.length) {
                 $('#empty-title').textContent = '최근에 연 게임이 없어요';
                 $('#empty-desc').textContent = '게임을 열면 여기에 순서대로 남아요.';
+            } else if (!q && state.tab === 'new') {
+                $('#empty-title').textContent = '최근 7일간 새로 나온 게임이 없어요';
+                $('#empty-desc').textContent = '새로운 게임이 출시되면 여기에 모아서 보여 드려요.';
             } else {
                 $('#empty-title').textContent = '찾는 게임이 없어요';
                 $('#empty-desc').textContent = '다른 검색어나 조건으로 찾아 보세요.';

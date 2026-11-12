@@ -20,6 +20,7 @@ const checkOnly = process.argv.includes('--check');
 const ASSETS = [
     'scripts/main.js',
     'scripts/game-common.js',
+    'scripts/room-client.js',
     'styles/main.css',
     'styles/game-common.css',
     'styles/pretendard.css',

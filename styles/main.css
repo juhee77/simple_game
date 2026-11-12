@@ -161,6 +161,29 @@ button { cursor: pointer; }
 
 .tab[aria-selected="true"] { color: var(--text); font-weight: 800; border-bottom-color: var(--text); }
 
+.tab.tab-new {
+    color: var(--new-ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.tab.tab-new::after {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--new-ink);
+    opacity: 0.9;
+}
+
+.tab.tab-new[aria-selected="true"] {
+    color: var(--new-ink);
+    font-weight: 800;
+    border-bottom-color: var(--new-ink);
+}
+
 .list-tools { display: flex; align-items: center; gap: 6px; padding: 0 16px; }
 
 .chip-btn {
@@ -199,7 +222,8 @@ button { cursor: pointer; }
     border-radius: var(--radius);
     background: var(--surface);
     text-decoration: none; color: var(--text);
-    border: 1px solid transparent;
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
 
