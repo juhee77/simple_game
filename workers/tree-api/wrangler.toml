@@ -1,0 +1,23 @@
+# 어드벤트 트리 API (Cloudflare Workers + D1)
+# 배포 전에 `npx wrangler d1 create advent-tree`로 DB를 만들고, 나온 database_id를 아래에 넣는다.
+name = "advent-tree-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# 브라우저 호출을 받을 사이트. *는 포트 번호 자리.
+ALLOWED_ORIGINS = "https://juhee77.github.io,http://localhost:*,http://127.0.0.1:*"
+# ALLOW_DEV(테스트용 날짜·IP 바꾸기)는 여기에 두지 않는다. 로컬에서만 `--var ALLOW_DEV:1`로 켠다.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "advent-tree"
+database_id = "00000000-0000-0000-0000-000000000000"   # ← d1 create 결과로 바꾸기
+migrations_dir = "migrations"
+
+# 매일 한국 시간 새벽 4시(UTC 19시)에 지난 시즌 데이터 정리
+[triggers]
+crons = ["0 19 * * *"]
+
+[observability]
+enabled = true

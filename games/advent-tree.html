@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <script src="../scripts/game-common.js?v=efdc1560"></script>
+    <!-- 어드벤트 트리 서버(Cloudflare Worker, workers/tree-api) 주소. 비워 두면 서버 없이 링크로만 주고받는다. -->
+    <meta name="tree-api" content="">
     <style>
         :root {
             /* 이 페이지만의 겨울 밤 색 */
@@ -342,6 +344,7 @@
 
         .mode-tag {
             flex: none;
+            white-space: nowrap;
             padding: 4px 9px;
             border-radius: var(--r-pill);
             background: rgba(255, 255, 255, .12);
@@ -938,6 +941,29 @@
     <div class="overlay" id="overlay" hidden></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <script type="application/json" id="game-rules">
+{
+ "title": "어드벤트 트리",
+ "goal": "12월 1일부터 25일까지 매일 물을 주고 장식을 뽑아 트리를 키워요.",
+ "steps": [
+  "이름을 적고 키우는 방식(나만의 · 커플 · 우리 숲)을 골라 트리를 심어요. 12월 전에 미리 심어 둘 수 있어요.",
+  "12월에는 하루 한 번 💧 물을 주고, 🎁 오늘의 캡슐을 열어 장식을 뽑아요. 매일 오면 희귀·전설 장식이 잘 나와요.",
+  "바구니의 장식을 누른 뒤 트리의 반짝이는 자리를 누르면 달려요. 물을 줄수록 트리가 자라고 자리가 늘어나요.",
+  "🎁 장식 받기 링크를 친구에게 보내면, 친구가 장식과 메시지를 골라 다시 보내 줘요. 메시지는 12월 25일에 열려요.",
+  "커플 트리는 서로 물방울 링크를 보내요. 같은 날 둘 다 물을 주면 하트 장식이 생겨요.",
+  "우리 숲은 단톡방에 트리 소식 링크를 올려요. 모두 합쳐 물을 많이 주면 숲에 눈이 내려요.",
+  "25일에 산타가 다녀가면 별에 불이 켜지고 받은 편지를 열어요. 트리 카드도 저장할 수 있어요."
+ ],
+ "tips": [
+  "트리는 이 브라우저에만 저장돼요. 카톡 안 브라우저보다 사파리·크롬에서 키우는 걸 추천해요.",
+  "폰을 바꾸거나 브라우저를 옮길 때는 💾 백업 코드를 써 주세요.",
+  "링크는 주소의 # 뒤에만 들어가서 서버로 보내지지 않아요."
+ ],
+ "players": "1인 · 커플 2인 · 숲 최대 12명",
+ "time": "하루 10초"
+}
+    </script>
+
     <script>
         // ════════════════════════════════════════════════════════════
         //  어드벤트 트리 (#72)
@@ -1385,7 +1411,8 @@
         if (S && (S.v !== 1 || !Array.isArray(S.waters) || !Array.isArray(S.hung))) S = null;
         const UI = { pick: null, lastLink: '' };
 
-        const save = () => Store.save(S);
+        // 기기에 먼저 저장하고, 서버에 연결된 트리면 잠시 뒤 묶어서 서버에도 올린다
+        const save = () => { Store.save(S); Sync.later(); };
 
         function firstEmpty(st) {
             const used = new Set(st.hung.map((h) => h.slot));
@@ -1458,6 +1485,268 @@
                 return true;
             }
             return false;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        //  서버 연동 (Cloudflare Worker: workers/tree-api)
+        //  - 서버 주소가 없으면 지금까지처럼 링크로만 주고받는다.
+        //  - 트리는 기기에 먼저 저장하고(S), 토큰(S.token)이 있으면 서버에도 올린다.
+        //  - 서버에 없던 기기 트리는 같은 아이디로 옮긴다 (숲·커플 연결도 같이).
+        // ════════════════════════════════════════════════════════════
+        const Api = (() => {
+            const meta = document.querySelector('meta[name="tree-api"]')?.content?.trim() || '';
+            const off = IS_LOCAL && new URLSearchParams(location.search).get('api') === 'off';
+            const base = off ? '' : (meta || (IS_LOCAL ? 'http://localhost:8787' : '')).replace(/\/$/, '');
+            async function call(method, path, body, token) {
+                const fail = (msg, status, data) => Object.assign(new Error(msg), { status, data });
+                if (!base) throw fail('서버가 연결되어 있지 않아요.', 0);
+                const headers = {};
+                if (body) headers['Content-Type'] = 'application/json';
+                if (token) headers.Authorization = `Bearer ${token}`;
+                // 로컬 개발: ?today로 바꾼 날짜를 서버에도 알려 메시지 잠금을 같이 시험한다 (배포 서버는 이 머리글을 무시)
+                if (IS_LOCAL && new URLSearchParams(location.search).get('today')) headers['X-Dev-Now'] = Clock.now().toISOString();
+                let res;
+                try {
+                    res = await fetch(base + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+                } catch {
+                    throw fail('서버에 연결할 수 없어요. 잠시 뒤 다시 시도해 주세요.', 0);
+                }
+                const data = res.status === 204 ? null : await res.json().catch(() => null);
+                if (!res.ok) throw fail(data?.detail || `요청이 실패했어요. (${res.status})`, res.status, data);
+                return data;
+            }
+            return { on: () => Boolean(base), call };
+        })();
+
+        const linked = () => Boolean(Api.on() && S?.token);
+
+        // 서버에 올릴 상태: 토큰·기기 전용 값과, 예전 링크 선물의 뒤섞인 메시지는 빼고 올린다
+        function serverState(st) {
+            const { token, rev, dirty, msgs, ...rest } = st;
+            const strip = (list) => list.map(({ msg, ...o }) => o);
+            const out = { ...rest, hung: strip(st.hung), tray: strip(st.tray) };
+            if (st.couple) out.couple = { id: st.couple.id, name: st.couple.name, heartDays: st.couple.heartDays, b3: st.couple.b3, b7: st.couple.b7 };
+            if (st.forest) out.forest = { id: st.forest.id, name: st.forest.name, goalDone: Boolean(st.forest.goalDone) };
+            return out;
+        }
+
+        // 다른 기기에서 먼저 바뀐 서버 상태와 합친다: 물 준 날·뽑기·받은 선물은 합집합, 장식은 서버 쪽에 내 기기에만 있는 것을 더한다
+        function mergeServer(t) {
+            const sv = t.state || {};
+            const keepMsg = new Map([...S.hung, ...S.tray].filter((o) => o.msg).map((o) => [o.uid, o.msg]));
+            const withMsg = (o) => (keepMsg.has(o.uid) ? { ...o, msg: keepMsg.get(o.uid) } : o);
+            const svHung = Array.isArray(sv.hung) ? sv.hung : [];
+            const svTray = Array.isArray(sv.tray) ? sv.tray : [];
+            const known = new Set([...svHung, ...svTray].map((o) => o.uid));
+            const hung = [];
+            const tray = [...svTray];
+            const used = new Set();
+            [...svHung, ...S.hung.filter((o) => !known.has(o.uid))].forEach((o) => {
+                if (used.has(o.slot)) { const { slot, ...r } = o; tray.push(r); } else { used.add(o.slot); hung.push(o); }
+            });
+            S.tray.forEach((o) => { if (!known.has(o.uid)) tray.push(o); });
+            S.waters = [...new Set([...(sv.waters || []), ...S.waters])].sort();
+            S.draws = { ...(sv.draws || {}), ...S.draws };
+            S.gifts = [...new Set([...(sv.gifts || []), ...S.gifts])];
+            S.hung = hung.map(withMsg);
+            S.tray = tray.map(withMsg);
+            S.opened = S.opened || Boolean(sv.opened);
+            if (sv.couple && S.couple) {
+                S.couple.heartDays = [...new Set([...(sv.couple.heartDays || []), ...S.couple.heartDays])].sort();
+                S.couple.b3 = S.couple.b3 || Boolean(sv.couple.b3);
+                S.couple.b7 = S.couple.b7 || Boolean(sv.couple.b7);
+            }
+            if (sv.forest?.goalDone && S.forest) S.forest.goalDone = true;
+            if (t.owner) S.owner = t.owner;
+            S.rev = t.rev;
+        }
+
+        const Sync = (() => {
+            let timer = null;
+            let busy = false;
+            let status = '';
+            const LABEL = { saving: '☁️ 저장 중…', saved: '☁️ 저장됨', wait: '⏳ 동기화 대기', off: '📴 오프라인' };
+            const label = () => (linked() ? LABEL[status] || '☁️' : '');
+            function set(s) {
+                status = s;
+                const el = $('sync-tag');
+                if (el) el.textContent = label();
+            }
+            function later() {
+                if (!linked()) return;
+                S.dirty = true;
+                Store.save(S);
+                set('saving');
+                clearTimeout(timer);
+                timer = setTimeout(push, 800);
+            }
+            async function push() {
+                if (!linked() || !S.dirty) return;
+                if (busy) { clearTimeout(timer); timer = setTimeout(push, 800); return; }
+                busy = true;
+                const me = S;   // 기다리는 사이 다른 트리(백업 불러오기·새로 심기)로 바뀌면 결과를 버린다
+                try {
+                    for (let tries = 0; tries < 3 && S.dirty; tries++) {
+                        try {
+                            const r = await Api.call('PUT', `/trees/${S.id}`, { state: serverState(S), rev: S.rev, owner: S.owner, mode: S.mode }, S.token);
+                            if (S !== me) return;
+                            S.rev = r.rev;
+                            S.dirty = false;
+                            Store.save(S);
+                            set('saved');
+                        } catch (e) {
+                            if (S !== me) return;
+                            if (e.status === 409 && e.data?.tree) { mergeServer(e.data.tree); Store.save(S); continue; }
+                            set(e.status === 0 ? 'off' : 'wait');
+                            return;
+                        }
+                    }
+                } finally {
+                    busy = false;
+                }
+            }
+            return { later, push, label, set };
+        })();
+
+        // 공개 보기(서버) → 지금 그림 코드가 쓰는 스냅샷 문자열
+        function snapFromView(v) {
+            const stage = stageOf(v.waters.length);
+            let s = `${stage}${v.lights ? 1 : 0}${v.opened ? 2 : stage >= 5 ? 1 : 0}`;
+            v.hung.forEach((o) => {
+                const ix = BY_ID[o.type]?.ix;
+                if (ix == null || !(o.slot >= 0 && o.slot < 30)) return;
+                s += o.slot.toString(36) + ix.toString(36).padStart(2, '0');
+            });
+            return s;
+        }
+
+        // 숲은 서버에 있으면 합류, 없으면(링크 방식으로 만든 숲) 같은 아이디로 만든다
+        async function joinOrCreateForest() {
+            const f = S.forest;
+            try {
+                await Api.call('POST', `/forests/${f.id}/members`, { treeId: S.id }, S.token);
+            } catch (e) {
+                if (e.status !== 404) throw e;
+                try {
+                    await Api.call('POST', '/forests', { id: f.id, name: f.name, year: S.year, treeId: S.id }, S.token);
+                } catch (e2) {
+                    if (e2.status !== 409) throw e2;
+                    await Api.call('POST', `/forests/${f.id}/members`, { treeId: S.id }, S.token);
+                }
+            }
+        }
+
+        let registering = null;
+        async function ensureServer() {
+            if (!Api.on() || !S) return false;
+            if (S.token) return true;
+            if (registering) return registering;
+            const me = S;
+            registering = (async () => {
+                try {
+                    const make = () => Api.call('POST', '/trees', { id: me.id, owner: me.owner, mode: me.mode, year: me.year, state: serverState(me) });
+                    let r;
+                    try {
+                        r = await make();
+                    } catch (e) {
+                        if (e.status !== 409) throw e;
+                        me.id = rid(16);   // 아이디가 이미 쓰이고 있으면 새 아이디로
+                        r = await make();
+                    }
+                    if (S !== me) return false;
+                    S.token = r.token;
+                    S.rev = r.rev;
+                    S.dirty = false;
+                    Store.save(S);
+                    Sync.set('saved');
+                    if (S.mode === 'forest' && S.forest?.id) await joinOrCreateForest().catch(() => {});
+                    return true;
+                } catch (e) {
+                    Sync.set(e.status === 0 ? 'off' : 'wait');
+                    return false;
+                } finally {
+                    registering = null;
+                }
+            })();
+            return registering;
+        }
+
+        // 서버에서 최신 상태·새 선물·짝꿍·숲을 받아 온다
+        let pulling = null;
+        let pullingFor = null;
+        function pull() {
+            if (!linked()) return Promise.resolve(false);
+            if (pulling && pullingFor === S) return pulling;
+            const me = S;   // 받아 오는 사이 다른 트리로 바뀌면(백업 불러오기 등) 결과를 쓰지 않는다
+            pullingFor = me;
+            let run = null;
+            run = (async () => {
+                try {
+                    if (S.dirty) await Sync.push();
+                    if (S !== me) return false;
+                    const r = await Api.call('GET', `/trees/${S.id}/private`, null, S.token);
+                    if (S !== me) return false;
+                    let changed = false;
+                    if (r.tree.rev > (S.rev || 0)) { mergeServer(r.tree); }
+                    S.mode = r.tree.mode;
+                    S.msgs = S.msgs || {};
+                    let fresh = 0;
+                    r.gifts.forEach((g) => {
+                        if (g.message) S.msgs[g.id] = g.message;
+                        if (S.gifts.includes(g.id)) return;
+                        S.gifts.push(g.id);
+                        addOrn(S, g.type, 'gift', { from: g.sender, gid: g.id, sv: 1, hasMsg: g.hasMessage }, true);
+                        fresh++;
+                        changed = true;
+                    });
+                    if (S.mode === 'couple') {
+                        if (!S.couple) S.couple = { id: '', name: '', snap: '', waters: [], at: 0, heartDays: [], sentDrop: '', b3: false, b7: false };
+                        if (r.partner) {
+                            Object.assign(S.couple, { id: r.partner.id, name: r.partner.owner, snap: snapFromView(r.partner), waters: r.partner.waters, at: r.partner.updatedAt });
+                        } else if (S.couple.id) {
+                            // 링크 방식으로 맺은 짝: 상대도 서버로 옮기면 연결된다
+                            await Api.call('POST', `/trees/${S.id}/pair`, { partnerId: S.couple.id, legacy: true }, S.token).catch(() => null);
+                        }
+                    }
+                    if (S.mode === 'forest' && S.forest) {
+                        if (!r.tree.forestId) await joinOrCreateForest().catch(() => {});
+                        const f = await Api.call('GET', `/forests/${S.forest.id}`).catch(() => null);
+                        if (S !== me) return false;
+                        if (f) {
+                            S.forest.name = f.forest.name;
+                            S.forest.members = Object.fromEntries(f.members.filter((m) => m.id !== S.id)
+                                .map((m) => [m.id, { name: m.owner, snap: snapFromView(m), w: m.waters.length, at: m.updatedAt }]));
+                        }
+                    }
+                    const hearts = syncHearts(S);
+                    const goal = checkForestGoal(S);
+                    Store.save(S);
+                    if (changed || hearts || goal) Sync.later(); else Sync.set('saved');
+                    if (!$('v-tree').hidden && !UI.pick) renderTree();
+                    if (fresh) { Sound.sparkle(); toast(`🎁 새 장식 ${fresh}개가 달렸어요!`); } else if (goal) toast('🌨️ 숲 공동 목표 달성! 숲에 눈이 내려요'); else if (hearts) toast('💗 둘 다 물 준 날 하트가 생겼어요!');
+                    return true;
+                } catch (e) {
+                    if (S === me) Sync.set(e.status === 0 ? 'off' : 'wait');
+                    return false;
+                } finally {
+                    if (pulling === run) { pulling = null; pullingFor = null; }
+                }
+            })();
+            pulling = run;
+            return run;
+        }
+
+        // 짝꿍 초대 코드로 서버에서 짝 맺기
+        async function serverPair(p) {
+            if (!(await ensureServer())) { toast('서버에 연결하지 못했어요. 잠시 뒤 링크를 다시 열어 주세요'); return; }
+            try {
+                await Sync.push();
+                await Api.call('POST', `/trees/${S.id}/pair`, { partnerId: p.i, code: p.c }, S.token);
+                await pull();
+                toast(`💗 ${S.couple?.name || '짝꿍'}님과 짝꿍이 됐어요!`);
+            } catch (e) {
+                toast(e.message);
+            }
         }
 
         // ── 소리 (첫 터치에 깨운다) ──
@@ -1604,7 +1893,7 @@
                 <div class="mode-grid">
                     <label class="mode-card"><input type="radio" name="mode" value="solo" checked><div><b>🎄 나만의 트리</b><span>혼자 키우고, 친구들이 장식을 보내 줘요.</span></div></label>
                     <label class="mode-card"><input type="radio" name="mode" value="couple"><div><b>💑 커플 트리</b><span>두 그루가 나란히. 같은 날 둘 다 물을 주면 하트가 생겨요.</span></div></label>
-                    <label class="mode-card"><input type="radio" name="mode" value="forest"><div><b>👨‍👩‍👧‍👦 그룹 트리 (우리 숲)</b><span>각자 트리가 모여 숲이 돼요. 단톡방에 소식을 올려 같이 키워요. (최대 ${MAX_FOREST}명)</span></div></label>
+                    <label class="mode-card"><input type="radio" name="mode" value="forest"><div><b>👨‍👩‍👧‍👦 그룹 트리 (우리 숲)</b><span>각자 트리가 모여 숲이 돼요. ${Api.on() ? '숲 링크 하나로 모여서 서로의 트리가 바로 보여요.' : '단톡방에 소식을 올려 같이 키워요.'} (최대 ${MAX_FOREST}명)</span></div></label>
                 </div>
                 <div id="forest-name-box" hidden><label class="field" for="forest-name">숲 이름</label><input class="txt" id="forest-name" maxlength="16" placeholder="예) 우리 동네 숲" autocomplete="off"></div>`;
             $('v-plant').innerHTML = `
@@ -1617,6 +1906,7 @@
                     ${modes}
                     <p class="error" id="plant-error"></p>
                     <button class="btn btn-festive btn-block" data-act="plant" type="button">🌱 심기</button>
+                    ${Api.on() ? '<p class="hint" style="margin:10px 0 0">트리 모양·물 준 날·이름은 서버에 저장돼요. 친구 메시지는 12월 25일 전에는 아무도 볼 수 없어요.</p>' : ''}
                 </div>`;
             $('v-plant').dataset.invite = invite ? JSON.stringify(invite) : '';
             $('v-plant').querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener('change', () => {
@@ -1663,7 +1953,7 @@
 
             const xmasReady = !old && (se.phase === 'xmas' || se.phase === 'after') && !S.opened;
             const sky = `<div class="sky ${S.forest?.goalDone || se.phase === 'xmas' || S.opened ? 'snowing' : ''}">
-                <div class="sky-head"><div><b>${esc(S.owner)}의 트리</b><div class="meta">${meta}</div></div><span class="mode-tag">${modeTag}</span></div>
+                <div class="sky-head"><div><b>${esc(S.owner)}의 트리</b><div class="meta">${meta}</div></div><div style="text-align:right"><span class="mode-tag">${modeTag}</span>${linked() ? `<div class="meta" id="sync-tag" style="margin-top:6px">${Sync.label()}</div>` : ''}</div></div>
                 ${stageHtml}
                 ${pick ? `<div class="pick-bar"><span>✨ 반짝이는 자리를 눌러 달아 주세요</span><button class="text-btn" data-act="cancel-pick" type="button">취소</button></div>` : ''}
                 ${xmasReady ? '<div class="xmas-call"><button class="btn btn-festive btn-block glow" data-act="xmas" type="button">🎅 산타가 다녀갔어요! 선물 열어 보기</button></div>' : ''}
@@ -1714,6 +2004,18 @@
             const today = Clock.today();
             const watered = S.waters.includes(today);
             let h = '<div class="panel"><h3>💌 같이 키우기</h3><div class="share-grid">';
+            if (linked()) {
+                // 서버판: 링크는 한 번만. 친구는 트리 링크에서 바로 달고, 짝꿍·숲은 열 때마다 최신으로 보인다.
+                if (S.mode === 'couple') {
+                    if (!S.couple?.id) h += '<button class="btn btn-festive wide" data-act="share-pair" type="button">💌 짝꿍 초대 링크 보내기</button>';
+                    else h += `<button class="btn btn-ghost wide" data-act="gift-to" data-id="${esc(S.couple.id)}" data-name="${esc(S.couple.name)}" type="button">🎁 ${esc(S.couple.name)}에게 장식 보내기</button>`;
+                }
+                if (S.mode === 'forest' && S.forest) h += '<button class="btn btn-ghost wide" data-act="share-forest" type="button">🔗 숲 초대 링크 보내기</button>';
+                h += '<button class="btn btn-festive wide" data-act="share-invite" type="button">🎁 내 트리 링크 보내기 (구경·장식 달기)</button>';
+                if (S.mode !== 'solo') h += '<button class="btn btn-ghost wide" data-act="refresh" type="button">🔄 새로 고침</button>';
+                h += '</div><p class="hint" style="margin:10px 0 0">친구가 링크에서 단 장식은 내 트리에 바로 달려요. 메시지는 12월 25일에 열려요.</p></div>';
+                return h;
+            }
             if (S.mode === 'couple') {
                 if (!S.couple.id) h += '<button class="btn btn-festive wide" data-act="share-pair" type="button">💌 짝꿍 초대 링크 보내기</button>';
                 else {
@@ -1749,7 +2051,7 @@
                 <div class="goal"><div class="goal-bar"><i style="width:${pct}%"></i></div>
                 <div class="goal-text"><span>${S.forest.goalDone ? '🌨️ 목표 달성! 숲에 눈이 내려요' : '숲 공동 목표: 모두 합쳐 물 주기'}</span><b>${Math.min(total, target)}/${target}</b></div></div>
                 <div class="forest-grid">${tiles}</div>
-                <p class="hint" style="margin:10px 0 0">멤버가 단톡방에 올린 소식 링크를 열면 여기 트리가 새로 바뀌어요.</p></div>`;
+                <p class="hint" style="margin:10px 0 0">${linked() ? '숲 초대 링크로 들어온 멤버가 여기 모여요. 열 때마다 모두의 최신 트리가 보여요.' : '멤버가 단톡방에 올린 소식 링크를 열면 여기 트리가 새로 바뀌어요.'}</p></div>`;
         }
 
         // ── 장식 보내기 (방문자) ──
@@ -1757,20 +2059,33 @@
         function renderGift(target) {
             giftTarget = { ...target, type: '' };
             const nick = Store.get('nick') || (S?.owner ?? '');
-            $('v-gift').innerHTML = `<div class="panel">
-                <h2>🎁 ${esc(target.name)}님 트리에 장식 보내기</h2>
-                <p class="hint">장식을 고르고 한마디를 남기면 링크가 만들어져요. ${esc(target.name)}님에게 보내면 트리에 달리고, 메시지는 <b>12월 25일</b>에 열려요.</p>
+            const live = Api.on();
+            $('v-gift').innerHTML = `${live ? '<div class="sky" id="gift-preview" hidden></div><div style="height:12px"></div>' : ''}<div class="panel">
+                <h2>🎁 ${esc(target.name)}님 트리에 장식 ${live ? '달기' : '보내기'}</h2>
+                <p class="hint">${live ? `장식을 고르고 한마디를 남기면 ${esc(target.name)}님 트리에 바로 달려요.` : `장식을 고르고 한마디를 남기면 링크가 만들어져요. ${esc(target.name)}님에게 보내면 트리에 달리고,`} 메시지는 <b>12월 25일</b>에 열려요.</p>
                 <div class="gift-grid">${GIFT_TYPES.map((t) => `<button class="gift-opt" data-act="gift-pick" data-type="${t}" aria-pressed="false" type="button">${ornSvg(t, 44)}<span>${esc(BY_ID[t].name)}</span></button>`).join('')}</div>
                 <label class="field" for="gift-from">보내는 사람</label>
                 <input class="txt" id="gift-from" maxlength="${MAX_NAME}" value="${esc(nick)}" placeholder="내 이름" autocomplete="off">
                 <label class="field" for="gift-msg">메시지 <span class="count" id="gift-count">0/${MAX_MSG}</span></label>
                 <textarea class="txt" id="gift-msg" maxlength="${MAX_MSG}" placeholder="크리스마스에 열어 볼 한마디 (비워도 돼요)"></textarea>
                 <p class="error" id="gift-error"></p>
-                <button class="btn btn-festive btn-block" data-act="gift-make" type="button">🎁 장식 링크 만들어 보내기</button>
+                <button class="btn btn-festive btn-block" data-act="gift-make" type="button">${live ? '🎁 트리에 달아 주기' : '🎁 장식 링크 만들어 보내기'}</button>
                 <div class="btn-row" style="margin-top:10px"><button class="btn btn-ghost" data-act="home" type="button">${S ? '내 트리로' : '🌱 나도 트리 심기'}</button></div>
             </div>`;
             $('gift-msg').addEventListener('input', (e) => { $('gift-count').textContent = `${e.target.value.length}/${MAX_MSG}`; });
             show('v-gift');
+            // 서버판: 친구 트리의 지금 모습을 같이 보여 준다 (구경 + 장식 달기)
+            if (live) {
+                Api.call('GET', `/trees/${target.id}`).then((v) => {
+                    const box = $('gift-preview');
+                    if (!box || giftTarget?.id !== target.id) return;
+                    giftTarget.name = v.owner;
+                    const view = unsnap(snapFromView(v));
+                    box.innerHTML = `<div class="sky-head"><div><b>${esc(v.owner)}의 트리</b><div class="meta">💧 ${v.waters.length}번 · ${STAGE_NAME[view.stage]} · 장식 ${v.hung.length}개</div></div><span class="mode-tag">👀 지금 모습</span></div>
+                        <div class="tree-box view-box">${treeSvg(view, {}, `${v.owner}의 트리`)}</div>`;
+                    box.hidden = false;
+                }).catch(() => {});
+            }
         }
 
         // ── 구경 ──
@@ -1790,7 +2105,7 @@
         //  링크 받기
         // ════════════════════════════════════════════════════════════
         const str = (v, max = 40) => (typeof v === 'string' ? v.slice(0, max) : '');
-        const isId = (v) => typeof v === 'string' && /^[0-9a-z]{6,12}$/.test(v);
+        const isId = (v) => typeof v === 'string' && /^[0-9a-z]{6,20}$/.test(v);   // 링크 방식 10자, 서버 16자
 
         // 트리가 없는 브라우저(예: 카톡 안)에서 내 트리용 링크를 열었을 때
         function needTree(what) {
@@ -1849,6 +2164,13 @@
                     S.mode = 'couple';
                     S.couple = { id: '', name: '', snap: '', waters: [], at: 0, heartDays: [], sentDrop: '', b3: false, b7: false };
                 }
+                // 서버판 초대(코드가 든 링크): 서버가 양쪽을 한 번에 이어 주므로 답장 링크가 필요 없다
+                if (p.c && Api.on()) {
+                    save();
+                    renderTree();
+                    serverPair(p);
+                    return;
+                }
                 const first = !S.couple.id;
                 applyPartner(partner);
                 save();
@@ -1880,11 +2202,25 @@
                 if (S.mode === 'couple') { info('커플 트리는 숲에 들어갈 수 없어요', '숲에는 나만의 트리로 합류할 수 있어요.', [{ label: '내 트리로', act: 'home', primary: true }]); return; }
                 if (S.forest && !confirm(`지금 있는 '${S.forest.name}' 숲을 나와서 '${fn}' 숲으로 옮길까요?`)) { renderTree(); return; }
                 if (!S.forest && !confirm(`내 트리를 '${fn}' 숲에 심을까요?`)) { renderTree(); return; }
+                const old = S.forest;
                 S.mode = 'forest';
                 S.forest = { id: p.f, name: fn, members: {}, goalDone: false, sentNews: '' };
                 save();
                 renderTree();
-                askNews();
+                if (!Api.on()) { askNews(); return; }
+                // 서버판: 예전 숲에서 나오고 새 숲에 합류한 뒤 멤버를 바로 불러온다
+                (async () => {
+                    if (!(await ensureServer())) { askNews(); return; }
+                    try {
+                        if (old?.id) await Api.call('DELETE', `/forests/${old.id}/members/${S.id}`, null, S.token).catch(() => null);
+                        await Sync.push();
+                        await joinOrCreateForest();
+                        await pull();
+                        toast(`🌲 '${S.forest.name}' 숲에 들어왔어요!`);
+                    } catch (e) {
+                        toast(e.message);
+                    }
+                })();
             },
             // 숲 멤버 소식
             n(p) {
@@ -1951,9 +2287,25 @@
         }
 
         const SHARES = {
-            'share-invite': () => share(linkFor('t', { i: S.id, n: S.owner, m: S.mode }), `🎄 ${S.owner}의 어드벤트 트리에 장식을 달아 주세요! 크리스마스에 메시지가 열려요.`),
+            'share-invite': () => share(linkFor('t', { i: S.id, n: S.owner, m: S.mode }), linked()
+                ? `🎄 ${S.owner}의 어드벤트 트리 구경 오세요! 장식을 달아 주면 크리스마스에 메시지가 열려요.`
+                : `🎄 ${S.owner}의 어드벤트 트리에 장식을 달아 주세요! 크리스마스에 메시지가 열려요.`),
             'share-view': () => share(linkFor('v', { ...myView(), m: S.mode, w: S.waters.length }), `👀 ${S.owner}의 트리 구경하러 오세요!`),
-            'share-pair': () => share(linkFor('p', { ...myView(), w: maskOf(S.waters, S.year), at: Clock.stamp(), r: 0 }), `💑 우리 커플 트리 같이 키우자! 링크를 열고 내 트리를 심어 줘`),
+            'share-pair': async () => {
+                const text = '💑 우리 커플 트리 같이 키우자! 링크를 열고 내 트리를 심어 줘';
+                const base = { ...myView(), w: maskOf(S.waters, S.year), at: Clock.stamp(), r: 0 };
+                if (!Api.on()) return share(linkFor('p', base), text);
+                // 서버판: 7일짜리 초대 코드를 넣어 보낸다. 상대가 열면 서버가 둘을 바로 이어 준다.
+                if (!(await ensureServer())) { toast('서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요'); return null; }
+                try {
+                    await Sync.push();
+                    const r = await Api.call('POST', `/trees/${S.id}/pair-code`, null, S.token);
+                    return share(linkFor('p', { ...base, c: r.code }), text);
+                } catch (e) {
+                    toast(e.message);
+                    return null;
+                }
+            },
             'share-pair-reply': async () => {
                 closeSheet();
                 await share(linkFor('p', { ...myView(), w: maskOf(S.waters, S.year), at: Clock.stamp(), r: 1 }), `💗 짝꿍 트리 연결 완료! 이 링크를 열면 내 트리가 보여요`);
@@ -1983,9 +2335,11 @@
             if (o.src === 'gift') {
                 const left = Clock.daysUntil(S.year, 12, 25);
                 body += `<p class="center hint">보낸 사람: <b>${esc(o.from || '익명의 산타')}</b></p>`;
-                if (!o.msg) body += '<div class="lock">메시지 없이 장식만 보냈어요</div>';
-                else if (unlocked()) body += `<div class="letter">${esc(Codec.reveal(o.msg, S.id))}</div>`;
-                else body += `<div class="lock">🔒 메시지는 12월 25일에 열려요 (D-${left})</div>`;
+                const text = giftMessage(o);
+                if (!o.msg && !o.hasMsg) body += '<div class="lock">메시지 없이 장식만 보냈어요</div>';
+                else if (!unlocked()) body += `<div class="lock">🔒 메시지는 12월 25일에 열려요 (D-${left})</div>`;
+                else if (text) body += `<div class="letter">${esc(text)}</div>`;
+                else { body += '<div class="lock">💌 메시지를 불러오는 중이에요…</div>'; pull(); }
             } else if (o.src === 'heart') {
                 body += `<p class="center hint">${esc(S.couple?.name || '짝꿍')}님과 같이 물 준 날 생긴 장식이에요 💗</p>`;
             }
@@ -2020,7 +2374,11 @@
         // 크리스마스: 썰매 → 별 점등 → 편지 넘기기 → 카드
         let letters = [];
         let letterAt = 0;
-        function startXmas() {
+        // 링크 선물은 장식 안의 뒤섞인 메시지를, 서버 선물은 25일 이후 서버가 내려준 메시지를 쓴다
+        const giftMessage = (o) => (o.msg ? Codec.reveal(o.msg, S.id) : (o.gid && S.msgs?.[o.gid]) || '');
+
+        async function startXmas() {
+            if (linked()) await pull();   // 서버에 잠겨 있던 메시지를 받아 온다
             letters = [...S.hung, ...S.tray].filter((o) => o.src === 'gift');
             letterAt = -1;
             const el = $('overlay');
@@ -2047,7 +2405,7 @@
             }
             const o = letters[letterAt];
             const c = BY_ID[o.type];
-            const msg = o.msg ? Codec.reveal(o.msg, S.id) : '';
+            const msg = giftMessage(o);
             el.innerHTML = `<p>${letterAt + 1} / ${letters.length}</p>
                 <svg class="reveal" viewBox="-16 -17 32 32" width="110" height="110">${c.svg}</svg>
                 <h2>${esc(o.from || '익명의 산타')}님의 선물</h2>
@@ -2212,13 +2570,30 @@
                         ? { id: invite.p.f, name: invite.p.fn, members: {}, goalDone: false, sentNews: '' }
                         : { id: rid(10), name: forestName, members: {}, goalDone: false, sentNews: '' };
                 }
-                if (invite?.kind === 'p') {
+                const serverInvite = Api.on() && (invite?.kind === 'f' || (invite?.kind === 'p' && invite.p.c));
+                if (invite?.kind === 'p' && !serverInvite) {
                     const p = invite.p;
                     applyPartner({ id: p.i, name: str(p.n, MAX_NAME) || '짝꿍', snap: unsnap(p.s) ? p.s : '', waters: unmask(p.w, S.year), at: Number(p.at) || 0 });
                 }
                 save();
                 Sound.pop();
                 renderTree();
+                if (Api.on()) {
+                    // 서버판: 심자마자 서버에 등록하고, 초대받아 왔으면 짝꿍·숲에 바로 연결한다 (숲은 ensureServer 안에서 합류)
+                    ensureServer().then(async (ok) => {
+                        if (!ok) {
+                            if (invite?.kind === 'p' && !invite.p.c) askReply();
+                            toast('서버에 연결하지 못해서 이 기기에만 심었어요. 다음에 열 때 다시 연결해요');
+                            return;
+                        }
+                        if (invite?.kind === 'p' && invite.p.c) { await serverPair(invite.p); return; }
+                        await pull();
+                        if (invite?.kind === 'f') toast(`🌲 '${S.forest.name}' 숲에 들어왔어요!`);
+                        else if (invite?.kind === 'p') askReply();
+                        else toast('🌱 트리를 심었어요! 바구니의 빨간 볼을 달아 보세요');
+                    });
+                    return;
+                }
                 if (invite?.kind === 'p') askReply();
                 else if (invite?.kind === 'f') askNews();
                 else toast('🌱 트리를 심었어요! 바구니의 빨간 볼을 달아 보세요');
@@ -2304,6 +2679,21 @@
                 if (!from) return err('보내는 사람 이름을 적어 주세요.');
                 err('');
                 Store.set('nick', from);
+                if (Api.on()) {
+                    // 서버판: 친구 트리에 바로 단다. 상대가 아직 서버로 옮기지 않았거나 서버가 꺼져 있으면 아래 링크 방식으로.
+                    const btn = document.querySelector('[data-act="gift-make"]');
+                    if (btn) btn.disabled = true;
+                    try {
+                        await Api.call('POST', `/trees/${giftTarget.id}/gifts`, { type: giftTarget.type, sender: from, message: msg });
+                        Sound.sparkle();
+                        info('🎁 장식을 달았어요!', `<b>${esc(giftTarget.name)}</b>님 트리에 바로 달렸어요. 메시지는 12월 25일에 열려요.`,
+                            [{ label: '🎁 하나 더 달기', act: 'gift-again', primary: true }, { label: S ? '내 트리로' : '🌱 나도 트리 심기', act: 'home' }]);
+                        return;
+                    } catch (e) {
+                        if (btn) btn.disabled = false;
+                        if (e.status !== 404 && e.status !== 0) return err(e.message);
+                    }
+                }
                 const url = linkFor('g', { i: giftTarget.id, n: giftTarget.name, g: rid(8), o: giftTarget.type, f: from, x: Codec.hide(msg, giftTarget.id) });
                 const r = await share(url, `🎁 ${giftTarget.name}님, ${from}님이 트리 장식을 보냈어요! 링크를 열면 트리에 달려요.`);
                 if (r === 'cancel') return;
@@ -2329,16 +2719,26 @@
                     const st = importBackup($('backup-in').value);
                     if (!confirm('지금 트리를 이 백업으로 바꿀까요? 지금 트리는 사라져요.')) return;
                     S = st;
-                    save();
+                    Store.save(S);
                     closeSheet();
                     renderTree();
                     toast('🌲 트리를 불러왔어요');
+                    // 서버판 백업 코드에는 트리 열쇠(토큰)가 들어 있어서, 다른 브라우저에서도 같은 트리로 이어진다
+                    if (Api.on()) ensureServer().then((ok) => ok && pull());
                 } catch (e) {
                     $('backup-error').textContent = e.message === 'broken' || e.message === 'bad' ? '코드가 잘렸거나 깨졌어요.' : e.message;
                 }
             },
+            async refresh() {
+                if (!linked()) return;
+                toast('🔄 새로 불러오는 중…');
+                if (await pull()) toast('🔄 최신 모습으로 바꿨어요');
+                else toast('서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요');
+            },
             replant() {
                 if (S && !confirm('지금 트리를 지우고 처음부터 심을까요? 받은 장식과 메시지도 사라져요. (먼저 카드나 백업 코드를 저장해 두세요)')) return;
+                // 숲에 있던 트리는 숲에서 빼 둔다 (서버의 지난 트리는 시즌이 끝나면 지워진다)
+                if (linked() && S.forest?.id) Api.call('DELETE', `/forests/${S.forest.id}/members/${S.id}`, null, S.token).catch(() => null);
                 S = null;
                 Store.clear();
                 UI.pick = null;
@@ -2371,6 +2771,27 @@
 
         window.addEventListener('hashchange', route);
 
+        // 서버판: 화면으로 돌아오거나 인터넷이 다시 되면 최신으로 맞춘다
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && linked()) pull(); });
+        window.addEventListener('online', () => { if (linked()) Sync.push().then(() => pull()); });
+
+        // 서버가 있으면 도움말도 서버판 흐름으로 바꾼다 (game-common.js가 DOMContentLoaded에 이 JSON을 읽는다)
+        if (Api.on()) {
+            try {
+                const el = $('game-rules');
+                const r = JSON.parse(el.textContent);
+                r.steps[3] = '🎁 내 트리 링크를 보내면 친구가 구경하고 장식과 메시지를 바로 달아 줘요. 메시지는 12월 25일에 열려요.';
+                r.steps[4] = '커플 트리는 짝꿍 초대 링크를 한 번만 보내면 돼요. 같은 날 둘 다 물을 주면 하트 장식이 생겨요.';
+                r.steps[5] = '우리 숲은 숲 초대 링크로 모여요. 열 때마다 모두의 최신 트리가 보이고, 다 같이 물을 많이 주면 숲에 눈이 내려요.';
+                r.tips = [
+                    '트리 모양·물 준 날·이름은 서버에 저장돼요. 친구 메시지도 서버에 있지만 12월 25일 전에는 주인도 볼 수 없어요.',
+                    '다른 폰·브라우저에서 이어 키우려면 💾 백업 코드(트리 열쇠)를 옮겨 주세요.',
+                    '지난 시즌 트리는 2월이 되면 서버에서 지워져요. 카드를 저장해 두세요.'
+                ];
+                el.textContent = JSON.stringify(r);
+            } catch { /* 도움말은 원래대로 */ }
+        }
+
         // ── 시작 ──
         $('defs-host').innerHTML = DEFS;
         renderBanners();
@@ -2378,30 +2799,10 @@
             if (S) renderTree();
             else renderPlant();
         }
+        // 서버판: 기기에만 있던 트리는 서버로 옮기고, 최신 선물·짝꿍·숲을 받아 온다
+        if (S && Api.on()) ensureServer().then((ok) => ok && pull());
     </script>
 
-    <script type="application/json" id="game-rules">
-{
- "title": "어드벤트 트리",
- "goal": "12월 1일부터 25일까지 매일 물을 주고 장식을 뽑아 트리를 키워요.",
- "steps": [
-  "이름을 적고 키우는 방식(나만의 · 커플 · 우리 숲)을 골라 트리를 심어요. 12월 전에 미리 심어 둘 수 있어요.",
-  "12월에는 하루 한 번 💧 물을 주고, 🎁 오늘의 캡슐을 열어 장식을 뽑아요. 매일 오면 희귀·전설 장식이 잘 나와요.",
-  "바구니의 장식을 누른 뒤 트리의 반짝이는 자리를 누르면 달려요. 물을 줄수록 트리가 자라고 자리가 늘어나요.",
-  "🎁 장식 받기 링크를 친구에게 보내면, 친구가 장식과 메시지를 골라 다시 보내 줘요. 메시지는 12월 25일에 열려요.",
-  "커플 트리는 서로 물방울 링크를 보내요. 같은 날 둘 다 물을 주면 하트 장식이 생겨요.",
-  "우리 숲은 단톡방에 트리 소식 링크를 올려요. 모두 합쳐 물을 많이 주면 숲에 눈이 내려요.",
-  "25일에 산타가 다녀가면 별에 불이 켜지고 받은 편지를 열어요. 트리 카드도 저장할 수 있어요."
- ],
- "tips": [
-  "트리는 이 브라우저에만 저장돼요. 카톡 안 브라우저보다 사파리·크롬에서 키우는 걸 추천해요.",
-  "폰을 바꾸거나 브라우저를 옮길 때는 💾 백업 코드를 써 주세요.",
-  "링크는 주소의 # 뒤에만 들어가서 서버로 보내지지 않아요."
- ],
- "players": "1인 · 커플 2인 · 숲 최대 12명",
- "time": "하루 10초"
-}
-    </script>
 </body>
 
 </html>
