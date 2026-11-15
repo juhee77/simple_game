@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     # 서버 코드만 바뀐 커밋은 사이트를 다시 올리지 않는다
-    paths-ignore: [ 'server/**' ]
+    paths-ignore: [ 'server/**', 'workers/**' ]
   workflow_dispatch:
 
 permissions:
@@ -26,9 +26,9 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # 서버 코드는 공개 사이트에 올리지 않는다
+      # 서버 코드(방 서버·Cloudflare Worker)는 공개 사이트에 올리지 않는다
       - name: Stage site
-        run: rsync -a --exclude '.git' --exclude '.github' --exclude '/server' ./ _site/
+        run: rsync -a --exclude '.git' --exclude '.github' --exclude '/server' --exclude '/workers' ./ _site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -1,0 +1,16 @@
+{
+  "name": "advent-tree-api",
+  "private": true,
+  "type": "module",
+  "description": "어드벤트 트리 서버 (Cloudflare Workers + D1)",
+  "scripts": {
+    "db:local": "wrangler d1 migrations apply advent-tree --local",
+    "dev": "wrangler d1 migrations apply advent-tree --local && wrangler dev --port 8787 --var ALLOW_DEV:1",
+    "test": "node --test test/*.test.mjs",
+    "db:remote": "wrangler d1 migrations apply advent-tree --remote",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.156.0"
+  }
+}

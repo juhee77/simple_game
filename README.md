@@ -201,6 +201,7 @@ python3 -m http.server 8000
 | LocalStorage | 점수/기록 저장 |
 | Google Fonts (Outfit) | 타이포그래피 |
 | Kotlin + Spring Boot (`server/`) | 여러 기기가 함께 쓰는 방(room) 서버 — [server/README.md](server/README.md) |
+| Cloudflare Workers + D1 (`workers/tree-api/`) | 어드벤트 트리의 트리·선물·짝꿍·숲 저장 — [workers/tree-api/README.md](workers/tree-api/README.md) |
 
 ---
 
@@ -249,6 +250,7 @@ simple_game/
 │   ├── stamp-assets.mjs        # 에셋 캐시 버스팅
 │   └── add-metadata.js         # 메타데이터 관리
 ├── server/                     # 방(room) 서버 — Kotlin + Spring Boot (Pages에는 올라가지 않음)
+├── workers/tree-api/           # 어드벤트 트리 서버 — Cloudflare Workers + D1 (Pages에는 올라가지 않음)
 └── THIRD_PARTY_NOTICES.md      # 서드파티 라이선스
 ```
 
