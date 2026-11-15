@@ -56,7 +56,7 @@ npm test        # 임시 DB로 wrangler dev를 따로 띄워 API 전체 확인
    ```bash
    npm run db:remote
    ```
-5. 배포: 출력된 `https://advent-tree-api.<계정>.workers.dev` 주소 확인
+5. 배포: 출력된 `https://advent-tree-api.<계정 서브도메인>.workers.dev` 주소 확인 (지금: `https://advent-tree-api.lahezy.workers.dev`)
    ```bash
    npm run deploy
    ```
