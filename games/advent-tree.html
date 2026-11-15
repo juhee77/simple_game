@@ -1495,8 +1495,9 @@
         // ════════════════════════════════════════════════════════════
         const Api = (() => {
             const meta = document.querySelector('meta[name="tree-api"]')?.content?.trim() || '';
-            const off = IS_LOCAL && new URLSearchParams(location.search).get('api') === 'off';
-            const base = off ? '' : (meta || (IS_LOCAL ? 'http://localhost:8787' : '')).replace(/\/$/, '');
+            // localhost에서는 실제 서버 대신 로컬 Worker(npm run dev)에 붙는다. ?api=off는 서버 없이, ?api=prod는 실제 서버로.
+            const q = IS_LOCAL ? new URLSearchParams(location.search).get('api') : null;
+            const base = q === 'off' ? '' : (IS_LOCAL && q !== 'prod' ? 'http://localhost:8787' : meta).replace(/\/$/, '');
             async function call(method, path, body, token) {
                 const fail = (msg, status, data) => Object.assign(new Error(msg), { status, data });
                 if (!base) throw fail('서버가 연결되어 있지 않아요.', 0);

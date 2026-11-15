@@ -40,7 +40,7 @@ npm run dev     # 로컬 D1에 테이블 만들고 http://localhost:8787 로 띄
 npm test        # 임시 DB로 wrangler dev를 따로 띄워 API 전체 확인
 ```
 - `npm run dev`는 `ALLOW_DEV:1`로 띄워서 `X-Dev-Now`(날짜)·`X-Dev-Ip`(IP) 머리글로 테스트할 수 있어요. 배포 환경에는 이 변수가 없어서 머리글이 무시돼요.
-- 화면은 사이트를 `localhost`에서 열면 자동으로 `http://localhost:8787`에 붙어요. 끄려면 주소에 `?api=off`를 붙이세요.
+- 화면은 사이트를 `localhost`에서 열면 실제 서버 대신 `http://localhost:8787`(로컬 Worker)에 붙어요. `?api=off`는 서버 없이, `?api=prod`는 실제 서버로 붙어요.
 
 ## 배포 (처음 한 번)
 1. [Cloudflare 가입](https://dash.cloudflare.com/sign-up) (무료)
