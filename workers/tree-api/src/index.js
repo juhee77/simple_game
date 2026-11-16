@@ -125,6 +125,7 @@ async function authTree(env, req, id) {
 }
 
 const SRC = new Set(['self', 'gift', 'heart']);
+const THEMES = new Set(['green', 'snow', 'pink', 'gold']);
 const isInt = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
 // 장식 하나의 공개 모양: 표면 좌표(a 각도·h 높이, 3D 트리) 또는 예전 칸 번호(slot)
 function publicOrn(o) {
@@ -157,6 +158,7 @@ function publicView(row, extra = {}) {
         hung,
         opened: Boolean(st.opened),
         face: Number.isInteger(st.face) && st.face >= 0 && st.face < 360 ? st.face : 0,
+        theme: THEMES.has(st.theme) ? st.theme : 'green',
         lights: Boolean(st.forest && st.forest.goalDone),
         partnerId: row.partner_id || null,
         forestId: row.forest_id || null,

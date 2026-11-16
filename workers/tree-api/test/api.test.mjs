@@ -236,10 +236,13 @@ test('공개 보기: 3D 장식 위치(a·h·z·r)와 예전 칸 번호를 함께
         { uid: 'a6', type: 'candy', a: 10, h: 500, z: 5, r: 90, src: 'self' },
         { uid: 'a7', type: 'candy', slot: 30, src: 'self' }
     ];
-    const t = await makeTree('지우', 'solo', { state: { hung, face: 200 } });
+    const t = await makeTree('지우', 'solo', { state: { hung, face: 200, theme: 'pink' } });
     const v = await call('GET', `/trees/${t.id}`);
     assert.equal(v.status, 200);
     assert.equal(v.data.face, 200);
+    assert.equal(v.data.theme, 'pink');
+    const t2 = await makeTree('지우2', 'solo', { state: { theme: '<script>' } });
+    assert.equal((await call('GET', `/trees/${t2.id}`)).data.theme, 'green');
     assert.deepEqual(v.data.hung, [
         { slot: 2, type: 'ball-red', src: 'self' },
         { a: 123, h: 456, z: 2, r: -15, type: 'bell', src: 'self' },
