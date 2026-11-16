@@ -125,14 +125,29 @@ async function authTree(env, req, id) {
 }
 
 const SRC = new Set(['self', 'gift', 'heart']);
+const isInt = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+// 장식 하나의 공개 모양: 표면 좌표(a 각도·h 높이, 3D 트리) 또는 예전 칸 번호(slot)
+function publicOrn(o) {
+    if (!o || typeof o.type !== 'string' || o.type.length > 24) return null;
+    let pos;
+    if (isInt(o.a, 0, 359) && isInt(o.h, 0, 1000)) {
+        pos = { a: o.a, h: o.h };
+        if (isInt(o.z, 0, 2) && o.z !== 1) pos.z = o.z;
+        if (isInt(o.r, -30, 30) && o.r !== 0) pos.r = o.r;
+    } else if (isInt(o.slot, 0, 29)) {
+        pos = { slot: o.slot };
+    } else return null;
+    return { ...pos, type: o.type, src: SRC.has(o.src) ? o.src : 'self', ...(o.src === 'gift' && typeof o.from === 'string' ? { from: o.from.slice(0, 10) } : {}) };
+}
+
 // 공개 보기: 주인 state에서 그림에 필요한 것만 골라낸다. 메시지·선물ID·바구니는 빼고, 선물 보낸 사람 닉네임만 남긴다.
 function publicView(row, extra = {}) {
     let st = {};
     try { st = JSON.parse(row.state); } catch { st = {}; }
     const waters = (Array.isArray(st.waters) ? st.waters : []).filter((k) => typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k)).slice(0, 40);
     const hung = (Array.isArray(st.hung) ? st.hung : []).slice(0, 40)
-        .filter((o) => o && Number.isInteger(o.slot) && o.slot >= 0 && o.slot < 30 && typeof o.type === 'string' && o.type.length <= 24)
-        .map((o) => ({ slot: o.slot, type: o.type, src: SRC.has(o.src) ? o.src : 'self', ...(o.src === 'gift' && typeof o.from === 'string' ? { from: o.from.slice(0, 10) } : {}) }));
+        .map(publicOrn)
+        .filter(Boolean);
     return {
         id: row.id,
         owner: row.owner,
@@ -141,6 +156,7 @@ function publicView(row, extra = {}) {
         waters,
         hung,
         opened: Boolean(st.opened),
+        face: Number.isInteger(st.face) && st.face >= 0 && st.face < 360 ? st.face : 0,
         lights: Boolean(st.forest && st.forest.goalDone),
         partnerId: row.partner_id || null,
         forestId: row.forest_id || null,

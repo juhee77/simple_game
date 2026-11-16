@@ -226,6 +226,29 @@ test('정리: 2월이 되면 지난 시즌 데이터 삭제', async () => {
     assert.equal((await call('GET', `/trees/${t.id}`)).status, 404);
 });
 
+test('공개 보기: 3D 장식 위치(a·h·z·r)와 예전 칸 번호를 함께 통과, 잘못된 값은 거름', async () => {
+    const hung = [
+        { uid: 'a1', type: 'ball-red', slot: 2, src: 'self' },
+        { uid: 'a2', type: 'bell', a: 123, h: 456, z: 2, r: -15, src: 'self' },
+        { uid: 'a3', type: 'g-cat', a: 10, h: 900, z: 1, r: 0, src: 'gift', from: '민지민지민지민지민지민지' },
+        { uid: 'a4', type: 'candy', a: 360, h: 100, src: 'self' },
+        { uid: 'a5', type: 'candy', a: 10, h: 1001, src: 'self' },
+        { uid: 'a6', type: 'candy', a: 10, h: 500, z: 5, r: 90, src: 'self' },
+        { uid: 'a7', type: 'candy', slot: 30, src: 'self' }
+    ];
+    const t = await makeTree('지우', 'solo', { state: { hung, face: 200 } });
+    const v = await call('GET', `/trees/${t.id}`);
+    assert.equal(v.status, 200);
+    assert.equal(v.data.face, 200);
+    assert.deepEqual(v.data.hung, [
+        { slot: 2, type: 'ball-red', src: 'self' },
+        { a: 123, h: 456, z: 2, r: -15, type: 'bell', src: 'self' },
+        { a: 10, h: 900, type: 'g-cat', src: 'gift', from: '민지민지민지민지민지' },
+        { a: 10, h: 500, type: 'candy', src: 'self' }
+    ]);
+    assert.ok(v.data.hung.every((o) => !('uid' in o)));
+});
+
 test('없는 주소·잘못된 아이디', async () => {
     assert.equal((await call('GET', '/nope')).status, 404);
     assert.equal((await call('GET', '/trees/BAD!')).status, 400);
