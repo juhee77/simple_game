@@ -19,7 +19,7 @@
 // 끊긴 동안 보낸 메시지는 버려진다. 다시 붙으면 onWelcome이 다시 오므로 그때 상태를 맞춘다.
 const RoomClient = (() => {
     // 서버를 배포하면 여기에 https 주소를 적는다. 페이지에 <meta name="room-server" content="...">가 있으면 그쪽이 먼저다.
-    const PRODUCTION_URL = '';
+    const PRODUCTION_URL = 'https://room-api.lahezy.workers.dev';
     const LOCAL_URL = 'http://localhost:8080';
     const SESSION_KEY = 'room-session:';
     const PING_INTERVAL_MS = 25_000;

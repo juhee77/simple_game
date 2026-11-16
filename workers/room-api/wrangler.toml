@@ -1,0 +1,26 @@
+# 방(room) 서버 — Cloudflare Workers + Durable Objects
+# server/(Kotlin)와 같은 규칙으로 동작해서 scripts/room-client.js가 그대로 붙는다.
+name = "room-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# 브라우저 호출(REST·WebSocket)을 받을 사이트. *는 포트 번호 자리.
+ALLOWED_ORIGINS = "https://juhee77.github.io,http://localhost:*,http://127.0.0.1:*"
+# ALLOW_DEV(테스트용 IP·보관 기간 바꾸기)는 여기에 두지 않는다. 로컬에서만 `--var ALLOW_DEV:1`로 켠다.
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+[[durable_objects.bindings]]
+name = "LIMITS"
+class_name = "Limiter"
+
+# 무료 플랜은 SQLite 저장소 방식만 쓸 수 있다
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room", "Limiter"]
+
+[observability]
+enabled = true
