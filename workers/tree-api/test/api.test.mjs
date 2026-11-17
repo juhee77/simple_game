@@ -114,6 +114,22 @@ test('선물: 공개 조회엔 메시지가 없고, 25일(KST) 전에는 주인�
     assert.equal(noTok.status, 403);
 });
 
+test('선물: 이모지 장식은 이모지 한 글자만 받음', async () => {
+    const t = await makeTree();
+    const okTypes = ['e.0🎅', 'e.b👍🏽', 'e.5❄️', 'e.a👩\u200d🍳', 'e.3🇰🇷'];
+    for (const type of okTypes) {
+        const r = await call('POST', `/trees/${t.id}/gifts`, { ip: '10.7.7.7', body: { type, sender: '지은' } });
+        assert.equal(r.status, 201, type);
+    }
+    const badTypes = ['e.0', 'e.c🎅', 'e.0a', 'e.0🎅<b>', 'e.0🎅 ', 'e.0<script>', 'e.0' + '🎅'.repeat(9), 'x.0🎅', 'e.0#'];
+    for (const type of badTypes) {
+        const r = await call('POST', `/trees/${t.id}/gifts`, { ip: '10.7.7.7', body: { type, sender: '지은' } });
+        assert.equal(r.status, 400, type);
+    }
+    const priv = await call('GET', `/trees/${t.id}/private`, { token: t.token, now: XMAS_EVE });
+    assert.deepEqual(priv.data.gifts.map((g) => g.type), okTypes);
+});
+
 test('선물 하루 제한 (같은 IP 30개)', async () => {
     const t = await makeTree();
     for (let i = 0; i < 30; i++) {
