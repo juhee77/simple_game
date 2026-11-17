@@ -425,17 +425,98 @@
             font-weight: 800;
         }
 
-        .orn {
+        .tree-cv {
+            display: block;
+            width: 100%;
+            max-width: 340px;
+            aspect-ratio: 3 / 4;
+            margin: 0 auto;
+            touch-action: pan-y;
+            cursor: grab;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .tree-cv.grabbing {
+            cursor: grabbing;
+        }
+
+        .tree-cv:focus-visible {
+            outline: 2px solid #fde68a;
+            outline-offset: 2px;
+            border-radius: var(--r-md);
+        }
+
+        .tree-box.duo .tree-cv {
+            max-width: 260px;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .theme-opt {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 4px;
+            border: 2px solid transparent;
+            border-radius: var(--r-md);
+            background: #0f1b33;
+            color: #fff;
+            font: inherit;
+            font-size: .8rem;
+            font-weight: 800;
             cursor: pointer;
         }
 
-        .slot-hint {
-            fill: rgba(255, 255, 255, .14);
-            stroke: #fde68a;
-            stroke-width: 1.6;
-            stroke-dasharray: 3 3;
+        .theme-opt svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .theme-opt[aria-pressed="true"] {
+            border-color: #fde68a;
+        }
+
+        .orn-tune {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: .9rem;
+            font-weight: 800;
+        }
+
+        .seg {
+            display: inline-flex;
+            gap: 4px;
+            padding: 3px;
+            border-radius: var(--r-pill);
+            background: var(--surface-2, rgba(0, 0, 0, .06));
+        }
+
+        .seg-btn {
+            min-width: 52px;
+            padding: 7px 10px;
+            border: 0;
+            border-radius: var(--r-pill);
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            font-size: .85rem;
             cursor: pointer;
-            animation: pulse 1.1s ease-in-out infinite alternate;
+        }
+
+        .seg-btn[aria-pressed="true"] {
+            background: var(--surface, #fff);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
         }
 
         @keyframes pulse {
@@ -888,7 +969,6 @@
         @media (prefers-reduced-motion: reduce) {
 
             .sky.snowing::after,
-            .slot-hint,
             .btn.glow,
             .capsule i,
             .reveal,
@@ -957,13 +1037,14 @@
  "steps": [
   "이름을 적고 키우는 방식(나만의 · 커플 · 우리 숲)을 골라 트리를 심어요. 12월 전에 미리 심어 둘 수 있어요.",
   "12월에는 하루 한 번 💧 물을 주고, 🎁 오늘의 캡슐을 열어 장식을 뽑아요. 매일 오면 희귀·전설 장식이 잘 나와요.",
-  "바구니의 장식을 누른 뒤 트리의 반짝이는 자리를 누르면 달려요. 물을 줄수록 트리가 자라고 자리가 늘어나요.",
+  "바구니의 장식을 누른 뒤 트리에서 달 곳을 누르면 달려요. 트리를 좌우로 밀면 빙글 돌아가고, 달린 장식은 끌어서 옮기거나 눌러서 크기·기울기를 바꿀 수 있어요. 물을 줄수록 트리가 자라고 달 수 있는 장식이 늘어나요.",
   "🎁 장식 받기 링크를 친구에게 보내면, 친구가 장식과 메시지를 골라 다시 보내 줘요. 메시지는 12월 25일에 열려요.",
   "커플 트리는 서로 물방울 링크를 보내요. 같은 날 둘 다 물을 주면 하트 장식이 생겨요.",
   "우리 숲은 단톡방에 트리 소식 링크를 올려요. 모두 합쳐 물을 많이 주면 숲에 눈이 내려요.",
   "25일에 산타가 다녀가면 별에 불이 켜지고 받은 편지를 열어요. 트리 카드도 저장할 수 있어요."
  ],
  "tips": [
+  "🎨 트리 색 버튼으로 초록·눈꽃·핑크·금빛 트리를 고를 수 있어요. 친구에게 장식을 받을수록 트리 밑에 선물 상자가 쌓여요.",
   "트리는 이 브라우저에만 저장돼요. 카톡 안 브라우저보다 사파리·크롬에서 키우는 걸 추천해요.",
   "폰을 바꾸거나 브라우저를 옮길 때는 💾 백업 코드를 써 주세요.",
   "링크는 주소의 # 뒤에만 들어가서 서버로 보내지지 않아요."
@@ -1121,6 +1202,15 @@
         // ════════════════════════════════════════════════════════════
         //  장식 (순서 고정! 번호가 링크에 들어간다)
         // ════════════════════════════════════════════════════════════
+        // 트리 색 테마 (순서 고정: 링크 스냅샷에 번호로 들어간다)
+        const THEMES = {
+            green: { name: '초록', emoji: '🌲', leaf: ['#0d4728', '#125a35', '#186b40', '#1e7d4b', '#279257', '#35a766', '#4dbd7c'], cone: ['#1d7a4b', '#25945d', '#0e4a2a'] },
+            snow: { name: '눈꽃', emoji: '❄️', leaf: ['#6f879e', '#8aa1b6', '#a5b9cb', '#bfcfdd', '#d6e1ea', '#e8eef4', '#f7fafc'], cone: ['#b9c9d8', '#dbe5ee', '#8299ae'] },
+            pink: { name: '핑크', emoji: '🌸', leaf: ['#7f2450', '#9b3363', '#b44476', '#c95a8a', '#da74a0', '#e892b7', '#f4b6d1'], cone: ['#c2558a', '#d97aa6', '#87295a'] },
+            gold: { name: '금빛', emoji: '✨', leaf: ['#6e4a0c', '#865c12', '#9f6f19', '#b88423', '#cf9b33', '#e2b64f', '#f2d27f'], cone: ['#b98a2a', '#d6a943', '#76520f'] }
+        };
+        const THEME_KEYS = Object.keys(THEMES);
+
         const DEFS = `<defs>
             <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#f5b83d"/><stop offset="1" stop-color="#b7791f"/></linearGradient>
             <linearGradient id="gAurora" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a5f3fc"/><stop offset=".5" stop-color="#a78bfa"/><stop offset="1" stop-color="#f0abfc"/></linearGradient>
@@ -1128,6 +1218,9 @@
             <linearGradient id="gRainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f87171"/><stop offset=".25" stop-color="#fbbf24"/><stop offset=".5" stop-color="#4ade80"/><stop offset=".75" stop-color="#60a5fa"/><stop offset="1" stop-color="#c084fc"/></linearGradient>
             <linearGradient id="gRoyal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8b4fe"/><stop offset="1" stop-color="#6d28d9"/></linearGradient>
             <linearGradient id="gPineA" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a9a63"/><stop offset="1" stop-color="#1a6e45"/></linearGradient>
+            ${THEME_KEYS.map((k) => `<linearGradient id="gCone-${k}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${THEMES[k].cone[0]}"/><stop offset=".35" stop-color="${THEMES[k].cone[1]}"/><stop offset="1" stop-color="${THEMES[k].cone[2]}"/></linearGradient>`).join('')}
+            <radialGradient id="gWarm"><stop offset="0" stop-color="#ffd68c" stop-opacity=".22"/><stop offset="1" stop-color="#ffd68c" stop-opacity="0"/></radialGradient>
+            <linearGradient id="gTrunk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a5a30"/><stop offset=".4" stop-color="#7c4a24"/><stop offset="1" stop-color="#4f2c12"/></linearGradient>
             <radialGradient id="gGlow"><stop offset="0" stop-color="#fff7c2" stop-opacity=".6"/><stop offset="1" stop-color="#fff7c2" stop-opacity="0"/></radialGradient>
             <radialGradient id="gStarGlow"><stop offset="0" stop-color="#fde68a" stop-opacity=".95"/><stop offset="1" stop-color="#fde68a" stop-opacity="0"/></radialGradient>
         </defs>`;
@@ -1237,12 +1330,12 @@
         //  트리 성장·그리기
         // ════════════════════════════════════════════════════════════
         const STAGE_AT = [0, 3, 7, 12, 17, 21];          // 물 준 횟수 → 단계
-        const STAGE_SLOTS = [6, 10, 15, 20, 26, 30];
+        const STAGE_CAP = [6, 10, 15, 20, 26, 30];        // 단계별로 달 수 있는 장식 수
         const STAGE_SCALE = [0.5, 0.62, 0.74, 0.85, 0.93, 1];
         const STAGE_NAME = ['묘목', '작은 트리', '두 층 트리', '세 층 트리', '큰 트리', '꼭대기까지 자란 트리'];
         const stageOf = (w) => STAGE_AT.reduce((s, t, i) => (w >= t ? i : s), 0);
 
-        // 장식 칸 30개 (다 자란 트리 기준 좌표). 번호는 링크에 들어가므로 고정.
+        // 예전 장식 칸 30개 (평면 트리 기준 좌표). 칸 번호로 저장된 예전 트리·링크를 새 위치로 바꿀 때만 쓴다.
         const SLOTS = [
             [138, 82], [162, 82],                                   // 0-1
             [126, 118], [174, 118],                                 // 2-3
@@ -1253,18 +1346,10 @@
             [72, 282], [112, 282], [152, 282], [192, 282], [232, 282], // 19-23
             [52, 316], [94, 316], [136, 316], [178, 316], [220, 316], [254, 316] // 24-29
         ];
-        // 작은 트리부터 고르게 채워지도록 열리는 순서
-        const SLOT_ORDER = [2, 3, 7, 8, 15, 17, 25, 28, 4, 5, 10, 13, 21, 0, 1, 14, 18, 24, 29, 16, 6, 9, 19, 23, 26, 27, 11, 12, 20, 22];
-        const slotsForStage = (stage) => SLOT_ORDER.slice(0, STAGE_SLOTS[stage]);
-
         const TIERS = [[190, 330, 130], [140, 265, 110], [90, 200, 85], [40, 140, 60]];   // [꼭대기 y, 밑동 y, 반폭] 아래층부터
         const BASE = [150, 370];
         const scaled = (x, y, f) => [BASE[0] + (x - BASE[0]) * f, BASE[1] - (BASE[1] - y) * f];
-
-        function tierPath(apex, base, hw) {
-            const c = 150;
-            return `M${c} ${apex}L${c + hw} ${base}Q${c + hw * 0.5} ${base + 12} ${c} ${base}Q${c - hw * 0.5} ${base + 12} ${c - hw} ${base}Z`;
-        }
+        const TRUNK = '<rect x="135" y="318" width="30" height="52" rx="5" fill="url(#gTrunk)"/>';
 
         function faceSvg(mood) {
             if (mood === 'happy') {
@@ -1276,64 +1361,561 @@
             return '<circle cx="143" cy="345" r="1.8" fill="#2b1708"/><circle cx="157" cy="345" r="1.8" fill="#2b1708"/><path d="M145 351q5 3.6 10 0" stroke="#2b1708" stroke-width="2" fill="none" stroke-linecap="round"/>';
         }
 
-        function lightsAlong(x1, y1, cx, cy, x2, y2, n, r, colors) {
-            let dots = `<path d="M${x1} ${y1}Q${cx} ${cy} ${x2} ${y2}" stroke="#334155" stroke-width="1.4" fill="none"/>`;
-            for (let i = 1; i < n; i++) {
-                const t = i / n;
-                const x = (1 - t) ** 2 * x1 + 2 * (1 - t) * t * cx + t ** 2 * x2;
-                const y = (1 - t) ** 2 * y1 + 2 * (1 - t) * t * cy + t ** 2 * y2;
-                const c = colors[i % colors.length];
-                dots += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r * 2}" fill="${c}" opacity=".25"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${c}"/>`;
-            }
-            return dots;
+        function starSvg(star, [sx, sy]) {
+            if (star === 2) return `<circle cx="${sx}" cy="${sy}" r="40" fill="url(#gStarGlow)"/><path d="${starPath(17, 7.4)}" transform="translate(${sx} ${sy})" fill="url(#gGold)" stroke="#b45309" stroke-width="1"/>`;
+            if (star === 1) return `<path d="${starPath(15, 6.5)}" transform="translate(${sx} ${sy})" fill="none" stroke="#fde68a" stroke-width="1.6" stroke-dasharray="3 3" opacity=".8"/>`;
+            return '';
         }
 
-        // v = { stage, orns:[{slot,type,src,uid?}], star:0|1|2, lights:bool, mood }
-        // o = { interactive, pick:{uid?}|null }
-        function treeInner(v, o = {}) {
-            const f = STAGE_SCALE[v.stage] ?? 0.5;
-            let g = '<ellipse cx="150" cy="372" rx="132" ry="16" fill="#e8eef7"/><ellipse cx="150" cy="369" rx="92" ry="8" fill="#fff" opacity=".7"/>';
-            g += `<g transform="translate(150 370) scale(${f}) translate(-150 -370)">`;
-            g += '<rect x="135" y="318" width="30" height="52" rx="5" fill="#7c4a24"/><rect x="135" y="318" width="10" height="52" fill="#000" opacity=".08"/>';
-            g += faceSvg(v.mood);
-            TIERS.forEach(([apex, base, hw], i) => {
-                g += `<path d="${tierPath(apex, base, hw)}" fill="${i % 2 ? '#22905c' : '#1e7d4f'}"/>`;
-                g += `<path d="M150 ${apex}L${150 + hw} ${base}Q${150 + hw * 0.5} ${base + 12} 150 ${base}Z" fill="#000" opacity=".12"/>`;
-                g += `<path d="M150 ${apex + 4}L${150 - hw * 0.72} ${base - 6}" stroke="#fff" stroke-width="2" opacity=".08"/>`;
-            });
-            if (v.stage >= 3) {
-                g += lightsAlong(92, 196, 150, 226, 210, 190, 7, 2.4, ['#fde047', '#fb7185', '#60a5fa', '#4ade80']);
-                g += lightsAlong(64, 262, 150, 300, 238, 254, 9, 2.4, ['#fb7185', '#fde047', '#4ade80', '#60a5fa']);
-            }
-            if (v.lights) g += lightsAlong(36, 322, 150, 368, 266, 316, 11, 4.4, ['#f43f5e', '#facc15', '#22d3ee', '#a3e635', '#c084fc']);
-            g += '</g>';
+        const GIFT_TAG = '<path d="M6 6l5 1.4-1.6 4.4z" fill="#fbbf24" stroke="#b45309" stroke-width=".5"/>';
 
-            const [sx, sy] = scaled(150, 36, f);
-            if (v.star === 2) {
-                g += `<circle cx="${sx}" cy="${sy}" r="40" fill="url(#gStarGlow)"/><path d="${starPath(17, 7.4)}" transform="translate(${sx} ${sy})" fill="url(#gGold)" stroke="#b45309" stroke-width="1"/>`;
-            } else if (v.star === 1) {
-                g += `<path d="${starPath(15, 6.5)}" transform="translate(${sx} ${sy})" fill="none" stroke="#fde68a" stroke-width="1.6" stroke-dasharray="3 3" opacity=".8"/>`;
-            }
+        // ── 3D 트리 ──
+        // 트리 = 원뿔 4층. 장식 위치는 표면 좌표 {a: 둘레 각도 0~359, h: 높이 0(꼭대기)~1000(밑동)}, 크기 z(0~2), 기울기 r(도).
+        // 화면은 살짝 위에서 내려다본 직교 투영: 앞으로 나온 만큼(d) 아래로 내려 보인다(K).
+        // 같은 장면을 SVG 문자열(카드·숲 타일 등 멈춘 그림)과 캔버스(돌려 보는 화면) 두 가지로 그린다.
+        // 캔버스는 전구가 깜빡이고 눈이 내린다(움직임 줄이기 설정이면 멈춘 채로).
+        const Tree3D = (() => {
+            const K = 0.2;
+            const TOP = 40;
+            const BOTTOM = 330;
+            const RAD = Math.PI / 180;
+            const H_MIN = 70;                     // 꼭대기 별 자리는 비워 둔다
+            const ZOOM = [0.78, 1, 1.32];
+            const yOfH = (h) => TOP + (h / 1000) * (BOTTOM - TOP);
+            const hOfY = (y) => Math.round(((y - TOP) / (BOTTOM - TOP)) * 1000);
+            const tierR = ([ap, b, hw], y) => (y >= ap && y <= b ? (hw * (y - ap)) / (b - ap) : 0);
+            const radiusAt = (y) => TIERS.reduce((m, t) => Math.max(m, tierR(t, y)), 0);
+            const surf = (y) => radiusAt(y) * 0.96;
+            const norm = (a) => ((Math.round(a) % 360) + 360) % 360;
+            const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+            const themeOf = (v) => THEMES[v.theme] || THEMES.green;
 
-            const s = 0.62 + 0.38 * f;
-            const bySlot = new Map(v.orns.filter((x) => x.slot != null).map((x) => [x.slot, x]));
-            slotsForStage(v.stage).forEach((slot) => {
-                const [x, y] = scaled(...SLOTS[slot], f);
-                const orn = bySlot.get(slot);
-                const pos = `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})`;
-                if (orn && BY_ID[orn.type]) {
-                    const moving = o.pick && o.pick.uid === orn.uid;
-                    const attrs = o.interactive && !o.pick ? ` class="orn" data-act="orn" data-uid="${esc(orn.uid)}"` : (moving ? ' class="orn moving"' : '');
-                    const tag = orn.src === 'gift' ? '<path d="M6 6l5 1.4-1.6 4.4z" fill="#fbbf24" stroke="#b45309" stroke-width=".5"/>' : '';
-                    g += `<g transform="${pos}"${attrs}>${BY_ID[orn.type].svg}${tag}</g>`;
-                } else if (o.pick) {
-                    g += `<circle class="slot-hint" data-act="slot" data-slot="${slot}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(10.5 * s).toFixed(1)}"/>`;
+            // (가로 x, 앞쪽 d, 높이 y) 점을 가리는 위층(치마)이 있으면 그 층 번호
+            function cover(x, d, y) {
+                for (let i = TIERS.length - 1; i >= 0; i--) {
+                    const [, b, hw] = TIERS[i];
+                    if (b >= y - 0.5) continue;
+                    const d2 = d + (y - b) / K;
+                    if (x * x + d2 * d2 < hw * hw * 0.97) return i;
                 }
-            });
-            return g;
-        }
+                return -1;
+            }
 
+            function project(a, y, rot, r = surf(y)) {
+                const t = (a - rot) * RAD;
+                const lx = Math.sin(t) * r;
+                const d = Math.cos(t) * r;
+                return { x: 150 + lx, y: y + d * K, d, lx, r };
+            }
+
+            // 잎 뭉치: 층마다 고리 모양으로 고정 배치 (돌리면 같이 돌아서 입체감이 난다)
+            const TUFTS = (() => {
+                const out = [];
+                const rnd = mulberry32(20261201);
+                TIERS.forEach((t) => {
+                    const [ap, b] = t;
+                    const rows = Math.round((b - ap) / 22);
+                    for (let i = 1; i <= rows; i++) {
+                        const y0 = ap + ((b - ap) * i) / rows - 1;
+                        const n = Math.max(3, Math.round((2 * Math.PI * tierR(t, y0)) / 17));
+                        for (let j = 0; j < n; j++) {
+                            const y = Math.min(b - 1, y0 - rnd() * 8);
+                            const r = tierR(t, y);
+                            if (r < radiusAt(y) - 3) continue;   // 위층 안쪽이라 안 보인다
+                            // 위층 치마 바로 밑은 그늘, 층 끝자락은 조금 밝고 크게
+                            const shade = TIERS.some(([, b2, hw2]) => y > b2 && y - b2 < 24 && hw2 > r * 0.8) ? -2 : i === rows ? 1 : 0;
+                            out.push({ a: ((j + (i % 2) * 0.5) / n) * 360 + rnd() * 8, y, r, s: (0.85 + rnd() * 0.35) * (i === rows ? 1.18 : 1), w: rnd() * 30 - 15, shade, lite: (i + j) % 3 === 0 || i === rows, snow: rnd() < (i === rows ? 0.7 : 0.38) });
+                        }
+                    }
+                });
+                return out;
+            })();
+            const TUFT = 'M0-8C2.6-4 5.6-.4 8 4.6 4.6 3 2.4 3.8 0 7.6-2.4 3.8-4.6 3-8 4.6-5.6-.4-2.6-4 0-8Z';
+            const CAP = 'M-5.6-1.2C-4-4-2-6.2 0-8 2-6.2 4-4 5.6-1.2 3.4-2.4 1.6-1.4 0-.2-1.6-1.4-3.4-2.4-5.6-1.2Z';
+            // 왼쪽 앞에서 빛이 온다
+            const lightOf = (phi) => 0.5 + 0.5 * Math.cos((phi + 40) * RAD);
+            const leafColor = (th, phi, shade = 0) => th.leaf[clamp(Math.floor(lightOf(phi) * 6.99) + shade, 0, 6)];
+            const SMALL = ['#fde047', '#fb7185', '#60a5fa', '#4ade80'];
+            const BIG = ['#f43f5e', '#facc15', '#22d3ee', '#a3e635', '#c084fc'];
+
+            // 트리 밑 선물 상자 자리 (받은 선물 수만큼 앞에서부터 채운다)
+            const BOXES = [
+                { a: -18, r: 74, s: 1.15, c: 0 }, { a: 26, r: 82, s: 0.95, c: 1 }, { a: -52, r: 96, s: 0.9, c: 2 },
+                { a: 58, r: 100, s: 1.05, c: 3 }, { a: 4, r: 104, s: 0.8, c: 4 }, { a: -88, r: 88, s: 1, c: 5 },
+                { a: 92, r: 80, s: 0.9, c: 6 }, { a: 140, r: 90, s: 1.1, c: 1 }, { a: -140, r: 92, s: 1, c: 3 }
+            ];
+            const BOX_COLORS = [
+                ['#dc2626', '#991b1b', '#f87171', '#fde68a'], ['#2563eb', '#1e3a8a', '#60a5fa', '#fbbf24'], ['#16a34a', '#14532d', '#4ade80', '#fde047'],
+                ['#db2777', '#831843', '#f472b6', '#ffffff'], ['#7c3aed', '#4c1d95', '#a78bfa', '#fde68a'], ['#f59e0b', '#92400e', '#fcd34d', '#dc2626'], ['#0891b2', '#164e63', '#67e8f9', '#ffffff']
+            ];
+            const boxSvg = (ci) => {
+                const [c, dk, lt, rb] = BOX_COLORS[ci];
+                return `<ellipse cx="1" cy="7.5" rx="15" ry="3" fill="#0b1530" opacity=".22"/><path d="M-12-6h17v13h-17z" fill="${c}"/><path d="M5-6l6-4v13l-6 4z" fill="${dk}"/><path d="M-12-6l6-4h17l-6 4z" fill="${lt}"/>`
+                    + `<path d="M-5-6h3v13h-3z" fill="${rb}"/><path d="M8.5-8v13l-1.6 1V-7z" fill="${rb}" opacity=".85"/><path d="M-5-6l6-4h3l-6 4z" fill="${rb}"/><path d="M-11-8.3h17l-1.4 1h-17z" fill="${rb}" opacity=".8"/>`
+                    + `<path d="M-1.5-8c-5-4.6-8.6-1.4-4.4.6M-1.5-8c4-5.2 8.4-2.6 4.6.4" stroke="${rb}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+            };
+
+            // 장면: 원뿔 앞에 오는 것들(잎·눈·구슬 줄·전구·장식)을 깊이 순서로, 선물 상자는 앞뒤로 나눠서
+            function build(v, rot, o = {}) {
+                const th = themeOf(v);
+                const f = STAGE_SCALE[v.stage] ?? 0.5;
+                const s = 0.62 + 0.38 * f;
+                const P = (x, y) => scaled(x, y, f);
+                const items = [];
+                TUFTS.forEach((t) => {
+                    if (o.lite && !t.lite) return;
+                    const p = project(t.a, t.y, rot, t.r);
+                    if (p.d < -0.3 * t.r || cover(p.lx, p.d, t.y) >= 0) return;
+                    const [x, y] = P(p.x, p.y);
+                    items.push({ k: 't', x, y, d: p.d, sc: f * t.s * (o.lite ? 1.35 : 1) * (1 + p.d / 700), rot: (p.lx / Math.max(t.r, 1)) * 38 + t.w, c: leafColor(th, t.a - rot, t.shade), cap: t.snow });
+                });
+                // 금빛 구슬 줄: 나선으로 감되 고정점 사이가 살짝 처진다
+                if (v.stage >= 2) {
+                    const turns = 1.8;
+                    const N = o.lite ? 70 : 170;
+                    for (let i = 0; i <= N; i++) {
+                        const tt = i / N;
+                        const u = tt * 7 * turns;
+                        const yy = 78 + 234 * tt + 7 * Math.sin(Math.PI * (u % 1));
+                        const p = project(120 + tt * turns * 360, yy, rot, radiusAt(yy));
+                        if (p.d < -0.1 * p.r || cover(p.lx, p.d, yy) >= 0) continue;
+                        const [x, y] = P(p.x, p.y);
+                        items.push({ k: 'g', x, y, d: p.d + 0.3, r: 1.55 * f * (1 + p.d / 700) * (o.lite ? 1.4 : 1) });
+                    }
+                }
+                const helix = (turns, phase, n, size, colors, y0, y1) => {
+                    const steps = n * 4;
+                    let prev = null;
+                    for (let i = 0; i <= steps; i++) {
+                        const tt = i / steps;
+                        const yy = y0 + (y1 - y0) * tt;
+                        const p = project(phase + tt * turns * 360, yy, rot, radiusAt(yy) * 0.99);
+                        const vis = p.d > -0.12 * p.r && cover(p.lx, p.d, yy) < 0;
+                        const [x, y] = P(p.x, p.y);
+                        if (vis && prev && !o.lite) items.push({ k: 'w', x1: prev[0], y1: prev[1], x2: x, y2: y, d: p.d - 1, sc: f });
+                        prev = vis ? [x, y] : null;
+                        if (vis && i % 4 === 2) items.push({ k: 'b', x, y, d: p.d + 0.5, r: size * f, c: colors[Math.floor(i / 4) % colors.length], ph: i / 4 + phase });
+                    }
+                };
+                if (v.stage >= 3) helix(2.4, 20, 30, 2.4, SMALL, 70, 318);
+                if (v.lights) helix(1.7, 200, 22, 4.2, BIG, 60, 322);
+                (v.orns || []).forEach((orn) => {
+                    if (orn.h == null || !BY_ID[orn.type]) return;
+                    const yy = yOfH(orn.h);
+                    const p = project(orn.a, yy, rot);
+                    if (p.d < -0.35 * p.r || cover(p.lx, p.d, yy) >= 0) return;
+                    const [x, y] = P(p.x, p.y);
+                    items.push({ k: 'o', x, y, d: p.d + 22, sc: s * ZOOM[orn.z ?? 1] * (1 + p.d / 600), r: orn.r || 0, o: orn, bri: 0.66 + 0.34 * lightOf(orn.a - rot) });
+                });
+                items.sort((a, b) => a.d - b.d);
+                const boxes = BOXES.slice(0, clamp(v.boxes || 0, 0, BOXES.length)).map((b) => {
+                    const t = (b.a - rot) * RAD;
+                    const R = b.r * Math.max(f, 0.72);
+                    const d = Math.cos(t) * R;
+                    return { x: 150 + Math.sin(t) * R, y: 369 + d * 0.12, d, sc: b.s * (0.78 + 0.22 * f) * (1 + d / 800), c: b.c };
+                }).sort((a, b) => a.d - b.d);
+                return { f, s, th, items, back: boxes.filter((b) => b.d <= 0), front: boxes.filter((b) => b.d > 0), star: P(150, 36), glow: v.stage >= 3 || v.lights };
+            }
+
+            const n1 = (x) => Math.round(x * 10) / 10;
+            const conePath = ([ap, b, hw]) => `M150 ${ap}L${150 + hw} ${b}A${hw} ${n1(hw * K)} 0 0 1 ${150 - hw} ${b}Z`;
+            const RAYS = (() => {
+                let d = '';
+                for (let i = 0; i < 12; i++) {
+                    const a = (i * 30) * RAD;
+                    const L = i % 2 ? 30 : 46;
+                    d += `M${n1(Math.cos(a - 0.07) * 6)} ${n1(Math.sin(a - 0.07) * 6)}L${n1(Math.cos(a) * L)} ${n1(Math.sin(a) * L)}L${n1(Math.cos(a + 0.07) * 6)} ${n1(Math.sin(a + 0.07) * 6)}Z`;
+                }
+                return d;
+            })();
+            const boxTag = (b) => `<g transform="translate(${n1(b.x)} ${n1(b.y)}) scale(${n1(b.sc * 100) / 100})">${boxSvg(b.c)}</g>`;
+
+            // 멈춘 그림 (300×400 좌표의 SVG 조각)
+            function svg(v, o = {}) {
+                const sc = build(v, o.rot ?? v.face ?? 0, o);
+                const theme = THEMES[v.theme] ? v.theme : 'green';
+                let g = '';
+                if (sc.glow) g += `<ellipse cx="150" cy="${n1(scaled(150, 220, sc.f)[1])}" rx="${n1(165 * sc.f)}" ry="${n1(190 * sc.f)}" fill="url(#gWarm)"/>`;
+                g += '<ellipse cx="150" cy="372" rx="132" ry="16" fill="#e8eef7"/><ellipse cx="150" cy="369" rx="92" ry="8" fill="#fff" opacity=".7"/>';
+                g += sc.back.map(boxTag).join('');
+                g += `<g transform="translate(150 370) scale(${sc.f}) translate(-150 -370)">${TRUNK}${faceSvg(v.mood)}${TIERS.map((t) => `<path d="${conePath(t)}" fill="url(#gCone-${theme})"/>`).join('')}</g>`;
+                sc.items.forEach((it) => {
+                    if (it.k === 't') {
+                        g += `<g transform="translate(${n1(it.x)} ${n1(it.y)}) rotate(${Math.round(it.rot)}) scale(${n1(it.sc * 10) / 10})"><path d="${TUFT}" fill="${it.c}"/>${it.cap ? `<path d="${CAP}" fill="#f8fafc" opacity=".92"/>` : ''}</g>`;
+                    } else if (it.k === 'g') {
+                        g += `<circle cx="${n1(it.x)}" cy="${n1(it.y)}" r="${n1(it.r)}" fill="#f2c14e"/>`;
+                    } else if (it.k === 'w') {
+                        g += `<path d="M${n1(it.x1)} ${n1(it.y1)}L${n1(it.x2)} ${n1(it.y2)}" stroke="#334155" stroke-width="${n1(1.3 * it.sc)}"/>`;
+                    } else if (it.k === 'b') {
+                        g += `<circle cx="${n1(it.x)}" cy="${n1(it.y)}" r="${n1(it.r * 2.6)}" fill="${it.c}" opacity=".22"/><circle cx="${n1(it.x)}" cy="${n1(it.y)}" r="${n1(it.r)}" fill="${it.c}"/>`;
+                    } else {
+                        g += `<g transform="translate(${n1(it.x)} ${n1(it.y)}) rotate(${it.r}) scale(${(Math.round(it.sc * 1000) / 1000)})"><ellipse cx="2.4" cy="3.4" rx="9.5" ry="9" fill="#04140b" opacity=".2"/>${BY_ID[it.o.type].svg}${it.o.src === 'gift' ? GIFT_TAG : ''}</g>`;
+                    }
+                });
+                g += sc.front.map(boxTag).join('');
+                if (v.star === 2) g += `<path d="${RAYS}" transform="translate(${n1(sc.star[0])} ${n1(sc.star[1])})" fill="#fde68a" opacity=".35"/>`;
+                return g + starSvg(v.star, sc.star);
+            }
+
+            // 캔버스용 그림 조각(장식·줄기·별·상자)은 SVG를 이미지로 한 번만 만들어 둔다
+            const cache = new Map();
+            let onLoad = () => {};
+            function pic(key, inner, vb, w, h) {
+                let im = cache.get(key);
+                if (!im) {
+                    im = new Image();
+                    im.onload = () => onLoad();
+                    im.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="${w}" height="${h}">${DEFS}${inner}</svg>`)}`;
+                    cache.set(key, im);
+                }
+                return im.complete && im.naturalWidth ? im : null;
+            }
+            let path2d = null;
+
+            // 내리는 눈: 트리 둘레 원통 안의 눈송이. 돌리면 앞뒤 눈송이가 다르게 움직여 깊이감이 난다.
+            const FLAKES = (() => {
+                const rnd = mulberry32(1225);
+                return Array.from({ length: 64 }, () => ({ a: rnd() * 360, R: 30 + rnd() * 150, y: rnd() * 420, s: 0.8 + rnd() * 1.6, v: 0.012 + rnd() * 0.02, ph: rnd() * 6.28 }));
+            })();
+            function drawFlakes(ctx, rot, t, front) {
+                ctx.fillStyle = '#fff';
+                FLAKES.forEach((fl) => {
+                    const th = (fl.a - rot) * RAD;
+                    const d = Math.cos(th) * fl.R;
+                    if ((d > 0) !== front) return;
+                    const y = ((fl.y + t * fl.v) % 430) - 20 + d * K;
+                    const x = 150 + Math.sin(th) * fl.R + Math.sin(t * 0.0011 + fl.ph) * 5;
+                    const k = 1 + d / 260;
+                    ctx.globalAlpha = front ? 0.9 : 0.4;
+                    ctx.beginPath(); ctx.arc(x, y, fl.s * k, 0, Math.PI * 2); ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+            }
+
+            const withScale = (ctx, f, fn) => { ctx.save(); ctx.translate(150, 370); ctx.scale(f, f); ctx.translate(-150, -370); fn(); ctx.restore(); };
+            const drawBox = (ctx, b) => {
+                const im = pic(`box|${b.c}`, boxSvg(b.c), '-16 -14 32 24', 128, 96);
+                if (im) ctx.drawImage(im, b.x - 16 * b.sc, b.y - 14 * b.sc, 32 * b.sc, 24 * b.sc);
+            };
+
+            // 돌려 보는 화면 (ctx는 300×400 좌표로 맞춰 둔 상태). o.t가 있으면 깜빡임·눈 내림.
+            function paint(ctx, v, rot, o = {}) {
+                const sc = build(v, rot);
+                const t = o.t ?? 0;
+                path2d = path2d || { tuft: new Path2D(TUFT), cap: new Path2D(CAP), rays: new Path2D(RAYS) };
+                if (sc.glow) {
+                    const [gx, gy] = scaled(150, 220, sc.f);
+                    const gr = ctx.createRadialGradient(gx, gy, 0, gx, gy, 190 * sc.f);
+                    gr.addColorStop(0, 'rgba(255, 214, 140, .22)'); gr.addColorStop(1, 'rgba(255, 214, 140, 0)');
+                    ctx.fillStyle = gr;
+                    ctx.fillRect(0, 0, 300, 400);
+                }
+                if (o.snow) drawFlakes(ctx, rot, t, false);
+                ctx.fillStyle = '#e8eef7';
+                ctx.beginPath(); ctx.ellipse(150, 372, 132, 16, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 0.7; ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.ellipse(150, 369, 92, 8, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1;
+                sc.back.forEach((b) => drawBox(ctx, b));
+                withScale(ctx, sc.f, () => {
+                    const trunk = pic(`trunk|${v.mood}`, TRUNK + faceSvg(v.mood), '120 310 60 64', 180, 192);
+                    if (trunk) ctx.drawImage(trunk, 120, 310, 60, 64);
+                    TIERS.forEach((tier) => {
+                        const hw = tier[2];
+                        const gr = ctx.createLinearGradient(150 - hw, 0, 150 + hw, 0);
+                        gr.addColorStop(0, sc.th.cone[0]); gr.addColorStop(0.35, sc.th.cone[1]); gr.addColorStop(1, sc.th.cone[2]);
+                        ctx.fillStyle = gr;
+                        ctx.fill(new Path2D(conePath(tier)));
+                    });
+                });
+                const canFilter = 'filter' in ctx;
+                sc.items.forEach((it) => {
+                    if (it.k === 't') {
+                        ctx.save(); ctx.translate(it.x, it.y); ctx.rotate(it.rot * RAD); ctx.scale(it.sc, it.sc);
+                        ctx.fillStyle = it.c; ctx.fill(path2d.tuft);
+                        if (it.cap) { ctx.globalAlpha = 0.92; ctx.fillStyle = '#f8fafc'; ctx.fill(path2d.cap); }
+                        ctx.restore();
+                    } else if (it.k === 'g') {
+                        ctx.fillStyle = '#f2c14e';
+                        ctx.beginPath(); ctx.arc(it.x, it.y, it.r, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = 'rgba(255, 250, 220, .9)';
+                        ctx.beginPath(); ctx.arc(it.x - it.r * 0.35, it.y - it.r * 0.35, it.r * 0.4, 0, Math.PI * 2); ctx.fill();
+                    } else if (it.k === 'w') {
+                        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1.3 * it.sc;
+                        ctx.beginPath(); ctx.moveTo(it.x1, it.y1); ctx.lineTo(it.x2, it.y2); ctx.stroke();
+                    } else if (it.k === 'b') {
+                        const tw = o.t == null ? 1 : 0.5 + 0.5 * Math.sin(t * 0.0032 + it.ph * 2.3);
+                        const hr = it.r * (2.2 + 1.4 * tw);
+                        const gr = ctx.createRadialGradient(it.x, it.y, 0, it.x, it.y, hr);
+                        gr.addColorStop(0, it.c); gr.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                        ctx.globalCompositeOperation = 'lighter';
+                        ctx.globalAlpha = 0.25 + 0.35 * tw;
+                        ctx.fillStyle = gr;
+                        ctx.beginPath(); ctx.arc(it.x, it.y, hr, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalCompositeOperation = 'source-over';
+                        ctx.globalAlpha = 0.65 + 0.35 * tw;
+                        ctx.fillStyle = it.c;
+                        ctx.beginPath(); ctx.arc(it.x, it.y, it.r, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalAlpha = 0.8 * tw;
+                        ctx.fillStyle = '#fff';
+                        ctx.beginPath(); ctx.arc(it.x, it.y, it.r * 0.45, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                    } else {
+                        const gift = it.o.src === 'gift';
+                        const im = pic(`o|${it.o.type}|${gift ? 1 : 0}`, BY_ID[it.o.type].svg + (gift ? GIFT_TAG : ''), '-16 -17 32 32', 128, 128);
+                        ctx.save(); ctx.translate(it.x, it.y); ctx.rotate(it.r * RAD); ctx.scale(it.sc, it.sc);
+                        ctx.globalAlpha = 0.2; ctx.fillStyle = '#04140b';
+                        ctx.beginPath(); ctx.ellipse(2.4, 3.4, 9.5, 9, 0, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                        if (o.moving && o.moving === it.o.uid) {
+                            ctx.setLineDash([3, 3]); ctx.strokeStyle = '#fde68a'; ctx.lineWidth = 1.6;
+                            ctx.beginPath(); ctx.arc(0, -2, 15, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+                        }
+                        if (im) {
+                            if (canFilter && it.bri < 0.97) ctx.filter = `brightness(${it.bri.toFixed(2)})`;
+                            ctx.drawImage(im, -16, -17, 32, 32);
+                            if (canFilter) ctx.filter = 'none';
+                        }
+                        ctx.restore();
+                    }
+                });
+                sc.front.forEach((b) => drawBox(ctx, b));
+                if (v.star === 2) {
+                    ctx.save();
+                    ctx.translate(sc.star[0], sc.star[1]);
+                    ctx.rotate(t * 0.00025);
+                    ctx.globalCompositeOperation = 'lighter';
+                    ctx.globalAlpha = o.t == null ? 0.35 : 0.28 + 0.12 * Math.sin(t * 0.002);
+                    ctx.fillStyle = '#fde68a';
+                    ctx.fill(path2d.rays);
+                    ctx.restore();
+                }
+                if (v.star) {
+                    const im = pic(`star|${v.star}`, starSvg(v.star, [0, 0]), '-42 -42 84 84', 252, 252);
+                    if (im) ctx.drawImage(im, sc.star[0] - 42, sc.star[1] - 42, 84, 84);
+                }
+                if (o.hint) {
+                    // 달 곳 고르는 중: 트리 둘레를 점선으로
+                    withScale(ctx, sc.f, () => {
+                        ctx.setLineDash([5, 5]); ctx.strokeStyle = 'rgba(253, 230, 138, .85)'; ctx.lineWidth = 1.6 / sc.f;
+                        TIERS.forEach((tier) => ctx.stroke(new Path2D(conePath(tier))));
+                    });
+                }
+                if (o.snow) drawFlakes(ctx, rot, t, true);
+                return sc;
+            }
+
+            // 화면 점(300×400 좌표) → 표면 좌표. 트리 밖이면 null
+            function pickAt(v, rot, tx, ty) {
+                const f = STAGE_SCALE[v.stage] ?? 0.5;
+                const X = 150 + (tx - 150) / f;
+                const Y = 370 - (370 - ty) / f;
+                const lx = X - 150;
+                let y = Y;
+                for (let i = 0; i < 8; i++) {
+                    const r = surf(y);
+                    const sn = r > 1 ? clamp(lx / r, -1, 1) : 0;
+                    y = clamp(Y - r * Math.sqrt(1 - sn * sn) * K, TOP, BOTTOM);
+                }
+                y = clamp(y, yOfH(H_MIN), BOTTOM - 2);
+                let r = surf(y);
+                if (r < 1 || Math.abs(lx) > r * 1.08) return null;
+                let sn = clamp(lx / r, -1, 1);
+                const ti = cover(lx, Math.sqrt(1 - sn * sn) * r, y);
+                if (ti >= 0) {   // 위층 치마 끝을 누른 것
+                    y = TIERS[ti][1] - 2;
+                    r = surf(y);
+                    sn = clamp(lx / r, -1, 1);
+                }
+                if (Math.abs(y + Math.sqrt(1 - sn * sn) * r * K - Y) > 14) return null;
+                return { a: norm(Math.asin(sn) / RAD + rot), h: hOfY(y) };
+            }
+
+            // 예전 칸 번호 → 표면 좌표 (정면에서 본 평면 위치를 그대로 옮긴다)
+            function fromSlot(slot) {
+                const [x, y] = SLOTS[slot];
+                const r = surf(y);
+                return { a: norm(Math.asin(clamp((x - 150) / Math.max(r, 1), -1, 1)) / RAD), h: hOfY(y) };
+            }
+
+            // 저절로 다는 장식: 앞쪽에서 다른 장식과 가장 먼 자리
+            function freeSpot(orns, face = 0) {
+                const pt = (a, h) => { const y = yOfH(h); const r = surf(y); return [Math.sin(a * RAD) * r, y, Math.cos(a * RAD) * r]; };
+                const others = orns.filter((x) => x.h != null).map((x) => pt(x.a, x.h));
+                let best = null;
+                for (let h = 160; h <= 900; h += 55) {
+                    for (let da = -60; da <= 60; da += 15) {
+                        const a = norm(face + da);
+                        const p = project(a, yOfH(h), face);
+                        if (cover(p.lx, p.d, yOfH(h)) >= 0) continue;
+                        const q = pt(a, h);
+                        const m = others.reduce((acc, o2) => Math.min(acc, Math.hypot(q[0] - o2[0], q[1] - o2[1], q[2] - o2[2])), 999);
+                        const score = m - Math.abs(da) * 0.08;
+                        if (!best || score > best.score) best = { a, h, score };
+                    }
+                }
+                return { a: best.a, h: best.h };
+            }
+
+            return { svg, paint, pickAt, fromSlot, freeSpot, norm, set onLoad(fn) { onLoad = fn; } };
+        })();
+
+        // v = { stage, orns:[{a,h,z?,r?,type,src,uid?}], star:0|1|2, lights:bool, mood, face }
+        // o = { rot?, lite? }
+        const treeInner = (v, o = {}) => Tree3D.svg(v, o);
         const treeSvg = (v, o = {}, label = '트리') => `<svg viewBox="0 0 300 400" role="img" aria-label="${esc(label)}">${treeInner(v, o)}</svg>`;
+
+        // 돌려 보는 트리 화면: 빈 곳을 좌우로 밀면 회전, 장식을 누르면 onTap, 장식을 끌면 표면을 따라 옮긴다
+        const Views = (() => {
+            const live = new Set();
+            const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+            function redrawAll() {
+                live.forEach((V) => { if (V.cv.isConnected) V.draw(); else { V.stop(); live.delete(V); } });
+            }
+            Tree3D.onLoad = () => requestAnimationFrame(redrawAll);
+            document.addEventListener('visibilitychange', () => { if (!document.hidden) live.forEach((V) => V.kick?.()); });
+
+            // o = { view(), rot, interactive, onTap(orn|null, pos|null), onRot(rot), onDrop(orn, ok, orig), moving(), hint(), intro }
+            function mount(cv, o) {
+                if (!cv) return null;
+                const ctx = cv.getContext('2d');
+                const V = { cv, rot: o.rot || 0, scene: null, raf: 0, vel: 0 };
+                let W = 0;
+                let G = null;
+                V.draw = () => {
+                    if (!W) return;
+                    const k = cv.width / 300;
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.clearRect(0, 0, cv.width, cv.height);
+                    ctx.setTransform(k, 0, 0, k, 0, 0);
+                    V.scene = Tree3D.paint(ctx, o.view(), V.rot, { moving: o.moving?.(), hint: o.hint?.(), snow: true, t: reduce() ? null : performance.now() });
+                };
+                // 전구 깜빡임·눈 내림: 화면에 보이고 탭이 앞에 있을 때만 초당 30번 정도 다시 그린다
+                let visible = true;
+                let last = 0;
+                const tick = (now) => {
+                    V.anim = 0;
+                    if (!cv.isConnected || !visible || document.hidden || reduce()) return;
+                    if (now - last >= 33) { last = now; V.draw(); }
+                    V.anim = requestAnimationFrame(tick);
+                };
+                V.kick = () => { if (!V.anim) V.anim = requestAnimationFrame(tick); };
+                const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => { visible = es[es.length - 1].isIntersecting; if (visible) V.kick(); }) : null;
+                io?.observe(cv);
+                const size = () => {
+                    const r = cv.getBoundingClientRect();
+                    if (!r.width) return;
+                    const dpr = Math.min(3, window.devicePixelRatio || 1);
+                    W = r.width;
+                    cv.width = Math.round(r.width * dpr);
+                    cv.height = Math.round(r.width * (4 / 3) * dpr);
+                    V.draw();
+                };
+                const ro = new ResizeObserver(size);
+                ro.observe(cv);
+                V.stop = () => { ro.disconnect(); io?.disconnect(); cancelAnimationFrame(V.raf); cancelAnimationFrame(V.anim); };
+                live.add(V);
+                V.kick();
+
+                const commit = () => o.onRot?.(Tree3D.norm(V.rot));
+                const toTree = (e) => { const r = cv.getBoundingClientRect(); return [((e.clientX - r.left) / r.width) * 300, ((e.clientY - r.top) / r.height) * 400]; };
+                const hit = ([x, y]) => {
+                    const list = V.scene?.items || [];
+                    for (let i = list.length - 1; i >= 0; i--) {
+                        const it = list[i];
+                        if (it.k === 'o' && Math.hypot(it.x - x, it.y - 2 * it.sc - y) < 13 * it.sc + 3) return it.o;
+                    }
+                    return null;
+                };
+                const stopSpin = () => { cancelAnimationFrame(V.raf); V.raf = 0; };
+                const spin = () => {
+                    if (Math.abs(V.vel) < 0.004) { V.raf = 0; commit(); return; }
+                    V.rot += V.vel * 16;
+                    V.vel *= 0.93;
+                    V.draw();
+                    V.raf = requestAnimationFrame(spin);
+                };
+
+                // 장식 위·고르는 중에는 화면이 스크롤되지 않게 (그 밖에는 세로 스크롤을 살린다)
+                cv.addEventListener('touchstart', (e) => {
+                    const t = e.touches[0];
+                    if (o.interactive && t && (o.hint?.() || hit(toTree(t)))) e.preventDefault();
+                }, { passive: false });
+                cv.addEventListener('pointerdown', (e) => {
+                    if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+                    stopSpin();
+                    const p = toTree(e);
+                    const orn = o.interactive ? hit(p) : null;
+                    G = { id: e.pointerId, x0: e.clientX, y0: e.clientY, lx: e.clientX, lt: e.timeStamp, p, orn, mode: '', ok: false, orig: orn ? { a: orn.a, h: orn.h } : null };
+                    V.vel = 0;
+                    try { cv.setPointerCapture(e.pointerId); } catch { /* 무시 */ }
+                });
+                cv.addEventListener('pointermove', (e) => {
+                    if (!G || e.pointerId !== G.id) return;
+                    if (!G.mode) {
+                        if (Math.hypot(e.clientX - G.x0, e.clientY - G.y0) < 7) return;
+                        G.mode = G.orn && !o.hint?.() ? 'orn' : 'spin';
+                        cv.classList.add('grabbing');
+                    }
+                    if (G.mode === 'spin') {
+                        const dt = Math.max(1, e.timeStamp - G.lt);
+                        const dr = -(e.clientX - G.lx) * (300 / Math.max(W, 1)) * 0.55;
+                        V.rot += dr;
+                        V.vel = V.vel * 0.5 + (dr / dt) * 0.5;
+                        G.lx = e.clientX;
+                        G.lt = e.timeStamp;
+                    } else {
+                        const pos = Tree3D.pickAt(o.view(), V.rot, ...toTree(e));
+                        G.ok = Boolean(pos);
+                        if (pos) Object.assign(G.orn, pos);
+                    }
+                    V.draw();
+                });
+                const end = (e, cancel) => {
+                    if (!G || e.pointerId !== G.id) return;
+                    const g = G;
+                    G = null;
+                    cv.classList.remove('grabbing');
+                    if (g.mode === 'spin') {
+                        if (!cancel && !reduce() && Math.abs(V.vel) > 0.02 && e.timeStamp - g.lt < 80) V.raf = requestAnimationFrame(spin);
+                        else commit();
+                    } else if (g.mode === 'orn') {
+                        const ok = g.ok && !cancel;
+                        if (!ok) Object.assign(g.orn, g.orig);
+                        o.onDrop?.(g.orn, ok);
+                        V.draw();
+                    } else if (!cancel) {
+                        o.onTap?.(g.orn || hit(g.p), Tree3D.pickAt(o.view(), V.rot, ...g.p));
+                    }
+                };
+                cv.addEventListener('pointerup', (e) => end(e, false));
+                cv.addEventListener('pointercancel', (e) => end(e, true));
+                cv.addEventListener('keydown', (e) => {
+                    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                    e.preventDefault();
+                    V.rot += e.key === 'ArrowLeft' ? 20 : -20;
+                    V.draw();
+                    commit();
+                });
+
+                // 처음 한 번은 살짝 돌며 나타나서 돌릴 수 있다는 걸 보여 준다
+                if (o.intro && !reduce()) {
+                    const target = V.rot;
+                    const t0 = performance.now();
+                    V.rot = target - 50;
+                    const step = (now) => {
+                        const t = Math.min(1, (now - t0) / 1100);
+                        V.rot = target - 50 * (1 - t) ** 3;
+                        V.draw();
+                        if (t < 1 && !G) V.raf = requestAnimationFrame(step);
+                        else if (t >= 1) V.raf = 0;
+                    };
+                    V.raf = requestAnimationFrame(step);
+                }
+                return V;
+            }
+            return { mount, redrawAll };
+        })();
 
         // ── 트리 상태 계산 ──
         function streakOf(waters, today) {
@@ -1355,29 +1937,63 @@
         const starOf = (st) => (st.opened ? 2 : stageOf(st.waters.length) >= 5 ? 1 : 0);
 
         function viewOf(st) {
-            return { stage: stageOf(st.waters.length), orns: st.hung, star: starOf(st), lights: Boolean(st.forest?.goalDone), mood: moodOf(st) };
+            return { stage: stageOf(st.waters.length), orns: st.hung, star: starOf(st), lights: Boolean(st.forest?.goalDone), mood: moodOf(st), face: st.face || 0, theme: st.theme || 'green', boxes: [...st.hung, ...(st.tray || [])].filter((o) => o.src === 'gift').length };
         }
 
-        // 스냅샷: 단계(1) 전구(1) 별(1) + [칸(1) 장식번호(2)]… → 장식 30개여도 100자 안쪽
+        // 예전 칸 번호(slot)로 저장된 장식을 표면 좌표로 바꾼다. 위치가 없는 장식은 null
+        function fixOrn(o) {
+            if (!o || typeof o !== 'object') return null;
+            if (!(Number.isInteger(o.a) && Number.isInteger(o.h)) && Number.isInteger(o.slot) && SLOTS[o.slot]) Object.assign(o, Tree3D.fromSlot(o.slot));
+            delete o.slot;
+            return Number.isInteger(o.a) && Number.isInteger(o.h) ? o : null;
+        }
+
+        // 불러온 트리를 지금 형식으로: 달린 장식은 위치를 맞추고, 위치를 모르는 장식은 바구니로
+        function fixTree(st) {
+            const hung = [];
+            st.hung.forEach((o) => { if (fixOrn(o)) hung.push(o); else if (o && typeof o === 'object') { delete o.a; delete o.h; st.tray.push(o); } });
+            st.hung = hung;
+            st.tray.forEach((o) => { if (o) delete o.slot; });
+            return st;
+        }
+
+        // 스냅샷 v2: b + 단계(1) 전구(1) 별(1) 정면 각도(2) 테마(1) + [각도(2) 높이(2) 장식번호(2) 크기·기울기(1)]…
+        // 예전 형식(숫자로 시작, 칸 번호)도 읽는다.
+        const b36 = (n, w) => Math.max(0, Math.round(n)).toString(36).padStart(w, '0').slice(-w);
         function snapOf(st) {
-            let s = `${stageOf(st.waters.length)}${st.forest?.goalDone ? 1 : 0}${starOf(st)}`;
-            st.hung.forEach((o) => {
+            let s = `b${stageOf(st.waters.length)}${st.forest?.goalDone ? 1 : 0}${starOf(st)}${b36(Tree3D.norm(st.face || 0), 2)}${Math.max(0, THEME_KEYS.indexOf(st.theme || 'green'))}`;
+            st.hung.slice(0, 40).forEach((o) => {
                 const ix = BY_ID[o.type]?.ix;
-                if (ix == null || o.slot == null) return;
-                s += o.slot.toString(36) + ix.toString(36).padStart(2, '0');
+                if (ix == null || !Number.isInteger(o.h)) return;
+                const zr = (o.z ?? 1) * 11 + Math.max(-5, Math.min(5, Math.round((o.r || 0) / 6))) + 5;
+                s += b36(Tree3D.norm(o.a), 2) + b36(Math.min(1000, o.h), 2) + b36(ix, 2) + zr.toString(36);
             });
             return s;
         }
 
         function unsnap(s) {
-            if (typeof s !== 'string' || !/^[0-5][01][0-2](?:[0-9a-t][0-9a-z]{2}){0,30}$/.test(s)) return null;
+            if (typeof s !== 'string') return null;
             const orns = [];
+            const src = (c) => (c.tier === 'gift' ? 'gift' : 'self');
+            if (s[0] === 'b') {
+                if (!/^b[0-5][01][0-2][0-9a-z]{2}[0-3](?:[0-9a-z]{7}){0,40}$/.test(s)) return null;
+                for (let i = 7; i < s.length; i += 7) {
+                    const a = parseInt(s.slice(i, i + 2), 36);
+                    const h = parseInt(s.slice(i + 2, i + 4), 36);
+                    const c = CAT[parseInt(s.slice(i + 4, i + 6), 36)];
+                    const zr = parseInt(s[i + 6], 36);
+                    const z = Math.floor(zr / 11);
+                    if (c && a < 360 && h <= 1000 && z <= 2) orns.push({ a, h, z, r: ((zr % 11) - 5) * 6, type: c.id, src: src(c) });
+                }
+                return { stage: Number(s[1]), lights: s[2] === '1', star: Number(s[3]), face: Math.min(359, parseInt(s.slice(4, 6), 36)), theme: THEME_KEYS[Number(s[6])], orns, boxes: orns.filter((o) => o.src === 'gift').length, mood: 'normal' };
+            }
+            if (!/^[0-5][01][0-2](?:[0-9a-t][0-9a-z]{2}){0,30}$/.test(s)) return null;
             for (let i = 3; i < s.length; i += 3) {
                 const slot = parseInt(s[i], 36);
                 const c = CAT[parseInt(s.slice(i + 1, i + 3), 36)];
-                if (c && slot < 30) orns.push({ slot, type: c.id, src: c.tier === 'gift' ? 'gift' : 'self' });
+                if (c && slot < 30) orns.push({ ...Tree3D.fromSlot(slot), type: c.id, src: src(c) });
             }
-            return { stage: Number(s[0]), lights: s[1] === '1', star: Number(s[2]), orns, mood: 'normal' };
+            return { stage: Number(s[0]), lights: s[1] === '1', star: Number(s[2]), face: 0, theme: 'green', orns, boxes: orns.filter((o) => o.src === 'gift').length, mood: 'normal' };
         }
 
         // 12월 1~25일 물 준 날 → 25비트
@@ -1417,22 +2033,20 @@
         //  상태 변경
         // ════════════════════════════════════════════════════════════
         let S = Store.load();
-        if (S && (S.v !== 1 || !Array.isArray(S.waters) || !Array.isArray(S.hung))) S = null;
-        const UI = { pick: null, lastLink: '' };
+        if (S && (S.v !== 1 || !Array.isArray(S.waters) || !Array.isArray(S.hung) || !Array.isArray(S.tray))) S = null;
+        if (S) fixTree(S);
+        const UI = { pick: null, lastLink: '', rot: null, intro: false };
 
         // 기기에 먼저 저장하고, 서버에 연결된 트리면 잠시 뒤 묶어서 서버에도 올린다
         const save = () => { Store.save(S); Sync.later(); };
 
-        function firstEmpty(st) {
-            const used = new Set(st.hung.map((h) => h.slot));
-            return slotsForStage(stageOf(st.waters.length)).find((s) => !used.has(s));
-        }
+        // 단계마다 달 수 있는 장식 수가 늘어난다
+        const roomLeft = (st) => STAGE_CAP[stageOf(st.waters.length)] - st.hung.length;
 
-        // 선물·하트는 빈 칸이 있으면 바로 달고, 없으면 바구니로
+        // 선물·하트는 자리가 남았으면 앞쪽 빈 곳에 바로 달고, 없으면 바구니로
         function addOrn(st, type, src, extra = {}, autoHang = false) {
             const o = { uid: rid(6), type, src, ...extra };
-            const slot = autoHang ? firstEmpty(st) : undefined;
-            if (slot != null) { o.slot = slot; st.hung.push(o); } else st.tray.push(o);
+            if (autoHang && roomLeft(st) > 0) { Object.assign(o, Tree3D.freeSpot(st.hung, st.face || 0)); st.hung.push(o); } else st.tray.push(o);
             return o;
         }
 
@@ -1550,10 +2164,12 @@
             const known = new Set([...svHung, ...svTray].map((o) => o.uid));
             const hung = [];
             const tray = [...svTray];
-            const used = new Set();
             [...svHung, ...S.hung.filter((o) => !known.has(o.uid))].forEach((o) => {
-                if (used.has(o.slot)) { const { slot, ...r } = o; tray.push(r); } else { used.add(o.slot); hung.push(o); }
+                if (fixOrn(o)) hung.push(o); else if (o && typeof o === 'object') tray.push(o);
             });
+            tray.forEach((o) => { if (o) delete o.slot; });
+            if (S.face == null && Number.isInteger(sv.face)) S.face = sv.face;
+            if (!S.theme && THEMES[sv.theme]) S.theme = sv.theme;
             S.tray.forEach((o) => { if (!known.has(o.uid)) tray.push(o); });
             S.waters = [...new Set([...(sv.waters || []), ...S.waters])].sort();
             S.draws = { ...(sv.draws || {}), ...S.draws };
@@ -1620,14 +2236,8 @@
 
         // 공개 보기(서버) → 지금 그림 코드가 쓰는 스냅샷 문자열
         function snapFromView(v) {
-            const stage = stageOf(v.waters.length);
-            let s = `${stage}${v.lights ? 1 : 0}${v.opened ? 2 : stage >= 5 ? 1 : 0}`;
-            v.hung.forEach((o) => {
-                const ix = BY_ID[o.type]?.ix;
-                if (ix == null || !(o.slot >= 0 && o.slot < 30)) return;
-                s += o.slot.toString(36) + ix.toString(36).padStart(2, '0');
-            });
-            return s;
+            const hung = (v.hung || []).map((o) => fixOrn({ ...o })).filter(Boolean);
+            return snapOf({ waters: v.waters || [], hung, face: Number(v.face) || 0, theme: THEMES[v.theme] ? v.theme : 'green', opened: Boolean(v.opened), forest: { goalDone: Boolean(v.lights) } });
         }
 
         // 숲은 서버에 있으면 합류, 없으면(링크 방식으로 만든 숲) 같은 아이디로 만든다
@@ -1948,7 +2558,7 @@
             meta += ` · ${STAGE_NAME[stage]}${giftCount ? ` · 🎁 ${giftCount}` : ''}`;
 
             const pick = UI.pick;
-            const mine = treeSvg(viewOf(S), { interactive: !old, pick }, `${S.owner}의 트리`);
+            const mine = `<canvas class="tree-cv" id="my-tree" tabindex="0" role="img" aria-label="${esc(S.owner)}의 트리 (좌우로 밀면 돌아가요)"></canvas>`;
             let stageHtml;
             if (S.mode === 'couple') {
                 const p = S.couple?.id ? unsnap(S.couple.snap) : null;
@@ -1965,7 +2575,7 @@
             const sky = `<div class="sky ${S.forest?.goalDone || se.phase === 'xmas' || S.opened ? 'snowing' : ''}">
                 <div class="sky-head"><div><b>${esc(S.owner)}의 트리</b><div class="meta">${meta}</div></div><div style="text-align:right"><span class="mode-tag">${modeTag}</span>${linked() ? `<div class="meta" id="sync-tag" style="margin-top:6px">${Sync.label()}</div>` : ''}</div></div>
                 ${stageHtml}
-                ${pick ? `<div class="pick-bar"><span>✨ 반짝이는 자리를 눌러 달아 주세요</span><button class="text-btn" data-act="cancel-pick" type="button">취소</button></div>` : ''}
+                ${pick ? `<div class="pick-bar"><span>✨ 트리에서 달 곳을 눌러 주세요 · 밀면 돌아가요</span><button class="text-btn" data-act="cancel-pick" type="button">취소</button></div>` : ''}
                 ${xmasReady ? '<div class="xmas-call"><button class="btn btn-festive btn-block glow" data-act="xmas" type="button">🎅 산타가 다녀갔어요! 선물 열어 보기</button></div>' : ''}
             </div>`;
 
@@ -1993,15 +2603,73 @@
                 : '<p class="tray-empty">바구니가 비었어요. 캡슐을 열거나 친구에게 장식을 받아 보세요.</p>';
 
             $('v-tree').innerHTML = `${sky}${daily}
-                ${old ? '' : `<div class="panel"><h3>🧺 장식 바구니 <span class="count">${S.tray.length}개</span></h3><p class="hint" style="margin-bottom:8px">장식을 누르고 트리의 빈 자리를 누르면 달려요. 달린 장식을 누르면 옮길 수 있어요.</p>${tray}</div>`}
+                ${old ? '' : `<div class="panel"><h3>🧺 장식 바구니 <span class="count">${S.tray.length}개</span></h3><p class="hint" style="margin-bottom:8px">장식을 누르고 트리에서 달 곳을 누르면 달려요. 달린 장식은 끌어서 옮기고, 누르면 크기·기울기를 바꿀 수 있어요. (${S.hung.length}/${STAGE_CAP[stage]}개)</p>${tray}</div>`}
                 ${old ? '' : sharePanel()}
                 ${S.mode === 'forest' ? forestPanel() : ''}
                 <div class="tools">
+                    ${old ? '' : `<button class="text-btn" data-act="theme-sheet" type="button">🎨 트리 색</button>`}
                     <button class="text-btn" data-act="backup" type="button">💾 백업 코드</button>
                     ${!old && (S.opened || se.phase === 'after') ? '<button class="text-btn" data-act="card" type="button">🖼️ 카드 저장</button>' : ''}
                     <button class="text-btn" data-act="replant" type="button">🔄 처음부터</button>
                 </div>`;
             show('v-tree');
+            mountMine(old);
+        }
+
+        // 내 트리: 돌리기·장식 누르기·끌어서 옮기기·바구니 장식 달기
+        function mountMine(old) {
+            if (UI.rot == null) UI.rot = S.face || 0;
+            Views.mount($('my-tree'), {
+                view: () => viewOf(S),
+                rot: UI.rot,
+                interactive: !old,
+                intro: !UI.intro && (UI.intro = true),
+                moving: () => UI.pick?.uid,
+                hint: () => Boolean(UI.pick),
+                onRot(r) {
+                    UI.rot = r;
+                    const diff = Math.abs(((r - (S.face || 0) + 540) % 360) - 180);
+                    if (!old && diff >= 3) { S.face = r; save(); }
+                },
+                onTap(orn, pos) {
+                    if (UI.pick) {
+                        if (!pos) { toast('트리 위를 눌러 주세요'); return; }
+                        hangPicked(pos);
+                    } else if (orn && !old) openOrnSheet(orn.uid);
+                },
+                onDrop(orn, ok) {
+                    if (ok) { save(); Sound.pop(); } else toast('트리 위에 놓아 주세요');
+                }
+            });
+        }
+
+        function hangPicked(pos) {
+            const uid = UI.pick.uid;
+            const ti = S.tray.findIndex((o) => o.uid === uid);
+            if (ti >= 0) {
+                if (roomLeft(S) <= 0) { toast('더 달 자리가 없어요. 트리를 더 키우거나 달린 장식을 바구니로 옮겨 주세요'); return; }
+                const [o] = S.tray.splice(ti, 1);
+                Object.assign(o, pos);
+                S.hung.push(o);
+            } else {
+                const o = S.hung.find((x) => x.uid === uid);
+                if (o) Object.assign(o, pos);
+            }
+            UI.pick = null;
+            save();
+            Sound.pop();
+            buzz(15);
+            renderTree();
+        }
+
+        // 남의 트리: 돌려 보기만 하고, 장식을 누르면 이름과 보낸 사람
+        function mountViewer(id, v) {
+            Views.mount($(id), {
+                view: () => v,
+                rot: v.face || 0,
+                interactive: false,
+                onTap(orn) { if (orn) toast(`${BY_ID[orn.type].name}${orn.from ? ` · ${orn.from}` : ''}`); }
+            });
         }
 
         function agoText(at) {
@@ -2051,10 +2719,10 @@
             const pct = Math.min(100, Math.round((total / target) * 100));
             const members = Object.entries(S.forest.members).sort((a, b) => a[1].name.localeCompare(b[1].name, 'ko'));
             const tiles = [
-                `<button class="forest-tile me" type="button">${treeSvg(viewOf(S), {}, S.owner)}<b>${esc(S.owner)}</b><small>나 · 💧${S.waters.length}</small></button>`,
+                `<button class="forest-tile me" type="button">${treeSvg(viewOf(S), { lite: true }, S.owner)}<b>${esc(S.owner)}</b><small>나 · 💧${S.waters.length}</small></button>`,
                 ...members.map(([id, m]) => {
                     const v = unsnap(m.snap) || { stage: 0, orns: [], star: 0, lights: false, mood: 'normal' };
-                    return `<button class="forest-tile" data-act="member" data-id="${esc(id)}" type="button">${treeSvg(v, {}, m.name)}<b>${esc(m.name)}</b><small>💧${Number(m.w) || 0} · ${agoText(m.at)}</small></button>`;
+                    return `<button class="forest-tile" data-act="member" data-id="${esc(id)}" type="button">${treeSvg(v, { lite: true }, m.name)}<b>${esc(m.name)}</b><small>💧${Number(m.w) || 0} · ${agoText(m.at)}</small></button>`;
                 })
             ].join('');
             return `<div class="panel"><h3>🌲 ${esc(S.forest.name)} <span class="count">${count}명</span></h3>
@@ -2092,8 +2760,9 @@
                     giftTarget.name = v.owner;
                     const view = unsnap(snapFromView(v));
                     box.innerHTML = `<div class="sky-head"><div><b>${esc(v.owner)}의 트리</b><div class="meta">💧 ${v.waters.length}번 · ${STAGE_NAME[view.stage]} · 장식 ${v.hung.length}개</div></div><span class="mode-tag">👀 지금 모습</span></div>
-                        <div class="tree-box view-box">${treeSvg(view, {}, `${v.owner}의 트리`)}</div>`;
+                        <div class="tree-box view-box"><canvas class="tree-cv" id="gift-tree" tabindex="0" role="img" aria-label="${esc(v.owner)}의 트리 (좌우로 밀면 돌아가요)"></canvas></div>`;
                     box.hidden = false;
+                    mountViewer('gift-tree', view);
                 }).catch(() => {});
             }
         }
@@ -2104,11 +2773,12 @@
             if (!v) { info('트리를 불러오지 못했어요', '링크가 잘렸거나 깨진 것 같아요. 다시 받아 주세요.'); return; }
             const isMe = S && S.id === p.i;
             $('v-view').innerHTML = `<div class="sky"><div class="sky-head"><div><b>${esc(p.n)}의 트리</b><div class="meta">${Number(p.y) || ''}년 · 💧 ${Number(p.w) || 0}번 · ${STAGE_NAME[v.stage]}</div></div><span class="mode-tag">👀 구경 중</span></div>
-                <div class="tree-box view-box">${treeSvg(v, {}, `${p.n}의 트리`)}</div></div>
+                <div class="tree-box view-box"><canvas class="tree-cv" id="view-tree" tabindex="0" role="img" aria-label="${esc(p.n)}의 트리 (좌우로 밀면 돌아가요)"></canvas></div></div>
                 <div class="panel" style="margin-top:12px"><p class="hint">구경 링크를 만든 순간의 모습이에요.</p><div class="btn-row">
                 ${isMe ? '' : `<button class="btn btn-festive" data-act="gift-to" data-id="${esc(p.i)}" data-name="${esc(p.n)}" type="button">🎁 장식 보내기</button>`}
                 <button class="btn btn-ghost" data-act="home" type="button">${S ? '내 트리로' : '🌱 나도 트리 심기'}</button></div></div>`;
             show('v-view');
+            mountViewer('view-tree', v);
         }
 
         // ════════════════════════════════════════════════════════════
@@ -2354,9 +3024,11 @@
                 body += `<p class="center hint">${esc(S.couple?.name || '짝꿍')}님과 같이 물 준 날 생긴 장식이에요 💗</p>`;
             }
             const inTray = S.tray.some((x) => x.uid === uid);
+            const tune = inTray ? '' : `<div class="orn-tune"><span>크기</span><div class="seg">${['작게', '보통', '크게'].map((t, i) => `<button class="seg-btn" data-act="orn-size" data-uid="${esc(uid)}" data-z="${i}" aria-pressed="${(o.z ?? 1) === i}" type="button">${t}</button>`).join('')}</div></div>
+                <div class="orn-tune"><span>기울기</span><div class="seg"><button class="seg-btn" data-act="orn-tilt" data-uid="${esc(uid)}" data-d="-15" type="button" aria-label="왼쪽으로 기울이기">↺</button><button class="seg-btn" data-act="orn-tilt" data-uid="${esc(uid)}" data-d="0" aria-pressed="${!o.r}" type="button">곧게</button><button class="seg-btn" data-act="orn-tilt" data-uid="${esc(uid)}" data-d="15" type="button" aria-label="오른쪽으로 기울이기">↻</button></div></div>`;
             openSheet(`${title ? `<h2 class="center">${esc(title)}</h2>` : ''}
-                <div class="center"><svg class="big-orn" viewBox="-16 -17 32 32">${c.svg}</svg><b>${esc(c.name)}</b> <span class="tier ${c.tier}">${TIER_LABEL[c.tier]}</span></div>
-                ${body}
+                <div class="center"><svg class="big-orn" viewBox="-16 -17 32 32"${o.r ? ` style="transform:rotate(${o.r}deg)"` : ''}>${c.svg}</svg><b>${esc(c.name)}</b> <span class="tier ${c.tier}">${TIER_LABEL[c.tier]}</span></div>
+                ${body}${tune}
                 <div class="btn-row" style="margin-top:12px">
                     ${inTray ? `<button class="btn btn-festive" data-act="pick" data-uid="${esc(uid)}" type="button">✨ 트리에 달기</button>`
                         : `<button class="btn btn-ghost" data-act="move" data-uid="${esc(uid)}" type="button">↔️ 옮기기</button><button class="btn btn-ghost" data-act="to-tray" data-uid="${esc(uid)}" type="button">🧺 바구니로</button>`}
@@ -2544,7 +3216,7 @@
             if (!code.startsWith('AT')) throw new Error('AT로 시작하는 백업 코드가 아니에요.');
             const st = Codec.unpack(code.slice(2));
             if (st.v !== 1 || !isId(st.id) || !Array.isArray(st.waters) || !Array.isArray(st.hung) || !Array.isArray(st.tray)) throw new Error('트리 정보가 맞지 않아요.');
-            return st;
+            return fixTree(st);
         }
 
         // ════════════════════════════════════════════════════════════
@@ -2638,7 +3310,7 @@
                 $('overlay').hidden = true;
                 UI.pick = { uid: el.dataset.uid };
                 renderTree();
-                if (firstEmpty(S) == null) toast('빈 자리가 없어요. 달린 장식을 바구니로 옮기거나 트리를 더 키워 주세요');
+                if (S.tray.some((o) => o.uid === UI.pick.uid) && roomLeft(S) <= 0) toast('더 달 자리가 없어요. 달린 장식을 바구니로 옮기거나 트리를 더 키워 주세요');
             },
             move(el) {
                 closeSheet();
@@ -2646,30 +3318,48 @@
                 renderTree();
             },
             'cancel-pick'() { UI.pick = null; renderTree(); },
-            slot(el) {
-                if (!UI.pick) return;
-                const slot = Number(el.dataset.slot);
-                const uid = UI.pick.uid;
-                const ti = S.tray.findIndex((o) => o.uid === uid);
-                if (ti >= 0) {
-                    const [o] = S.tray.splice(ti, 1);
-                    o.slot = slot;
-                    S.hung.push(o);
-                } else {
-                    const o = S.hung.find((x) => x.uid === uid);
-                    if (o) o.slot = slot;
-                }
-                UI.pick = null;
+            'theme-sheet'() {
+                const cur = S.theme || 'green';
+                const v = viewOf(S);
+                openSheet(`<h2 class="center">🎨 트리 색 고르기</h2><p class="hint center">언제든 다시 바꿀 수 있어요. 친구가 보는 트리도 같이 바뀌어요.</p>
+                    <div class="theme-grid">${THEME_KEYS.map((k) => `<button class="theme-opt" data-act="theme" data-t="${k}" aria-pressed="${k === cur}" type="button">${treeSvg({ ...v, theme: k, boxes: 0 }, { lite: true }, THEMES[k].name)}<span>${THEMES[k].emoji} ${THEMES[k].name}</span></button>`).join('')}</div>
+                    <button class="btn btn-ghost btn-block" data-act="sheet-close" type="button" style="margin-top:12px">닫기</button>`);
+            },
+            theme(el) {
+                const k = el.dataset.t;
+                if (!THEMES[k]) return;
+                if (k === 'green') delete S.theme; else S.theme = k;
                 save();
+                closeSheet();
                 Sound.pop();
                 renderTree();
+                toast(`${THEMES[k].emoji} ${THEMES[k].name} 트리로 바꿨어요`);
+            },
+            'orn-size'(el) {
+                const o = S.hung.find((x) => x.uid === el.dataset.uid);
+                if (!o) return;
+                const z = Number(el.dataset.z);
+                if (z === 1) delete o.z; else o.z = z;
+                save();
+                Views.redrawAll();
+                openOrnSheet(o.uid);
+            },
+            'orn-tilt'(el) {
+                const o = S.hung.find((x) => x.uid === el.dataset.uid);
+                if (!o) return;
+                const d = Number(el.dataset.d);
+                const r = d ? Math.max(-30, Math.min(30, (o.r || 0) + d)) : 0;
+                if (r) o.r = r; else delete o.r;
+                save();
+                Views.redrawAll();
+                openOrnSheet(o.uid);
             },
             orn(el) { openOrnSheet(el.dataset.uid); },
             'to-tray'(el) {
                 const i = S.hung.findIndex((o) => o.uid === el.dataset.uid);
                 if (i >= 0) {
                     const [o] = S.hung.splice(i, 1);
-                    delete o.slot;
+                    ['a', 'h', 'z', 'r'].forEach((k) => delete o[k]);
                     S.tray.unshift(o);
                     save();
                 }
@@ -2794,6 +3484,7 @@
                 r.steps[4] = '커플 트리는 짝꿍 초대 링크를 한 번만 보내면 돼요. 같은 날 둘 다 물을 주면 하트 장식이 생겨요.';
                 r.steps[5] = '우리 숲은 숲 초대 링크로 모여요. 열 때마다 모두의 최신 트리가 보이고, 다 같이 물을 많이 주면 숲에 눈이 내려요.';
                 r.tips = [
+                    '🎨 트리 색 버튼으로 초록·눈꽃·핑크·금빛 트리를 고를 수 있어요. 친구에게 장식을 받을수록 트리 밑에 선물 상자가 쌓여요.',
                     '트리 모양·물 준 날·이름은 서버에 저장돼요. 친구 메시지도 서버에 있지만 12월 25일 전에는 주인도 볼 수 없어요.',
                     '다른 폰·브라우저에서 이어 키우려면 💾 백업 코드(트리 열쇠)를 옮겨 주세요.',
                     '지난 시즌 트리는 2월이 되면 서버에서 지워져요. 카드를 저장해 두세요.'
