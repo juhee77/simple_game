@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <script src="../scripts/game-common.js?v=efdc1560"></script>
-    <script src="../scripts/room-client.js?v=94195755"></script>
+    <script src="../scripts/room-client.js?v=7a81fa6a"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
@@ -992,7 +992,7 @@
         <section id="v-setup" hidden>
             <div class="panel" id="setup-host">
                 <h3>👑 진행자</h3>
-                <p class="hint">방을 만들면 QR과 링크가 나와요. 한 방에 최대 12명까지 들어올 수 있어요.</p>
+                <p class="hint">방을 만들면 QR과 링크가 나와요. 한 방에 최대 20명까지 들어올 수 있어요.</p>
                 <input class="txt" id="host-nick" maxlength="20" placeholder="내 닉네임" autocomplete="off">
                 <label class="toggle" style="margin-top:10px">
                     <input type="checkbox" id="host-plays" checked>
@@ -2394,7 +2394,7 @@
                 }
                 $('ol-share').hidden = !navigator.share;
                 const online = members.filter((m) => m.online);
-                $('ol-count').textContent = `(${online.length}명 접속 · 최대 12명)`;
+                $('ol-count').textContent = `(${online.length}명 접속 · 최대 20명)`;
                 $('ol-members').innerHTML = members.map((m) =>
                     `<li class="${m.id === me.id ? 'me' : ''}"><span class="dot ${m.online ? 'on' : ''}"></span>${m.host ? '👑 ' : ''}${esc(m.nickname)}</li>`
                 ).join('');
@@ -2614,7 +2614,7 @@
   "폰 한 대로 하면 정답 공개 뒤 맞힌 사람을 눌러 눈치왕 점수를 줄 수 있어요.",
   "입력한 답은 진행하는 기기에만 저장되고, 새로고침해도 이어서 할 수 있어요."
  ],
- "players": "3~20인 (각자 폰은 최대 12명)",
+ "players": "3~20인",
  "time": "약 30~60분"
 }
     </script>

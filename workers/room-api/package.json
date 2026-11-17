@@ -1,0 +1,14 @@
+{
+  "name": "room-api",
+  "private": true,
+  "type": "module",
+  "description": "방(room) 서버 (Cloudflare Workers + Durable Objects)",
+  "scripts": {
+    "dev": "wrangler dev --port 8080 --var ALLOW_DEV:1",
+    "test": "node --test test/*.test.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.156.0"
+  }
+}
