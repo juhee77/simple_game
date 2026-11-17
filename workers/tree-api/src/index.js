@@ -17,6 +17,14 @@ const MAX_GIFTS = 200;
 const PAIR_TTL = 7 * DAY;
 const LIMITS = { tree: 20, gift: 30, forest: 10, pair: 20 };   // IP당 하루
 const GIFT_TYPES = new Set(['g-present', 'g-letter', 'g-cocoa', 'g-cupcake', 'g-poinsettia', 'g-cat', 'g-dog', 'g-bunny', 'g-wand', 'g-candle', 'g-macaron', 'g-mistletoe']);
+// 이모지 장식: "e." + 꾸밈 번호(0~b) + 이모지 한 글자. 이모지 문자만 받는다(글자·기호·공백 X).
+const EMO_OK = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|\p{Emoji_Modifier}|\u200d|\ufe0f|[\u{e0020}-\u{e007f}])+$/u;
+const PICTO = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
+function isGiftType(t) {
+    if (GIFT_TYPES.has(t)) return true;
+    const m = typeof t === 'string' && t.length <= 24 && /^e\.[0-9ab](.+)$/u.exec(t);
+    return Boolean(m && m[1].length <= 16 && EMO_OK.test(m[1]) && PICTO.test(m[1]));
+}
 const MODES = new Set(['solo', 'couple', 'forest']);
 const ID_RE = /^[0-9a-z]{6,20}$/;
 
@@ -237,7 +245,7 @@ async function addGift(req, env, id) {
     const now = nowOf(req, env);
     const row = await loadTree(env, id);
     const b = await body(req);
-    if (!GIFT_TYPES.has(b.type)) throw new HttpError(400, '보낼 수 없는 장식이에요.');
+    if (!isGiftType(b.type)) throw new HttpError(400, '보낼 수 없는 장식이에요.');
     const sender = str(b.sender, 10, '보내는 사람');
     const message = str(b.message, 80, '메시지', { required: false });
     const { n } = await env.DB.prepare('SELECT COUNT(*) AS n FROM gifts WHERE tree_id = ?1').bind(id).first();

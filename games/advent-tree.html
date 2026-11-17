@@ -741,6 +741,68 @@
             color: var(--text-2);
         }
 
+        .gift-tabs {
+            display: flex;
+            margin-bottom: 12px;
+        }
+
+        .gift-tabs .seg-btn {
+            flex: 1;
+            padding: 9px 8px;
+            font-weight: 700;
+        }
+
+        .emo-make {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .emo-preview {
+            flex: none;
+            display: grid;
+            place-items: center;
+            width: 104px;
+            height: 104px;
+            border-radius: var(--r-md);
+            background: radial-gradient(circle at 50% 40%, #1d4a35, #0d2a1e);
+        }
+
+        .emo-input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .emo-input .txt {
+            font-size: 1.4rem;
+        }
+
+        .emo-input .hint {
+            margin: 6px 0 0;
+        }
+
+        .emo-quick {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .emo-q {
+            aspect-ratio: 1;
+            border: 0;
+            border-radius: 10px;
+            background: var(--surface-2);
+            font-size: 1.3rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .emo-q:active {
+            transform: scale(.92);
+        }
+
         .view-box {
             max-width: 360px;
             margin: 0 auto;
@@ -1038,7 +1100,7 @@
   "이름을 적고 키우는 방식(나만의 · 커플 · 우리 숲)을 골라 트리를 심어요. 12월 전에 미리 심어 둘 수 있어요.",
   "12월에는 하루 한 번 💧 물을 주고, 🎁 오늘의 캡슐을 열어 장식을 뽑아요. 매일 오면 희귀·전설 장식이 잘 나와요.",
   "바구니의 장식을 누른 뒤 트리에서 달 곳을 누르면 달려요. 트리를 좌우로 밀면 빙글 돌아가고, 달린 장식은 끌어서 옮기거나 눌러서 크기·기울기를 바꿀 수 있어요. 물을 줄수록 트리가 자라고 달 수 있는 장식이 늘어나요.",
-  "🎁 장식 받기 링크를 친구에게 보내면, 친구가 장식과 메시지를 골라 다시 보내 줘요. 메시지는 12월 25일에 열려요.",
+  "🎁 장식 받기 링크를 친구에게 보내면, 친구가 장식과 메시지를 골라 다시 보내 줘요. 준비된 장식 말고 😀 이모지로 직접 만들어 보낼 수도 있어요. 메시지는 12월 25일에 열려요.",
   "커플 트리는 서로 물방울 링크를 보내요. 같은 날 둘 다 물을 주면 하트 장식이 생겨요.",
   "우리 숲은 단톡방에 트리 소식 링크를 올려요. 모두 합쳐 물을 많이 주면 숲에 눈이 내려요.",
   "25일에 산타가 다녀가면 별에 불이 켜지고 받은 편지를 열어요. 트리 카드도 저장할 수 있어요."
@@ -1212,7 +1274,17 @@
         const THEME_KEYS = Object.keys(THEMES);
 
         // 솔잎 다발 (가지 방향 = +x, 0~1 길이, 폭 -0.5~0.5). 가장자리가 톱니라 솔잎처럼 보인다. 트리 그림에서 <use href="#fr">로 쓴다.
-        const FROND = 'M0 0L.1-.2.17-.08.3-.42.37-.18.52-.5.58-.22.75-.4.79-.14 1-.04 1 .04.79.14.75.4.58.22.52.5.37.18.3.42.17.08.1.2Z';
+        const FROND = (() => {
+            // 가운데 줄기 양쪽으로 솔잎 7쌍. 가운데가 가장 길고 양 끝으로 갈수록 짧다.
+            const top = [];
+            for (let i = 0; i < 7; i++) {
+                const x = 0.06 + i * 0.13;
+                const w = 0.5 * Math.pow(Math.sin(Math.PI * Math.min(0.96, x + 0.1)), 0.6);
+                top.push([x, -0.05], [x + 0.09, -w]);
+            }
+            const pts = [[0, 0], ...top, [1, -0.03], [1, 0.03], ...top.slice().reverse().map(([x, y]) => [x, -y])];
+            return `M${pts.map(([x, y]) => `${+x.toFixed(3)} ${+y.toFixed(3)}`).join('L')}Z`;
+        })();
         const DEFS = `<defs>
             <path id="fr" d="${FROND}"/>
             <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#f5b83d"/><stop offset="1" stop-color="#b7791f"/></linearGradient>
@@ -1327,7 +1399,57 @@
         const TIER_LABEL = { basic: '기본', special: '특별', rare: '희귀 ✨', legend: '전설 🌟', gift: '선물 🎁', couple: '커플 💗' };
         const GIFT_TYPES = CAT.filter((c) => c.tier === 'gift').map((c) => c.id);
 
-        const ornSvg = (type, size = 40) => `<svg viewBox="-16 -17 32 32" width="${size}" height="${size}" aria-hidden="true">${BY_ID[type]?.svg || ''}</svg>`;
+        // ── 이모지 장식 (친구에게 보낼 때 직접 만든다) ──
+        // 종류 문자열 = "e." + 꾸밈 번호(0~b) + 이모지 한 글자. 이모지만 받아서(글자·기호 X) 따로 검사할 필요가 없다.
+        const EMO_FONT = "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+        const emoT = (e, fs, y = 0, x = 0) => `<text x="${x}" y="${y}" font-size="${fs}" text-anchor="middle" dominant-baseline="central" font-family="${EMO_FONT}">${e}</text>`;
+        const glassBall = (fill, e) => `${hook(-13)}${CAP}<circle r="9.6" fill="${fill}"/>${emoT(e, 11.5, 0.8)}${SHINE}`;
+        const HEART = 'M0 9.4C-7 4.6-10.4 0-10.4-3.8a5.2 5.2 0 0 1 10.4-1.4 5.2 5.2 0 0 1 10.4 1.4C10.4 0 7 4.6 0 9.4z';
+        const EMO_STYLES = [
+            { name: '빨간 볼', svg: (e) => glassBall('#d62839', e) },
+            { name: '금빛 볼', svg: (e) => glassBall('url(#gGold)', e) },
+            { name: '파란 볼', svg: (e) => glassBall('#2f6fdd', e) },
+            { name: '유리 구슬', svg: (e) => `${hook(-13)}${CAP}<circle r="9.6" fill="#e0f2fe" opacity=".6"/>${emoT(e, 11.5, 0.8)}<circle r="9.6" fill="none" stroke="#bae6fd" stroke-width="1"/><path d="M-6.4-4.6a7.6 7.6 0 0 1 4.8-3.6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".9"/>` },
+            { name: '금테 메달', svg: (e) => `${hook(-12)}<circle r="10.6" fill="url(#gGold)" stroke="#b45309" stroke-width=".6"/><circle r="8.4" fill="#fff7e6"/>${emoT(e, 11, 0.6)}` },
+            { name: '별', svg: (e) => `<path d="${starPath(13, 6.6)}" transform="translate(0 1)" fill="url(#gGold)" stroke="#b45309" stroke-width=".7"/>${emoT(e, 9.5, 1.6)}` },
+            { name: '하트', svg: (e) => `<path d="${HEART}" transform="scale(1.12)" fill="#ef4444"/><ellipse cx="-6" cy="-4.6" rx="2" ry="1.2" fill="#fff" opacity=".45" transform="rotate(-30 -6 -4.6)"/>${emoT(e, 9.5, 0)}` },
+            { name: '진저 쿠키', svg: (e) => `<circle r="10.4" fill="#c47a3a"/><circle r="8.4" fill="none" stroke="#fff" stroke-width="1.1" stroke-dasharray="1.6 1.8"/>${emoT(e, 10, 0.6)}` },
+            { name: '선물 태그', svg: (e) => `<path d="M-6-9.6C-9-12-12-11-13-8" stroke="#b91c1c" stroke-width="1.1" fill="none"/><path d="M-10-5.4 4-7.4 10 .6 4 7.6-10 7.4z" transform="rotate(-8)" fill="#e9c896" stroke="#b08550" stroke-width=".7"/><circle cx="-7.4" cy="-4" r="1.2" fill="#fff" stroke="#b08550" stroke-width=".5"/>${emoT(e, 10, 1, -0.6)}` },
+            { name: '눈꽃 메달', svg: (e) => `<g stroke="#bfdbfe" stroke-width="1.6" stroke-linecap="round">${[0, 60, 120].map((a) => `<path d="M0-12.6V12.6" transform="rotate(${a})"/>`).join('')}</g><circle r="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>${emoT(e, 10, 0.6)}` },
+            { name: '리본', svg: (e) => `${emoT(e, 16, 2.4)}<path d="M0-9L-6.4-13v8ZM0-9l6.4-4v8Z" fill="#e11d48"/><circle cy="-9" r="1.8" fill="#9f1239"/>` },
+            { name: '그대로', svg: (e) => `<path d="M0-16v5" stroke="#b08d2a" stroke-width="1.2"/>${emoT(e, 18, 1.4)}` }
+        ];
+        const PICTO = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
+        const EMO_OK = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|\p{Emoji_Modifier}|‍|️|[\u{e0020}-\u{e007f}])+$/u;
+        const isEmoji = (e) => typeof e === 'string' && e.length <= 16 && EMO_OK.test(e) && PICTO.test(e);
+        function emoOf(type) {
+            const m = typeof type === 'string' && type.length <= 24 && /^e\.([0-9ab])(.+)$/u.exec(type);
+            return m && isEmoji(m[2]) ? { style: parseInt(m[1], 36), e: m[2] } : null;
+        }
+        const emoType = (style, e) => `e.${style.toString(36)}${e}`;
+        const ORN_CACHE = new Map();
+        // 장식 정보 (기본 장식이든 이모지 장식이든). 모르는 종류면 null
+        function ornDef(type) {
+            if (BY_ID[type]) return BY_ID[type];
+            let d = ORN_CACHE.get(type);
+            if (d === undefined) {
+                const m = emoOf(type);
+                d = m ? { id: type, name: `${m.e} ${EMO_STYLES[m.style].name}`, tier: 'gift', svg: EMO_STYLES[m.style].svg(m.e), emo: m } : null;
+                ORN_CACHE.set(type, d);
+            }
+            return d;
+        }
+        const isGiftType = (t) => GIFT_TYPES.includes(t) || Boolean(emoOf(t));
+        // 입력한 글에서 마지막 이모지 한 글자 (피부색·국기·ZWJ 묶음도 한 글자로)
+        const SEG = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ko', { granularity: 'grapheme' }) : null;
+        function lastEmoji(text) {
+            const gs = SEG ? [...SEG.segment(text)].map((x) => x.segment) : Array.from(text);
+            for (let i = gs.length - 1; i >= 0; i--) if (isEmoji(gs[i])) return gs[i];
+            return '';
+        }
+        const EMO_QUICK = ['🎅', '🤶', '🦌', '⛄', '🎄', '🎁', '🔔', '⭐', '🌟', '❄️', '✨', '🕯️', '🍪', '☕', '🍫', '🧦', '🧤', '🧣', '🎀', '💝', '❤️', '💛', '💚', '💙', '💜', '🐶', '🐱', '🐰', '🐻', '🐧', '🦊', '🐹', '🍓', '🍰', '🧁', '🍩', '🌈', '🌙', '🍀', '🌸', '🎶', '😊', '🥰', '😎', '🤗', '👍', '🙏', '💪'];
+
+        const ornSvg = (type, size = 40) => `<svg viewBox="-16 -17 32 32" width="${size}" height="${size}" aria-hidden="true">${ornDef(type)?.svg || ''}</svg>`;
 
         // ════════════════════════════════════════════════════════════
         //  트리 성장·그리기
@@ -1432,7 +1554,8 @@
                             out.push({
                                 a: ((j + (i % 2) * 0.5) / n) * 360 + rnd() * 10 - 5, y, r: r * (1 + rnd() * 0.07),
                                 len: 0.42 + rnd() * 0.14, lift: 0.1 + rnd() * 0.08, w: 0.85 + rnd() * 0.35,
-                                shade: shade + rnd() * 0.8 - 0.4, snow: rnd() < (i === rows ? 0.62 : 0.34)
+                                shade: shade + rnd() * 0.8 - 0.4, snow: rnd() < (i === rows ? 0.62 : 0.34),
+                                jit: [0, 1, 2, 3].map(() => rnd() * 0.44 - 0.22)
                             });
                         }
                     }
@@ -1441,7 +1564,8 @@
             })();
             // 가지 위에 얹힌 눈덩이 (가로로 길고 위가 둥근 모양)
             const CAP = 'M-6.4.6C-6.2-1.6-4.4-3-2.4-2.8-1.4-4.2 1.2-4.4 2.4-3 4.4-3.2 6.4-1.6 6.6.6 4.4-.6 2.2.2 0-.4-2.2.4-4.4-.4-6.4.6Z';
-            const SPRAY_T = [0.42, 0.7, 0.98];
+            const SPRAY_T = [0.3, 0.52, 0.75, 0.98];
+            const TWIG = '#3d2b1a';
             // 왼쪽 앞에서 빛이 온다
             const lightOf = (phi) => 0.5 + 0.5 * Math.cos((phi + 40) * RAD);
             const SMALL = ['#fde047', '#fb7185', '#60a5fa', '#4ade80'];
@@ -1486,16 +1610,26 @@
                     const sg = ux >= 0 ? 1 : -1;      // 다발의 "윗면"이 늘 화면 위쪽을 향하게 뒤집는다
                     const light = lightOf(br.a - rot);
                     const [bx, by] = P(base.x, base.y);
+                    // 잔가지: 솔잎 사이로 살짝 비치는 갈색 줄기
+                    if (!o.lite) items.push({ k: 'tw', x1: bx, y1: by, x2: bx + dx * 0.93, y2: by + dy * 0.93, d: base.d + (tip.d - base.d) * 0.2, w: 1.25 * f * near });
+                    const last = SPRAY_T.length - 1;
                     SPRAY_T.forEach((tt, k) => {
-                        if (o.lite && k < 2) return;
-                        const cx = bx + dx * tt - ux * Ls * 0.62;
-                        const cy = by + dy * tt - uy * Ls * 0.62;
-                        const ci = clamp(Math.round(light * 3.3 + k * 1.15 + br.shade - 0.9), 0, 6);
+                        if (o.lite && k < last - 1) return;
+                        // 다발마다 방향을 조금씩 틀어서 가지런하지 않게
+                        const jc = Math.cos(br.jit[k]);
+                        const js = Math.sin(br.jit[k]) * sg;
+                        const vx = ux * jc - uy * js;
+                        const vy = uy * jc + ux * js;
+                        const cx = bx + dx * tt - vx * Ls * 0.62;
+                        const cy = by + dy * tt - vy * Ls * 0.62;
+                        const ci = clamp(Math.round(light * 3.3 + k * 0.85 + br.shade - 0.9), 0, 6);
                         items.push({
                             k: 't', d: base.d + (tip.d - base.d) * tt,
-                            m: [ux * Ls, uy * Ls, -uy * W * sg, ux * W * sg, cx, cy],
-                            c: th.leaf[ci], hl: k === 2 && ci < 6 && !o.lite ? th.leaf[ci + 1] : null,
-                            cap: k === 2 && br.snow ? { x: cx + ux * Ls * 0.55, y: cy + uy * Ls * 0.55 - W * 0.12, s: W / 12, r: Math.abs(ux) > 0.5 ? clamp(Math.atan2(uy * sg, ux * sg) / RAD, -28, 28) : 0 } : null
+                            m: [vx * Ls, vy * Ls, -vy * W * sg, vx * W * sg, cx, cy],
+                            c: th.leaf[ci],
+                            sh: o.lite ? null : th.leaf[Math.max(0, ci - 2)],
+                            hl: k >= last - 1 && ci < 6 && !o.lite ? th.leaf[ci + 1] : null,
+                            cap: k === last && br.snow ? { x: cx + vx * Ls * 0.55, y: cy + vy * Ls * 0.55 - W * 0.12, s: W / 12, r: Math.abs(vx) > 0.5 ? clamp(Math.atan2(vy * sg, vx * sg) / RAD, -28, 28) : 0 } : null
                         });
                     });
                 });
@@ -1530,7 +1664,7 @@
                 if (v.stage >= 3) helix(2.4, 20, 30, 2.4, SMALL, 70, 318);
                 if (v.lights) helix(1.7, 200, 22, 4.2, BIG, 60, 322);
                 (v.orns || []).forEach((orn) => {
-                    if (orn.h == null || !BY_ID[orn.type]) return;
+                    if (orn.h == null || !ornDef(orn.type)) return;
                     const yy = yOfH(orn.h);
                     const p = project(orn.a, yy, rot);
                     if (p.d < -0.35 * p.r || cover(p.lx, p.d, yy) >= 0) return;
@@ -1575,9 +1709,12 @@
                 sc.items.forEach((it) => {
                     if (it.k === 't') {
                         const mt = `matrix(${it.m.slice(0, 4).map(n2).join(' ')} ${n1(it.m[4])} ${n1(it.m[5])})`;
+                        if (it.sh) g += `<use href="#fr" transform="${mt} translate(.03 .16) scale(1 .85)" fill="${it.sh}"/>`;
                         g += `<use href="#fr" transform="${mt}" fill="${it.c}"/>`;
                         if (it.hl) g += `<use href="#fr" transform="${mt} translate(.1 -.1) scale(.8 .45)" fill="${it.hl}"/>`;
                         if (it.cap) g += `<path d="${CAP}" transform="translate(${n1(it.cap.x)} ${n1(it.cap.y)}) rotate(${Math.round(it.cap.r)}) scale(${n2(it.cap.s)})" fill="#f8fafc" opacity=".92"/>`;
+                    } else if (it.k === 'tw') {
+                        g += `<path d="M${n1(it.x1)} ${n1(it.y1)}L${n1(it.x2)} ${n1(it.y2)}" stroke="${TWIG}" stroke-width="${n1(it.w)}" stroke-linecap="round" opacity=".85"/>`;
                     } else if (it.k === 'g') {
                         g += `<circle cx="${n1(it.x)}" cy="${n1(it.y)}" r="${n1(it.r)}" fill="#f2c14e"/>`;
                     } else if (it.k === 'w') {
@@ -1585,7 +1722,7 @@
                     } else if (it.k === 'b') {
                         g += `<circle cx="${n1(it.x)}" cy="${n1(it.y)}" r="${n1(it.r * 2.6)}" fill="${it.c}" opacity=".22"/><circle cx="${n1(it.x)}" cy="${n1(it.y)}" r="${n1(it.r)}" fill="${it.c}"/>`;
                     } else {
-                        g += `<g transform="translate(${n1(it.x)} ${n1(it.y)}) rotate(${it.r}) scale(${(Math.round(it.sc * 1000) / 1000)})"><ellipse cx="2.4" cy="3.4" rx="9.5" ry="9" fill="#04140b" opacity=".2"/>${BY_ID[it.o.type].svg}${it.o.src === 'gift' ? GIFT_TAG : ''}</g>`;
+                        g += `<g transform="translate(${n1(it.x)} ${n1(it.y)}) rotate(${it.r}) scale(${(Math.round(it.sc * 1000) / 1000)})"><ellipse cx="2.4" cy="3.4" rx="9.5" ry="9" fill="#04140b" opacity=".2"/>${ornDef(it.o.type).svg}${it.o.src === 'gift' ? GIFT_TAG : ''}</g>`;
                     }
                 });
                 g += sc.front.map(boxTag).join('');
@@ -1671,6 +1808,7 @@
                     if (it.k === 't') {
                         const m = it.m;
                         ctx.save(); ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                        if (it.sh) { ctx.save(); ctx.translate(0.03, 0.16); ctx.scale(1, 0.85); ctx.fillStyle = it.sh; ctx.fill(path2d.frond); ctx.restore(); }
                         ctx.fillStyle = it.c; ctx.fill(path2d.frond);
                         if (it.hl) { ctx.translate(0.1, -0.1); ctx.scale(0.8, 0.45); ctx.fillStyle = it.hl; ctx.fill(path2d.frond); }
                         ctx.restore();
@@ -1679,6 +1817,10 @@
                             ctx.globalAlpha = 0.92; ctx.fillStyle = '#f8fafc'; ctx.fill(path2d.cap);
                             ctx.restore();
                         }
+                    } else if (it.k === 'tw') {
+                        ctx.globalAlpha = 0.85; ctx.strokeStyle = TWIG; ctx.lineWidth = it.w; ctx.lineCap = 'round';
+                        ctx.beginPath(); ctx.moveTo(it.x1, it.y1); ctx.lineTo(it.x2, it.y2); ctx.stroke();
+                        ctx.globalAlpha = 1; ctx.lineCap = 'butt';
                     } else if (it.k === 'g') {
                         ctx.fillStyle = '#f2c14e';
                         ctx.beginPath(); ctx.arc(it.x, it.y, it.r, 0, Math.PI * 2); ctx.fill();
@@ -1706,7 +1848,7 @@
                         ctx.globalAlpha = 1;
                     } else {
                         const gift = it.o.src === 'gift';
-                        const im = pic(`o|${it.o.type}|${gift ? 1 : 0}`, BY_ID[it.o.type].svg + (gift ? GIFT_TAG : ''), '-16 -17 32 32', 128, 128);
+                        const im = pic(`o|${it.o.type}|${gift ? 1 : 0}`, ornDef(it.o.type).svg + (gift ? GIFT_TAG : ''), '-16 -17 32 32', 128, 128);
                         ctx.save(); ctx.translate(it.x, it.y); ctx.rotate(it.r * RAD); ctx.scale(it.sc, it.sc);
                         ctx.globalAlpha = 0.2; ctx.fillStyle = '#04140b';
                         ctx.beginPath(); ctx.ellipse(2.4, 3.4, 9.5, 9, 0, 0, Math.PI * 2); ctx.fill();
@@ -1723,6 +1865,20 @@
                         ctx.restore();
                     }
                 });
+                // 전구 빛이 둘레 가지·장식에 번진다 (이미 그린 곳에만 칠한다)
+                ctx.save();
+                ctx.globalCompositeOperation = 'source-atop';
+                sc.items.forEach((it) => {
+                    if (it.k !== 'b') return;
+                    const tw = o.t == null ? 1 : 0.5 + 0.5 * Math.sin(t * 0.0032 + it.ph * 2.3);
+                    const R = it.r * 7.5;
+                    const gr = ctx.createRadialGradient(it.x, it.y, 0, it.x, it.y, R);
+                    gr.addColorStop(0, it.c); gr.addColorStop(1, `${it.c}00`);
+                    ctx.globalAlpha = 0.12 + 0.2 * tw;
+                    ctx.fillStyle = gr;
+                    ctx.beginPath(); ctx.arc(it.x, it.y, R, 0, Math.PI * 2); ctx.fill();
+                });
+                ctx.restore();
                 sc.front.forEach((b) => drawBox(ctx, b));
                 if (v.star === 2) {
                     ctx.save();
@@ -2002,32 +2158,55 @@
         }
 
         // 스냅샷 v2: b + 단계(1) 전구(1) 별(1) 정면 각도(2) 테마(1) + [각도(2) 높이(2) 장식번호(2) 크기·기울기(1)]…
+        // 이모지 장식이 있으면 첫 글자가 c: 장식번호 자리가 "z"+꾸밈 번호이고, 뒤에 글자 수(1) + 코드포인트마다 4글자가 붙는다.
         // 예전 형식(숫자로 시작, 칸 번호)도 읽는다.
         const b36 = (n, w) => Math.max(0, Math.round(n)).toString(36).padStart(w, '0').slice(-w);
         function snapOf(st) {
-            let s = `b${stageOf(st.waters.length)}${st.forest?.goalDone ? 1 : 0}${starOf(st)}${b36(Tree3D.norm(st.face || 0), 2)}${Math.max(0, THEME_KEYS.indexOf(st.theme || 'green'))}`;
+            let body = '';
+            let emo = false;
             st.hung.slice(0, 40).forEach((o) => {
                 const ix = BY_ID[o.type]?.ix;
-                if (ix == null || !Number.isInteger(o.h)) return;
+                const m = ix == null ? emoOf(o.type) : null;
+                if ((ix == null && !m) || !Number.isInteger(o.h)) return;
                 const zr = (o.z ?? 1) * 11 + Math.max(-5, Math.min(5, Math.round((o.r || 0) / 6))) + 5;
-                s += b36(Tree3D.norm(o.a), 2) + b36(Math.min(1000, o.h), 2) + b36(ix, 2) + zr.toString(36);
+                body += b36(Tree3D.norm(o.a), 2) + b36(Math.min(1000, o.h), 2);
+                if (m) {
+                    const cps = Array.from(m.e).map((ch) => ch.codePointAt(0));
+                    body += `z${m.style.toString(36)}${zr.toString(36)}${cps.length.toString(36)}${cps.map((c) => b36(c, 4)).join('')}`;
+                    emo = true;
+                } else body += b36(ix, 2) + zr.toString(36);
             });
-            return s;
+            return `${emo ? 'c' : 'b'}${stageOf(st.waters.length)}${st.forest?.goalDone ? 1 : 0}${starOf(st)}${b36(Tree3D.norm(st.face || 0), 2)}${Math.max(0, THEME_KEYS.indexOf(st.theme || 'green'))}${body}`;
         }
 
         function unsnap(s) {
             if (typeof s !== 'string') return null;
             const orns = [];
             const src = (c) => (c.tier === 'gift' ? 'gift' : 'self');
-            if (s[0] === 'b') {
-                if (!/^b[0-5][01][0-2][0-9a-z]{2}[0-3](?:[0-9a-z]{7}){0,40}$/.test(s)) return null;
-                for (let i = 7; i < s.length; i += 7) {
+            if (s[0] === 'b' || s[0] === 'c') {
+                if (s.length > 1200 || !/^[bc][0-5][01][0-2][0-9a-z]{2}[0-3][0-9a-z]*$/.test(s)) return null;
+                if (s[0] === 'b' && !/^b.{6}(?:[0-9a-z]{7}){0,40}$/.test(s)) return null;
+                let i = 7;
+                while (i < s.length && orns.length < 40) {
+                    if (i + 7 > s.length) return null;
                     const a = parseInt(s.slice(i, i + 2), 36);
                     const h = parseInt(s.slice(i + 2, i + 4), 36);
-                    const c = CAT[parseInt(s.slice(i + 4, i + 6), 36)];
                     const zr = parseInt(s[i + 6], 36);
                     const z = Math.floor(zr / 11);
-                    if (c && a < 360 && h <= 1000 && z <= 2) orns.push({ a, h, z, r: ((zr % 11) - 5) * 6, type: c.id, src: src(c) });
+                    let type = '';
+                    if (s[0] === 'c' && s[i + 4] === 'z') {
+                        const n = parseInt(s[i + 7], 36);
+                        if (!(n >= 1 && n <= 8) || i + 8 + n * 4 > s.length) return null;
+                        let e = '';
+                        try { for (let k = 0; k < n; k++) e += String.fromCodePoint(parseInt(s.slice(i + 8 + k * 4, i + 12 + k * 4), 36)); } catch { return null; }
+                        type = emoType(parseInt(s[i + 5], 36), e);
+                        i += 8 + n * 4;
+                    } else {
+                        type = CAT[parseInt(s.slice(i + 4, i + 6), 36)]?.id || '';
+                        i += 7;
+                    }
+                    const c = ornDef(type);
+                    if (c && a < 360 && h <= 1000 && z <= 2) orns.push({ a, h, z, r: ((zr % 11) - 5) * 6, type, src: src(c) });
                 }
                 return { stage: Number(s[1]), lights: s[2] === '1', star: Number(s[3]), face: Math.min(359, parseInt(s.slice(4, 6), 36)), theme: THEME_KEYS[Number(s[6])], orns, boxes: orns.filter((o) => o.src === 'gift').length, mood: 'normal' };
             }
@@ -2643,7 +2822,7 @@
             }
 
             const tray = S.tray.length
-                ? `<div class="tray">${S.tray.map((o) => `<button class="tray-item" data-act="pick" data-uid="${esc(o.uid)}" aria-pressed="${pick?.uid === o.uid}" type="button">${ornSvg(o.type)}<span>${esc(BY_ID[o.type]?.name || '')}</span></button>`).join('')}</div>`
+                ? `<div class="tray">${S.tray.map((o) => `<button class="tray-item" data-act="pick" data-uid="${esc(o.uid)}" aria-pressed="${pick?.uid === o.uid}" type="button">${ornSvg(o.type)}<span>${esc(ornDef(o.type)?.name || '')}</span></button>`).join('')}</div>`
                 : '<p class="tray-empty">바구니가 비었어요. 캡슐을 열거나 친구에게 장식을 받아 보세요.</p>';
 
             $('v-tree').innerHTML = `${sky}${daily}
@@ -2712,7 +2891,7 @@
                 view: () => v,
                 rot: v.face || 0,
                 interactive: false,
-                onTap(orn) { if (orn) toast(`${BY_ID[orn.type].name}${orn.from ? ` · ${orn.from}` : ''}`); }
+                onTap(orn) { if (orn) toast(`${ornDef(orn.type).name}${orn.from ? ` · ${orn.from}` : ''}`); }
             });
         }
 
@@ -2779,13 +2958,22 @@
         // ── 장식 보내기 (방문자) ──
         let giftTarget = null;
         function renderGift(target) {
-            giftTarget = { ...target, type: '' };
+            giftTarget = { ...target, type: '', tab: 'cat', emo: { e: '🎅', style: 0 } };
             const nick = Store.get('nick') || (S?.owner ?? '');
             const live = Api.on();
             $('v-gift').innerHTML = `${live ? '<div class="sky" id="gift-preview" hidden></div><div style="height:12px"></div>' : ''}<div class="panel">
                 <h2>🎁 ${esc(target.name)}님 트리에 장식 ${live ? '달기' : '보내기'}</h2>
                 <p class="hint">${live ? `장식을 고르고 한마디를 남기면 ${esc(target.name)}님 트리에 바로 달려요.` : `장식을 고르고 한마디를 남기면 링크가 만들어져요. ${esc(target.name)}님에게 보내면 트리에 달리고,`} 메시지는 <b>12월 25일</b>에 열려요.</p>
-                <div class="gift-grid">${GIFT_TYPES.map((t) => `<button class="gift-opt" data-act="gift-pick" data-type="${t}" aria-pressed="false" type="button">${ornSvg(t, 44)}<span>${esc(BY_ID[t].name)}</span></button>`).join('')}</div>
+                <div class="seg gift-tabs"><button class="seg-btn" data-act="gift-tab" data-tab="cat" aria-pressed="true" type="button">🎁 준비된 장식</button><button class="seg-btn" data-act="gift-tab" data-tab="emo" aria-pressed="false" type="button">😀 이모지로 만들기</button></div>
+                <div id="gift-cat"><div class="gift-grid">${GIFT_TYPES.map((t) => `<button class="gift-opt" data-act="gift-pick" data-type="${t}" aria-pressed="false" type="button">${ornSvg(t, 44)}<span>${esc(BY_ID[t].name)}</span></button>`).join('')}</div></div>
+                <div id="gift-emo" hidden>
+                    <div class="emo-make"><div class="emo-preview" id="emo-preview"></div>
+                    <div class="emo-input"><label class="field" for="emo-in">이모지</label><input class="txt" id="emo-in" maxlength="24" value="🎅" autocomplete="off" aria-describedby="emo-hint">
+                    <p class="hint" id="emo-hint">아래에서 고르거나 키보드 이모지로 아무거나 넣어 보세요</p></div></div>
+                    <div class="emo-quick">${EMO_QUICK.map((e) => `<button class="emo-q" data-act="emo-pick" data-e="${esc(e)}" type="button" aria-label="${esc(e)}">${e}</button>`).join('')}</div>
+                    <label class="field">꾸밈</label>
+                    <div class="gift-grid" id="emo-styles"></div>
+                </div>
                 <label class="field" for="gift-from">보내는 사람</label>
                 <input class="txt" id="gift-from" maxlength="${MAX_NAME}" value="${esc(nick)}" placeholder="내 이름" autocomplete="off">
                 <label class="field" for="gift-msg">메시지 <span class="count" id="gift-count">0/${MAX_MSG}</span></label>
@@ -2795,6 +2983,13 @@
                 <div class="btn-row" style="margin-top:10px"><button class="btn btn-ghost" data-act="home" type="button">${S ? '내 트리로' : '🌱 나도 트리 심기'}</button></div>
             </div>`;
             $('gift-msg').addEventListener('input', (e) => { $('gift-count').textContent = `${e.target.value.length}/${MAX_MSG}`; });
+            $('emo-in').addEventListener('input', (ev) => {
+                const e = lastEmoji(ev.target.value);
+                $('emo-hint').textContent = e || !ev.target.value ? '아래에서 고르거나 키보드 이모지로 아무거나 넣어 보세요' : '이모지만 넣을 수 있어요';
+                if (e) { giftTarget.emo.e = e; refreshEmo(); }
+            });
+            $('emo-in').addEventListener('change', (ev) => { ev.target.value = giftTarget.emo.e; });
+            refreshEmo();
             show('v-gift');
             // 서버판: 친구 트리의 지금 모습을 같이 보여 준다 (구경 + 장식 달기)
             if (live) {
@@ -2810,6 +3005,15 @@
                 }).catch(() => {});
             }
         }
+
+        // 이모지 장식 미리보기·꾸밈 고르기 다시 그리기
+        function refreshEmo() {
+            const { e, style } = giftTarget.emo;
+            if (!$('emo-preview')) return;
+            $('emo-preview').innerHTML = ornSvg(emoType(style, e), 92);
+            $('emo-styles').innerHTML = EMO_STYLES.map((st, i) => `<button class="gift-opt" data-act="emo-style" data-i="${i}" aria-pressed="${i === style}" type="button">${ornSvg(emoType(i, e), 44)}<span>${esc(st.name)}</span></button>`).join('');
+        }
+        const giftType = () => (giftTarget.tab === 'emo' ? emoType(giftTarget.emo.style, giftTarget.emo.e) : giftTarget.type);
 
         // ── 구경 ──
         function renderViewSnap(p) {
@@ -2851,7 +3055,7 @@
             },
             // 장식 도착
             g(p) {
-                if (!isId(p.i) || !GIFT_TYPES.includes(p.o) || typeof p.g !== 'string') throw new Error('bad');
+                if (!isId(p.i) || !isGiftType(p.o) || typeof p.g !== 'string') throw new Error('bad');
                 const from = str(p.f, MAX_NAME) || '익명의 산타';
                 if (!S) { needTree(`<b>${esc(from)}</b>님이 <b>${esc(str(p.n, MAX_NAME))}</b>님에게 보낸 장식이에요.`); return; }
                 if (S.id !== p.i) {
@@ -3054,7 +3258,8 @@
         function openOrnSheet(uid, title = '') {
             const o = [...S.hung, ...S.tray].find((x) => x.uid === uid);
             if (!o) return;
-            const c = BY_ID[o.type];
+            const c = ornDef(o.type);
+            if (!c) return;
             let body = '';
             if (o.src === 'gift') {
                 const left = Clock.daysUntil(S.year, 12, 25);
@@ -3130,10 +3335,10 @@
                 return;
             }
             const o = letters[letterAt];
-            const c = BY_ID[o.type];
+            const c = ornDef(o.type);
             const msg = giftMessage(o);
             el.innerHTML = `<p>${letterAt + 1} / ${letters.length}</p>
-                <svg class="reveal" viewBox="-16 -17 32 32" width="110" height="110">${c.svg}</svg>
+                <svg class="reveal" viewBox="-16 -17 32 32" width="110" height="110">${c?.svg || ''}</svg>
                 <h2>${esc(o.from || '익명의 산타')}님의 선물</h2>
                 <div class="letter" style="max-width:420px;width:100%;color:var(--text);text-align:left">${msg ? esc(msg) : '메시지 없이 장식만 보냈어요 🎁'}</div>
                 <button class="btn btn-festive" data-act="letter-next" type="button">${letterAt + 1 < letters.length ? '다음 선물 ▶' : '다 열었어요 🎄'}</button>`;
@@ -3413,13 +3618,31 @@
             'gift-to'(el) { renderGift({ id: el.dataset.id, name: el.dataset.name }); },
             'gift-pick'(el) {
                 giftTarget.type = el.dataset.type;
-                document.querySelectorAll('.gift-opt').forEach((b) => b.setAttribute('aria-pressed', String(b === el)));
+                document.querySelectorAll('#gift-cat .gift-opt').forEach((b) => b.setAttribute('aria-pressed', String(b === el)));
+            },
+            'gift-tab'(el) {
+                giftTarget.tab = el.dataset.tab;
+                document.querySelectorAll('.gift-tabs .seg-btn').forEach((b) => b.setAttribute('aria-pressed', String(b === el)));
+                $('gift-cat').hidden = giftTarget.tab !== 'cat';
+                $('gift-emo').hidden = giftTarget.tab !== 'emo';
+            },
+            'emo-pick'(el) {
+                if (!isEmoji(el.dataset.e)) return;
+                giftTarget.emo.e = el.dataset.e;
+                $('emo-in').value = el.dataset.e;
+                $('emo-hint').textContent = '아래에서 고르거나 키보드 이모지로 아무거나 넣어 보세요';
+                refreshEmo();
+            },
+            'emo-style'(el) {
+                giftTarget.emo.style = Math.max(0, Math.min(EMO_STYLES.length - 1, Number(el.dataset.i) || 0));
+                refreshEmo();
             },
             async 'gift-make'() {
                 const from = $('gift-from').value.trim();
                 const msg = $('gift-msg').value.trim().slice(0, MAX_MSG);
                 const err = (m) => { $('gift-error').textContent = m; };
-                if (!giftTarget.type) return err('장식을 하나 골라 주세요.');
+                const type = giftType();
+                if (!type || !isGiftType(type)) return err(giftTarget.tab === 'emo' ? '이모지를 하나 넣어 주세요.' : '장식을 하나 골라 주세요.');
                 if (!from) return err('보내는 사람 이름을 적어 주세요.');
                 err('');
                 Store.set('nick', from);
@@ -3428,7 +3651,7 @@
                     const btn = document.querySelector('[data-act="gift-make"]');
                     if (btn) btn.disabled = true;
                     try {
-                        await Api.call('POST', `/trees/${giftTarget.id}/gifts`, { type: giftTarget.type, sender: from, message: msg });
+                        await Api.call('POST', `/trees/${giftTarget.id}/gifts`, { type, sender: from, message: msg });
                         Sound.sparkle();
                         info('🎁 장식을 달았어요!', `<b>${esc(giftTarget.name)}</b>님 트리에 바로 달렸어요. 메시지는 12월 25일에 열려요.`,
                             [{ label: '🎁 하나 더 달기', act: 'gift-again', primary: true }, { label: S ? '내 트리로' : '🌱 나도 트리 심기', act: 'home' }]);
@@ -3438,7 +3661,7 @@
                         if (e.status !== 404 && e.status !== 0) return err(e.message);
                     }
                 }
-                const url = linkFor('g', { i: giftTarget.id, n: giftTarget.name, g: rid(8), o: giftTarget.type, f: from, x: Codec.hide(msg, giftTarget.id) });
+                const url = linkFor('g', { i: giftTarget.id, n: giftTarget.name, g: rid(8), o: type, f: from, x: Codec.hide(msg, giftTarget.id) });
                 const r = await share(url, `🎁 ${giftTarget.name}님, ${from}님이 트리 장식을 보냈어요! 링크를 열면 트리에 달려요.`);
                 if (r === 'cancel') return;
                 info('🎁 장식을 보냈어요!', `<b>${esc(giftTarget.name)}</b>님이 링크를 열면 트리에 달려요. 메시지는 12월 25일에 열려요.`,
@@ -3524,7 +3747,7 @@
             try {
                 const el = $('game-rules');
                 const r = JSON.parse(el.textContent);
-                r.steps[3] = '🎁 내 트리 링크를 보내면 친구가 구경하고 장식과 메시지를 바로 달아 줘요. 메시지는 12월 25일에 열려요.';
+                r.steps[3] = '🎁 내 트리 링크를 보내면 친구가 구경하고 장식과 메시지를 바로 달아 줘요. 😀 이모지로 직접 만든 장식도 보낼 수 있어요. 메시지는 12월 25일에 열려요.';
                 r.steps[4] = '커플 트리는 짝꿍 초대 링크를 한 번만 보내면 돼요. 같은 날 둘 다 물을 주면 하트 장식이 생겨요.';
                 r.steps[5] = '우리 숲은 숲 초대 링크로 모여요. 열 때마다 모두의 최신 트리가 보이고, 다 같이 물을 많이 주면 숲에 눈이 내려요.';
                 r.tips = [
