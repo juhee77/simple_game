@@ -200,6 +200,69 @@
         }
 
         /* ── 안내 배너 ── */
+        .dbg-fab {
+            position: fixed;
+            left: max(14px, env(safe-area-inset-left));
+            bottom: max(14px, env(safe-area-inset-bottom));
+            z-index: 25;
+            width: 52px;
+            height: 52px;
+            border: 0;
+            border-radius: 50%;
+            background: #1f2937;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .dbg-banner {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .dbg-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 12px 0 8px;
+        }
+
+        .dbg-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .dbg-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .dbg-chip {
+            padding: 6px 10px;
+            border: 1.5px solid var(--line);
+            border-radius: var(--r-pill);
+            background: var(--surface-2);
+            color: inherit;
+            font: inherit;
+            font-size: .82rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .dbg-chip small {
+            margin-left: 4px;
+            font-weight: 500;
+            color: var(--text-2);
+        }
+
+        .dbg-chip[aria-pressed="true"] {
+            border-color: var(--berry);
+            background: var(--berry-soft);
+        }
+
         .banner {
             padding: 12px 14px;
             margin-bottom: 12px;
@@ -1127,6 +1190,13 @@
         const $ = (id) => document.getElementById(id);
         const esc = (v) => escapeHtml(v);
         const IS_LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
+        // 디버그 모드 (?debug=1): 12월이 아니어도 날짜를 바꿔 가며 시험해 볼 수 있다.
+        // 진짜 트리와 따로 저장하고(advent-tree:debug), 서버는 쓰지 않는다(링크 방식). 실제 사이트에서도 켤 수 있다.
+        const DEBUG = new URLSearchParams(location.search).has('debug');
+        const DebugDay = {
+            get() { try { const k = localStorage.getItem('advent-tree:debug:today'); return k && /^\d{4}-\d{2}-\d{2}$/.test(k) ? k : ''; } catch { return ''; } },
+            set(k) { try { if (k) localStorage.setItem('advent-tree:debug:today', k); else localStorage.removeItem('advent-tree:debug:today'); } catch { /* 무시 */ } }
+        };
         const MAX_NAME = 10;
         const MAX_MSG = 80;
         const MAX_FOREST = 12;
@@ -1161,6 +1231,12 @@
         // 기기 시계 기준. 개발할 때만 ?today=YYYY-MM-DD로 날짜를 바꿔 볼 수 있다 (localhost에서만).
         const Clock = (() => {
             function now() {
+                const dk = DEBUG ? DebugDay.get() : '';
+                if (dk) {
+                    const [y, m, d] = dk.split('-').map(Number);
+                    const t = new Date();
+                    return new Date(y, m - 1, d, t.getHours(), t.getMinutes(), t.getSeconds());
+                }
                 if (IS_LOCAL) {
                     const q = new URLSearchParams(location.search).get('today');
                     if (q && /^\d{4}-\d{2}-\d{2}$/.test(q)) {
@@ -1193,7 +1269,8 @@
 
         // ── 저장 ─────────────────────────────────────────────────
         const Store = (() => {
-            const KEY = 'advent-tree:v1';
+            const KEY = DEBUG ? 'advent-tree:debug' : 'advent-tree:v1';
+            const PRE = DEBUG ? 'advent-tree:debug:' : 'advent-tree:';
             let ok = true;
             try {
                 localStorage.setItem('advent-tree:probe', '1');
@@ -1206,8 +1283,8 @@
                 load() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; } },
                 save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* 메모리로만 진행 */ } },
                 clear() { try { localStorage.removeItem(KEY); } catch { /* 무시 */ } },
-                get(k) { try { return localStorage.getItem(`advent-tree:${k}`); } catch { return null; } },
-                set(k, v) { try { localStorage.setItem(`advent-tree:${k}`, v); } catch { /* 무시 */ } }
+                get(k) { try { return localStorage.getItem(PRE + k); } catch { return null; } },
+                set(k, v) { try { localStorage.setItem(PRE + k, v); } catch { /* 무시 */ } }
             };
         })();
 
@@ -2343,7 +2420,7 @@
             const meta = document.querySelector('meta[name="tree-api"]')?.content?.trim() || '';
             // localhost에서는 실제 서버 대신 로컬 Worker(npm run dev)에 붙는다. ?api=off는 서버 없이, ?api=prod는 실제 서버로.
             const q = IS_LOCAL ? new URLSearchParams(location.search).get('api') : null;
-            const base = q === 'off' ? '' : (IS_LOCAL && q !== 'prod' ? 'http://localhost:8787' : meta).replace(/\/$/, '');
+            const base = q === 'off' || DEBUG ? '' : (IS_LOCAL && q !== 'prod' ? 'http://localhost:8787' : meta).replace(/\/$/, '');
             async function call(method, path, body, token) {
                 const fail = (msg, status, data) => Object.assign(new Error(msg), { status, data });
                 if (!base) throw fail('서버가 연결되어 있지 않아요.', 0);
@@ -2644,7 +2721,8 @@
         // ════════════════════════════════════════════════════════════
         //  공유·복사
         // ════════════════════════════════════════════════════════════
-        const linkFor = (kind, obj) => `${location.origin}${location.pathname}#${kind}=${Codec.pack(obj)}`;
+        // 디버그 모드에서 만든 링크는 받는 쪽도 디버그 모드로 열린다 (진짜 트리에 섞이지 않게)
+        const linkFor = (kind, obj) => `${location.origin}${location.pathname}${DEBUG ? '?debug=1' : ''}#${kind}=${Codec.pack(obj)}`;
 
         async function copyText(text) {
             try {
@@ -2718,7 +2796,9 @@
                 h += `<div class="banner"><b>📱 사파리·크롬에서 키우는 걸 추천해요</b>메신저 안 브라우저는 저장이 지워질 수 있어요. 트리는 열었던 브라우저에만 저장돼요.
                     ${KAKAO ? '<br><button class="btn btn-ghost" data-act="external" type="button">🌐 다른 브라우저로 열기</button>' : ''}</div>`;
             }
+            if (DEBUG) h = `<div class="banner dbg-banner"><b>🐞 디버그 모드 · ${Clock.today()}</b>진짜 트리와 따로 저장되고 서버는 쓰지 않아요. 왼쪽 아래 🐞 버튼으로 날짜를 바꿔 보세요.</div>${h}`;
             $('banners').innerHTML = h;
+            if (DEBUG && !$('dbg-fab')) document.body.insertAdjacentHTML('beforeend', '<button class="dbg-fab" id="dbg-fab" data-act="dbg-open" type="button" aria-label="디버그 도구">🐞</button>');
         }
 
         // ── 심기 ──
@@ -3471,6 +3551,42 @@
         // ════════════════════════════════════════════════════════════
         //  버튼 동작 (모든 클릭을 여기서 나눈다)
         // ════════════════════════════════════════════════════════════
+        // ── 디버그 도구 ──
+        const DBG_DATES = [['11-30', '시즌 전'], ['12-01', '첫날'], ['12-10', '10일'], ['12-24', '이브'], ['12-25', '크리스마스'], ['01-03', '보기 기간']];
+        const PHASE_NAME = { pre: '시즌 전', advent: '물 주는 기간', xmas: '크리스마스', after: '지난 시즌 보기' };
+        function dbgPanel() {
+            const se = Clock.season();
+            const y = S?.year || se.year;
+            const n = S ? S.waters.length : 0;
+            const today = Clock.today();
+            openSheet(`<h3>🐞 디버그 도구</h3>
+                <p class="hint" style="margin:0 0 10px">진짜 트리와 따로 저장되고 서버는 쓰지 않아요. 여기서 만든 링크도 디버그 모드로 열려요.</p>
+                <div class="dbg-row"><b>📅 ${today}</b><span class="count">${PHASE_NAME[se.phase]}${DebugDay.get() ? '' : ' · 실제 날짜'}</span></div>
+                <div class="dbg-grid">
+                    <button class="btn btn-ghost" data-act="dbg-day" data-n="-1" type="button">◀ 하루 전</button>
+                    <button class="btn btn-ghost" data-act="dbg-day" data-n="1" type="button">하루 뒤 ▶</button>
+                </div>
+                <div class="dbg-chips">${DBG_DATES.map(([md, label]) => { const k = `${md.startsWith('01') ? y + 1 : y}-${md}`; return `<button class="dbg-chip" data-act="dbg-date" data-d="${k}" aria-pressed="${k === today}" type="button">${label}<small>${md.replace('-', '/')}</small></button>`; }).join('')}
+                    <button class="dbg-chip" data-act="dbg-date" data-d="" aria-pressed="${!DebugDay.get()}" type="button">실제 날짜<small>오늘</small></button></div>
+                ${S ? `<div class="dbg-row"><b>💧 물 ${n}번</b><span class="count">${STAGE_NAME[stageOf(n)]}</span></div>
+                <div class="dbg-chips">${STAGE_AT.map((w, i) => `<button class="dbg-chip" data-act="dbg-water" data-n="${w}" aria-pressed="${stageOf(n) === i}" type="button">${STAGE_NAME[i]}<small>${w}번</small></button>`).join('')}
+                    <button class="dbg-chip" data-act="dbg-water" data-n="25" aria-pressed="${n >= 25}" type="button">다 줌<small>25번</small></button></div>
+                <div class="dbg-grid">
+                    <button class="btn btn-ghost" data-act="dbg-redraw" type="button">🎁 오늘 캡슐 다시</button>
+                    <button class="btn btn-ghost" data-act="dbg-orns" type="button">🧺 장식 8개 받기</button>
+                    <button class="btn btn-ghost" data-act="dbg-gifts" type="button">💌 친구 선물 3개</button>
+                    <button class="btn btn-ghost" data-act="dbg-reset" type="button">🌱 새로 심기</button>
+                </div>` : '<p class="hint">먼저 트리를 심으면 물·장식·선물 도구가 나와요.</p>'}
+                <div class="btn-row" style="margin-top:12px"><button class="btn btn-ghost" data-act="dbg-exit" type="button">디버그 끝내기</button><button class="btn btn-festive" data-act="sheet-close" type="button">닫기</button></div>`);
+        }
+        // 날짜·상태를 바꾼 뒤: 지금 화면을 새로 그리고 도구를 다시 연다
+        function dbgRefresh(msg) {
+            if (S) renderTree(); else renderPlant();
+            renderBanners();
+            dbgPanel();
+            if (msg) toast(msg);
+        }
+
         const ACT = {
             home() { closeSheet(); $('overlay').hidden = true; if (S) renderTree(); else renderPlant(); },
             'go-plant'() { renderPlant(); },
@@ -3615,6 +3731,49 @@
                 closeSheet();
                 renderTree();
             },
+            'dbg-open'() { dbgPanel(); },
+            'dbg-day'(el) { DebugDay.set(Clock.shift(Clock.today(), Number(el.dataset.n) || 0)); dbgRefresh(); },
+            'dbg-date'(el) { DebugDay.set(el.dataset.d || ''); dbgRefresh(); },
+            'dbg-water'(el) {
+                const n = Math.max(0, Math.min(25, Number(el.dataset.n) || 0));
+                S.waters = Array.from({ length: n }, (_, i) => `${S.year}-12-${String(i + 1).padStart(2, '0')}`);
+                syncHearts(S);
+                checkForestGoal(S);
+                save();
+                dbgRefresh(`💧 물 ${n}번 준 트리로 바꿨어요`);
+            },
+            'dbg-redraw'() {
+                const today = Clock.today();
+                delete S.draws[today];
+                if (!S.waters.includes(today)) { S.waters.push(today); S.waters.sort(); }
+                save();
+                dbgRefresh('오늘 캡슐을 다시 열 수 있어요');
+            },
+            'dbg-orns'() {
+                for (let i = 0; i < 8; i++) addOrn(S, CAT[Math.floor(Math.random() * CAT.length)].id, 'self');
+                save();
+                dbgRefresh('🧺 바구니에 장식 8개를 넣었어요');
+            },
+            'dbg-gifts'() {
+                const names = ['지은', '하늘', '도윤', '서아', '익명의 산타'];
+                for (let i = 0; i < 3; i++) {
+                    const type = Math.random() < 0.5 ? GIFT_TYPES[Math.floor(Math.random() * GIFT_TYPES.length)] : emoType(Math.floor(Math.random() * EMO_STYLES.length), EMO_QUICK[Math.floor(Math.random() * EMO_QUICK.length)]);
+                    const gid = rid(8);
+                    S.gifts.push(gid);
+                    addOrn(S, type, 'gift', { from: names[Math.floor(Math.random() * names.length)], gid, msg: Codec.hide(`디버그 메시지 ${i + 1} 🎄`, S.id) }, true);
+                }
+                save();
+                dbgRefresh('💌 친구 선물 3개가 도착했어요');
+            },
+            'dbg-reset'() {
+                if (!confirm('디버그 트리를 지우고 새로 심을까요? (진짜 트리는 그대로예요)')) return;
+                Store.clear();
+                S = null;
+                closeSheet();
+                renderPlant();
+                renderBanners();
+            },
+            'dbg-exit'() { location.href = location.pathname; },
             'gift-to'(el) { renderGift({ id: el.dataset.id, name: el.dataset.name }); },
             'gift-pick'(el) {
                 giftTarget.type = el.dataset.type;
