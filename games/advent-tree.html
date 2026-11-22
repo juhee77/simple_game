@@ -1375,7 +1375,7 @@
             <linearGradient id="gTrunk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a5a30"/><stop offset=".4" stop-color="#7c4a24"/><stop offset="1" stop-color="#4f2c12"/></linearGradient>
             <radialGradient id="gGlow"><stop offset="0" stop-color="#fff7c2" stop-opacity=".6"/><stop offset="1" stop-color="#fff7c2" stop-opacity="0"/></radialGradient>
             <filter id="fOrn" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
-                <feMorphology in="SourceAlpha" operator="dilate" radius=".55" result="dil"/>
+                <feMorphology in="SourceAlpha" operator="dilate" radius=".4" result="dil"/>
                 <feFlood flood-color="#d9b04c" result="gold"/>
                 <feComposite in="gold" in2="dil" operator="in" result="rim"/>
                 <feGaussianBlur in="SourceAlpha" stdDeviation="1.4" result="bl"/>
@@ -1386,6 +1386,15 @@
                 <feComposite in="lit" in2="spc2" operator="arithmetic" k2="1" k3=".6" result="glz"/>
                 <feComposite in="glz" in2="SourceAlpha" operator="in" result="body"/>
                 <feMerge><feMergeNode in="rim"/><feMergeNode in="body"/></feMerge>
+            </filter>
+            <filter id="fGlass" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="1.9" result="bl"/>
+                <feDiffuseLighting in="bl" surfaceScale="3.4" diffuseConstant="1" lighting-color="#fff" result="dif"><feDistantLight azimuth="225" elevation="40"/></feDiffuseLighting>
+                <feComposite in="SourceGraphic" in2="dif" operator="arithmetic" k1=".88" k2=".2" result="lit"/>
+                <feSpecularLighting in="bl" surfaceScale="3.4" specularConstant="1.25" specularExponent="42" lighting-color="#fff" result="spc"><fePointLight x="-7" y="-11" z="19"/></feSpecularLighting>
+                <feComposite in="spc" in2="SourceAlpha" operator="in" result="spc2"/>
+                <feComposite in="lit" in2="spc2" operator="arithmetic" k2="1" k3="1" result="glz"/>
+                <feComposite in="glz" in2="SourceAlpha" operator="in"/>
             </filter>
             <radialGradient id="gStarGlow"><stop offset="0" stop-color="#fde68a" stop-opacity=".95"/><stop offset="1" stop-color="#fde68a" stop-opacity="0"/></radialGradient>
         </defs>`;
@@ -1498,7 +1507,9 @@
         };
         // 앞쪽의 은은한 빛(gGlow 원·흐린 원)은 광택·금테를 입히지 않는다
         const GLOW_HEAD = /^(?:<circle [^>]*(?:url\(#gGlow\)|opacity="\.25")[^>]*\/>)+/;
-        function ornamentize(svg, top = -10) {
+        // 유리 장식(볼·고드름·스노볼 등)은 금테 없이 매끈하고 또렷한 유리 반짝임, 나머지는 도자기 유약 + 얇은 금테
+        const GLASS = new Set(['ball-red', 'ball-gold', 'ball-blue', 'ball-silver', 'ball-green', 'ball-pink', 'stripe-ball', 'glitter', 'rainbow-ball', 'aurora', 'icicle', 'snowglobe', 'c-ring', 'glass-bird']);
+        function ornamentize(svg, top = -10, glass = false) {
             const glow = (svg.match(GLOW_HEAD) || [''])[0];
             let body = svg.slice(glow.length);
             // 이모지 글자는 광택을 입히지 않고 위에 그대로 얹는다
@@ -1506,9 +1517,9 @@
             texts.forEach((t) => { body = body.replace(t, ''); });
             const hasHook = body.includes('stroke="#b08d2a"');
             const thread = hasHook ? '' : `<path d="M0-17V${top}" stroke="#d6b45a" stroke-width=".7" opacity=".9"/>`;
-            return `${glow}${thread}${body.trim() ? `<g filter="url(#fOrn)">${body}</g>` : ''}${texts.join('')}`;
+            return `${glow}${thread}${body.trim() ? `<g filter="url(#${glass ? 'fGlass' : 'fOrn'})">${body}</g>` : ''}${texts.join('')}`;
         }
-        const BY_ID = Object.fromEntries(CAT.map((c, i) => [c.id, { ...c, ix: i, raw: c.svg, svg: ornamentize(c.svg, ORN_TOP[c.id]) }]));
+        const BY_ID = Object.fromEntries(CAT.map((c, i) => [c.id, { ...c, ix: i, raw: c.svg, svg: ornamentize(c.svg, ORN_TOP[c.id], GLASS.has(c.id)) }]));
         const TIER_LABEL = { basic: '기본', special: '특별', rare: '희귀 ✨', legend: '전설 🌟', gift: '선물 🎁', couple: '커플 💗' };
         const GIFT_TYPES = CAT.filter((c) => c.tier === 'gift').map((c) => c.id);
 
@@ -1548,7 +1559,7 @@
             let d = ORN_CACHE.get(type);
             if (d === undefined) {
                 const m = emoOf(type);
-                d = m ? { id: type, name: `${m.e} ${EMO_STYLES[m.style].name}`, tier: 'gift', svg: ornamentize(EMO_STYLES[m.style].svg(m.e), EMO_TOP[m.style]), emo: m } : null;
+                d = m ? { id: type, name: `${m.e} ${EMO_STYLES[m.style].name}`, tier: 'gift', svg: ornamentize(EMO_STYLES[m.style].svg(m.e), EMO_TOP[m.style], m.style <= 3), emo: m } : null;
                 ORN_CACHE.set(type, d);
             }
             return d;
@@ -1841,7 +1852,7 @@
                     const p = project(orn.a, yy, rot);
                     if (p.d < -0.35 * p.r || cover(p.lx, p.d, yy) >= 0) return;
                     const [x, y] = P(p.x, p.y);
-                    items.push({ k: 'o', x, y, d: p.d + 22, sc: s * ZOOM[orn.z ?? 1] * (1 + p.d / 600), r: orn.r || 0, o: orn, bri: 0.66 + 0.34 * lightOf(orn.a - rot) });
+                    items.push({ k: 'o', x, y, d: p.d + 22, sc: s * ZOOM[orn.z ?? 1] * (1 + p.d / 600), r: orn.r || 0, sw: (o.swing || 0) * (p.d / Math.max(p.r, 1)) * (0.75 + (hash32(orn.uid || orn.type) % 50) / 100), o: orn, bri: 0.66 + 0.34 * lightOf(orn.a - rot) });
                 });
                 items.sort((a, b) => a.d - b.d);
                 const boxes = BOXES.slice(0, clamp(v.boxes || 0, 0, BOXES.length)).map((b) => {
@@ -1935,7 +1946,7 @@
 
             // 돌려 보는 화면 (ctx는 300×400 좌표로 맞춰 둔 상태). o.t가 있으면 깜빡임·눈 내림.
             function paint(ctx, v, rot, o = {}) {
-                const sc = build(v, rot);
+                const sc = build(v, rot, { swing: o.swing });
                 const t = o.t ?? 0;
                 path2d = path2d || { frond: new Path2D(FROND), cap: new Path2D(CAP), flare: new Path2D(STAR_FLARE), glint: new Path2D(GLINT) };
                 if (sc.glow) {
@@ -2011,7 +2022,10 @@
                     } else {
                         const gift = it.o.src === 'gift';
                         const im = pic(`o|${it.o.type}|${gift ? 1 : 0}`, ornDef(it.o.type).svg + (gift ? GIFT_TAG : ''), '-16 -17 32 32', 128, 128);
-                        ctx.save(); ctx.translate(it.x, it.y); ctx.rotate(it.r * RAD); ctx.scale(it.sc, it.sc);
+                        ctx.save(); ctx.translate(it.x, it.y);
+                        // 트리를 돌리면 실 끝(위)을 축으로 흔들린다
+                        if (it.sw) { ctx.translate(0, -15 * it.sc); ctx.rotate(it.sw * RAD); ctx.translate(0, 15 * it.sc); }
+                        ctx.rotate(it.r * RAD); ctx.scale(it.sc, it.sc);
                         ctx.globalAlpha = 0.2; ctx.fillStyle = '#04140b';
                         ctx.beginPath(); ctx.ellipse(2.4, 3.4, 9.5, 9, 0, 0, Math.PI * 2); ctx.fill();
                         ctx.globalAlpha = 1;
@@ -2177,6 +2191,22 @@
                 if (!cv) return null;
                 const ctx = cv.getContext('2d');
                 const V = { cv, rot: o.rot || 0, scene: null, raf: 0, vel: 0 };
+                // 장식 흔들림: 돌리는 속도에 끌려 뒤로 기울었다가 용수철처럼 천천히 멈춘다
+                const SW = { s: 0, v: 0, rot: V.rot, t: 0 };
+                const swing = (now) => {
+                    if (reduce()) return 0;
+                    const dt = SW.t ? Math.min(50, now - SW.t) : 16;
+                    const w = SW.t ? (V.rot - SW.rot) / Math.max(dt, 1) : 0;
+                    SW.t = now; SW.rot = V.rot;
+                    const target = Math.max(-26, Math.min(26, -w * 520));
+                    for (let k = 0; k < 2; k++) {
+                        const h = dt / 2 / 1000;
+                        SW.v += (-90 * (SW.s - target) - 3.2 * SW.v) * h;
+                        SW.s += SW.v * h;
+                    }
+                    if (Math.abs(SW.s) < 0.05 && Math.abs(SW.v) < 0.05 && !target) { SW.s = 0; SW.v = 0; }
+                    return SW.s;
+                };
                 let W = 0;
                 let G = null;
                 V.draw = () => {
@@ -2185,7 +2215,8 @@
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.clearRect(0, 0, cv.width, cv.height);
                     ctx.setTransform(k, 0, 0, k, 0, 0);
-                    V.scene = Tree3D.paint(ctx, o.view(), V.rot, { moving: o.moving?.(), hint: o.hint?.(), snow: true, t: reduce() ? null : performance.now() });
+                    const now = performance.now();
+                    V.scene = Tree3D.paint(ctx, o.view(), V.rot, { moving: o.moving?.(), hint: o.hint?.(), snow: true, t: reduce() ? null : now, swing: swing(now) });
                 };
                 // 전구 깜빡임·눈 내림: 화면에 보이고 탭이 앞에 있을 때만 초당 30번 정도 다시 그린다
                 let visible = true;
