@@ -1374,6 +1374,19 @@
             <radialGradient id="gWarm"><stop offset="0" stop-color="#ffd68c" stop-opacity=".22"/><stop offset="1" stop-color="#ffd68c" stop-opacity="0"/></radialGradient>
             <linearGradient id="gTrunk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a5a30"/><stop offset=".4" stop-color="#7c4a24"/><stop offset="1" stop-color="#4f2c12"/></linearGradient>
             <radialGradient id="gGlow"><stop offset="0" stop-color="#fff7c2" stop-opacity=".6"/><stop offset="1" stop-color="#fff7c2" stop-opacity="0"/></radialGradient>
+            <filter id="fOrn" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                <feMorphology in="SourceAlpha" operator="dilate" radius=".55" result="dil"/>
+                <feFlood flood-color="#d9b04c" result="gold"/>
+                <feComposite in="gold" in2="dil" operator="in" result="rim"/>
+                <feGaussianBlur in="SourceAlpha" stdDeviation="1.4" result="bl"/>
+                <feDiffuseLighting in="bl" surfaceScale="2.6" diffuseConstant="1" lighting-color="#fff" result="dif"><feDistantLight azimuth="225" elevation="50"/></feDiffuseLighting>
+                <feComposite in="SourceGraphic" in2="dif" operator="arithmetic" k1=".8" k2=".32" result="lit"/>
+                <feSpecularLighting in="bl" surfaceScale="2.6" specularConstant=".55" specularExponent="26" lighting-color="#fff" result="spc"><fePointLight x="-10" y="-14" z="26"/></feSpecularLighting>
+                <feComposite in="spc" in2="SourceAlpha" operator="in" result="spc2"/>
+                <feComposite in="lit" in2="spc2" operator="arithmetic" k2="1" k3=".6" result="glz"/>
+                <feComposite in="glz" in2="SourceAlpha" operator="in" result="body"/>
+                <feMerge><feMergeNode in="rim"/><feMergeNode in="body"/></feMerge>
+            </filter>
             <radialGradient id="gStarGlow"><stop offset="0" stop-color="#fde68a" stop-opacity=".95"/><stop offset="1" stop-color="#fde68a" stop-opacity="0"/></radialGradient>
         </defs>`;
 
@@ -1472,7 +1485,30 @@
             { id: 'c-ring', name: '반지 전구', tier: 'couple', svg: `<circle r="12.5" fill="url(#gGlow)"/><rect x="-3.6" y="-13" width="7.2" height="4.4" rx="1.2" fill="#94a3b8"/><path d="${BULB}" fill="#fda4af"/><circle r="3.4" fill="none" stroke="#eab308" stroke-width="1.6"/><path d="M-1.4-3.6l1.4-2 1.4 2z" fill="#a5f3fc"/>` },
             { id: 'c-mug', name: '커플 머그', tier: 'couple', svg: '<path d="M-9-4h8v7a3.4 3.4 0 0 1-3.4 3.4h-1.2A3.4 3.4 0 0 1-9 3z" fill="#fca5a5"/><path d="M1-4h8v7a3.4 3.4 0 0 1-3.4 3.4H4.4A3.4 3.4 0 0 1 1 3z" fill="#93c5fd"/><path d="M0-6c-1.6-1.4-3.4.4-1.6 2L0-2.4 1.6-4c1.8-1.6 0-3.4-1.6-2z" fill="#ef4444"/>' }
         ];
-        const BY_ID = Object.fromEntries(CAT.map((c, i) => [c.id, { ...c, ix: i }]));
+        // ── 장식답게: 모든 장식에 유약 같은 광택·빛과 그늘·얇은 금테를 입히고, 가지에 거는 금실을 단다 ──
+        // (그림 자체는 그대로라 장식 번호·링크·이미 받은 장식은 그대로 쓴다)
+        // 장식 윗부분 높이 (금실이 여기까지 내려온다). 고리(hook)가 있는 장식은 따로 안 적어도 된다.
+        const ORN_TOP = {
+            candy: -8, sock: -12, bow: -6.5, present: -12, mitten: -8.5, apple: -11, 'star-cookie': -10.4, acorn: -12.4,
+            ginger: -10.8, ribbon: -8.6, 'mini-snowman': -12.6, owl: -9, mushroom: -9, drum: -8.4, teddy: -9.6, reindeer: -13.6,
+            aurora: -13, 'glass-bird': -5, snowflake: -10.6, moon: -9.8, icicle: -10, snowglobe: -9.8, angel: -14.4,
+            'gold-star': -11.4, sleigh: -7, crown: -9, 'g-present': -12, 'g-letter': -7, 'g-cocoa': -5, 'g-cupcake': -10.6,
+            'g-poinsettia': -11, 'g-cat': -11, 'g-dog': -8.2, 'g-bunny': -14.8, 'g-wand': -11, 'g-candle': -12, 'g-macaron': -8.4,
+            'g-mistletoe': -6, 'c-heart': -5.6, 'c-ring': -13, 'c-mug': -6
+        };
+        // 앞쪽의 은은한 빛(gGlow 원·흐린 원)은 광택·금테를 입히지 않는다
+        const GLOW_HEAD = /^(?:<circle [^>]*(?:url\(#gGlow\)|opacity="\.25")[^>]*\/>)+/;
+        function ornamentize(svg, top = -10) {
+            const glow = (svg.match(GLOW_HEAD) || [''])[0];
+            let body = svg.slice(glow.length);
+            // 이모지 글자는 광택을 입히지 않고 위에 그대로 얹는다
+            const texts = body.match(/<text [^>]*>[^<]*<\/text>/g) || [];
+            texts.forEach((t) => { body = body.replace(t, ''); });
+            const hasHook = body.includes('stroke="#b08d2a"');
+            const thread = hasHook ? '' : `<path d="M0-17V${top}" stroke="#d6b45a" stroke-width=".7" opacity=".9"/>`;
+            return `${glow}${thread}${body.trim() ? `<g filter="url(#fOrn)">${body}</g>` : ''}${texts.join('')}`;
+        }
+        const BY_ID = Object.fromEntries(CAT.map((c, i) => [c.id, { ...c, ix: i, raw: c.svg, svg: ornamentize(c.svg, ORN_TOP[c.id]) }]));
         const TIER_LABEL = { basic: '기본', special: '특별', rare: '희귀 ✨', legend: '전설 🌟', gift: '선물 🎁', couple: '커플 💗' };
         const GIFT_TYPES = CAT.filter((c) => c.tier === 'gift').map((c) => c.id);
 
@@ -1494,8 +1530,9 @@
             { name: '선물 태그', svg: (e) => `<path d="M-6-9.6C-9-12-12-11-13-8" stroke="#b91c1c" stroke-width="1.1" fill="none"/><path d="M-10-5.4 4-7.4 10 .6 4 7.6-10 7.4z" transform="rotate(-8)" fill="#e9c896" stroke="#b08550" stroke-width=".7"/><circle cx="-7.4" cy="-4" r="1.2" fill="#fff" stroke="#b08550" stroke-width=".5"/>${emoT(e, 10, 1, -0.6)}` },
             { name: '눈꽃 메달', svg: (e) => `<g stroke="#bfdbfe" stroke-width="1.6" stroke-linecap="round">${[0, 60, 120].map((a) => `<path d="M0-12.6V12.6" transform="rotate(${a})"/>`).join('')}</g><circle r="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>${emoT(e, 10, 0.6)}` },
             { name: '리본', svg: (e) => `${emoT(e, 16, 2.4)}<path d="M0-9L-6.4-13v8ZM0-9l6.4-4v8Z" fill="#e11d48"/><circle cy="-9" r="1.8" fill="#9f1239"/>` },
-            { name: '그대로', svg: (e) => `<path d="M0-16v5" stroke="#b08d2a" stroke-width="1.2"/>${emoT(e, 18, 1.4)}` }
+            { name: '그대로', svg: (e) => emoT(e, 18, 1.4) }
         ];
+        const EMO_TOP = [-13, -13, -13, -13, -12, -12, -9.4, -10.4, -9.6, -12.6, -13, -8];
         const PICTO = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
         const EMO_OK = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|\p{Emoji_Modifier}|‍|️|[\u{e0020}-\u{e007f}])+$/u;
         const isEmoji = (e) => typeof e === 'string' && e.length <= 16 && EMO_OK.test(e) && PICTO.test(e);
@@ -1511,7 +1548,7 @@
             let d = ORN_CACHE.get(type);
             if (d === undefined) {
                 const m = emoOf(type);
-                d = m ? { id: type, name: `${m.e} ${EMO_STYLES[m.style].name}`, tier: 'gift', svg: EMO_STYLES[m.style].svg(m.e), emo: m } : null;
+                d = m ? { id: type, name: `${m.e} ${EMO_STYLES[m.style].name}`, tier: 'gift', svg: ornamentize(EMO_STYLES[m.style].svg(m.e), EMO_TOP[m.style]), emo: m } : null;
                 ORN_CACHE.set(type, d);
             }
             return d;
@@ -3476,7 +3513,7 @@
             letters = [...S.hung, ...S.tray].filter((o) => o.src === 'gift');
             letterAt = -1;
             const el = $('overlay');
-            el.innerHTML = `<svg class="sleigh" viewBox="-20 -16 40 30">${BY_ID.sleigh.svg}<path d="M-12 2c-4 0-6-3-6-3" stroke="#a0612f" stroke-width="1.6" fill="none"/></svg><h2>🎅 산타가 다녀갔어요!</h2>`;
+            el.innerHTML = `<svg class="sleigh" viewBox="-20 -16 40 30">${BY_ID.sleigh.raw}<path d="M-12 2c-4 0-6-3-6-3" stroke="#a0612f" stroke-width="1.6" fill="none"/></svg><h2>🎅 산타가 다녀갔어요!</h2>`;
             el.hidden = false;
             Sound.bells();
             setTimeout(() => {
