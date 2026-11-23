@@ -954,16 +954,111 @@
             color: var(--berry);
         }
 
-        .letter {
+        /* 편지지: 줄 노트 + 위쪽 항공우편 줄무늬 */
+        .letter,
+        .lt-paper {
+            position: relative;
             margin: 10px 0;
-            padding: 14px;
-            border-radius: var(--r-md);
-            background: #fffaf0;
-            border: 1px solid #fde7b0;
-            line-height: 1.6;
+            padding: 20px 16px 12px;
+            border-radius: 6px;
+            background-color: #fffaf0;
+            background-image: repeating-linear-gradient(to bottom, transparent 0 27px, rgba(214, 170, 100, .35) 27px 28px);
+            background-position: 0 20px;
+            border: 0;
+            box-shadow: 0 1px 0 #f3e2bd, 0 6px 16px rgba(120, 80, 20, .14);
+            color: #3b2a17;
+            line-height: 28px;
+            text-align: left;
             white-space: pre-wrap;
             word-break: keep-all;
             overflow-wrap: anywhere;
+        }
+
+        .letter::before,
+        .lt-paper::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 6px;
+            border-radius: 6px 6px 0 0;
+            background: repeating-linear-gradient(135deg, #dc2626 0 7px, #fffaf0 7px 12px, #15803d 12px 19px, #fffaf0 19px 24px);
+        }
+
+        .lt-count {
+            font-size: .85rem;
+            letter-spacing: .1em;
+        }
+
+        .lt {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: min(100%, 380px);
+        }
+
+        .lt-orn {
+            position: relative;
+            z-index: 1;
+            width: 104px;
+            height: 104px;
+            margin-bottom: -26px;
+            filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35));
+            transform-origin: 50% 0;
+            animation: popin .5s cubic-bezier(.2, 1.6, .4, 1) both, ltswing 2.4s .5s ease-in-out both;
+        }
+
+        .lt-paper {
+            width: 100%;
+            margin: 0;
+            padding-top: 34px;
+            background-position: 0 34px;
+            transform: rotate(-.8deg);
+            white-space: normal;
+            animation: letterin .6s .15s cubic-bezier(.2, .9, .3, 1) both;
+        }
+
+        .lt-to {
+            font-weight: 700;
+            color: #9a3412;
+        }
+
+        .lt-body {
+            white-space: pre-wrap;
+            min-height: 84px;
+            font-size: 1.02rem;
+        }
+
+        .lt-from {
+            text-align: right;
+            font-weight: 700;
+            color: #9a3412;
+        }
+
+        .overlay p.lt-name {
+            margin-top: -4px;
+            font-size: .85rem;
+        }
+
+        @keyframes letterin {
+            from {
+                transform: translateY(46px) rotate(2deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes ltswing {
+            0% { transform: rotate(0); }
+            20% { transform: rotate(7deg); }
+            45% { transform: rotate(-4.5deg); }
+            70% { transform: rotate(2deg); }
+            100% { transform: rotate(0); }
+        }
+
+        /* 크게 보는 화면에서는 장식을 매단 금실을 숨긴다 (트리 위에서만 실이 보임) */
+        .solo .thr {
+            display: none;
         }
 
         .lock {
@@ -1097,6 +1192,8 @@
             .btn.glow,
             .capsule i,
             .reveal,
+            .lt-orn,
+            .lt-paper,
             .sleigh {
                 animation: none !important;
             }
@@ -1374,6 +1471,28 @@
             <radialGradient id="gWarm"><stop offset="0" stop-color="#ffd68c" stop-opacity=".22"/><stop offset="1" stop-color="#ffd68c" stop-opacity="0"/></radialGradient>
             <linearGradient id="gTrunk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a5a30"/><stop offset=".4" stop-color="#7c4a24"/><stop offset="1" stop-color="#4f2c12"/></linearGradient>
             <radialGradient id="gGlow"><stop offset="0" stop-color="#fff7c2" stop-opacity=".6"/><stop offset="1" stop-color="#fff7c2" stop-opacity="0"/></radialGradient>
+            <filter id="fOrn" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                <feMorphology in="SourceAlpha" operator="dilate" radius=".4" result="dil"/>
+                <feFlood flood-color="#d9b04c" result="gold"/>
+                <feComposite in="gold" in2="dil" operator="in" result="rim"/>
+                <feGaussianBlur in="SourceAlpha" stdDeviation="1.4" result="bl"/>
+                <feDiffuseLighting in="bl" surfaceScale="2.6" diffuseConstant="1" lighting-color="#fff" result="dif"><feDistantLight azimuth="225" elevation="50"/></feDiffuseLighting>
+                <feComposite in="SourceGraphic" in2="dif" operator="arithmetic" k1=".8" k2=".32" result="lit"/>
+                <feSpecularLighting in="bl" surfaceScale="2.6" specularConstant=".55" specularExponent="26" lighting-color="#fff" result="spc"><fePointLight x="-10" y="-14" z="26"/></feSpecularLighting>
+                <feComposite in="spc" in2="SourceAlpha" operator="in" result="spc2"/>
+                <feComposite in="lit" in2="spc2" operator="arithmetic" k2="1" k3=".6" result="glz"/>
+                <feComposite in="glz" in2="SourceAlpha" operator="in" result="body"/>
+                <feMerge><feMergeNode in="rim"/><feMergeNode in="body"/></feMerge>
+            </filter>
+            <filter id="fGlass" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="1.9" result="bl"/>
+                <feDiffuseLighting in="bl" surfaceScale="3.4" diffuseConstant="1" lighting-color="#fff" result="dif"><feDistantLight azimuth="225" elevation="40"/></feDiffuseLighting>
+                <feComposite in="SourceGraphic" in2="dif" operator="arithmetic" k1=".88" k2=".2" result="lit"/>
+                <feSpecularLighting in="bl" surfaceScale="3.4" specularConstant="1.25" specularExponent="42" lighting-color="#fff" result="spc"><fePointLight x="-7" y="-11" z="19"/></feSpecularLighting>
+                <feComposite in="spc" in2="SourceAlpha" operator="in" result="spc2"/>
+                <feComposite in="lit" in2="spc2" operator="arithmetic" k2="1" k3="1" result="glz"/>
+                <feComposite in="glz" in2="SourceAlpha" operator="in"/>
+            </filter>
             <radialGradient id="gStarGlow"><stop offset="0" stop-color="#fde68a" stop-opacity=".95"/><stop offset="1" stop-color="#fde68a" stop-opacity="0"/></radialGradient>
         </defs>`;
 
@@ -1472,7 +1591,32 @@
             { id: 'c-ring', name: '반지 전구', tier: 'couple', svg: `<circle r="12.5" fill="url(#gGlow)"/><rect x="-3.6" y="-13" width="7.2" height="4.4" rx="1.2" fill="#94a3b8"/><path d="${BULB}" fill="#fda4af"/><circle r="3.4" fill="none" stroke="#eab308" stroke-width="1.6"/><path d="M-1.4-3.6l1.4-2 1.4 2z" fill="#a5f3fc"/>` },
             { id: 'c-mug', name: '커플 머그', tier: 'couple', svg: '<path d="M-9-4h8v7a3.4 3.4 0 0 1-3.4 3.4h-1.2A3.4 3.4 0 0 1-9 3z" fill="#fca5a5"/><path d="M1-4h8v7a3.4 3.4 0 0 1-3.4 3.4H4.4A3.4 3.4 0 0 1 1 3z" fill="#93c5fd"/><path d="M0-6c-1.6-1.4-3.4.4-1.6 2L0-2.4 1.6-4c1.8-1.6 0-3.4-1.6-2z" fill="#ef4444"/>' }
         ];
-        const BY_ID = Object.fromEntries(CAT.map((c, i) => [c.id, { ...c, ix: i }]));
+        // ── 장식답게: 모든 장식에 유약 같은 광택·빛과 그늘·얇은 금테를 입히고, 가지에 거는 금실을 단다 ──
+        // (그림 자체는 그대로라 장식 번호·링크·이미 받은 장식은 그대로 쓴다)
+        // 장식 윗부분 높이 (금실이 여기까지 내려온다). 고리(hook)가 있는 장식은 따로 안 적어도 된다.
+        const ORN_TOP = {
+            candy: -8, sock: -12, bow: -6.5, present: -12, mitten: -8.5, apple: -11, 'star-cookie': -10.4, acorn: -12.4,
+            ginger: -10.8, ribbon: -8.6, 'mini-snowman': -12.6, owl: -9, mushroom: -9, drum: -8.4, teddy: -9.6, reindeer: -13.6,
+            aurora: -13, 'glass-bird': -5, snowflake: -10.6, moon: -9.8, icicle: -10, snowglobe: -9.8, angel: -14.4,
+            'gold-star': -11.4, sleigh: -7, crown: -9, 'g-present': -12, 'g-letter': -7, 'g-cocoa': -5, 'g-cupcake': -10.6,
+            'g-poinsettia': -11, 'g-cat': -11, 'g-dog': -8.2, 'g-bunny': -14.8, 'g-wand': -11, 'g-candle': -12, 'g-macaron': -8.4,
+            'g-mistletoe': -6, 'c-heart': -5.6, 'c-ring': -13, 'c-mug': -6
+        };
+        // 앞쪽의 은은한 빛(gGlow 원·흐린 원)은 광택·금테를 입히지 않는다
+        const GLOW_HEAD = /^(?:<circle [^>]*(?:url\(#gGlow\)|opacity="\.25")[^>]*\/>)+/;
+        // 유리 장식(볼·고드름·스노볼 등)은 금테 없이 매끈하고 또렷한 유리 반짝임, 나머지는 도자기 유약 + 얇은 금테
+        const GLASS = new Set(['ball-red', 'ball-gold', 'ball-blue', 'ball-silver', 'ball-green', 'ball-pink', 'stripe-ball', 'glitter', 'rainbow-ball', 'aurora', 'icicle', 'snowglobe', 'c-ring', 'glass-bird']);
+        function ornamentize(svg, top = -10, glass = false) {
+            const glow = (svg.match(GLOW_HEAD) || [''])[0];
+            let body = svg.slice(glow.length);
+            // 이모지 글자는 광택을 입히지 않고 위에 그대로 얹는다
+            const texts = body.match(/<text [^>]*>[^<]*<\/text>/g) || [];
+            texts.forEach((t) => { body = body.replace(t, ''); });
+            const hasHook = body.includes('stroke="#b08d2a"');
+            const thread = hasHook ? '' : `<path class="thr" d="M0-17V${top}" stroke="#d6b45a" stroke-width=".7" opacity=".9"/>`;
+            return `${glow}${thread}${body.trim() ? `<g filter="url(#${glass ? 'fGlass' : 'fOrn'})">${body}</g>` : ''}${texts.join('')}`;
+        }
+        const BY_ID = Object.fromEntries(CAT.map((c, i) => [c.id, { ...c, ix: i, raw: c.svg, svg: ornamentize(c.svg, ORN_TOP[c.id], GLASS.has(c.id)) }]));
         const TIER_LABEL = { basic: '기본', special: '특별', rare: '희귀 ✨', legend: '전설 🌟', gift: '선물 🎁', couple: '커플 💗' };
         const GIFT_TYPES = CAT.filter((c) => c.tier === 'gift').map((c) => c.id);
 
@@ -1494,8 +1638,9 @@
             { name: '선물 태그', svg: (e) => `<path d="M-6-9.6C-9-12-12-11-13-8" stroke="#b91c1c" stroke-width="1.1" fill="none"/><path d="M-10-5.4 4-7.4 10 .6 4 7.6-10 7.4z" transform="rotate(-8)" fill="#e9c896" stroke="#b08550" stroke-width=".7"/><circle cx="-7.4" cy="-4" r="1.2" fill="#fff" stroke="#b08550" stroke-width=".5"/>${emoT(e, 10, 1, -0.6)}` },
             { name: '눈꽃 메달', svg: (e) => `<g stroke="#bfdbfe" stroke-width="1.6" stroke-linecap="round">${[0, 60, 120].map((a) => `<path d="M0-12.6V12.6" transform="rotate(${a})"/>`).join('')}</g><circle r="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>${emoT(e, 10, 0.6)}` },
             { name: '리본', svg: (e) => `${emoT(e, 16, 2.4)}<path d="M0-9L-6.4-13v8ZM0-9l6.4-4v8Z" fill="#e11d48"/><circle cy="-9" r="1.8" fill="#9f1239"/>` },
-            { name: '그대로', svg: (e) => `<path d="M0-16v5" stroke="#b08d2a" stroke-width="1.2"/>${emoT(e, 18, 1.4)}` }
+            { name: '그대로', svg: (e) => emoT(e, 18, 1.4) }
         ];
+        const EMO_TOP = [-13, -13, -13, -13, -12, -12, -9.4, -10.4, -9.6, -12.6, -13, -8];
         const PICTO = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
         const EMO_OK = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|\p{Emoji_Modifier}|‍|️|[\u{e0020}-\u{e007f}])+$/u;
         const isEmoji = (e) => typeof e === 'string' && e.length <= 16 && EMO_OK.test(e) && PICTO.test(e);
@@ -1511,7 +1656,7 @@
             let d = ORN_CACHE.get(type);
             if (d === undefined) {
                 const m = emoOf(type);
-                d = m ? { id: type, name: `${m.e} ${EMO_STYLES[m.style].name}`, tier: 'gift', svg: EMO_STYLES[m.style].svg(m.e), emo: m } : null;
+                d = m ? { id: type, name: `${m.e} ${EMO_STYLES[m.style].name}`, tier: 'gift', svg: ornamentize(EMO_STYLES[m.style].svg(m.e), EMO_TOP[m.style], m.style <= 3), emo: m } : null;
                 ORN_CACHE.set(type, d);
             }
             return d;
@@ -1526,7 +1671,7 @@
         }
         const EMO_QUICK = ['🎅', '🤶', '🦌', '⛄', '🎄', '🎁', '🔔', '⭐', '🌟', '❄️', '✨', '🕯️', '🍪', '☕', '🍫', '🧦', '🧤', '🧣', '🎀', '💝', '❤️', '💛', '💚', '💙', '💜', '🐶', '🐱', '🐰', '🐻', '🐧', '🦊', '🐹', '🍓', '🍰', '🧁', '🍩', '🌈', '🌙', '🍀', '🌸', '🎶', '😊', '🥰', '😎', '🤗', '👍', '🙏', '💪'];
 
-        const ornSvg = (type, size = 40) => `<svg viewBox="-16 -17 32 32" width="${size}" height="${size}" aria-hidden="true">${ornDef(type)?.svg || ''}</svg>`;
+        const ornSvg = (type, size = 40) => `<svg class="solo" viewBox="-16 -17 32 32" width="${size}" height="${size}" aria-hidden="true">${ornDef(type)?.svg || ''}</svg>`;
 
         // ════════════════════════════════════════════════════════════
         //  트리 성장·그리기
@@ -1563,10 +1708,68 @@
             return '<circle cx="143" cy="345" r="1.8" fill="#2b1708"/><circle cx="157" cy="345" r="1.8" fill="#2b1708"/><path d="M145 351q5 3.6 10 0" stroke="#2b1708" stroke-width="2" fill="none" stroke-linecap="round"/>';
         }
 
-        function starSvg(star, [sx, sy]) {
-            if (star === 2) return `<circle cx="${sx}" cy="${sy}" r="40" fill="url(#gStarGlow)"/><path d="${starPath(17, 7.4)}" transform="translate(${sx} ${sy})" fill="url(#gGold)" stroke="#b45309" stroke-width="1"/>`;
-            if (star === 1) return `<path d="${starPath(15, 6.5)}" transform="translate(${sx} ${sy})" fill="none" stroke="#fde68a" stroke-width="1.6" stroke-dasharray="3 3" opacity=".8"/>`;
-            return '';
+        // 꼭대기 별: 면마다 빛·그늘이 다른 입체 별 + 꼭대기에 꽂는 금빛 받침.
+        // 1 = 다 자랐지만 아직 안 켜짐(차분한 샴페인색), 2 = 크리스마스에 켜짐(금빛 + 부드러운 빛 + 반짝임)
+        const mixHex = (a, b, t) => `#${[0, 2, 4].map((i) => Math.round(parseInt(a.slice(1 + i, 3 + i), 16) * (1 - t) + parseInt(b.slice(1 + i, 3 + i), 16) * t).toString(16).padStart(2, '0')).join('')}`;
+        // 별 면 10개. 가운데가 솟은 별이라 면마다 기울기(법선)가 다르다. 트리와 같이 돌린 뒤 빛과 반짝임을 계산해서
+        // 돌릴 때 면마다 빛이 번쩍 지나가고, 옆으로 돌면 별 두께(뒷면 테두리)가 보인다.
+        const STAR_R = 17;
+        const STAR_IR = 7.2;
+        const STAR_THICK = 2.8;
+        const v3 = (x, y, z) => { const l = Math.hypot(x, y, z); return [x / l, y / l, z / l]; };
+        const STAR_L = v3(-0.55, -0.62, 0.58);                       // 왼쪽 위 앞에서 오는 빛
+        const STAR_H = v3(STAR_L[0], STAR_L[1], STAR_L[2] + 1);       // 반짝임(정반사) 방향
+        const STAR_FACES = (() => {
+            const pt = (deg, rad) => [Math.cos((deg * Math.PI) / 180) * rad, Math.sin((deg * Math.PI) / 180) * rad];
+            const out = [];
+            for (let i = 0; i < 5; i++) {
+                const a = -90 + i * 72;
+                const O = pt(a, STAR_R);
+                [[a - 36, a - 14], [a + 36, a + 14]].forEach(([ia, na]) => {
+                    const n = v3(Math.cos((na * Math.PI) / 180) * 0.9, Math.sin((na * Math.PI) / 180) * 0.9, 1);
+                    out.push({ pts: [[0, 0], pt(ia, STAR_IR), O], n });
+                });
+            }
+            return out;
+        })();
+        const STAR_TIPS = STAR_FACES.filter((_, i) => i % 2 === 0).map((f) => f.pts[2]);
+        const STAR_OUTLINE = STAR_FACES.flatMap((f, i) => (i % 2 ? [f.pts[2]] : [f.pts[1], f.pts[2]])).slice(0, 10);
+        // 별 장면(별 중심 기준 좌표): 테두리(두께)·면·꼭짓점 위치
+        function starScene(star, rot) {
+            const lit = star === 2;
+            const [dk, lt] = lit ? ['#80480a', '#fff5c0'] : ['#5f533b', '#efe6cf'];
+            const th = (rot * Math.PI) / 180;
+            const c = Math.cos(th);
+            const sn = Math.sin(th);
+            const kx = Math.sign(c || 1) * Math.max(0.2, Math.abs(c));
+            const f1 = (x) => Math.round(x * 10) / 10;
+            const poly = (pts, dx = 0) => `M${pts.map(([x, y]) => `${f1(x * kx + dx)} ${f1(y)}`).join('L')}Z`;
+            const faces = STAR_FACES.map(({ pts, n }) => {
+                const nx = n[0] * c + n[2] * sn;
+                const nz = Math.abs(-n[0] * sn + n[2] * c);
+                const dif = Math.max(0, nx * STAR_L[0] + n[1] * STAR_L[1] + nz * STAR_L[2]);
+                const spec = Math.pow(Math.max(0, nx * STAR_H[0] + n[1] * STAR_H[1] + nz * STAR_H[2]), 28);
+                const base = mixHex(dk, lt, 0.1 + 0.9 * dif);
+                return { d: poly(pts), fill: spec > 0.02 ? mixHex(base, '#ffffff', Math.min(1, spec * (lit ? 1.2 : 0.7))) : base };
+            });
+            return {
+                lit, dk,
+                rim: Math.abs(sn) > 0.04 ? poly(STAR_OUTLINE, STAR_THICK * sn) : '',
+                faces,
+                tips: STAR_TIPS.map(([x, y]) => [x * kx, y])
+            };
+        }
+        const STAR_STEM = (lit) => `<path d="M-2.3 10L2.3 10 1.5 21-1.5 21Z" fill="${lit ? '#c58a1e' : '#857552'}"/><path d="M-2.3 10L-.4 10-.6 21-1.5 21Z" fill="${lit ? '#f3cf74' : '#b3a582'}" opacity=".8"/>`;
+        // 반짝임: 가늘고 긴 십자 빛, 꼭짓점에 맺히는 작은 반짝이
+        const STAR_FLARE = 'M-22 0L0-1.2 22 0 0 1.2ZM0-19L1 0 0 19-1 0Z';
+        const GLINT = 'M-4 0L0-.7 4 0 0 .7ZM0-4L.7 0 0 4-.7 0Z';
+        function starSvg(star, [sx, sy], rot = 0) {
+            if (!star) return '';
+            const sc = starScene(star, rot);
+            const glow = sc.lit ? `<circle cx="${sx}" cy="${sy}" r="30" fill="url(#gStarGlow)" opacity=".8"/><path d="${STAR_FLARE}" transform="translate(${sx} ${sy})" fill="#fff7d1" opacity=".5"/>` : '';
+            const glints = sc.lit ? [0, 3].map((k) => `<path d="${GLINT}" transform="translate(${Math.round(sc.tips[k][0] * 10) / 10} ${Math.round(sc.tips[k][1] * 10) / 10})" fill="#fff"/>`).join('') : '';
+            return `${glow}<g transform="translate(${sx} ${sy})">${STAR_STEM(sc.lit)}${sc.rim ? `<path d="${sc.rim}" fill="${sc.dk}"/>` : ''}`
+                + `<g stroke="${sc.dk}" stroke-width=".45" stroke-opacity=".5" stroke-linejoin="round">${sc.faces.map((f) => `<path d="${f.d}" fill="${f.fill}"/>`).join('')}</g>${glints}</g>`;
         }
 
         const GIFT_TAG = '<path d="M6 6l5 1.4-1.6 4.4z" fill="#fbbf24" stroke="#b45309" stroke-width=".5"/>';
@@ -1746,7 +1949,7 @@
                     const p = project(orn.a, yy, rot);
                     if (p.d < -0.35 * p.r || cover(p.lx, p.d, yy) >= 0) return;
                     const [x, y] = P(p.x, p.y);
-                    items.push({ k: 'o', x, y, d: p.d + 22, sc: s * ZOOM[orn.z ?? 1] * (1 + p.d / 600), r: orn.r || 0, o: orn, bri: 0.66 + 0.34 * lightOf(orn.a - rot) });
+                    items.push({ k: 'o', x, y, d: p.d + 22, sc: s * ZOOM[orn.z ?? 1] * (1 + p.d / 600), r: orn.r || 0, sw: (o.swing || 0) * (p.d / Math.max(p.r, 1)) * (0.75 + (hash32(orn.uid || orn.type) % 50) / 100), o: orn, bri: 0.66 + 0.34 * lightOf(orn.a - rot) });
                 });
                 items.sort((a, b) => a.d - b.d);
                 const boxes = BOXES.slice(0, clamp(v.boxes || 0, 0, BOXES.length)).map((b) => {
@@ -1755,22 +1958,13 @@
                     const d = Math.cos(t) * R;
                     return { x: 150 + Math.sin(t) * R, y: 369 + d * 0.12, d, sc: b.s * (0.78 + 0.22 * f) * (1 + d / 800), c: b.c };
                 }).sort((a, b) => a.d - b.d);
-                return { f, s, th, items, back: boxes.filter((b) => b.d <= 0), front: boxes.filter((b) => b.d > 0), star: P(150, 36), glow: v.stage >= 3 || v.lights };
+                return { f, s, th, items, back: boxes.filter((b) => b.d <= 0), front: boxes.filter((b) => b.d > 0), star: P(150, 25), glow: v.stage >= 3 || v.lights };
             }
 
             const n1 = (x) => Math.round(x * 10) / 10;
             const n2 = (x) => Math.round(x * 100) / 100;
             const conePath = ([ap, b, hw], k = 1) => `M150 ${ap}L${n1(150 + hw * k)} ${b}A${n1(hw * k)} ${n1(hw * k * K)} 0 0 1 ${n1(150 - hw * k)} ${b}Z`;
             const CORE = 0.9;   // 속 원뿔(어두운 안쪽)은 가지 끝보다 안쪽
-            const RAYS = (() => {
-                let d = '';
-                for (let i = 0; i < 12; i++) {
-                    const a = (i * 30) * RAD;
-                    const L = i % 2 ? 30 : 46;
-                    d += `M${n1(Math.cos(a - 0.07) * 6)} ${n1(Math.sin(a - 0.07) * 6)}L${n1(Math.cos(a) * L)} ${n1(Math.sin(a) * L)}L${n1(Math.cos(a + 0.07) * 6)} ${n1(Math.sin(a + 0.07) * 6)}Z`;
-                }
-                return d;
-            })();
             const boxTag = (b) => `<g transform="translate(${n1(b.x)} ${n1(b.y)}) scale(${n1(b.sc * 100) / 100})">${boxSvg(b.c)}</g>`;
 
             // 멈춘 그림 (300×400 좌표의 SVG 조각)
@@ -1803,8 +1997,7 @@
                     }
                 });
                 g += sc.front.map(boxTag).join('');
-                if (v.star === 2) g += `<path d="${RAYS}" transform="translate(${n1(sc.star[0])} ${n1(sc.star[1])})" fill="#fde68a" opacity=".35"/>`;
-                return g + starSvg(v.star, sc.star);
+                return g + starSvg(v.star, sc.star, o.rot ?? v.face ?? 0);
             }
 
             // 캔버스용 그림 조각(장식·줄기·별·상자)은 SVG를 이미지로 한 번만 만들어 둔다
@@ -1850,9 +2043,9 @@
 
             // 돌려 보는 화면 (ctx는 300×400 좌표로 맞춰 둔 상태). o.t가 있으면 깜빡임·눈 내림.
             function paint(ctx, v, rot, o = {}) {
-                const sc = build(v, rot);
+                const sc = build(v, rot, { swing: o.swing });
                 const t = o.t ?? 0;
-                path2d = path2d || { frond: new Path2D(FROND), cap: new Path2D(CAP), rays: new Path2D(RAYS) };
+                path2d = path2d || { frond: new Path2D(FROND), cap: new Path2D(CAP), flare: new Path2D(STAR_FLARE), glint: new Path2D(GLINT) };
                 if (sc.glow) {
                     const [gx, gy] = scaled(150, 220, sc.f);
                     const gr = ctx.createRadialGradient(gx, gy, 0, gx, gy, 190 * sc.f);
@@ -1926,7 +2119,10 @@
                     } else {
                         const gift = it.o.src === 'gift';
                         const im = pic(`o|${it.o.type}|${gift ? 1 : 0}`, ornDef(it.o.type).svg + (gift ? GIFT_TAG : ''), '-16 -17 32 32', 128, 128);
-                        ctx.save(); ctx.translate(it.x, it.y); ctx.rotate(it.r * RAD); ctx.scale(it.sc, it.sc);
+                        ctx.save(); ctx.translate(it.x, it.y);
+                        // 트리를 돌리면 실 끝(위)을 축으로 흔들린다
+                        if (it.sw) { ctx.translate(0, -15 * it.sc); ctx.rotate(it.sw * RAD); ctx.translate(0, 15 * it.sc); }
+                        ctx.rotate(it.r * RAD); ctx.scale(it.sc, it.sc);
                         ctx.globalAlpha = 0.2; ctx.fillStyle = '#04140b';
                         ctx.beginPath(); ctx.ellipse(2.4, 3.4, 9.5, 9, 0, 0, Math.PI * 2); ctx.fill();
                         ctx.globalAlpha = 1;
@@ -1957,19 +2153,54 @@
                 });
                 ctx.restore();
                 sc.front.forEach((b) => drawBox(ctx, b));
-                if (v.star === 2) {
-                    ctx.save();
-                    ctx.translate(sc.star[0], sc.star[1]);
-                    ctx.rotate(t * 0.00025);
-                    ctx.globalCompositeOperation = 'lighter';
-                    ctx.globalAlpha = o.t == null ? 0.35 : 0.28 + 0.12 * Math.sin(t * 0.002);
-                    ctx.fillStyle = '#fde68a';
-                    ctx.fill(path2d.rays);
-                    ctx.restore();
-                }
                 if (v.star) {
-                    const im = pic(`star|${v.star}`, starSvg(v.star, [0, 0]), '-42 -42 84 84', 252, 252);
-                    if (im) ctx.drawImage(im, sc.star[0] - 42, sc.star[1] - 42, 84, 84);
+                    const [sx, sy] = sc.star;
+                    const st = starScene(v.star, rot);
+                    const pulse = o.t == null ? 1 : 0.85 + 0.15 * Math.sin(t * 0.0021);
+                    if (st.lit) {
+                        // 켜진 별 빛이 꼭대기 가지에 내려앉는다 (이미 그린 곳에만)
+                        ctx.save();
+                        ctx.globalCompositeOperation = 'source-atop';
+                        const tg = ctx.createRadialGradient(sx, sy + 16, 0, sx, sy + 16, 58);
+                        tg.addColorStop(0, 'rgba(255, 214, 130, .42)'); tg.addColorStop(1, 'rgba(255, 214, 130, 0)');
+                        ctx.fillStyle = tg;
+                        ctx.beginPath(); ctx.arc(sx, sy + 16, 58, 0, Math.PI * 2); ctx.fill();
+                        ctx.restore();
+                        const gr = ctx.createRadialGradient(sx, sy, 0, sx, sy, 32);
+                        gr.addColorStop(0, 'rgba(253, 230, 138, .75)'); gr.addColorStop(1, 'rgba(253, 230, 138, 0)');
+                        ctx.fillStyle = gr;
+                        ctx.beginPath(); ctx.arc(sx, sy, 32, 0, Math.PI * 2); ctx.fill();
+                        ctx.save();
+                        ctx.translate(sx, sy); ctx.scale(pulse, pulse);
+                        ctx.globalCompositeOperation = 'lighter';
+                        ctx.globalAlpha = 0.3 + 0.25 * pulse;
+                        ctx.fillStyle = '#fff7d1';
+                        ctx.fill(path2d.flare);
+                        ctx.restore();
+                    }
+                    ctx.save();
+                    ctx.translate(sx, sy);
+                    const stem = pic(`stem|${st.lit ? 1 : 0}`, STAR_STEM(st.lit), '-4 8 8 14', 32, 56);
+                    if (stem) ctx.drawImage(stem, -4, 8, 8, 14);
+                    if (st.rim) { ctx.fillStyle = st.dk; ctx.fill(new Path2D(st.rim)); }
+                    ctx.strokeStyle = st.dk; ctx.lineWidth = 0.45; ctx.lineJoin = 'round';
+                    st.faces.forEach((f) => {
+                        const p2 = new Path2D(f.d);
+                        ctx.fillStyle = f.fill; ctx.fill(p2);
+                        ctx.globalAlpha = 0.5; ctx.stroke(p2); ctx.globalAlpha = 1;
+                    });
+                    if (st.lit) {
+                        // 꼭짓점 두 곳이 번갈아 반짝인다
+                        ctx.fillStyle = '#fff';
+                        st.tips.forEach(([x, y], k) => {
+                            const tw = o.t == null ? (k === 0 || k === 3 ? 1 : 0) : Math.max(0, Math.sin(t * 0.0027 + k * 1.9));
+                            if (tw < 0.15) return;
+                            ctx.save(); ctx.translate(x, y); ctx.scale(tw, tw); ctx.globalAlpha = tw;
+                            ctx.fill(path2d.glint);
+                            ctx.restore();
+                        });
+                    }
+                    ctx.restore();
                 }
                 if (o.hint) {
                     // 달 곳 고르는 중: 트리 둘레를 점선으로
@@ -2057,6 +2288,22 @@
                 if (!cv) return null;
                 const ctx = cv.getContext('2d');
                 const V = { cv, rot: o.rot || 0, scene: null, raf: 0, vel: 0 };
+                // 장식 흔들림: 돌리는 속도에 끌려 뒤로 기울었다가 용수철처럼 천천히 멈춘다
+                const SW = { s: 0, v: 0, rot: V.rot, t: 0 };
+                const swing = (now) => {
+                    if (reduce()) return 0;
+                    const dt = SW.t ? Math.min(50, now - SW.t) : 16;
+                    const w = SW.t ? (V.rot - SW.rot) / Math.max(dt, 1) : 0;
+                    SW.t = now; SW.rot = V.rot;
+                    const target = Math.max(-26, Math.min(26, -w * 520));
+                    for (let k = 0; k < 2; k++) {
+                        const h = dt / 2 / 1000;
+                        SW.v += (-90 * (SW.s - target) - 3.2 * SW.v) * h;
+                        SW.s += SW.v * h;
+                    }
+                    if (Math.abs(SW.s) < 0.05 && Math.abs(SW.v) < 0.05 && !target) { SW.s = 0; SW.v = 0; }
+                    return SW.s;
+                };
                 let W = 0;
                 let G = null;
                 V.draw = () => {
@@ -2065,7 +2312,8 @@
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.clearRect(0, 0, cv.width, cv.height);
                     ctx.setTransform(k, 0, 0, k, 0, 0);
-                    V.scene = Tree3D.paint(ctx, o.view(), V.rot, { moving: o.moving?.(), hint: o.hint?.(), snow: true, t: reduce() ? null : performance.now() });
+                    const now = performance.now();
+                    V.scene = Tree3D.paint(ctx, o.view(), V.rot, { moving: o.moving?.(), hint: o.hint?.(), snow: true, t: reduce() ? null : now, swing: swing(now) });
                 };
                 // 전구 깜빡임·눈 내림: 화면에 보이고 탭이 앞에 있을 때만 초당 30번 정도 다시 그린다
                 let visible = true;
@@ -3356,7 +3604,7 @@
             const tune = inTray ? '' : `<div class="orn-tune"><span>크기</span><div class="seg">${['작게', '보통', '크게'].map((t, i) => `<button class="seg-btn" data-act="orn-size" data-uid="${esc(uid)}" data-z="${i}" aria-pressed="${(o.z ?? 1) === i}" type="button">${t}</button>`).join('')}</div></div>
                 <div class="orn-tune"><span>기울기</span><div class="seg"><button class="seg-btn" data-act="orn-tilt" data-uid="${esc(uid)}" data-d="-15" type="button" aria-label="왼쪽으로 기울이기">↺</button><button class="seg-btn" data-act="orn-tilt" data-uid="${esc(uid)}" data-d="0" aria-pressed="${!o.r}" type="button">곧게</button><button class="seg-btn" data-act="orn-tilt" data-uid="${esc(uid)}" data-d="15" type="button" aria-label="오른쪽으로 기울이기">↻</button></div></div>`;
             openSheet(`${title ? `<h2 class="center">${esc(title)}</h2>` : ''}
-                <div class="center"><svg class="big-orn" viewBox="-16 -17 32 32"${o.r ? ` style="transform:rotate(${o.r}deg)"` : ''}>${c.svg}</svg><b>${esc(c.name)}</b> <span class="tier ${c.tier}">${TIER_LABEL[c.tier]}</span></div>
+                <div class="center"><svg class="big-orn solo" viewBox="-16 -17 32 32"${o.r ? ` style="transform:rotate(${o.r}deg)"` : ''}>${c.svg}</svg><b>${esc(c.name)}</b> <span class="tier ${c.tier}">${TIER_LABEL[c.tier]}</span></div>
                 ${body}${tune}
                 <div class="btn-row" style="margin-top:12px">
                     ${inTray ? `<button class="btn btn-festive" data-act="pick" data-uid="${esc(uid)}" type="button">✨ 트리에 달기</button>`
@@ -3374,7 +3622,7 @@
             setTimeout(() => {
                 Sound.sparkle();
                 buzz([30, 40, 30]);
-                el.innerHTML = `<svg class="reveal" viewBox="-16 -17 32 32" width="140" height="140">${c.svg}</svg>
+                el.innerHTML = `<svg class="reveal solo" viewBox="-16 -17 32 32" width="140" height="140">${c.svg}</svg>
                     <h2>${esc(c.name)}</h2><span class="tier ${c.tier}">${TIER_LABEL[c.tier]}</span>
                     <p>${c.tier === 'legend' ? '전설 장식이에요! 한 판에 하나뿐이에요 🌟' : c.tier === 'rare' ? '희귀 장식이 나왔어요! ✨' : '바구니에 담겼어요.'}</p>
                     <button class="btn btn-festive" data-act="pick" data-uid="${esc(uid)}" type="button">✨ 트리에 달기</button>
@@ -3393,7 +3641,7 @@
             letters = [...S.hung, ...S.tray].filter((o) => o.src === 'gift');
             letterAt = -1;
             const el = $('overlay');
-            el.innerHTML = `<svg class="sleigh" viewBox="-20 -16 40 30">${BY_ID.sleigh.svg}<path d="M-12 2c-4 0-6-3-6-3" stroke="#a0612f" stroke-width="1.6" fill="none"/></svg><h2>🎅 산타가 다녀갔어요!</h2>`;
+            el.innerHTML = `<svg class="sleigh" viewBox="-20 -16 40 30">${BY_ID.sleigh.raw}<path d="M-12 2c-4 0-6-3-6-3" stroke="#a0612f" stroke-width="1.6" fill="none"/></svg><h2>🎅 산타가 다녀갔어요!</h2>`;
             el.hidden = false;
             Sound.bells();
             setTimeout(() => {
@@ -3417,10 +3665,16 @@
             const o = letters[letterAt];
             const c = ornDef(o.type);
             const msg = giftMessage(o);
-            el.innerHTML = `<p>${letterAt + 1} / ${letters.length}</p>
-                <svg class="reveal" viewBox="-16 -17 32 32" width="110" height="110">${c?.svg || ''}</svg>
-                <h2>${esc(o.from || '익명의 산타')}님의 선물</h2>
-                <div class="letter" style="max-width:420px;width:100%;color:var(--text);text-align:left">${msg ? esc(msg) : '메시지 없이 장식만 보냈어요 🎁'}</div>
+            el.innerHTML = `<p class="lt-count">${letterAt + 1} / ${letters.length}</p>
+                <div class="lt">
+                    <svg class="lt-orn solo" viewBox="-16 -17 32 32" aria-hidden="true">${c?.svg || ''}</svg>
+                    <div class="lt-paper">
+                        <div class="lt-to">To. ${esc(S.owner || '나')}</div>
+                        <div class="lt-body">${msg ? esc(msg) : '메시지 없이 장식만 보냈어요 🎁'}</div>
+                        <div class="lt-from">From. ${esc(o.from || '익명의 산타')}</div>
+                    </div>
+                </div>
+                <p class="lt-name">${esc(c?.name || '')}</p>
                 <button class="btn btn-festive" data-act="letter-next" type="button">${letterAt + 1 < letters.length ? '다음 선물 ▶' : '다 열었어요 🎄'}</button>`;
             Sound.pop();
         }
