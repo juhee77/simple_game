@@ -954,16 +954,111 @@
             color: var(--berry);
         }
 
-        .letter {
+        /* 편지지: 줄 노트 + 위쪽 항공우편 줄무늬 */
+        .letter,
+        .lt-paper {
+            position: relative;
             margin: 10px 0;
-            padding: 14px;
-            border-radius: var(--r-md);
-            background: #fffaf0;
-            border: 1px solid #fde7b0;
-            line-height: 1.6;
+            padding: 20px 16px 12px;
+            border-radius: 6px;
+            background-color: #fffaf0;
+            background-image: repeating-linear-gradient(to bottom, transparent 0 27px, rgba(214, 170, 100, .35) 27px 28px);
+            background-position: 0 20px;
+            border: 0;
+            box-shadow: 0 1px 0 #f3e2bd, 0 6px 16px rgba(120, 80, 20, .14);
+            color: #3b2a17;
+            line-height: 28px;
+            text-align: left;
             white-space: pre-wrap;
             word-break: keep-all;
             overflow-wrap: anywhere;
+        }
+
+        .letter::before,
+        .lt-paper::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 6px;
+            border-radius: 6px 6px 0 0;
+            background: repeating-linear-gradient(135deg, #dc2626 0 7px, #fffaf0 7px 12px, #15803d 12px 19px, #fffaf0 19px 24px);
+        }
+
+        .lt-count {
+            font-size: .85rem;
+            letter-spacing: .1em;
+        }
+
+        .lt {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: min(100%, 380px);
+        }
+
+        .lt-orn {
+            position: relative;
+            z-index: 1;
+            width: 104px;
+            height: 104px;
+            margin-bottom: -26px;
+            filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35));
+            transform-origin: 50% 0;
+            animation: popin .5s cubic-bezier(.2, 1.6, .4, 1) both, ltswing 2.4s .5s ease-in-out both;
+        }
+
+        .lt-paper {
+            width: 100%;
+            margin: 0;
+            padding-top: 34px;
+            background-position: 0 34px;
+            transform: rotate(-.8deg);
+            white-space: normal;
+            animation: letterin .6s .15s cubic-bezier(.2, .9, .3, 1) both;
+        }
+
+        .lt-to {
+            font-weight: 700;
+            color: #9a3412;
+        }
+
+        .lt-body {
+            white-space: pre-wrap;
+            min-height: 84px;
+            font-size: 1.02rem;
+        }
+
+        .lt-from {
+            text-align: right;
+            font-weight: 700;
+            color: #9a3412;
+        }
+
+        .overlay p.lt-name {
+            margin-top: -4px;
+            font-size: .85rem;
+        }
+
+        @keyframes letterin {
+            from {
+                transform: translateY(46px) rotate(2deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes ltswing {
+            0% { transform: rotate(0); }
+            20% { transform: rotate(7deg); }
+            45% { transform: rotate(-4.5deg); }
+            70% { transform: rotate(2deg); }
+            100% { transform: rotate(0); }
+        }
+
+        /* 크게 보는 화면에서는 장식을 매단 금실을 숨긴다 (트리 위에서만 실이 보임) */
+        .solo .thr {
+            display: none;
         }
 
         .lock {
@@ -1097,6 +1192,8 @@
             .btn.glow,
             .capsule i,
             .reveal,
+            .lt-orn,
+            .lt-paper,
             .sleigh {
                 animation: none !important;
             }
@@ -1516,7 +1613,7 @@
             const texts = body.match(/<text [^>]*>[^<]*<\/text>/g) || [];
             texts.forEach((t) => { body = body.replace(t, ''); });
             const hasHook = body.includes('stroke="#b08d2a"');
-            const thread = hasHook ? '' : `<path d="M0-17V${top}" stroke="#d6b45a" stroke-width=".7" opacity=".9"/>`;
+            const thread = hasHook ? '' : `<path class="thr" d="M0-17V${top}" stroke="#d6b45a" stroke-width=".7" opacity=".9"/>`;
             return `${glow}${thread}${body.trim() ? `<g filter="url(#${glass ? 'fGlass' : 'fOrn'})">${body}</g>` : ''}${texts.join('')}`;
         }
         const BY_ID = Object.fromEntries(CAT.map((c, i) => [c.id, { ...c, ix: i, raw: c.svg, svg: ornamentize(c.svg, ORN_TOP[c.id], GLASS.has(c.id)) }]));
@@ -1574,7 +1671,7 @@
         }
         const EMO_QUICK = ['🎅', '🤶', '🦌', '⛄', '🎄', '🎁', '🔔', '⭐', '🌟', '❄️', '✨', '🕯️', '🍪', '☕', '🍫', '🧦', '🧤', '🧣', '🎀', '💝', '❤️', '💛', '💚', '💙', '💜', '🐶', '🐱', '🐰', '🐻', '🐧', '🦊', '🐹', '🍓', '🍰', '🧁', '🍩', '🌈', '🌙', '🍀', '🌸', '🎶', '😊', '🥰', '😎', '🤗', '👍', '🙏', '💪'];
 
-        const ornSvg = (type, size = 40) => `<svg viewBox="-16 -17 32 32" width="${size}" height="${size}" aria-hidden="true">${ornDef(type)?.svg || ''}</svg>`;
+        const ornSvg = (type, size = 40) => `<svg class="solo" viewBox="-16 -17 32 32" width="${size}" height="${size}" aria-hidden="true">${ornDef(type)?.svg || ''}</svg>`;
 
         // ════════════════════════════════════════════════════════════
         //  트리 성장·그리기
@@ -3507,7 +3604,7 @@
             const tune = inTray ? '' : `<div class="orn-tune"><span>크기</span><div class="seg">${['작게', '보통', '크게'].map((t, i) => `<button class="seg-btn" data-act="orn-size" data-uid="${esc(uid)}" data-z="${i}" aria-pressed="${(o.z ?? 1) === i}" type="button">${t}</button>`).join('')}</div></div>
                 <div class="orn-tune"><span>기울기</span><div class="seg"><button class="seg-btn" data-act="orn-tilt" data-uid="${esc(uid)}" data-d="-15" type="button" aria-label="왼쪽으로 기울이기">↺</button><button class="seg-btn" data-act="orn-tilt" data-uid="${esc(uid)}" data-d="0" aria-pressed="${!o.r}" type="button">곧게</button><button class="seg-btn" data-act="orn-tilt" data-uid="${esc(uid)}" data-d="15" type="button" aria-label="오른쪽으로 기울이기">↻</button></div></div>`;
             openSheet(`${title ? `<h2 class="center">${esc(title)}</h2>` : ''}
-                <div class="center"><svg class="big-orn" viewBox="-16 -17 32 32"${o.r ? ` style="transform:rotate(${o.r}deg)"` : ''}>${c.svg}</svg><b>${esc(c.name)}</b> <span class="tier ${c.tier}">${TIER_LABEL[c.tier]}</span></div>
+                <div class="center"><svg class="big-orn solo" viewBox="-16 -17 32 32"${o.r ? ` style="transform:rotate(${o.r}deg)"` : ''}>${c.svg}</svg><b>${esc(c.name)}</b> <span class="tier ${c.tier}">${TIER_LABEL[c.tier]}</span></div>
                 ${body}${tune}
                 <div class="btn-row" style="margin-top:12px">
                     ${inTray ? `<button class="btn btn-festive" data-act="pick" data-uid="${esc(uid)}" type="button">✨ 트리에 달기</button>`
@@ -3525,7 +3622,7 @@
             setTimeout(() => {
                 Sound.sparkle();
                 buzz([30, 40, 30]);
-                el.innerHTML = `<svg class="reveal" viewBox="-16 -17 32 32" width="140" height="140">${c.svg}</svg>
+                el.innerHTML = `<svg class="reveal solo" viewBox="-16 -17 32 32" width="140" height="140">${c.svg}</svg>
                     <h2>${esc(c.name)}</h2><span class="tier ${c.tier}">${TIER_LABEL[c.tier]}</span>
                     <p>${c.tier === 'legend' ? '전설 장식이에요! 한 판에 하나뿐이에요 🌟' : c.tier === 'rare' ? '희귀 장식이 나왔어요! ✨' : '바구니에 담겼어요.'}</p>
                     <button class="btn btn-festive" data-act="pick" data-uid="${esc(uid)}" type="button">✨ 트리에 달기</button>
@@ -3568,10 +3665,16 @@
             const o = letters[letterAt];
             const c = ornDef(o.type);
             const msg = giftMessage(o);
-            el.innerHTML = `<p>${letterAt + 1} / ${letters.length}</p>
-                <svg class="reveal" viewBox="-16 -17 32 32" width="110" height="110">${c?.svg || ''}</svg>
-                <h2>${esc(o.from || '익명의 산타')}님의 선물</h2>
-                <div class="letter" style="max-width:420px;width:100%;color:var(--text);text-align:left">${msg ? esc(msg) : '메시지 없이 장식만 보냈어요 🎁'}</div>
+            el.innerHTML = `<p class="lt-count">${letterAt + 1} / ${letters.length}</p>
+                <div class="lt">
+                    <svg class="lt-orn solo" viewBox="-16 -17 32 32" aria-hidden="true">${c?.svg || ''}</svg>
+                    <div class="lt-paper">
+                        <div class="lt-to">To. ${esc(S.owner || '나')}</div>
+                        <div class="lt-body">${msg ? esc(msg) : '메시지 없이 장식만 보냈어요 🎁'}</div>
+                        <div class="lt-from">From. ${esc(o.from || '익명의 산타')}</div>
+                    </div>
+                </div>
+                <p class="lt-name">${esc(c?.name || '')}</p>
                 <button class="btn btn-festive" data-act="letter-next" type="button">${letterAt + 1 < letters.length ? '다음 선물 ▶' : '다 열었어요 🎄'}</button>`;
             Sound.pop();
         }
