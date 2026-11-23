@@ -611,6 +611,93 @@
             color: #fde68a;
         }
 
+        .inbox-call {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            margin-top: 6px;
+        }
+
+        .inbox-btn {
+            min-height: 40px;
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 255, 255, .22);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+            font: inherit;
+            font-size: .92rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .inbox-btn b {
+            display: inline-block;
+            min-width: 22px;
+            margin-left: 4px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #dc2626;
+            font-size: .8rem;
+            line-height: 22px;
+        }
+
+        .inbox {
+            display: grid;
+            gap: 14px;
+            margin: 12px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .ib-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .ib-orn {
+            flex: none;
+            width: 60px;
+            height: 60px;
+            margin-top: 4px;
+            padding: 4px;
+            border: 0;
+            border-radius: 50%;
+            background: var(--surface-2);
+            cursor: pointer;
+        }
+
+        .ib-orn svg {
+            display: block;
+            width: 52px;
+            height: 52px;
+        }
+
+        .letter.ib-paper {
+            flex: 1;
+            min-width: 0;
+            margin: 0;
+            padding-bottom: 2px;
+            white-space: normal;
+        }
+
+        .ib-from {
+            font-weight: 700;
+            color: #9a3412;
+        }
+
+        .ib-text {
+            white-space: pre-wrap;
+        }
+
+        .ib-lock,
+        .ib-none {
+            color: #8a6d45;
+            font-size: .92rem;
+        }
+
         .xmas-call {
             position: relative;
             z-index: 1;
@@ -3127,6 +3214,7 @@
                 <div class="sky-head"><div><b>${esc(S.owner)}의 트리</b><div class="meta">${meta}</div></div><div style="text-align:right"><span class="mode-tag">${modeTag}</span>${linked() ? `<div class="meta" id="sync-tag" style="margin-top:6px">${Sync.label()}</div>` : ''}</div></div>
                 ${stageHtml}
                 ${pick ? `<div class="pick-bar"><span>✨ 트리에서 달 곳을 눌러 주세요 · 밀면 돌아가요</span><button class="text-btn" data-act="cancel-pick" type="button">취소</button></div>` : ''}
+                ${giftCount ? `<div class="inbox-call"><button class="inbox-btn" data-act="inbox" type="button">💌 받은 편지함 <b>${giftCount}</b></button></div>` : ''}
                 ${xmasReady ? '<div class="xmas-call"><button class="btn btn-festive btn-block glow" data-act="xmas" type="button">🎅 산타가 다녀갔어요! 선물 열어 보기</button></div>' : ''}
             </div>`;
 
@@ -3630,6 +3718,47 @@
             }, reduce ? 50 : 1500);
         }
 
+        // 받은 편지함: 받은 선물을 한 화면에. 25일 전엔 보낸 사람만, 25일부터는 메시지까지
+        const giftsOf = () => [...S.hung, ...S.tray].filter((o) => o.src === 'gift');
+        function openInbox(fetched = false) {
+            const list = giftsOf();
+            const open = unlocked();
+            const left = Clock.daysUntil(S.year, 12, 25);
+            let waiting = false;
+            const items = list.map((o) => {
+                const c = ornDef(o.type);
+                const text = giftMessage(o);
+                const has = Boolean(o.msg || o.hasMsg);
+                let body;
+                if (!has) body = '<span class="ib-none">메시지 없이 장식만 보냈어요 🎁</span>';
+                else if (!open) body = '<span class="ib-lock">🔒 25일에 열려요</span>';
+                else if (text) body = `<div class="ib-text">${esc(text)}</div>`;
+                else { body = '<span class="ib-lock">💌 불러오는 중…</span>'; waiting = true; }
+                return `<li class="ib-item">
+                    <button class="ib-orn" data-act="inbox-orn" data-uid="${esc(o.uid)}" type="button" aria-label="${esc(c?.name || '장식')} 자세히 보기">${ornSvg(o.type, 52)}</button>
+                    <div class="letter ib-paper"><div class="ib-from">From. ${esc(o.from || '익명의 산타')}</div>${body}</div>
+                </li>`;
+            }).join('');
+            const head = !list.length ? '아직 받은 선물이 없어요. 내 트리 링크를 친구에게 보내 보세요.'
+                : open ? `받은 편지 ${list.length}통이에요.` : `받은 편지 ${list.length}통 · 메시지는 12월 25일에 열려요 (D-${left})`;
+            openSheet(`<h2 class="center">💌 받은 편지함</h2><p class="center hint">${head}</p>
+                <ul class="inbox" id="inbox-list">${items}</ul>
+                <div class="btn-row" style="margin-top:12px">
+                    ${open && S.opened && list.length ? '<button class="btn btn-festive" data-act="letters-replay" type="button">💌 다시 넘겨 보기</button>' : ''}
+                    <button class="btn btn-ghost" data-act="sheet-close" type="button">닫기</button>
+                </div>`);
+            // 서버 트리는 25일이 지나야 메시지를 내려 주니, 비어 있으면 한 번 받아 와서 다시 그린다
+            if (waiting && !fetched && linked()) pull().then(() => { if ($('inbox-list')) openInbox(true); });
+        }
+
+        function replayLetters() {
+            closeSheet();
+            letters = giftsOf();
+            letterAt = -1;
+            $('overlay').hidden = false;
+            nextLetter();
+        }
+
         // 크리스마스: 썰매 → 별 점등 → 편지 넘기기 → 카드
         let letters = [];
         let letterAt = 0;
@@ -3638,7 +3767,7 @@
 
         async function startXmas() {
             if (linked()) await pull();   // 서버에 잠겨 있던 메시지를 받아 온다
-            letters = [...S.hung, ...S.tray].filter((o) => o.src === 'gift');
+            letters = giftsOf();
             letterAt = -1;
             const el = $('overlay');
             el.innerHTML = `<svg class="sleigh" viewBox="-20 -16 40 30">${BY_ID.sleigh.raw}<path d="M-12 2c-4 0-6-3-6-3" stroke="#a0612f" stroke-width="1.6" fill="none"/></svg><h2>🎅 산타가 다녀갔어요!</h2>`;
@@ -3845,6 +3974,9 @@
             home() { closeSheet(); $('overlay').hidden = true; if (S) renderTree(); else renderPlant(); },
             'go-plant'() { renderPlant(); },
             'sheet-close': closeSheet,
+            inbox() { openInbox(); },
+            'inbox-orn'(b) { openOrnSheet(b.dataset.uid); },
+            'letters-replay'() { replayLetters(); },
             'overlay-close'() { $('overlay').hidden = true; renderTree(); },
             external() {
                 const url = UI.lastLink || location.href;

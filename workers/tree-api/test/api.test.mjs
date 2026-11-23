@@ -80,7 +80,11 @@ test('트리 만들기·토큰 인증·저장 충돌', async () => {
     assert.equal(stale.status, 409);
     assert.equal(stale.data.tree.rev, 2);
     assert.deepEqual(stale.data.tree.state.waters, ['2026-12-01', '2026-12-02']);
-    const big = await call('PUT', `/trees/${t.id}`, { token: t.token, body: { state: state({ pad: 'x'.repeat(17000) }), rev: 2 } });
+    // 선물 200개(받을 수 있는 최대)를 바구니에 둔 트리도 저장된다
+    const gifts = Array.from({ length: 200 }, (_, i) => ({ uid: `u${String(i).padStart(5, '0')}`, type: 'e.6🐶', src: 'gift', from: '친구이름열자까지다', gid: `g${String(i).padStart(11, '0')}`, sv: 1, hasMsg: true }));
+    const full = await call('PUT', `/trees/${t.id}`, { token: t.token, body: { state: state({ tray: gifts, gifts: gifts.map((g) => g.gid) }), rev: 2 } });
+    assert.equal(full.status, 200);
+    const big = await call('PUT', `/trees/${t.id}`, { token: t.token, body: { state: state({ pad: 'x'.repeat(70000) }), rev: 3 } });
     assert.equal(big.status, 413);
     const dup = await call('POST', '/trees', { body: { id: t.id, owner: '누구', mode: 'solo', year: 2026, state: state() }, now: NOV });
     assert.equal(dup.status, 409);
