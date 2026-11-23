@@ -29,6 +29,24 @@ function isGameBlocked(slug) {
     if (m && isGameBlocked(m[1])) location.replace(`../index.html?closed=${m[1]}`);
 })();
 
+// ── 방문 통계 (Cloudflare Web Analytics) ──────────────────
+// 어떤 게임이 실제로 많이 열리는지 보려고 붙였다. 쿠키를 쓰지 않고 개인을 식별하지 않으며,
+// 페이지 주소별 조회수·유입 경로·국가 정도만 Cloudflare 대시보드(Web Analytics)에 모인다.
+// 메인과 모든 게임 페이지가 이 파일을 불러오므로 여기 한 곳에서만 심는다.
+// 로컬 개발 중에는 통계가 섞이지 않도록 실제 서비스 주소에서만 켠다.
+// 토큰은 대시보드에서 사이트를 추가하면 받는 공개용 값이다 (비밀이 아님). 비워 두면 아무것도 안 한다.
+const CF_ANALYTICS_TOKEN = '333fd96bbc844f4eb0e5c7c7de7be047';
+const CF_ANALYTICS_HOSTS = ['juhee77.github.io'];
+
+(function loadAnalytics() {
+    if (!CF_ANALYTICS_TOKEN || !CF_ANALYTICS_HOSTS.includes(location.hostname)) return;
+    const s = document.createElement('script');
+    s.type = 'module'; // Cloudflare가 주는 공식 코드 조각과 같게 (module은 저절로 defer처럼 동작)
+    s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    s.setAttribute('data-cf-beacon', JSON.stringify({ token: CF_ANALYTICS_TOKEN }));
+    document.head.appendChild(s);
+})();
+
 // 참가자가 입력한 이름·답변·문장을 innerHTML 템플릿에 넣기 전에 이스케이프한다.
 // 이스케이프하지 않으면 이름에 '<' 하나만 들어가도 결과 목록이 통째로 깨진다.
 function escapeHtml(value) {
