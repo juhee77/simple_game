@@ -11,7 +11,7 @@
 
 const KST = 9 * 3600 * 1000;
 const DAY = 24 * 3600 * 1000;
-const MAX_STATE = 16 * 1024;
+const MAX_STATE = 64 * 1024;   // 선물 200개(장식 하나 약 120자)도 들어가게
 const MAX_FOREST = 12;
 const MAX_GIFTS = 200;
 const PAIR_TTL = 7 * DAY;
