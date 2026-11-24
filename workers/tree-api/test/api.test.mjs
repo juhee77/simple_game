@@ -20,7 +20,7 @@ let ipSeq = 0;
 before(async () => {
     dir = mkdtempSync(join(tmpdir(), 'tree-api-'));
     execFileSync(WRANGLER, ['d1', 'migrations', 'apply', 'advent-tree', '--local', '--persist-to', dir], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, CI: '1' } });
-    dev = spawn(WRANGLER, ['dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', dir, '--var', 'ALLOW_DEV:1'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, CI: '1' } });
+    dev = spawn(WRANGLER, ['dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', dir, '--var', 'ALLOW_DEV:1', '--var', 'ALLOWED_ORIGINS:https://juhee77.github.io,http://localhost:*,http://127.0.0.1:*'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, CI: '1' } });
     for (let i = 0; i < 120; i++) {
         try { if ((await fetch(`${BASE}/health`)).ok) return; } catch { /* 아직 안 뜸 */ }
         await new Promise((r) => setTimeout(r, 500));

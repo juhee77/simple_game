@@ -16,6 +16,10 @@ const TTL = 7 * DAY;
 const MAX_MEMBERS = 20;
 const MAX_MESSAGE_BYTES = 16 * 1024;
 const ROOMS_PER_DAY = 30;   // IP당 하루 방 만들기
+// 연결 하나가 보낼 수 있는 메시지 (ping 자동 응답은 세지 않음).
+// 10초에 60개를 넘으면 버리고 한 번 알려 주고, 300개를 넘으면 도배로 보고 연결을 끊는다 (1008).
+// 송년회 키트·네온 고스트는 한 사람이 10초에 몇 개 정도만 보낸다.
+const RATE = { windowMs: 10_000, soft: 60, hard: 300 };
 const ID_RE = /^[A-Za-z0-9_-]{22}$/;
 const GAME_RE = /^[a-z0-9-]{1,40}$/;
 const CLOSE = { REPLACED: [4000, 'replaced'], LEFT: [4001, 'left'], UNAUTHORIZED: [4003, 'unauthorized'], ROOM_CLOSED: [4004, 'room_closed'] };
@@ -236,7 +240,31 @@ export class Room extends DurableObject {
     }
 
     // ── WebSocket 메시지 ──
+    // 도배 막기: 소켓마다 10초 창으로 센다. 잠들었다 깨어나도 남도록 첨부 정보(attachment)에 둔다.
+    overLimit(ws) {
+        const att = ws.deserializeAttachment() || {};
+        const now = Date.now();
+        if (!att.w || now - att.w >= RATE.windowMs) { att.w = now; att.n = 0; att.warned = false; }
+        att.n += 1;
+        if (att.n > RATE.hard) {
+            ws.serializeAttachment(att);
+            this.close(ws, [1008, 'rate_limited']);
+            return true;
+        }
+        if (att.n > RATE.soft) {
+            if (!att.warned) {
+                att.warned = true;
+                this.send(ws, { type: 'error', message: '메시지를 너무 빨리 보내고 있어요. 잠시 뒤에 다시 보내 주세요.' });
+            }
+            ws.serializeAttachment(att);
+            return true;
+        }
+        ws.serializeAttachment(att);
+        return false;
+    }
+
     async webSocketMessage(ws, raw) {
+        if (this.overLimit(ws)) return;
         if (typeof raw !== 'string') { this.send(ws, { type: 'error', message: 'JSON 형식이 아니에요.' }); return; }
         if (new TextEncoder().encode(raw).length > MAX_MESSAGE_BYTES) {
             this.send(ws, { type: 'error', message: '메시지가 너무 커요. (16KB까지)' });

@@ -4,8 +4,8 @@
   "type": "module",
   "description": "방(room) 서버 (Cloudflare Workers + Durable Objects)",
   "scripts": {
-    "dev": "wrangler dev --port 8080 --var ALLOW_DEV:1",
-    "test": "node --test test/*.test.mjs",
+    "dev": "wrangler dev --port 8080 --var ALLOW_DEV:1 --var 'ALLOWED_ORIGINS:https://juhee77.github.io,http://localhost:*,http://127.0.0.1:*'",
+    "test": "node --test --test-timeout=60000 test/*.test.mjs",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {

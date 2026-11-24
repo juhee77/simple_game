@@ -14,7 +14,8 @@
 - 방 ID 128비트(base64url 22자), 7일 뒤 자동으로 사라짐 (알람)
 - **최대 20명**, 닉네임 1~20자(방 안에서 중복 불가), 방 이름 40자, 게임 이름 `^[a-z0-9-]{1,40}$`, 메시지 16KB
 - 방 만들기는 IP 해시 기준 하루 30개
-- 허용 출처: `https://juhee77.github.io`, `http://localhost:*`, `http://127.0.0.1:*` (REST·WebSocket 모두)
+- 도배 막기: 연결 하나당 10초에 60개까지. 넘으면 버리고 한 번 `error`로 알리고, 300개를 넘으면 연결을 끊어요(1008). ping 자동 응답은 세지 않아요.
+- 허용 출처: 실제 서버는 `https://juhee77.github.io`만 받아요 (REST·WebSocket 모두). `npm run dev`와 테스트는 `localhost`·`127.0.0.1`도 받도록 `--var ALLOWED_ORIGINS`를 더해요.
 
 ## REST API
 오류는 `{"status":409,"detail":"방이 꽉 찼어요. (최대 20명)"}` 형식이고, `detail`은 화면에 그대로 띄울 수 있어요.

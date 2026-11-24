@@ -1,0 +1,46 @@
+name: Worker tests
+
+# Cloudflare Worker(트리 서버·방 서버)를 바꾸는 PR마다 로컬 wrangler로 API 테스트를 돌린다.
+# 계정·비밀 키 없이 돈다 (wrangler dev가 임시 D1·Durable Object 저장소를 쓴다).
+on:
+  pull_request:
+    paths: [ 'workers/**', '.github/workflows/workers-test.yml' ]
+  push:
+    branches: [ main ]
+    paths: [ 'workers/**', '.github/workflows/workers-test.yml' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        worker: [ tree-api, room-api ]
+    defaults:
+      run:
+        working-directory: workers/${{ matrix.worker }}
+    env:
+      CI: '1'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 테스트가 Node 내장 WebSocket을 쓰므로 22 이상
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: workers/${{ matrix.worker }}/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
