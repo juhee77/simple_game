@@ -21,7 +21,7 @@ let ipSeq = 0;
 
 before(async () => {
     dir = mkdtempSync(pathJoin(tmpdir(), 'room-api-'));
-    dev = spawn(WRANGLER, ['dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', dir, '--var', 'ALLOW_DEV:1', '--var', 'ALLOWED_ORIGINS:https://juhee77.github.io,http://localhost:*,http://127.0.0.1:*'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, CI: '1' } });
+    dev = spawn(WRANGLER, ['dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', dir, '--var', 'ALLOW_DEV:1', '--var', 'HOST_GRACE_MS:1500', '--var', 'ALLOWED_ORIGINS:https://juhee77.github.io,http://localhost:*,http://127.0.0.1:*'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, CI: '1' } });
     for (let i = 0; i < 120; i++) {
         try { if ((await fetch(`${BASE}/health`)).ok) return; } catch { /* 아직 안 뜸 */ }
         await new Promise((r) => setTimeout(r, 500));
@@ -311,4 +311,103 @@ test('도배 막기: 10초에 60개 넘으면 버리고 알림, 300개 넘으면
     assert.ok(await P.none('error', 300), 'ping은 제한에 걸리지 않음');
     P.ws.close();
     A.ws.close();   // 열린 연결이 남으면 테스트 프로세스가 끝나지 않는다
+});
+
+test('비밀 보관함(vault): 방장만 쓰고 방장 welcome에만 온다', async () => {
+    const host = await create('방장');
+    const a = await join(host.room.id, '민수');
+    const { c: H, welcome: hw } = await authed(host.room.id, host.token);
+    assert.equal(hw.vault, null);
+    assert.equal(hw.hostOfflineMs, null);
+    const { c: A, welcome: aw } = await authed(host.room.id, a.token);
+    assert.ok(!('vault' in aw), '참가자 welcome에는 vault가 없다');
+    A.send({ type: 'vault', data: { x: 1 } });
+    assert.equal((await A.next('error')).message, '방장만 할 수 있어요.');
+    // 16KB를 넘어도 vault는 64KB까지 받는다 (다른 메시지는 16KB)
+    const big = 'ㄱ'.repeat(10_000);   // 30KB
+    H.send({ type: 'vault', data: { answers: big } });
+    H.send({ type: 'broadcast', data: { big } });
+    assert.match((await H.next('error')).message, /너무 커요/);
+    H.ws.close();
+    await H.closed;
+    const { c: H2, welcome: hw2 } = await authed(host.room.id, host.token);
+    assert.equal(hw2.vault.answers.length, 10_000);
+    H2.send({ type: 'vault', data: 'ㄱ'.repeat(30_000) });   // 90KB
+    assert.match((await H2.next('error')).message, /너무 커요/);
+    H2.ws.close();
+    A.ws.close();
+});
+
+test('방장 넘기기(transfer): 접속한 참가자에게, 새 방장만 vault를 받는다', async () => {
+    const host = await create('방장');
+    const a = await join(host.room.id, '민수');
+    const b = await join(host.room.id, '현우');
+    const { c: H } = await authed(host.room.id, host.token);
+    const { c: A } = await authed(host.room.id, a.token);
+    H.send({ type: 'vault', data: { secret: 42 } });
+    H.send({ type: 'transfer', to: b.you.id });   // 현우는 아직 안 붙음
+    assert.equal((await H.next('error')).message, '상대가 접속해 있지 않아요.');
+    A.send({ type: 'transfer', to: a.you.id });
+    assert.equal((await A.next('error')).message, '방장만 할 수 있어요.');
+
+    H.send({ type: 'transfer', to: a.you.id });
+    const toOld = await H.next('host_changed');
+    const toNew = await A.next('host_changed');
+    assert.deepEqual([toOld.from, toOld.to, toOld.reason], [host.you.id, a.you.id, 'transfer']);
+    assert.ok(!('vault' in toOld), '예전 방장은 vault를 안 받는다');
+    assert.deepEqual(toNew.vault, { secret: 42 });
+
+    // 이제 예전 방장은 state를 못 바꾸고 나갈 수 있다. 새 방장은 state를 바꾸고 방을 닫을 수 있다.
+    H.send({ type: 'state', state: { p: 1 } });
+    assert.equal((await H.next('error')).message, '방장만 공유 상태를 바꿀 수 있어요.');
+    A.send({ type: 'state', state: { p: 2 } });
+    assert.deepEqual((await H.next('state')).state, { p: 2 });
+    const info = await call('GET', `/api/rooms/${host.room.id}`);
+    assert.deepEqual(info.data.members.filter((m) => m.host).map((m) => m.id), [a.you.id]);
+    assert.equal((await call('DELETE', `/api/rooms/${host.room.id}`, { token: host.token })).status, 403);
+    assert.equal((await call('DELETE', `/api/rooms/${host.room.id}/members/me`, { token: host.token })).status, 204);
+    assert.equal((await H.closed).code, 4001);
+    assert.equal((await call('DELETE', `/api/rooms/${host.room.id}`, { token: a.token })).status, 204);
+    assert.equal((await A.closed).code, 4004);
+});
+
+test('방장 이어받기(claim_host): 방장이 끊긴 지 HOST_GRACE_MS가 지나야', async () => {
+    const host = await create('방장');
+    const a = await join(host.room.id, '민수');
+    const b = await join(host.room.id, '현우');
+    const { c: H } = await authed(host.room.id, host.token);
+    const { c: A } = await authed(host.room.id, a.token);
+    const { c: B } = await authed(host.room.id, b.token);
+    H.send({ type: 'vault', data: { votes: [1, 2] } });
+    A.send({ type: 'claim_host' });
+    assert.equal((await A.next('error')).message, '방장이 아직 접속해 있어요.');
+
+    H.ws.close();
+    await H.closed;
+    let off = await A.next('presence');
+    while (off.memberId !== host.you.id || off.online) off = await A.next('presence');
+    A.send({ type: 'claim_host' });
+    assert.match((await A.next('error')).message, /기다리는 중이에요/);
+    // 늦게 붙은 사람도 welcome으로 방장이 끊긴 걸 안다
+    const { c: B2, welcome: bw } = await authed(host.room.id, b.token);
+    assert.equal(bw.hostGraceMs, 1500);
+    assert.ok(bw.hostOfflineMs >= 0 && bw.hostOfflineMs < 1500, String(bw.hostOfflineMs));
+    await B.closed;
+
+    await new Promise((r) => setTimeout(r, 1600));
+    A.send({ type: 'claim_host' });
+    B2.send({ type: 'claim_host' });   // 동시에 눌러도 한 사람만
+    const got = await A.next('host_changed');
+    assert.deepEqual([got.from, got.to, got.reason, got.vault], [host.you.id, a.you.id, 'claim', { votes: [1, 2] }]);
+    const seen = await B2.next('host_changed');
+    assert.equal(seen.to, a.you.id);
+    assert.ok(!('vault' in seen));
+    assert.equal((await B2.next('error')).message, '방장이 아직 접속해 있어요.');
+
+    // 예전 방장이 돌아오면 참가자로 붙는다 (vault 없음)
+    const { c: H2, welcome: hw } = await authed(host.room.id, host.token);
+    assert.equal(hw.you.host, false);
+    assert.ok(!('vault' in hw));
+    assert.equal(hw.hostOfflineMs, null);
+    H2.ws.close(); A.ws.close(); B2.ws.close();
 });

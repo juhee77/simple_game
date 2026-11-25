@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
     <script src="../scripts/game-common.js?v=a92208f4"></script>
-    <script src="../scripts/room-client.js?v=7a81fa6a"></script>
+    <script src="../scripts/room-client.js?v=96b5c02a"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
@@ -484,6 +484,72 @@
         .room-foot {
             margin-top: 10px;
             text-align: center;
+        }
+
+        /* 진행자 연결이 끊겼을 때 참가자 화면 아래에 뜨는 막대 */
+        .host-bar {
+            position: fixed;
+            left: 50%;
+            /* 오른쪽 아래 ? 도움말 버튼 위로 */
+            bottom: calc(max(12px, env(safe-area-inset-bottom)) + 60px);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: min(520px, calc(100% - 24px));
+            padding: 14px 16px;
+            border-radius: var(--r-lg);
+            background: #1d2340;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+            transform: translateX(-50%);
+        }
+
+        .host-bar[hidden] {
+            display: none;
+        }
+
+        /* 막대가 떠 있는 동안 아래쪽 버튼(제출 등)이 가려지지 않게 */
+        body.host-lost {
+            padding-bottom: 260px;
+        }
+
+        .host-bar p {
+            margin: 0;
+            font-size: .92rem;
+            line-height: 1.45;
+            word-break: keep-all;
+        }
+
+        .host-bar .btn:disabled {
+            opacity: .5;
+        }
+
+        /* 진행 넘기기: 받을 사람 고르기 */
+        .pick-dlg {
+            /* 공용 스타일의 margin 초기화 때문에 가운데로 직접 */
+            margin: auto;
+            width: min(420px, calc(100% - 32px));
+            padding: 20px;
+            border: none;
+            border-radius: var(--r-lg);
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .pick-dlg::backdrop {
+            background: rgba(0, 0, 0, .5);
+        }
+
+        .pick-dlg h2 {
+            margin: 0 0 6px;
+            font-size: 1.15rem;
+        }
+
+        .pick-list {
+            display: grid;
+            gap: 8px;
+            margin: 14px 0;
         }
 
         /* ── 무대 ── */
@@ -1078,7 +1144,7 @@
                 <p class="hint" id="lobby-hint" style="margin:12px 0 0"></p>
             </div>
             <button class="btn btn-festive" id="ol-start" type="button" style="width:100%" hidden>✍️ 입력 시작</button>
-            <div class="room-foot"><button class="text-btn" data-ol-leave type="button"></button></div>
+            <div class="room-foot"><button class="text-btn" data-ol-transfer type="button" hidden>👑 진행 넘기기</button> <button class="text-btn" data-ol-leave type="button"></button></div>
         </section>
 
         <!-- 방: 입력 -->
@@ -1096,7 +1162,7 @@
             </div>
             <div class="phone-card" id="input-done" hidden></div>
             <button class="btn btn-primary" id="input-close" type="button" style="width:100%;margin-top:12px" hidden>🎬 마감하고 발표 시작</button>
-            <div class="room-foot"><button class="text-btn" data-ol-leave type="button"></button></div>
+            <div class="room-foot"><button class="text-btn" data-ol-transfer type="button" hidden>👑 진행 넘기기</button> <button class="text-btn" data-ol-leave type="button"></button></div>
         </section>
 
         <!-- 발표 무대 (진행자) -->
@@ -1117,6 +1183,7 @@
             </div>
             <div class="stage-tools">
                 <button class="text-btn" id="btn-full" type="button">⛶ 크게 보기</button>
+                <button class="text-btn" id="btn-transfer" type="button" hidden>👑 진행 넘기기</button>
                 <button class="text-btn" id="btn-quit" type="button"></button>
             </div>
         </section>
@@ -1128,6 +1195,20 @@
             <div class="room-foot"><button class="text-btn" data-ol-leave type="button"></button></div>
         </section>
     </div>
+
+    <!-- 진행자 연결이 오래 끊기면: 참가자가 이어서 진행 -->
+    <div class="host-bar" id="host-bar" role="status" hidden>
+        <p id="host-bar-text"></p>
+        <button class="btn btn-festive" id="host-bar-go" type="button">👑 내가 이어서 진행하기</button>
+    </div>
+
+    <!-- 진행 넘기기 -->
+    <dialog class="pick-dlg" id="transfer-dlg">
+        <h2>👑 누구에게 진행을 넘길까요?</h2>
+        <p class="hint" style="margin:0">지금까지 모은 답과 투표가 그 사람 폰으로 넘어가요. 접속해 있는 사람만 고를 수 있어요.</p>
+        <div class="pick-list" id="transfer-list"></div>
+        <button class="btn btn-ghost" id="transfer-cancel" type="button" style="width:100%">취소</button>
+    </dialog>
 
     <script>
         // ════════════════════════════════════════════════════════════
@@ -1615,7 +1696,7 @@
                     ${view.hasGuess ? `<div class="end-card"><h3>🔍 눈치왕</h3>${ranking.length ? `<ol>${ranking.map((r, i) => `<li>${medals[i]} <b>${esc(r.name)}</b> ${r.score}개</li>`).join('')}</ol>` : '<p>아무도 못 맞혔어요 🙈</p>'}</div>` : ''}
                     ${view.keywords.length ? `<div class="end-card"><h3>📈 올해의 검색어</h3><ol>${view.keywords.map((k) => `<li><b>${esc(k.text)}</b>${k.count > 1 ? ` · ${k.count}명` : ''}</li>`).join('')}</ol></div>` : ''}
                 </div>
-                ${opts.host ? `<div class="btn-row" style="margin-top:18px"><button class="btn btn-festive" data-act="image" type="button">🖼️ 결과 이미지 저장</button></div>` : ''}
+                ${opts.host ? `<div class="btn-row" style="margin-top:18px"><button class="btn btn-festive" data-act="image" type="button">🖼️ 결과 이미지 저장</button>${opts.again ? '<button class="btn btn-ghost" data-act="again" type="button">🔁 한 판 더 하기</button>' : ''}</div>` : ''}
             </div>`;
         }
 
@@ -1706,6 +1787,8 @@
             let data = null;
             let commit = () => {};
             let quit = () => {};
+            let again = null;
+            let transfer = null;
             let lastSig = '';
             let timerId = null;
 
@@ -1714,7 +1797,10 @@
                 data = d;
                 commit = opts.commit;
                 quit = opts.quit;
+                again = opts.again || null;
+                transfer = opts.transfer || null;
                 $('btn-quit').textContent = opts.quitLabel;
+                $('btn-transfer').hidden = !transfer;
                 lastSig = '';
                 stopTimer();
             }
@@ -1725,7 +1811,7 @@
                 const sig = `${view.at}:${view.sub}`;
                 const stage = $('stage');
                 stage.classList.toggle('calm', sig === lastSig);   // 같은 화면을 다시 그릴 때는 등장 효과를 생략
-                stage.innerHTML = stageHtml(view, data.players, { online: data.mode === 'online', host: true });
+                stage.innerHTML = stageHtml(view, data.players, { online: data.mode === 'online', host: true, again: Boolean(again) });
                 lastSig = sig;
                 $('step-count').textContent = `${view.at + 1} / ${view.total}`;
                 const label = nextLabel(view);
@@ -1774,6 +1860,7 @@
                 $('btn-prev').addEventListener('click', () => go(-1));
                 $('timer-stop').addEventListener('click', stopTimer);
                 $('btn-quit').addEventListener('click', () => quit());
+                $('btn-transfer').addEventListener('click', () => transfer?.());
                 $('btn-full').addEventListener('click', () => {
                     const el = $('stage-wrap');
                     if (document.fullscreenElement) document.exitFullscreen?.();
@@ -1784,6 +1871,7 @@
                     const act = e.target.closest('[data-act]')?.dataset.act;
                     if (act === 'timer') startTimer();
                     if (act === 'image') saveResultImage(makeView(data), data.players);
+                    if (act === 'again') again?.();
                     const mark = e.target.closest('[data-mark]')?.dataset.mark;
                     if (mark && data.mode === 'offline') {
                         const step = data.plan[data.at];
@@ -2024,7 +2112,7 @@
 
             function render() {
                 if (data.phase === 'show') {
-                    Stage.bind(data, { commit: () => { save(); Stage.render(); }, quit, quitLabel: '처음으로' });
+                    Stage.bind(data, { commit: () => { save(); Stage.render(); }, quit, again, quitLabel: '처음으로' });
                     show('v-stage');
                     Stage.render();
                     return;
@@ -2082,6 +2170,15 @@
                 render();
             }
 
+            // 같은 사람·같은 상·같은 라운드로 입력부터 다시
+            function again() {
+                if (!confirm('같은 사람, 같은 상으로 한 판 더 할까요?\n지금 결과는 사라져요. 남기고 싶으면 먼저 결과 이미지를 저장해 주세요.')) return;
+                data = { ...data, sid: rid(), phase: 'input', answers: {}, skipped: [], plan: null, at: 0, sub: '', guesses: {}, marks: {} };
+                covered = true;
+                save();
+                render();
+            }
+
             function quit() {
                 if (!confirm('처음 화면으로 갈까요? 지금 송년회 기록은 지워져요.')) return;
                 drop();
@@ -2123,6 +2220,12 @@
             let qrFor = null;
             let formFor = '';
             let buzzedFor = '';
+            // 방장 넘기기 (서버가 지원할 때만: welcome에 hostGraceMs가 있음)
+            let canHandover = false;
+            let graceMs = 60_000;
+            let hostOffAt = null;  // 진행자 연결이 끊긴 시각 (이 기기 시계 기준)
+            let barTimer = null;
+            let claiming = false;
 
             const available = () => typeof RoomClient !== 'undefined' && RoomClient.isAvailable();
             const isHost = () => Boolean(me?.host);
@@ -2130,6 +2233,10 @@
             const players = () => state?.players || [];
             const isPlayer = () => players().some((p) => p.id === me?.id);
             const ctxForMe = () => ({ players: players(), awards: state.awards, rounds: state.rounds, self: me.id });
+            const gk = (key) => `${state?.sid}:${key}`;   // 내 선택은 판(sid)마다 따로 (한 판 더 하면 문제 키가 겹친다)
+            const nameOf = (id) => members.find((m) => m.id === id)?.nickname || '누군가';
+            // 방장 기록은 이 기기 저장본과 서버 보관함(vault) 중 더 최근 것(rev가 큰 것)을 쓴다
+            const newest = (a, b) => (!a ? b : !b ? a : (a.rev || 0) >= (b.rev || 0) ? a : b);
 
             // ── 방 만들기 · 들어가기 ──
             async function host(cfg) {
@@ -2186,7 +2293,7 @@
                 formFor = '';
                 status('연결하는 중…');
                 show('v-lobby');
-                conn = RoomClient.connect(roomId, { onWelcome, onState, onMessage, onMembers, onStatus, onError: flash });
+                conn = RoomClient.connect(roomId, { onWelcome, onState, onMessage, onMembers, onStatus, onHostChanged, onError: (text) => { claiming = false; flash(text); renderHostBar(); } });
             }
 
             // ── 서버에서 온 것 ──
@@ -2194,12 +2301,53 @@
                 me = msg.you;
                 members = msg.room.members;
                 state = msg.state;
+                canHandover = typeof msg.hostGraceMs === 'number';
+                if (canHandover) graceMs = msg.hostGraceMs;
+                hostOffAt = msg.hostOfflineMs == null ? null : Date.now() - msg.hostOfflineMs;
                 if (isHost()) {
-                    if (!data) data = Store.get(KEY.host + roomId);
+                    data = newest(msg.vault, data || Store.get(KEY.host + roomId));
                     // 끊긴 동안 바뀐 것까지, 또는 서버가 다시 떠서 비어 버린 공유 상태를 방장 기록으로 맞춘다
-                    if (data) { publish(); return; }
+                    if (data) { adopt(); publish(); return; }
+                } else if (data && data.hostId === me.id) {
+                    // 끊긴 동안 다른 사람이 진행을 이어받았다. 기록은 저장해 둔 채 참가자로 돌아간다.
+                    data = null;
+                    flash(`👑 ${nameOf(hostId())}님이 진행을 이어받았어요. 이제 참가자로 함께해요.`);
                 }
                 resend();
+                render();
+            }
+
+            // 내가 방장이 된 기록: 진행자 표시를 나로 바꾼다. 대기실에서 이어받았으면 나도 참가자로 친다.
+            function adopt() {
+                if (data.hostId === me.id) return;
+                data.hostId = me.id;
+                if (data.phase === 'lobby') data.hostPlays = true;
+            }
+
+            function onHostChanged(msg) {
+                members = members.map((m) => ({ ...m, host: m.id === msg.to }));
+                hostOffAt = null;
+                claiming = false;
+                if (!me) return;
+                me = { ...me, host: msg.to === me.id };
+                $('transfer-dlg').open && $('transfer-dlg').close();
+                if (isHost()) {
+                    data = newest(msg.vault, Store.get(KEY.host + roomId));
+                    if (!data && state) {
+                        // 기록을 못 받았으면 같은 상·라운드로 대기실부터 다시
+                        data = {
+                            sid: rid(), mode: 'online', phase: 'lobby', hostId: me.id, hostPlays: true,
+                            players: [], awards: state.awards, rounds: state.rounds,
+                            answers: {}, plan: null, at: 0, sub: '', guesses: {}, marks: {}
+                        };
+                        flash('이전 진행 기록을 받지 못해서 대기실부터 다시 시작해요.');
+                    } else flash('👑 이제 내가 진행자예요. 이어서 진행해 주세요!');
+                    if (data) { adopt(); publish(); return; }
+                } else {
+                    if (msg.from === me.id) { data = null; flash(`👑 ${nameOf(msg.to)}님에게 진행을 넘겼어요.`); }
+                    else flash(`👑 ${nameOf(msg.to)}님이 진행을 이어받았어요.`);
+                    resend();   // 예전 진행자가 못 받았을 답을 새 진행자에게
+                }
                 render();
             }
 
@@ -2214,6 +2362,7 @@
                 if (msg.type === 'member_left') members = members.filter((m) => m.id !== msg.memberId);
                 if (msg.type === 'presence') {
                     members = members.map((m) => (m.id === msg.memberId ? { ...m, online: msg.online } : m));
+                    if (msg.memberId === hostId()) hostOffAt = msg.online ? null : Date.now();
                     if (msg.online && msg.memberId === hostId()) resend();   // 방장이 돌아오면 못 받았을 답을 다시 보낸다
                 }
                 render();
@@ -2256,7 +2405,9 @@
             function onStatus(s, reason) {
                 if (s !== 'ended') { status(STATUS[s] ?? ''); return; }
                 if (reason !== 'replaced') [KEY.host, KEY.state, KEY.mine, KEY.guess].forEach((k) => Store.del(k + roomId));
-                conn = null; me = null; members = []; state = null; data = null; mine = null; guesses = {}; qrFor = null; roomId = null;
+                conn = null; me = null; members = []; state = null; data = null; mine = null; guesses = {}; qrFor = null; roomId = null; hostOffAt = null;
+                renderHostBar();
+                $('transfer-dlg').open && $('transfer-dlg').close();
                 history.replaceState(null, '', location.pathname);
                 show('v-home');
                 Home.refresh();
@@ -2274,14 +2425,17 @@
             }
 
             function publish() {
+                data.rev = (data.rev || 0) + 1;
                 Store.set(KEY.host + roomId, data);
                 state = publicState();
+                if (canHandover) conn?.setVault(data);   // 진행자가 바뀌어도 이어 갈 수 있게 서버 보관함에도
                 conn?.setState(state);
                 Store.set(KEY.state + roomId, state);
                 render();
             }
 
             function startInput() {
+                if (!data) return;
                 const list = members
                     .filter((m) => m.online && (m.id !== data.hostId || data.hostPlays))
                     .map((m) => ({ id: m.id, name: m.nickname }));
@@ -2330,7 +2484,7 @@
             function pick(guess) {
                 const v = state?.view;
                 if (!v || v.t !== 'guess' || v.sub !== 'ask') return;
-                guesses[v.key] = guess;
+                guesses[gk(v.key)] = guess;
                 Store.set(KEY.guess + roomId, guesses);
                 conn?.sendTo(hostId(), { kind: 'guess', sid: state.sid, key: v.key, guess });
                 buzz(15);
@@ -2346,9 +2500,58 @@
                     conn.sendTo(host, { kind: 'answers', sid: state.sid, answers: mine.answers });
                 }
                 const v = state.view;
-                if (state.phase === 'show' && v?.t === 'guess' && v.sub === 'ask' && guesses[v.key] && !v.answered.includes(me.id)) {
-                    conn.sendTo(host, { kind: 'guess', sid: state.sid, key: v.key, guess: guesses[v.key] });
+                if (state.phase === 'show' && v?.t === 'guess' && v.sub === 'ask' && guesses[gk(v.key)] && !v.answered.includes(me.id)) {
+                    conn.sendTo(host, { kind: 'guess', sid: state.sid, key: v.key, guess: guesses[gk(v.key)] });
                 }
+            }
+
+            // ── 진행 넘기기 · 이어받기 · 한 판 더 ──
+            function openTransfer() {
+                if (!isHost() || !canHandover) return;
+                const list = members.filter((m) => m.online && m.id !== me.id);
+                if (!list.length) { flash('넘겨받을 사람이 접속해 있지 않아요.'); return; }
+                $('transfer-list').innerHTML = list.map((m) => `<button class="btn btn-ghost" data-to="${esc(m.id)}" type="button">${esc(m.nickname)}</button>`).join('');
+                const dlg = $('transfer-dlg');
+                if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+            }
+
+            function transferTo(id) {
+                $('transfer-dlg').close?.();
+                if (!isHost() || !data) return;
+                conn?.setVault(data);          // 가장 최근 기록을 먼저 보관함에 (같은 연결이라 순서대로 도착한다)
+                if (!conn?.transferHost(id)) flash('연결이 끊겨 있어요. 다시 연결되면 눌러 주세요.');
+            }
+
+            function claim() {
+                if (isHost() || claiming) return;
+                if (!confirm('진행을 이어받을까요?\n지금까지 모은 답과 투표가 내 폰으로 넘어와요. 진행자는 정답을 미리 보게 돼서 맞히기에서는 빠져요.')) return;
+                claiming = conn?.claimHost() || false;
+                if (!claiming) flash('연결이 끊겨 있어요. 다시 연결되면 눌러 주세요.');
+                renderHostBar();
+            }
+
+            function again() {
+                if (!isHost() || !data) return;
+                if (!confirm('같은 방, 같은 상으로 한 판 더 할까요?\n지금 결과는 사라져요. 남기고 싶으면 먼저 결과 이미지를 저장해 주세요.')) return;
+                data = { ...data, sid: rid(), phase: 'lobby', players: [], answers: {}, plan: null, at: 0, sub: '', guesses: {}, marks: {} };
+                formFor = '';
+                publish();
+            }
+
+            // 진행자가 끊기면 참가자 화면 아래에 막대를 띄우고, 기다리는 시간이 지나면 이어받기 버튼을 켠다
+            function renderHostBar() {
+                const bar = $('host-bar');
+                const on = Boolean(canHandover && me && !isHost() && hostId() && hostOffAt != null);
+                bar.hidden = !on;
+                document.body.classList.toggle('host-lost', on);
+                if (!on) { clearInterval(barTimer); barTimer = null; return; }
+                const left = Math.ceil((hostOffAt + graceMs - Date.now()) / 1000);
+                $('host-bar-text').textContent = left > 0
+                    ? `📡 진행자(${nameOf(hostId())}) 연결이 끊겼어요. ${left}초 안에 안 돌아오면 누구든 이어서 진행할 수 있어요.`
+                    : `📡 진행자(${nameOf(hostId())}) 연결이 끊겼어요. 누구든 이어서 진행할 수 있어요.`;
+                $('host-bar-go').disabled = left > 0 || claiming;
+                $('host-bar-go').textContent = claiming ? '이어받는 중…' : '👑 내가 이어서 진행하기';
+                if (!barTimer) barTimer = setInterval(renderHostBar, 1000);
             }
 
             async function leave() {
@@ -2370,11 +2573,13 @@
             function render() {
                 if (!me) return;
                 document.querySelectorAll('[data-ol-leave]').forEach((b) => { b.textContent = isHost() ? '방 닫기' : '방 나가기'; });
+                document.querySelectorAll('[data-ol-transfer]').forEach((b) => { b.hidden = !(isHost() && canHandover); });
+                renderHostBar();
                 const phase = state?.phase || 'lobby';
                 if (phase === 'lobby') return renderLobby();
                 if (phase === 'input') return renderInput();
                 if (isHost()) {
-                    Stage.bind(data, { commit: publish, quit: leave, quitLabel: '방 닫기' });
+                    Stage.bind(data, { commit: publish, quit: leave, again, transfer: canHandover ? openTransfer : null, quitLabel: '방 닫기' });
                     show('v-stage');
                     Stage.render();
                     return;
@@ -2480,7 +2685,7 @@
                         if (!isPlayer()) h += '<p style="margin-top:14px">👀 구경 중이에요</p>';
                         else if (isMine) h += '<p style="margin-top:14px">🤫 이건 내 거예요!<br>모른 척 표정 관리 해 주세요.</p>';
                         else {
-                            const chosen = guesses[v.key];
+                            const chosen = guesses[gk(v.key)];
                             h += `<p style="margin-top:14px">누구일까요? ${chosen ? '(바꿀 수 있어요)' : ''}</p><div class="options">${ps
                                 .filter((p) => p.id !== me.id)
                                 .map((p) => `<button type="button" class="opt" data-guess="${esc(p.id)}" aria-pressed="${chosen === p.id}">${esc(p.name)}</button>`)
@@ -2490,7 +2695,7 @@
                         h += `<p style="margin-top:14px">정답은</p><div class="gold">${esc(name(v.answer))}</div>`;
                         if (isMine) h += '<p style="margin-top:8px">내 거였어요! 😎</p>';
                         else if (isPlayer()) {
-                            const chosen = guesses[v.key];
+                            const chosen = guesses[gk(v.key)];
                             h += v.correct.includes(me.id)
                                 ? '<p class="result-good" style="margin-top:8px">🎯 맞혔어요! +1</p>'
                                 : `<p style="margin-top:8px">${chosen ? `아쉬워요! (내 선택: ${esc(name(chosen))})` : '이번엔 못 골랐어요'}</p>`;
@@ -2502,7 +2707,8 @@
                     h = `<div class="big">🎊</div><h2>${YEAR} 송년회 끝!</h2>
                         ${won.length ? `<p>🏆 내가 받은 상</p><div class="gold" style="font-size:1.2rem">${won.map(esc).join('<br>')}</div>` : ''}
                         ${v.hasGuess && isPlayer() ? `<p style="margin-top:12px">🔍 내가 맞힌 문제: <b>${score}개</b></p>` : ''}
-                        <p style="margin-top:12px">${YEAR + 1}년에도 잘 부탁해요!</p>`;
+                        <p style="margin-top:12px">${YEAR + 1}년에도 잘 부탁해요!</p>
+                        <p style="margin-top:12px;font-size:.85rem">진행자가 🔁 한 판 더 하기를 누르면 이 방에서 바로 다시 시작해요.</p>`;
                 }
                 $('phone-body').innerHTML = `<div class="phone-card">${h}</div>`;
             }
@@ -2528,6 +2734,13 @@
                     if (g) pick(g);
                 });
                 document.querySelectorAll('[data-ol-leave]').forEach((b) => b.addEventListener('click', leave));
+                document.querySelectorAll('[data-ol-transfer]').forEach((b) => b.addEventListener('click', openTransfer));
+                $('transfer-list').addEventListener('click', (e) => {
+                    const id = e.target.closest('[data-to]')?.dataset.to;
+                    if (id) transferTo(id);
+                });
+                $('transfer-cancel').addEventListener('click', () => $('transfer-dlg').close?.());
+                $('host-bar-go').addEventListener('click', claim);
                 $('ol-copy').addEventListener('click', async () => {
                     const url = RoomClient.shareUrl(roomId);
                     try { await navigator.clipboard.writeText(url); flash('링크를 복사했어요. 단톡방에 붙여 넣어 주세요.'); } catch { prompt('이 링크를 복사해 주세요', url); }
@@ -2612,7 +2825,9 @@
  "tips": [
   "각자 폰으로 하면 맞히기 점수가 자동으로 계산돼요. 진행자는 답을 다 보니 맞히기에서 빠져요.",
   "폰 한 대로 하면 정답 공개 뒤 맞힌 사람을 눌러 눈치왕 점수를 줄 수 있어요.",
-  "입력한 답은 진행하는 기기에만 저장되고, 새로고침해도 이어서 할 수 있어요."
+  "입력한 답은 진행하는 기기에만 저장되고, 새로고침해도 이어서 할 수 있어요.",
+  "각자 폰으로 할 때 진행자 폰이 꺼져도 괜찮아요. 1분이 지나면 다른 사람이 👑 이어서 진행할 수 있고, 진행자가 직접 👑 진행 넘기기로 넘길 수도 있어요.",
+  "끝나면 🔁 한 판 더 하기로 같은 사람·같은 상으로 다시 할 수 있어요."
  ],
  "players": "3~20인",
  "time": "약 30~60분"
