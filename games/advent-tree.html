@@ -343,19 +343,130 @@
             line-height: 1.5;
         }
 
-        /* ── 밤하늘 무대 ── */
+        /* ── 무대: 아늑한 거실 (벽지 + 트리 불빛) ── */
         .sky {
+            --sky-muted: #e9d3bf;
             position: relative;
             overflow: hidden;
             padding: 14px 12px 10px;
             border-radius: var(--r-lg);
             background:
-                radial-gradient(circle at 20% 15%, rgba(255, 255, 255, .08), transparent 35%),
-                linear-gradient(180deg, var(--night-1), var(--night-2));
-            color: var(--sky-text);
+                radial-gradient(ellipse 70% 45% at 50% 62%, rgba(255, 196, 120, .2), transparent 70%),
+                repeating-linear-gradient(90deg, rgba(255, 236, 210, .035) 0 14px, transparent 14px 28px),
+                linear-gradient(180deg, #3a2224, #55302c);
+            color: #fff7ed;
+        }
+
+        .room {
+            position: absolute;
+            z-index: -1;
+            top: -8px;
+            bottom: 0;
+            left: -12px;
+            right: -12px;
+            pointer-events: none;
+        }
+
+        .tree-box .room .rm-win {
+            position: absolute;
+            height: auto;
+            max-width: none;
+            margin: 0;
+            top: 0;
+            left: 50%;
+            width: min(74%, 290px);
+            transform: translateX(-50%);
+        }
+
+        .rm-n1 { stop-color: #16234a; }
+        .rm-n2 { stop-color: #3a4f86; }
+        .rm-moon-cut { fill: #1b2a55; }
+        .sky.snowing .rm-n1 { stop-color: #2a3d72; }
+        .sky.snowing .rm-n2 { stop-color: #6d84b8; }
+        .sky.snowing .rm-moon-cut { fill: #31467d; }
+
+        .rm-snow,
+        .rm-snow2 {
+            animation: rmsnow 14s linear infinite;
+        }
+
+        .rm-snow2 {
+            display: none;
+            animation-duration: 9s;
+        }
+
+        .sky.snowing .rm-snow2 {
+            display: inline;
+        }
+
+        @keyframes rmsnow {
+            from { transform: translateY(-280px); }
+            to { transform: translateY(0); }
+        }
+
+        .tree-box .room .rm-fire {
+            position: absolute;
+            height: auto;
+            margin: 0;
+            left: 3%;
+            bottom: calc(21% - 2px);
+            width: 27%;
+            max-width: 120px;
+            overflow: visible;
+            filter: drop-shadow(0 0 18px rgba(255, 140, 50, .35));
+        }
+
+        .rm-flame {
+            transform-box: fill-box;
+            transform-origin: 50% 100%;
+            animation: rmflame 1.1s ease-in-out infinite alternate;
+        }
+
+        .rm-glow {
+            animation: rmglow 1.7s ease-in-out infinite alternate;
+        }
+
+        @keyframes rmflame {
+            0% { transform: scale(1, 1) skewX(0); }
+            50% { transform: scale(.94, 1.08) skewX(3deg); }
+            100% { transform: scale(1.04, .93) skewX(-2deg); }
+        }
+
+        @keyframes rmglow {
+            from { opacity: .7; }
+            to { opacity: 1; }
+        }
+
+        .rm-floor {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 79%;
+            height: 600px;
+            background:
+                linear-gradient(180deg, rgba(0, 0, 0, .28), transparent 18px),
+                repeating-linear-gradient(90deg, transparent 0 46px, rgba(0, 0, 0, .18) 46px 48px),
+                linear-gradient(180deg, #8a5634, #6e4127);
+            border-top: 5px solid #4a2a1a;
+        }
+
+        /* 바닥 앞쪽 동그란 러그 (트리 스커트 밑) */
+        .rm-floor::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 22px;
+            width: 92%;
+            max-width: 330px;
+            height: 44px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: repeating-radial-gradient(ellipse at center, #e8d8bf 0 7px, #d9c3a2 7px 10px, #c7a77f 10px 12px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, .2);
         }
 
         .sky::before {
+            display: none;
             content: "";
             position: absolute;
             inset: 0;
@@ -372,6 +483,7 @@
         }
 
         .sky.snowing::after {
+            display: none;
             content: "";
             position: absolute;
             inset: -40px 0 0;
@@ -427,6 +539,7 @@
         .tree-box {
             position: relative;
             z-index: 1;
+            isolation: isolate;
             display: flex;
             justify-content: center;
             gap: 6px;
@@ -831,8 +944,8 @@
             padding: 6px 4px 8px;
             border: none;
             border-radius: var(--r-md);
-            background: linear-gradient(180deg, var(--night-1), var(--night-2));
-            color: var(--sky-text);
+            background: linear-gradient(180deg, #3a2224 0 70%, #7a4a2c 70%);
+            color: #fff7ed;
             cursor: pointer;
             text-align: center;
         }
@@ -1276,6 +1389,10 @@
         @media (prefers-reduced-motion: reduce) {
 
             .sky.snowing::after,
+            .rm-snow,
+            .rm-snow2,
+            .rm-flame,
+            .rm-glow,
             .btn.glow,
             .capsule i,
             .reveal,
@@ -2060,7 +2177,7 @@
                 const theme = THEMES[v.theme] ? v.theme : 'green';
                 let g = '';
                 if (sc.glow) g += `<ellipse cx="150" cy="${n1(scaled(150, 220, sc.f)[1])}" rx="${n1(165 * sc.f)}" ry="${n1(190 * sc.f)}" fill="url(#gWarm)"/>`;
-                g += '<ellipse cx="150" cy="372" rx="132" ry="16" fill="#e8eef7"/><ellipse cx="150" cy="369" rx="92" ry="8" fill="#fff" opacity=".7"/>';
+                g += '<ellipse cx="150" cy="372" rx="132" ry="16" fill="#f4ead8"/><ellipse cx="150" cy="371" rx="123" ry="13.6" fill="#b3242f"/><ellipse cx="150" cy="369" rx="90" ry="8" fill="#d0464e" opacity=".7"/>';
                 g += `<ellipse cx="150" cy="370" rx="${n1(112 * sc.f)}" ry="${n1(12 * sc.f)}" fill="#0b1a33" opacity=".2"/>`;
                 g += sc.back.map(boxTag).join('');
                 g += `<g transform="translate(150 370) scale(${sc.f}) translate(-150 -370)">${TRUNK}${faceSvg(v.mood)}${TIERS.map((t) => `<path d="${conePath(t, CORE)}" fill="url(#gCone-${theme})"/>`).join('')}</g>`;
@@ -2108,16 +2225,16 @@
                 return Array.from({ length: 64 }, () => ({ a: rnd() * 360, R: 30 + rnd() * 150, y: rnd() * 420, s: 0.8 + rnd() * 1.6, v: 0.012 + rnd() * 0.02, ph: rnd() * 6.28 }));
             })();
             function drawFlakes(ctx, rot, t, front) {
-                ctx.fillStyle = '#fff';
+                ctx.fillStyle = '#ffe2a8';
                 FLAKES.forEach((fl) => {
                     const th = (fl.a - rot) * RAD;
                     const d = Math.cos(th) * fl.R;
                     if ((d > 0) !== front) return;
-                    const y = ((fl.y + t * fl.v) % 430) - 20 + d * K;
+                    const y = ((fl.y + t * fl.v * 0.45) % 430) - 20 + d * K;
                     const x = 150 + Math.sin(th) * fl.R + Math.sin(t * 0.0011 + fl.ph) * 5;
                     const k = 1 + d / 260;
-                    ctx.globalAlpha = front ? 0.9 : 0.4;
-                    ctx.beginPath(); ctx.arc(x, y, fl.s * k, 0, Math.PI * 2); ctx.fill();
+                    ctx.globalAlpha = (front ? 0.55 : 0.25) * (0.6 + 0.4 * Math.sin(t * 0.002 + fl.ph * 3));
+                    ctx.beginPath(); ctx.arc(x, y, fl.s * k * 0.75, 0, Math.PI * 2); ctx.fill();
                 });
                 ctx.globalAlpha = 1;
             }
@@ -2141,10 +2258,12 @@
                     ctx.fillRect(0, 0, 300, 400);
                 }
                 if (o.snow) drawFlakes(ctx, rot, t, false);
-                ctx.fillStyle = '#e8eef7';
+                ctx.fillStyle = '#f4ead8';
                 ctx.beginPath(); ctx.ellipse(150, 372, 132, 16, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.globalAlpha = 0.7; ctx.fillStyle = '#fff';
-                ctx.beginPath(); ctx.ellipse(150, 369, 92, 8, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#b3242f';
+                ctx.beginPath(); ctx.ellipse(150, 371, 123, 13.6, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 0.7; ctx.fillStyle = '#d0464e';
+                ctx.beginPath(); ctx.ellipse(150, 369, 90, 8, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.globalAlpha = 0.2; ctx.fillStyle = '#0b1a33';
                 ctx.beginPath(); ctx.ellipse(150, 370, 112 * sc.f, 12 * sc.f, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.globalAlpha = 1;
@@ -3173,6 +3292,48 @@
             show('v-plant');
         }
 
+        // ── 아늑한 거실: 트리 뒤의 창문(밖엔 눈)·벽난로·나무 바닥 (꾸밈 전용, 누르기에 반응하지 않음) ──
+        const ROOM = `<div class="room" aria-hidden="true">
+            <svg class="rm-win" viewBox="0 0 170 150">
+                <defs>
+                    <clipPath id="rmGlass"><path d="M41 140V64a44 44 0 0 1 88 0v76z"/></clipPath>
+                    <linearGradient id="rmNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="rm-n1"/><stop offset="1" class="rm-n2"/></linearGradient>
+                    <linearGradient id="rmCurt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8f1d27"/><stop offset=".5" stop-color="#b8323b"/><stop offset="1" stop-color="#8f1d27"/></linearGradient>
+                </defs>
+                <path d="M35 146V64a50 50 0 0 1 100 0v82z" fill="#7a4a2c"/>
+                <g clip-path="url(#rmGlass)">
+                    <rect x="35" y="10" width="100" height="140" fill="url(#rmNight)"/>
+                    <circle cx="108" cy="44" r="8" fill="#fef3c7" opacity=".9"/><circle cx="104" cy="41" r="7" class="rm-moon-cut"/>
+                    <path d="M35 128q22-14 44-6t50-10v28H35z" fill="#dbe7f5"/>
+                    <path d="M52 122l5-11 5 11zM61 124l4-9 4 9zM112 116l5-12 5 12z" fill="#4f6b5a"/>
+                    <rect x="88" y="113" width="12" height="9" fill="#8a5a3b"/><path d="M86 114l8-6 8 6z" fill="#f1f5f9"/><rect x="92" y="116" width="3.6" height="3.6" fill="#fcd34d"/>
+                    <g class="rm-snow" fill="#fff"><g><circle cx="22" cy="8" r="1.4"/><circle cx="48" cy="30" r="1"/><circle cx="80" cy="14" r="1.6"/><circle cx="100" cy="44" r="1.1"/><circle cx="34" cy="58" r="1.2"/><circle cx="70" cy="72" r="1.5"/><circle cx="14" cy="96" r="1"/><circle cx="92" cy="104" r="1.3"/><circle cx="52" cy="118" r="1.1"/><circle cx="28" cy="136" r="1.5"/><circle cx="84" cy="150" r="1"/><circle cx="60" cy="168" r="1.4"/><circle cx="16" cy="186" r="1.1"/><circle cx="104" cy="196" r="1.5"/><circle cx="40" cy="214" r="1"/><circle cx="76" cy="232" r="1.3"/><circle cx="96" cy="262" r="1.1"/><circle cx="22" cy="250" r="1.4"/><circle cx="58" cy="276" r="1"/></g><g transform="translate(0 280)"><circle cx="22" cy="8" r="1.4"/><circle cx="48" cy="30" r="1"/><circle cx="80" cy="14" r="1.6"/><circle cx="100" cy="44" r="1.1"/><circle cx="34" cy="58" r="1.2"/><circle cx="70" cy="72" r="1.5"/><circle cx="14" cy="96" r="1"/><circle cx="92" cy="104" r="1.3"/><circle cx="52" cy="118" r="1.1"/><circle cx="28" cy="136" r="1.5"/><circle cx="84" cy="150" r="1"/><circle cx="60" cy="168" r="1.4"/><circle cx="16" cy="186" r="1.1"/><circle cx="104" cy="196" r="1.5"/><circle cx="40" cy="214" r="1"/><circle cx="76" cy="232" r="1.3"/><circle cx="96" cy="262" r="1.1"/><circle cx="22" cy="250" r="1.4"/><circle cx="58" cy="276" r="1"/></g></g>
+                    <g class="rm-snow2" fill="#fff" opacity=".8"><g><circle cx="10" cy="20" r="1"/><circle cx="62" cy="4" r="1.2"/><circle cx="88" cy="36" r="0.9"/><circle cx="40" cy="46" r="1"/><circle cx="110" cy="70" r="1.1"/><circle cx="26" cy="84" r="0.9"/><circle cx="66" cy="98" r="1.2"/><circle cx="100" cy="128" r="0.9"/><circle cx="8" cy="140" r="1.1"/><circle cx="46" cy="160" r="1"/><circle cx="86" cy="178" r="1.2"/><circle cx="30" cy="206" r="0.9"/><circle cx="70" cy="220" r="1.1"/><circle cx="110" cy="240" r="1"/><circle cx="50" cy="262" r="1.2"/><circle cx="14" cy="270" r="0.9"/></g><g transform="translate(0 280)"><circle cx="10" cy="20" r="1"/><circle cx="62" cy="4" r="1.2"/><circle cx="88" cy="36" r="0.9"/><circle cx="40" cy="46" r="1"/><circle cx="110" cy="70" r="1.1"/><circle cx="26" cy="84" r="0.9"/><circle cx="66" cy="98" r="1.2"/><circle cx="100" cy="128" r="0.9"/><circle cx="8" cy="140" r="1.1"/><circle cx="46" cy="160" r="1"/><circle cx="86" cy="178" r="1.2"/><circle cx="30" cy="206" r="0.9"/><circle cx="70" cy="220" r="1.1"/><circle cx="110" cy="240" r="1"/><circle cx="50" cy="262" r="1.2"/><circle cx="14" cy="270" r="0.9"/></g></g>
+                </g>
+                <path d="M85 20v120M41 84h88" stroke="#7a4a2c" stroke-width="4"/>
+                <path d="M41 140V64a44 44 0 0 1 88 0v76" fill="none" stroke="#a36a42" stroke-width="1.5"/>
+                <rect x="28" y="138" width="114" height="9" rx="2" fill="#a36a42"/><path d="M31 138q8-5 18-1t20-2 22 1 20-2 26 4z" fill="#f8fafc"/>
+                <rect x="18" y="4" width="134" height="5" rx="2.5" fill="#5a3520"/>
+                <path d="M20 8h22q-4 40 2 70 6 26 2 64H20z" fill="url(#rmCurt)"/><path d="M150 8h-22q4 40-2 70-6 26-2 64h24z" fill="url(#rmCurt)"/>
+                <path d="M20 84q14 4 24-2M150 84q-14 4-24-2" stroke="#f5c84c" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+            </svg>
+            <svg class="rm-fire" viewBox="0 0 100 112">
+                <defs><radialGradient id="rmFireGlow"><stop offset="0" stop-color="#ffb347" stop-opacity=".85"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></radialGradient></defs>
+                <rect x="4" y="14" width="92" height="98" fill="#8c4436"/>
+                <path d="M4 34h92M4 54h92M4 74h92M4 94h92M26 14v20M58 14v20M86 14v20M14 34v20M44 34v20M74 34v20M8 74v20M90 74v20M10 94v18M90 94v18" stroke="#6e3127" stroke-width="1.6"/>
+                <path d="M22 112V74a28 26 0 0 1 56 0v38z" fill="#1c100b"/>
+                <ellipse class="rm-glow" cx="50" cy="96" rx="34" ry="22" fill="url(#rmFireGlow)"/>
+                <g class="rm-flame"><path d="M50 106c-14 0-18-10-12-20 3 5 6 6 7 4-2-8 3-16 9-20-1 8 6 10 7 18 2-2 3-5 3-7 6 9 5 25-14 25z" fill="#ff8a1f"/><path d="M50 106c-8 0-10-6-6-12 2 3 4 3 4 1 0-5 3-8 5-10 0 5 4 6 4 11 1-1 2-3 2-4 3 5 2 14-9 14z" fill="#ffd25e"/></g>
+                <rect x="30" y="102" width="40" height="6" rx="3" fill="#6b3f22" transform="rotate(-6 50 105)"/><rect x="30" y="102" width="40" height="6" rx="3" fill="#7c4a2a" transform="rotate(7 50 105)"/>
+                <rect x="0" y="6" width="100" height="10" rx="2" fill="#6b3f22"/><rect x="0" y="6" width="100" height="3" rx="1.5" fill="#8a5734"/>
+                <path d="M6 16q22 8 44 0t44 0" stroke="#2f7d4a" stroke-width="4" fill="none" stroke-linecap="round"/>
+                <circle cx="24" cy="19" r="2" fill="#e23b3b"/><circle cx="50" cy="16" r="2" fill="#f5c84c"/><circle cx="76" cy="19" r="2" fill="#e23b3b"/>
+                <path d="M30 16v18c0 5-6 6-8 11-2 4 4 7 8 4l8-7V16z" fill="#c62f39"/><rect x="28" y="16" width="12" height="5" rx="1.5" fill="#f8f1e6"/>
+                <path d="M62 16v18c0 5-6 6-8 11-2 4 4 7 8 4l8-7V16z" fill="#2f7d4a"/><rect x="60" y="16" width="12" height="5" rx="1.5" fill="#f8f1e6"/>
+            </svg>
+            <i class="rm-floor"></i>
+        </div>`;
+
         // ── 내 트리 ──
         function renderTree() {
             if (!S) { renderPlant(); return; }
@@ -3200,13 +3361,13 @@
             let stageHtml;
             if (S.mode === 'couple') {
                 const p = S.couple?.id ? unsnap(S.couple.snap) : null;
-                stageHtml = `<div class="tree-box duo">
+                stageHtml = `<div class="tree-box duo">${ROOM}
                     <div>${mine}<div class="tree-name">${esc(S.owner)}<small>나</small></div></div>
                     <div>${p ? `${treeSvg(p, {}, `${S.couple.name}의 트리`)}<div class="tree-name">${esc(S.couple.name)}<small>${agoText(S.couple.at)}</small></div>`
                         : '<div class="partner-wait"><span style="font-size:2rem">💌</span>짝꿍을 기다리는 중<br>아래에서 초대 링크를 보내 주세요</div>'}</div>
                 </div>${S.couple?.id ? `<div class="heart-line">💗 둘 다 물 준 날 ${S.couple.heartDays.length}일</div>` : ''}`;
             } else {
-                stageHtml = `<div class="tree-box">${mine}</div>`;
+                stageHtml = `<div class="tree-box">${ROOM}${mine}</div>`;
             }
 
             const xmasReady = !old && (se.phase === 'xmas' || se.phase === 'after') && !S.opened;
@@ -3415,7 +3576,7 @@
                     giftTarget.name = v.owner;
                     const view = unsnap(snapFromView(v));
                     box.innerHTML = `<div class="sky-head"><div><b>${esc(v.owner)}의 트리</b><div class="meta">💧 ${v.waters.length}번 · ${STAGE_NAME[view.stage]} · 장식 ${v.hung.length}개</div></div><span class="mode-tag">👀 지금 모습</span></div>
-                        <div class="tree-box view-box"><canvas class="tree-cv" id="gift-tree" tabindex="0" role="img" aria-label="${esc(v.owner)}의 트리 (좌우로 밀면 돌아가요)"></canvas></div>`;
+                        <div class="tree-box view-box">${ROOM}<canvas class="tree-cv" id="gift-tree" tabindex="0" role="img" aria-label="${esc(v.owner)}의 트리 (좌우로 밀면 돌아가요)"></canvas></div>`;
                     box.hidden = false;
                     mountViewer('gift-tree', view);
                 }).catch(() => {});
@@ -3437,7 +3598,7 @@
             if (!v) { info('트리를 불러오지 못했어요', '링크가 잘렸거나 깨진 것 같아요. 다시 받아 주세요.'); return; }
             const isMe = S && S.id === p.i;
             $('v-view').innerHTML = `<div class="sky"><div class="sky-head"><div><b>${esc(p.n)}의 트리</b><div class="meta">${Number(p.y) || ''}년 · 💧 ${Number(p.w) || 0}번 · ${STAGE_NAME[v.stage]}</div></div><span class="mode-tag">👀 구경 중</span></div>
-                <div class="tree-box view-box"><canvas class="tree-cv" id="view-tree" tabindex="0" role="img" aria-label="${esc(p.n)}의 트리 (좌우로 밀면 돌아가요)"></canvas></div></div>
+                <div class="tree-box view-box">${ROOM}<canvas class="tree-cv" id="view-tree" tabindex="0" role="img" aria-label="${esc(p.n)}의 트리 (좌우로 밀면 돌아가요)"></canvas></div></div>
                 <div class="panel" style="margin-top:12px"><p class="hint">구경 링크를 만든 순간의 모습이에요.</p><div class="btn-row">
                 ${isMe ? '' : `<button class="btn btn-festive" data-act="gift-to" data-id="${esc(p.i)}" data-name="${esc(p.n)}" type="button">🎁 장식 보내기</button>`}
                 <button class="btn btn-ghost" data-act="home" type="button">${S ? '내 트리로' : '🌱 나도 트리 심기'}</button></div></div>`;
