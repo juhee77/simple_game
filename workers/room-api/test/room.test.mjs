@@ -21,7 +21,7 @@ let ipSeq = 0;
 
 before(async () => {
     dir = mkdtempSync(pathJoin(tmpdir(), 'room-api-'));
-    dev = spawn(WRANGLER, ['dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', dir, '--var', 'ALLOW_DEV:1'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, CI: '1' } });
+    dev = spawn(WRANGLER, ['dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', dir, '--var', 'ALLOW_DEV:1', '--var', 'ALLOWED_ORIGINS:https://juhee77.github.io,http://localhost:*,http://127.0.0.1:*'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, CI: '1' } });
     for (let i = 0; i < 120; i++) {
         try { if ((await fetch(`${BASE}/health`)).ok) return; } catch { /* 아직 안 뜸 */ }
         await new Promise((r) => setTimeout(r, 500));
@@ -288,4 +288,27 @@ test('방 만들기 하루 제한 (같은 IP 30개)', async () => {
     }
     const over = await call('POST', '/api/rooms', { ip: '10.9.9.9', body: { game: 'imposter', nickname: 'over' } });
     assert.equal(over.status, 429);
+});
+
+test('도배 막기: 10초에 60개 넘으면 버리고 알림, 300개 넘으면 연결 끊기(1008)', async () => {
+    const host = await create('방장');
+    const a = await join(host.room.id, '받는사람');
+    const { c: H } = await authed(host.room.id, host.token);
+    const { c: A } = await authed(host.room.id, a.token);
+    await H.next('presence');
+    let got = 0;
+    A.ws.addEventListener('message', (e) => { if (JSON.parse(e.data).type === 'message') got++; });
+    for (let i = 0; i < 70; i++) H.send({ type: 'broadcast', data: { i } });
+    assert.match((await H.next('error')).message, /너무 빨리/);
+    await new Promise((r) => setTimeout(r, 500));
+    assert.ok(got <= 60, `60개까지만 전달돼야 하는데 ${got}개`);
+    assert.ok(await H.none('error', 200), '알림은 한 번만');
+    for (let i = 0; i < 300; i++) H.send({ type: 'broadcast', data: { i } });
+    assert.equal((await H.closed).code, 1008);
+    // ping 자동 응답은 세지 않는다
+    const { c: P } = await authed(host.room.id, host.token);
+    for (let i = 0; i < 80; i++) P.send('{"type":"ping"}');
+    assert.ok(await P.none('error', 300), 'ping은 제한에 걸리지 않음');
+    P.ws.close();
+    A.ws.close();   // 열린 연결이 남으면 테스트 프로세스가 끝나지 않는다
 });
