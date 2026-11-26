@@ -235,6 +235,29 @@ test('숲: 만들기·합류·12그루 제한·커플 거절·나가기', async 
     assert.equal(mj.status, 200);
 });
 
+test('발자국: 하루 한 번만 세고, 공개 보기엔 오늘 수만, 주인에겐 목록', async () => {
+    const t = await makeTree('발자국');
+    const D1 = '2026-12-03T03:00:00Z';
+    const D2 = '2026-12-04T03:00:00Z';
+    const a = await call('POST', `/trees/${t.id}/visits`, { body: { nick: '지은', vid: 'abcd1234ef' }, now: D1 });
+    assert.equal(a.status, 201);
+    assert.equal(a.data.visitsToday, 1);
+    const again = await call('POST', `/trees/${t.id}/visits`, { body: { nick: '지은이', vid: 'abcd1234ef' }, now: D1 });
+    assert.equal(again.status, 200, '같은 날 같은 사람은 다시 세지 않는다');
+    assert.equal(again.data.visitsToday, 1);
+    await call('POST', `/trees/${t.id}/visits`, { body: { vid: 'zzzz9999aa' }, now: D1 });
+    await call('POST', `/trees/${t.id}/visits`, { body: { nick: '지은', vid: 'abcd1234ef' }, now: D2 });
+    const bad = await call('POST', `/trees/${t.id}/visits`, { body: { nick: '열한글자가넘는긴이름이에요' }, now: D2 });
+    assert.equal(bad.status, 400);
+    const pub = await call('GET', `/trees/${t.id}`, { now: D1 });
+    assert.equal(pub.data.visitsToday, 2);
+    assert.equal(pub.data.visits, undefined, '공개 보기엔 이름 목록이 없다');
+    const priv = await call('GET', `/trees/${t.id}/private`, { token: t.token, now: D2 });
+    assert.deepEqual(priv.data.visits, [['2026-12-03', '지은이'], ['2026-12-03', ''], ['2026-12-04', '지은']]);
+    const none = await call('POST', '/trees/zzzzzzzzzz/visits', { body: {} });
+    assert.equal(none.status, 404);
+});
+
 test('정리: 2월이 되면 지난 시즌 데이터 삭제', async () => {
     const t = await makeTree('지난해');
     await call('POST', `/trees/${t.id}/gifts`, { body: { type: 'g-cat', sender: '지은', message: 'hi' } });
