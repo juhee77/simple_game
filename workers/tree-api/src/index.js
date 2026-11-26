@@ -213,7 +213,7 @@ async function getPrivate(req, env, id) {
     const open = now >= unlockAt(row.year);
     const gifts = (await env.DB.prepare('SELECT id, type, sender, message, created_at FROM gifts WHERE tree_id = ?1 ORDER BY created_at').bind(id).all()).results
         .map((g) => ({ id: g.id, type: g.type, sender: g.sender, hasMessage: Boolean(g.message), createdAt: g.created_at, ...(open && g.message ? { message: g.message } : {}) }));
-    const visits = (await env.DB.prepare('SELECT day, nick FROM visits WHERE tree_id = ?1 ORDER BY created_at LIMIT ?2').bind(id, MAX_VISITS).all()).results
+    const visits = (await env.DB.prepare('SELECT day, nick FROM visits WHERE tree_id = ?1 ORDER BY created_at, rowid LIMIT ?2').bind(id, MAX_VISITS).all()).results
         .map((v) => [v.day, v.nick]);
     const out = { tree: { id: row.id, owner: row.owner, mode: row.mode, year: row.year, rev: row.rev, state: JSON.parse(row.state), partnerId: row.partner_id, forestId: row.forest_id }, gifts, visits, unlockAt: unlockAt(row.year), now };
     if (row.partner_id) {
