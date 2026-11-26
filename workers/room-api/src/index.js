@@ -7,6 +7,8 @@
 //  - WebSocket은 Hibernation API로 받아서, 조용한 연결은 요금이 붙지 않는다. ping/pong은 자동 응답.
 //  - 참가자 토큰은 SHA-256 해시만 저장한다.
 //  - 오류 응답은 { detail } 이고, detail은 화면에 그대로 띄울 수 있는 문장이다.
+//  - 방장 넘기기: 방장이 transfer로 넘기거나, 방장이 HOST_GRACE_MS 넘게 끊겨 있으면 다른 참가자가 claim_host로 이어받는다.
+//    방장만 보는 vault(비밀 보관함)도 새 방장에게 같이 넘어가서 진행을 이어 갈 수 있다.
 // ════════════════════════════════════════════════════════════
 import { DurableObject } from 'cloudflare:workers';
 
@@ -15,6 +17,10 @@ const KST = 9 * 3600 * 1000;
 const TTL = 7 * DAY;
 const MAX_MEMBERS = 20;
 const MAX_MESSAGE_BYTES = 16 * 1024;
+// 방장만 보는 비밀 보관함 (송년회 키트의 답·투표처럼 방장 폰에만 있던 것). 방장이 바뀌면 새 방장에게 넘어간다.
+const MAX_VAULT_BYTES = 64 * 1024;
+// 방장이 이만큼 오래 끊겨 있으면 다른 참가자가 진행을 이어받을 수 있다
+const HOST_GRACE_MS = 60_000;
 const ROOMS_PER_DAY = 30;   // IP당 하루 방 만들기
 // 연결 하나가 보낼 수 있는 메시지 (ping 자동 응답은 세지 않음).
 // 10초에 60개를 넘으면 버리고 한 번 알려 주고, 300개를 넘으면 도배로 보고 연결을 끊는다 (1008).
@@ -31,6 +37,9 @@ const MSG = {
     dupNick: '이미 같은 닉네임이 있어요. 다른 이름으로 들어와 주세요.',
     hostLeave: '방장은 나갈 수 없어요. 방을 닫아 주세요.',
     hostOnlyClose: '방장만 방을 닫을 수 있어요.',
+    hostOnly: '방장만 할 수 있어요.',
+    hostStillHere: '방장이 아직 접속해 있어요.',
+    notOnline: '상대가 접속해 있지 않아요.',
     badGame: '게임 이름이 올바르지 않아요.',
     badRoomName: '방 이름은 40자까지 쓸 수 있어요.',
     badNick: '닉네임은 1~20자로 적어 주세요.',
@@ -96,6 +105,8 @@ export class Room extends DurableObject {
         super(ctx, env);
         // ping은 객체를 깨우지 않고 바로 pong (room-client.js가 25초마다 보낸다)
         ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{"type":"ping"}', '{"type":"pong"}'));
+        // 테스트·로컬 개발에서만 기다리는 시간을 줄일 수 있다
+        this.graceMs = devOn(env) && Number(env.HOST_GRACE_MS) >= 0 && env.HOST_GRACE_MS !== undefined ? Number(env.HOST_GRACE_MS) : HOST_GRACE_MS;
     }
 
     // ── 저장소 ──
@@ -184,6 +195,7 @@ export class Room extends DurableObject {
         const ttl = Number(b.ttl) > 0 ? Number(b.ttl) : TTL;
         const room = { id: b.id, game: b.game, name, createdAt: now, expiresAt: now + ttl };
         await this.ctx.storage.put('room', room);
+        await this.ctx.storage.put('hostOff', now);   // 방장이 아직 안 붙었으니 '끊긴 상태'로 시작
         await this.ctx.storage.setAlarm(room.expiresAt);
         return this.addMember(room, nickname, true);
     }
@@ -266,7 +278,8 @@ export class Room extends DurableObject {
     async webSocketMessage(ws, raw) {
         if (this.overLimit(ws)) return;
         if (typeof raw !== 'string') { this.send(ws, { type: 'error', message: 'JSON 형식이 아니에요.' }); return; }
-        if (new TextEncoder().encode(raw).length > MAX_MESSAGE_BYTES) {
+        const bytes = new TextEncoder().encode(raw).length;
+        if (bytes > MAX_VAULT_BYTES) {
             this.send(ws, { type: 'error', message: '메시지가 너무 커요. (16KB까지)' });
             return;
         }
@@ -279,6 +292,10 @@ export class Room extends DurableObject {
             return;
         }
         const type = node.type;
+        if (bytes > MAX_MESSAGE_BYTES && type !== 'vault') {
+            this.send(ws, { type: 'error', message: '메시지가 너무 커요. (16KB까지)' });
+            return;
+        }
         const memberId = ws.deserializeAttachment()?.memberId;
         if (!memberId) {
             if (type === 'auth') await this.authenticate(ws, typeof node.token === 'string' ? node.token : '');
@@ -314,9 +331,56 @@ export class Room extends DurableObject {
                 await this.ctx.storage.put('state', node.state);
                 this.broadcast({ type: 'state', from: memberId, state: node.state }, memberId);
                 break;
+            case 'vault':
+                // 방장만 보는 비밀 보관함. 덮어쓰기만 하고 아무에게도 알리지 않는다 (null이면 비움)
+                if (!member.host) { this.send(ws, { type: 'error', message: MSG.hostOnly }); break; }
+                if (node.data === undefined || node.data === null) await this.ctx.storage.delete('vault');
+                else await this.ctx.storage.put('vault', node.data);
+                break;
+            case 'transfer': {
+                if (!member.host) { this.send(ws, { type: 'error', message: MSG.hostOnly }); break; }
+                const to = typeof node.to === 'string' ? node.to : '';
+                if (!members.some((m) => m.id === to) || !this.online().has(to)) { this.send(ws, { type: 'error', message: MSG.notOnline }); break; }
+                if (to !== memberId) await this.changeHost(members, memberId, to, 'transfer');
+                break;
+            }
+            case 'claim_host': {
+                if (member.host) break;   // 이미 방장
+                const host = members.find((m) => m.host);
+                if (host && this.online().has(host.id)) { this.send(ws, { type: 'error', message: MSG.hostStillHere }); break; }
+                const off = (await this.ctx.storage.get('hostOff')) ?? 0;
+                const wait = this.graceMs - (Date.now() - off);
+                if (host && wait > 0) {
+                    this.send(ws, { type: 'error', message: `방장 연결을 기다리는 중이에요. ${Math.ceil(wait / 1000)}초 뒤에 다시 눌러 주세요.` });
+                    break;
+                }
+                await this.changeHost(members, host?.id || null, memberId, 'claim');
+                break;
+            }
             case 'auth': this.send(ws, { type: 'error', message: '이미 인증했어요.' }); break;
             default: this.send(ws, { type: 'error', message: `알 수 없는 메시지예요: ${type}` });
         }
+    }
+
+    // 방장 바꾸기: 참가자 목록의 host 표시를 옮기고 모두에게 알린다. 새 방장에게만 vault를 같이 보낸다.
+    async changeHost(members, from, to, reason) {
+        const next = members.map((m) => ({ ...m, host: m.id === to }));
+        await this.ctx.storage.put('members', next);
+        await this.ctx.storage.delete('hostOff');   // 새 방장은 접속해 있다
+        const vault = (await this.ctx.storage.get('vault')) ?? null;
+        const msg = { type: 'host_changed', from, to, reason };
+        this.sockets().forEach(({ ws, memberId }) => {
+            if (!memberId) return;
+            this.send(ws, memberId === to ? { ...msg, vault } : msg);
+        });
+    }
+
+    // welcome에 넣는 방장 접속 정보: 끊긴 지 얼마나 됐는지, 몇 ms 뒤에 이어받을 수 있는지
+    async hostStatus(members, online) {
+        const host = members.find((m) => m.host);
+        if (!host || online.has(host.id)) return { hostOfflineMs: null, hostGraceMs: this.graceMs };
+        const off = (await this.ctx.storage.get('hostOff')) ?? 0;
+        return { hostOfflineMs: Math.max(0, Date.now() - off), hostGraceMs: this.graceMs };
     }
 
     async authenticate(ws, token) {
@@ -334,9 +398,12 @@ export class Room extends DurableObject {
             }
         });
         ws.serializeAttachment({ memberId: member.id });
+        if (member.host) await this.ctx.storage.delete('hostOff');
         const online = this.online();
         const state = (await this.ctx.storage.get('state')) ?? null;
-        this.send(ws, { type: 'welcome', room: this.roomResponse(room, members, online), you: this.memberResponse(member, online), state });
+        const welcome = { type: 'welcome', room: this.roomResponse(room, members, online), you: this.memberResponse(member, online), state, ...(await this.hostStatus(members, online)) };
+        if (member.host) welcome.vault = (await this.ctx.storage.get('vault')) ?? null;
+        this.send(ws, welcome);
         this.broadcast({ type: 'presence', memberId: member.id, online: true }, member.id);
     }
 
@@ -355,7 +422,12 @@ export class Room extends DurableObject {
         if (!memberId) return;
         ws.serializeAttachment({ memberId: null });
         const still = this.sockets().some((s) => s.ws !== ws && s.memberId === memberId);
-        if (!still) this.broadcast({ type: 'presence', memberId, online: false });
+        if (still) return;
+        // 방장이 끊긴 시각을 남겨 둔다 (claim_host 기다리는 시간 계산용)
+        if ((await this.members()).some((m) => m.id === memberId && m.host) && (await this.ctx.storage.get('room'))) {
+            await this.ctx.storage.put('hostOff', Date.now());
+        }
+        this.broadcast({ type: 'presence', memberId, online: false });
     }
 }
 

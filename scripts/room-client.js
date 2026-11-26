@@ -13,8 +13,11 @@
 //       onState(state, from) { ... },        // 방장이 바꾼 공유 상태
 //       onMembers(msg) { ... },              // 참가자 입장·퇴장·접속 상태 변화
 //       onStatus(status, reason) { ... },    // connecting | online | offline | ended
+//       onHostChanged(msg) { ... },          // 방장이 바뀜 {from, to, reason: transfer|claim, vault?(새 방장에게만)}
 //   });
 //   conn.broadcast({ ... }); conn.sendTo(memberId, { ... }); conn.setState({ ... });
+//   conn.setVault({ ... });       // 방장만 보는 비밀 보관함 (방장 welcome의 msg.vault, 새 방장의 onHostChanged msg.vault로 돌아옴)
+//   conn.transferHost(memberId);  // 방장 넘기기 / conn.claimHost(): 방장이 오래 끊기면 내가 이어받기
 //
 // 끊긴 동안 보낸 메시지는 버려진다. 다시 붙으면 onWelcome이 다시 오므로 그때 상태를 맞춘다.
 const RoomClient = (() => {
@@ -161,6 +164,7 @@ const RoomClient = (() => {
                     case 'member_joined':
                     case 'member_left':
                     case 'presence': emit('onMembers', msg); break;
+                    case 'host_changed': emit('onHostChanged', msg); break;
                     case 'error': emit('onError', msg.message); break;
                     default: break;   // pong, room_closed(뒤이은 종료 코드로 처리)
                 }
@@ -213,6 +217,12 @@ const RoomClient = (() => {
             sendTo: (memberId, data) => send({ type: 'send', to: memberId, data }),
             /** 방장만. 늦게 들어오거나 다시 붙은 사람은 onWelcome의 msg.state로 받는다 */
             setState: (state) => send({ type: 'state', state }),
+            /** 방장만. 방장만 보는 비밀 보관함 (64KB). 방장이 바뀌면 새 방장에게 넘어간다 */
+            setVault: (data) => send({ type: 'vault', data }),
+            /** 방장만. 접속해 있는 참가자에게 방장을 넘긴다 */
+            transferHost: (memberId) => send({ type: 'transfer', to: memberId }),
+            /** 방장이 welcome의 hostGraceMs(60초) 넘게 끊겨 있으면 내가 방장이 된다. 아니면 onError */
+            claimHost: () => send({ type: 'claim_host' }),
             close() {
                 stop();
                 ws?.close(1000);

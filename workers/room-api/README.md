@@ -14,6 +14,7 @@
 - 방 ID 128비트(base64url 22자), 7일 뒤 자동으로 사라짐 (알람)
 - **최대 20명**, 닉네임 1~20자(방 안에서 중복 불가), 방 이름 40자, 게임 이름 `^[a-z0-9-]{1,40}$`, 메시지 16KB
 - 방 만들기는 IP 해시 기준 하루 30개
+- 방장 넘기기: 방장이 `transfer`로 넘기거나, 방장이 **60초 넘게 끊겨 있으면** 다른 참가자가 `claim_host`로 이어받아요. 방장만 보는 `vault`(64KB)가 새 방장에게 같이 넘어가요.
 - 도배 막기: 연결 하나당 10초에 60개까지. 넘으면 버리고 한 번 `error`로 알리고, 300개를 넘으면 연결을 끊어요(1008). ping 자동 응답은 세지 않아요.
 - 허용 출처: 실제 서버는 `https://juhee77.github.io`만 받아요 (REST·WebSocket 모두). `npm run dev`와 테스트는 `localhost`·`127.0.0.1`도 받도록 `--var ALLOWED_ORIGINS`를 더해요.
 
@@ -38,11 +39,15 @@
 | `{"type":"broadcast","data":{...}}` | 나를 뺀 모두에게 |
 | `{"type":"send","to":"memberId","data":{...}}` | 한 사람에게만. 상대가 접속해 있지 않으면 `error` |
 | `{"type":"state","state":{...}}` | 방장만. 공유 상태를 저장하고 나를 뺀 모두에게 알림 |
+| `{"type":"vault","data":{...}}` | 방장만. 방장만 보는 비밀 보관함에 저장 (64KB, 아무에게도 알리지 않음, `null`이면 비움) |
+| `{"type":"transfer","to":"memberId"}` | 방장만. 접속해 있는 참가자에게 방장을 넘김 |
+| `{"type":"claim_host"}` | 방장이 60초 넘게 끊겨 있으면 내가 방장이 됨. 아니면 `error` |
 | `{"type":"ping"}` | `pong` |
 
 | 서버 → 클라이언트 | 설명 |
 |---|---|
-| `welcome` `{room, you, state}` | 인증 성공. 다시 붙을 때마다 와요 |
+| `welcome` `{room, you, state, hostOfflineMs, hostGraceMs, vault?}` | 인증 성공. 다시 붙을 때마다 와요. `hostOfflineMs`는 방장이 끊긴 지 얼마나 됐는지(접속 중이면 `null`), `vault`는 방장에게만 |
+| `host_changed` `{from, to, reason, vault?}` | 방장이 바뀜 (`transfer` / `claim`). 새 방장에게만 `vault`가 같이 와요 |
 | `message` `{from, to, data}` | 다른 참가자가 보낸 메시지 (`to`가 있으면 귓속말) |
 | `state` `{from, state}` | 방장이 바꾼 공유 상태 |
 | `member_joined` / `member_left` / `presence` | 참가자 입장·퇴장·접속 상태 |
@@ -57,7 +62,7 @@ npm install
 npm run dev     # http://localhost:8080 (room-client.js가 localhost에서 자동으로 붙는 주소)
 npm test        # 임시 저장소로 wrangler dev를 따로 띄워 REST·WebSocket 전체 확인
 ```
-`npm run dev`는 `ALLOW_DEV:1`로 띄워서 `X-Dev-Ip`(IP)·`X-Dev-Ttl`(방 보관 기간, ms) 머리글로 테스트할 수 있어요. 배포 환경에는 이 변수가 없어서 무시돼요.
+`npm run dev`는 `ALLOW_DEV:1`로 띄워서 `X-Dev-Ip`(IP)·`X-Dev-Ttl`(방 보관 기간, ms) 머리글로 테스트할 수 있어요. `--var HOST_GRACE_MS:5000`처럼 방장 이어받기 대기 시간도 줄일 수 있어요(테스트는 1.5초). 배포 환경에는 이 변수가 없어서 무시돼요.
 
 ## 배포
 `wrangler login`이 되어 있으면 한 줄이에요. Durable Objects는 DB를 따로 만들 필요가 없어요.
