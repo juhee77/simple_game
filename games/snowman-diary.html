@@ -8,13 +8,13 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="미니게임 천국">
     <meta property="og:title" content="한 줄 눈사람 - 미니게임 천국">
-    <meta property="og:description" content="12월에 하루 한 줄이면 31일에 나만의 눈사람과 12월 리포트가 완성돼요">
+    <meta property="og:description" content="11월 27일부터 하루 한 줄이면 12월 31일에 나만의 눈사람과 12월 리포트가 완성돼요">
     <meta property="og:url" content="https://juhee77.github.io/simple_game/games/snowman-diary.html">
-    <meta property="og:image" content="https://juhee77.github.io/simple_game/assets/og/snowman-diary.jpg">
+    <meta property="og:image" content="https://juhee77.github.io/simple_game/assets/og/snowman-diary.jpg?v=1127">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="description" content="12월 한 달, 하루 한 줄씩 쓰면 눈덩이가 굴러 커지고 31일에 나의 12월 눈사람이 완성돼요.">
+    <meta name="description" content="11월 27일부터 12월 31일까지 하루 한 줄씩 쓰면 눈덩이가 굴러 커지고 나의 12월 눈사람이 완성돼요.">
     <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
     <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
     <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
@@ -312,8 +312,46 @@
             height: auto;
         }
 
-        .demo {
-            opacity: .55;
+        .man-box.bump svg {
+            transform-origin: 50% 92%;
+            animation: bump .8s ease-out;
+        }
+
+        @keyframes bump {
+            0% { transform: scale(1, 1); }
+            25% { transform: scale(1.06, .94) rotate(-2deg); }
+            55% { transform: scale(.97, 1.04) rotate(1.5deg); }
+            100% { transform: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .man-box.bump svg { animation: none; }
+        }
+
+        .q-peek {
+            margin-top: 10px;
+            padding: 12px 14px;
+            border-radius: var(--r-md, 12px);
+            background: #eff6ff;
+            border: 1px dashed #93c5fd;
+        }
+
+        .q-peek small {
+            display: block;
+            font-size: .75rem;
+            font-weight: 800;
+            color: #1d4ed8;
+        }
+
+        .q-peek b {
+            display: block;
+            margin: 4px 0 2px;
+            font-size: 1rem;
+        }
+
+        .q-peek span {
+            font-size: .82rem;
+            color: var(--muted);
         }
 
         /* ── 오늘의 질문 ── */
@@ -693,7 +731,7 @@
 
         <header class="game-header">
             <h1 class="game-title">⛄ 한 줄 눈사람</h1>
-            <p class="game-description">12월에 하루 한 줄, 굴려서 만드는 나의 12월</p>
+            <p class="game-description">하루 한 줄, 굴려서 만드는 나의 12월 (11/27 시작)</p>
         </header>
 
         <div id="banners"></div>
@@ -745,6 +783,28 @@
             };
         }
 
+        // ── 시즌 ── 11월 27일부터 12월 31일까지 35일 (2026년에 12/1에서 앞당김)
+        const START_M = 11;
+        const START_D = 27;
+        const SEASON_LEN = 35;
+        const atNoon = (k) => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d, 12); };
+        const startKey = (y) => `${y}-${String(START_M).padStart(2, '0')}-${START_D}`;
+        // 시즌 몇째 날인지 (1부터). 시즌 밖이면 0
+        function dayNo(k, y) {
+            const n = Math.round((atNoon(k) - atNoon(startKey(y))) / 86400000) + 1;
+            return n >= 1 && n <= SEASON_LEN ? n : 0;
+        }
+        function seasonKeys(y) {
+            const out = [];
+            const d = atNoon(startKey(y));
+            for (let i = 0; i < SEASON_LEN; i++) {
+                out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+                d.setDate(d.getDate() + 1);
+            }
+            return out;
+        }
+        const START_LABEL = `${START_M}월 ${START_D}일`;
+
         // ── 날짜 ── 기기 시계 기준, 개발할 때만 ?today=YYYY-MM-DD (localhost에서만)
         const Clock = (() => {
             function now() {
@@ -761,12 +821,13 @@
             const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const parse = (k) => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d, 12); };
             const shift = (k, n) => { const d = parse(k); d.setDate(d.getDate() + n); return key(d); };
-            // 12월 = 기록, 1/1 = 새해 소원, 1/2~1/31 = 보기, 2~11월 = 다음 12월을 기다림
+            // 11/27~12/31 = 기록, 1/1 = 새해 소원, 1/2~1/31 = 보기, 그 밖 = 다음 시즌을 기다림
+            // day: 시즌 몇째 날(1~SEASON_LEN), last: 12/31
             function season(d = now()) {
                 const y = d.getFullYear();
                 const m = d.getMonth() + 1;
                 const day = d.getDate();
-                if (m === 12) return { year: y, phase: 'diary', day };
+                if (m === 12 || (m === START_M && day >= START_D)) return { year: y, phase: 'diary', day: dayNo(key(d), y), last: m === 12 && day === 31 };
                 if (m === 1) return { year: y - 1, phase: day === 1 ? 'wish' : 'after', day: 0 };
                 return { year: y, phase: 'pre', day: 0 };
             }
@@ -873,11 +934,19 @@
             ['요즘 핸드폰 배경화면', '예) 우리 집 고양이'],
             ['오늘 가장 따뜻했던 순간', '예) 히터 앞에서 귤'],
             ['연말에 꼭 보고 싶은 사람', '예) 고향 친구들'],
-            ['요즘 출퇴근(등하교) 길의 즐거움', '예) 팟캐스트 듣기']
+            ['요즘 출퇴근(등하교) 길의 즐거움', '예) 팟캐스트 듣기'],
+            ['올겨울 처음 꺼낸 겨울옷', '예) 롱패딩'],
+            ['요즘 제일 자주 먹는 과일', '예) 귤'],
+            ['이번 주에 제일 잘한 일', '예) 미뤄 둔 병원 다녀옴'],
+            ['올해 크리스마스에 하고 싶은 것', '예) 케이크 한 판 다 먹기'],
+            ['요즘 방에서 나는 냄새', '예) 새로 산 캔들'],
+            ['오늘 본 하늘 색', '예) 연한 분홍 노을'],
+            ['요즘 즐겨 하는 게임이나 놀이', '예) 퍼즐 맞추기'],
+            ['올해 받은 선물 중 기억에 남는 것', '예) 손편지']
         ];
         const MOODS = ['😊', '😆', '🥰', '😌', '😴', '🥶', '😮‍💨', '🤯'];
 
-        // 날마다 다른 질문: 해마다 섞은 순서의 앞 31개를 날짜에, 나머지를 '바꾸기'에 쓴다
+        // 날마다 다른 질문: 해마다 섞은 순서의 앞 SEASON_LEN개를 날짜에, 나머지를 '바꾸기'에 쓴다
         function questionOrder(year) {
             const r = mulberry32(hash32(`q|${year}`));
             const a = QUESTIONS.map((_, i) => i);
@@ -890,10 +959,10 @@
 
         function questionFor(st, date) {
             const order = questionOrder(st.year);
-            const day = Number(date.slice(8));
+            const day = dayNo(date, st.year) || 1;
             const s = st.swaps[date] || 0;
             if (!s) return order[(day - 1) % order.length];
-            const spare = order.slice(31);
+            const spare = order.slice(SEASON_LEN);
             return spare[((day - 1) * MAX_SWAPS + s - 1) % spare.length];
         }
 
@@ -928,8 +997,49 @@
         }
         const stageName = (n) => STAGES.reduce((s, [at, name]) => (n >= at ? name : s), STAGES[0][1]);
 
-        function snowBall(cx, cy, r) {
-            return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#gSnow)" stroke="#cfd9e8" stroke-width="1.5"/><ellipse cx="${cx - r * 0.3}" cy="${cy - r * 0.35}" rx="${r * 0.28}" ry="${r * 0.16}" fill="#fff" opacity=".8"/>`;
+        const f1 = (n) => Math.round(n * 10) / 10;
+
+        // 눈덩이: 아래에 닿는 그림자 → 공(입체 그라데이션) → 테두리 빛·눈 알갱이
+        function snowBall(cx, cy, r, shadow = true) {
+            const p = (x, y) => `${f1(cx + x * r)} ${f1(cy + y * r)}`;
+            const rnd = mulberry32(Math.round(r * 7 + cy));
+            const dots = Array.from({ length: 5 }, () => {
+                const a = rnd() * Math.PI * 2;
+                const d = 0.3 + rnd() * 0.55;
+                return `<circle cx="${f1(cx + Math.cos(a) * d * r)}" cy="${f1(cy + Math.sin(a) * d * r)}" r="${f1(0.8 + rnd() * 1.2)}" fill="#cdd8e8" opacity=".7"/>`;
+            }).join('');
+            return `${shadow ? `<ellipse cx="${f1(cx + r * 0.06)}" cy="${f1(cy + r * 0.9)}" rx="${f1(r * 0.95)}" ry="${f1(r * 0.24)}" fill="url(#gShadow)"/>` : ''}<circle cx="${f1(cx)}" cy="${f1(cy)}" r="${f1(r)}" fill="url(#gSnow)" stroke="#c6d3e6" stroke-width="1.2"/>${dots}<ellipse cx="${f1(cx)}" cy="${f1(cy + r * 0.66)}" rx="${f1(r * 0.6)}" ry="${f1(r * 0.14)}" fill="#e8f0fc" opacity=".55"/><path d="M${p(-0.8, -0.12)}A${f1(r * 0.82)} ${f1(r * 0.82)} 0 0 1 ${p(0.08, -0.82)}" stroke="#fff" stroke-width="${f1(Math.max(2, r * 0.09))}" stroke-linecap="round" fill="none" opacity=".95"/><ellipse cx="${f1(cx - r * 0.34)}" cy="${f1(cy - r * 0.4)}" rx="${f1(r * 0.2)}" ry="${f1(r * 0.11)}" fill="#fff" transform="rotate(-30 ${f1(cx - r * 0.34)} ${f1(cy - r * 0.4)})"/>`;
+        }
+
+        const coal = (x, y, r) => `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="url(#gCoal)"/><circle cx="${f1(x - r * 0.3)}" cy="${f1(y - r * 0.32)}" r="${f1(r * 0.28)}" fill="#fff" opacity=".75"/>`;
+
+        // 나뭇가지 팔: 어깨(x, y)에서 dir(-1 왼쪽, 1 오른쪽)으로
+        function twig(x, y, dir, k) {
+            const L = 46 * k;
+            const ex = x + dir * L;
+            const ey = y - 22 * k;
+            const mx = x + dir * L * 0.55;
+            const my = y - 12 * k;
+            return `<path d="M${f1(x)} ${f1(y)}Q${f1(x + dir * L * 0.5)} ${f1(y - 4 * k)} ${f1(ex)} ${f1(ey)}" stroke="#6b4226" stroke-width="${f1(4.6 * k)}" stroke-linecap="round" fill="none"/>`
+                + `<path d="M${f1(mx)} ${f1(my)}l${f1(dir * 4 * k)} ${f1(-14 * k)}M${f1(x + dir * L * 0.82)} ${f1(y - 17 * k)}l${f1(dir * 12 * k)} ${f1(3 * k)}M${f1(x + dir * L * 0.82)} ${f1(y - 17 * k)}l${f1(dir * 5 * k)} ${f1(-11 * k)}" stroke="#6b4226" stroke-width="${f1(3 * k)}" stroke-linecap="round" fill="none"/>`
+                + `<path d="M${f1(x + dir * 6 * k)} ${f1(y - 2.2 * k)}Q${f1(x + dir * L * 0.5)} ${f1(y - 6 * k)} ${f1(ex - dir * 6 * k)} ${f1(ey + 1 * k)}" stroke="#a16b3f" stroke-width="${f1(1.4 * k)}" stroke-linecap="round" fill="none" opacity=".8"/>`;
+        }
+
+        function mitten(x, y, dir) {
+            return `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${dir * -20})"><ellipse cx="${-dir * 7}" cy="1" rx="4" ry="5.5" fill="#dc2626"/><rect x="-7.5" y="-10" width="15" height="17" rx="7.5" fill="url(#gScarf)"/><rect x="-8" y="5" width="16" height="5" rx="2.5" fill="#fff"/></g>`;
+        }
+
+        // 뒤쪽 풍경: 눈 언덕, 멀리 있는 전나무, 땅의 반짝임
+        function backdrop(ground) {
+            const pine = (x, h) => {
+                const w = h * 0.42;
+                const b = ground - 12;
+                return `<path d="M${x} ${b - h}l${f1(w * 0.6)} ${f1(h * 0.4)}h${f1(-w * 0.2)}l${f1(w * 0.6)} ${f1(h * 0.36)}h${f1(-w * 0.22)}l${f1(w * 0.62)} ${f1(h * 0.24)}h${f1(-w * 3.04)}l${f1(w * 0.62)} ${f1(-h * 0.24)}h${f1(-w * 0.22)}l${f1(w * 0.6)} ${f1(-h * 0.36)}h${f1(-w * 0.2)}z" fill="#9fb7d4" opacity=".75"/><path d="M${x} ${b - h}l${f1(w * 0.3)} ${f1(h * 0.2)}q${f1(-w * 0.3)} ${f1(h * 0.06)} ${f1(-w * 0.6)} 0z" fill="#fff" opacity=".9"/>`;
+            };
+            return `<path d="M0 ${ground - 26}C40 ${ground - 58} 96 ${ground - 52} 132 ${ground - 34}S220 ${ground - 62} 300 ${ground - 30}V${ground + 30}H0z" fill="url(#gHill)"/>`
+                + pine(26, 64) + pine(54, 44) + pine(280, 50)
+                + `<ellipse cx="150" cy="${ground + 8}" rx="152" ry="26" fill="url(#gGround)"/><path d="M6 ${ground + 2}q44-14 86-4t92-2 110 6" stroke="#fff" stroke-width="3" fill="none" opacity=".9"/>`
+                + [[38, ground + 14], [228, ground + 20], [92, ground + 24], [266, ground + 6]].map(([x, y]) => `<path d="M${x} ${y - 4}l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" fill="#fff"/>`).join('');
         }
 
         // m = { rec, size, wear:[], wish:'' } → { svg 안쪽, 팻말 자리 }
@@ -938,7 +1048,7 @@
             // 1.22를 넘으면 모자가 그림 위로 잘린다 (꼭대기 = 372 - 295k)
             const k = Math.min(1.22, 0.72 + m.size * 0.016);
             const ground = 334;
-            let g = `<ellipse cx="150" cy="${ground + 4}" rx="146" ry="20" fill="#f8fbff"/><path d="M8 ${ground + 4}q40-16 82-6t90-2 112 8" fill="#fff" opacity=".9"/>`;
+            let g = backdrop(ground);
             if (!rec) {
                 g += `${snowBall(150, ground - 9, 11)}`;
                 return { g, sign: null };
@@ -956,36 +1066,56 @@
                 return wear.has(id) && rec >= it.at && (it.needs === 'head' ? has.head : has.top);
             };
 
-            // 굴리는 중인 눈덩이
+            // 굴리는 중인 눈덩이 (지나온 자국과 떨어진 눈 덩어리)
             if (!has.body) {
                 const r = 12 + rec * 5;
-                g += `<path d="M20 ${ground}h${150 - r - 20}" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round"/>${snowBall(150, ground - r + 4, r)}`;
+                g += `<path d="M14 ${ground + 2}H${150 - r * 0.6}" stroke="#dbe5f2" stroke-width="${f1(Math.min(14, 6 + r * 0.12))}" stroke-linecap="round"/>`
+                    + [[40, 3], [78, 2.4], [112, 2.8]].filter(([x]) => x < 150 - r).map(([x, s]) => `<circle cx="${x}" cy="${ground - 2}" r="${s}" fill="#fff" stroke="#d3deec"/>`).join('')
+                    + snowBall(150, ground - r + 4, r);
             } else if (!has.top || !has.head) {
                 const r = has.top ? 8 + (rec - 14) * 3.6 : 10 + (rec - 7) * 4.5;
-                g += snowBall(262, ground - r + 4, r);
+                g += snowBall(258, ground - r + 4, r);
             }
             if (ok('broom')) {
-                g += `<path d="M${150 + R2 + 26} ${c2 - 10}L${150 + R2 + 40} ${ground - 4}" stroke="#92400e" stroke-width="5" stroke-linecap="round"/><path d="M${150 + R2 + 28} ${ground - 30}l-10 30h40l-6-32z" fill="#eab308"/>`;
+                const bx = 150 + R2 + 30;
+                g += `<path d="M${f1(bx - 8)} ${f1(c2 - 26)}L${f1(bx + 6)} ${ground - 26}" stroke="#92400e" stroke-width="5" stroke-linecap="round"/><path d="M${f1(bx - 6)} ${ground - 30}l-12 30q22 6 44 0l-8-32z" fill="#eab308"/><path d="M${f1(bx - 2)} ${ground - 22}l-6 20M${f1(bx + 6)} ${ground - 22}v21M${f1(bx + 14)} ${ground - 22}l6 20" stroke="#ca8a04" stroke-width="1.6" stroke-linecap="round"/><rect x="${f1(bx - 9)}" y="${ground - 33}" width="26" height="6" rx="2" fill="#b91c1c" transform="rotate(4 ${f1(bx + 4)} ${ground - 30})"/>`;
             }
             if (has.body) g += snowBall(150, c1, R1);
             if (has.top) {
-                g += `<path d="M${150 - R2 + 4} ${c2}l-40-20m14 7l-6-16M${150 + R2 - 4} ${c2}l40-22m-14 8l8-15" stroke="#7c4a24" stroke-width="4" stroke-linecap="round" fill="none"/>`;
+                g += twig(150 - R2 + 6, c2 - 2, -1, k) + twig(150 + R2 - 6, c2 - 4, 1, k);
                 g += snowBall(150, c2, R2);
-                g += [-0.35, 0, 0.35].map((t) => `<circle cx="150" cy="${c2 + t * R2 * 1.6}" r="${3.6 * k}" fill="#1f2937"/>`).join('');
-                if (ok('mitten')) g += `<circle cx="${150 - R2 - 36}" cy="${c2 - 18}" r="8" fill="#dc2626"/><circle cx="${150 + R2 + 36}" cy="${c2 - 20}" r="8" fill="#dc2626"/>`;
+                g += [-0.38, 0, 0.38].map((t) => coal(150, c2 + t * R2 * 1.5, 3.9 * k)).join('');
+                if (ok('mitten')) g += mitten(150 - R2 + 6 - 46 * k, c2 - 2 - 22 * k, -1) + mitten(150 + R2 - 6 + 46 * k, c2 - 4 - 22 * k, 1);
             }
             if (has.head) {
-                if (has.hat) g += `<path d="M${150 - R3 * 0.9} ${c3 + R3 * 0.72}q${R3 * 0.9} ${R3 * 0.5} ${R3 * 1.8} 0v10q-${R3 * 0.9} ${R3 * 0.5}-${R3 * 1.8} 0z" fill="#dc2626"/><path d="M${150 + R3 * 0.4} ${c3 + R3 * 0.9}l10 34h-14l-6-30z" fill="#b91c1c"/>`;
+                const ny = c3 + R3 * 0.8;
                 g += snowBall(150, c3, R3);
-                if (has.face) {
-                    g += `<circle cx="${150 - R3 * 0.34}" cy="${c3 - R3 * 0.18}" r="${3.8 * k}" fill="#111827"/><circle cx="${150 + R3 * 0.34}" cy="${c3 - R3 * 0.18}" r="${3.8 * k}" fill="#111827"/>`;
-                    g += `<path d="M150 ${c3 + R3 * 0.02}l${R3 * 0.75} ${R3 * 0.12}-${R3 * 0.75} ${R3 * 0.14}z" fill="#f97316"/>`;
-                    g += [-0.4, -0.2, 0, 0.2, 0.4].map((t) => `<circle cx="${150 + t * R3}" cy="${c3 + R3 * 0.42 - Math.abs(t) * R3 * 0.22}" r="${2.2 * k}" fill="#1f2937"/>`).join('');
+                if (has.hat) {
+                    // 목도리: 목에 두른 띠 + 늘어진 꼬리(줄무늬·술)
+                    g += `<path d="M${f1(150 + R3 * 0.48)} ${f1(ny + 4)}l${f1(9 * k)} ${f1(36 * k)}l${f1(-15 * k)} ${f1(3 * k)}l${f1(-5 * k)} ${f1(-36 * k)}z" fill="url(#gScarf)"/><path d="M${f1(150 + R3 * 0.48 + 4 * k)} ${f1(ny + 16 * k)}l${f1(-12 * k)} ${f1(2 * k)}M${f1(150 + R3 * 0.48 + 6.5 * k)} ${f1(ny + 27 * k)}l${f1(-13 * k)} ${f1(2.2 * k)}" stroke="#fff" stroke-width="${f1(3 * k)}"/><path d="M${f1(150 + R3 * 0.48 - 6 * k)} ${f1(ny + 43 * k)}v${f1(5 * k)}m${f1(5 * k)} ${f1(-6 * k)}v${f1(5 * k)}m${f1(5 * k)} ${f1(-6 * k)}v${f1(5 * k)}" stroke="#b91c1c" stroke-width="${f1(1.8 * k)}" stroke-linecap="round"/>`
+                        + `<path d="M${f1(150 - R3 * 0.98)} ${f1(ny - 6 * k)}q${f1(R3 * 0.98)} ${f1(R3 * 0.38)} ${f1(R3 * 1.96)} 0v${f1(11 * k)}q${f1(-R3 * 0.98)} ${f1(R3 * 0.38)} ${f1(-R3 * 1.96)} 0z" fill="url(#gScarf)"/><path d="M${f1(150 - R3 * 0.5)} ${f1(ny - 1 * k)}v${f1(10 * k)}M${f1(150 + R3 * 0.5)} ${f1(ny - 1 * k)}v${f1(10 * k)}" stroke="#fff" stroke-width="${f1(3 * k)}" opacity=".9"/><ellipse cx="${f1(150 + R3 * 0.48)}" cy="${f1(ny + 5 * k)}" rx="${f1(7 * k)}" ry="${f1(6 * k)}" fill="#b91c1c"/>`;
                 }
-                if (ok('shades')) g += `<rect x="${150 - R3 * 0.62}" y="${c3 - R3 * 0.34}" width="${R3 * 0.52}" height="${R3 * 0.32}" rx="5" fill="#111827"/><rect x="${150 + R3 * 0.1}" y="${c3 - R3 * 0.34}" width="${R3 * 0.52}" height="${R3 * 0.32}" rx="5" fill="#111827"/><path d="M${150 - R3 * 0.1} ${c3 - R3 * 0.2}h${R3 * 0.2}" stroke="#111827" stroke-width="3"/>`;
-                if (ok('earmuff')) g += `<path d="M${150 - R3 * 0.95} ${c3}a${R3 * 0.95} ${R3 * 0.95} 0 0 1 ${R3 * 1.9} 0" stroke="#7c3aed" stroke-width="5" fill="none"/><circle cx="${150 - R3 * 0.98}" cy="${c3 + 2}" r="${10 * k}" fill="#f472b6"/><circle cx="${150 + R3 * 0.98}" cy="${c3 + 2}" r="${10 * k}" fill="#f472b6"/>`;
-                if (ok('santa')) g += `<path d="M${150 - R3 * 0.95} ${c3 - R3 * 0.55}q${R3 * 0.4}-${R3 * 1.7} ${R3 * 1.5}-${R3 * 1.2} ${R3 * 0.55} ${R3 * 0.3} ${R3 * 0.42} ${R3 * 1.2}z" fill="#dc2626"/><rect x="${150 - R3 * 1.02}" y="${c3 - R3 * 0.72}" width="${R3 * 2.04}" height="${R3 * 0.32}" rx="${R3 * 0.16}" fill="#fff"/><circle cx="${150 + R3 * 0.98}" cy="${c3 - R3 * 1.7}" r="${R3 * 0.2}" fill="#fff"/>`;
-                else if (has.hat) g += `<rect x="${150 - R3 * 0.95}" y="${c3 - R3 * 0.98}" width="${R3 * 1.9}" height="${R3 * 0.2}" rx="3" fill="#111827"/><rect x="${150 - R3 * 0.6}" y="${c3 - R3 * 1.78}" width="${R3 * 1.2}" height="${R3 * 0.84}" rx="4" fill="#111827"/><rect x="${150 - R3 * 0.6}" y="${c3 - R3 * 1.16}" width="${R3 * 1.2}" height="${R3 * 0.16}" fill="#dc2626"/>`;
+                if (has.face) {
+                    const ey = c3 - R3 * 0.18;
+                    g += coal(150 - R3 * 0.34, ey, 4.2 * k) + coal(150 + R3 * 0.34, ey, 4.2 * k);
+                    g += `<ellipse cx="${f1(150 - R3 * 0.58)}" cy="${f1(c3 + R3 * 0.2)}" rx="${f1(R3 * 0.17)}" ry="${f1(R3 * 0.11)}" fill="#fb7185" opacity=".45"/><ellipse cx="${f1(150 + R3 * 0.58)}" cy="${f1(c3 + R3 * 0.2)}" rx="${f1(R3 * 0.17)}" ry="${f1(R3 * 0.11)}" fill="#fb7185" opacity=".45"/>`;
+                    g += `<path d="M${f1(150 - R3 * 0.04)} ${f1(c3 - R3 * 0.04)}L${f1(150 + R3 * 0.86)} ${f1(c3 + R3 * 0.12)}L${f1(150 - R3 * 0.04)} ${f1(c3 + R3 * 0.22)}Q${f1(150 - R3 * 0.12)} ${f1(c3 + R3 * 0.09)} ${f1(150 - R3 * 0.04)} ${f1(c3 - R3 * 0.04)}z" fill="url(#gCarrot)"/><path d="M${f1(150 + R3 * 0.22)} ${f1(c3 + R3 * 0.02)}l${f1(R3 * 0.04)} ${f1(R3 * 0.08)}M${f1(150 + R3 * 0.45)} ${f1(c3 + R3 * 0.06)}l${f1(R3 * 0.03)} ${f1(R3 * 0.07)}" stroke="#c2410c" stroke-width="1.2" stroke-linecap="round"/>`;
+                    g += [-0.4, -0.2, 0, 0.2, 0.4].map((t) => coal(150 + t * R3, c3 + R3 * 0.46 - Math.abs(t) * R3 * 0.24, 2.3 * k)).join('');
+                }
+                if (ok('shades')) g += `<rect x="${f1(150 - R3 * 0.64)}" y="${f1(c3 - R3 * 0.36)}" width="${f1(R3 * 0.54)}" height="${f1(R3 * 0.34)}" rx="5" fill="#111827"/><rect x="${f1(150 + R3 * 0.1)}" y="${f1(c3 - R3 * 0.36)}" width="${f1(R3 * 0.54)}" height="${f1(R3 * 0.34)}" rx="5" fill="#111827"/><path d="M${f1(150 - R3 * 0.1)} ${f1(c3 - R3 * 0.22)}h${f1(R3 * 0.2)}" stroke="#111827" stroke-width="3"/><path d="M${f1(150 - R3 * 0.54)} ${f1(c3 - R3 * 0.26)}l${f1(R3 * 0.12)} ${f1(-R3 * 0.06)}M${f1(150 + R3 * 0.2)} ${f1(c3 - R3 * 0.26)}l${f1(R3 * 0.12)} ${f1(-R3 * 0.06)}" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/>`;
+                if (ok('earmuff')) {
+                    const muff = (x) => `<circle cx="${f1(x)}" cy="${f1(c3 + 2)}" r="${f1(10.5 * k)}" fill="#f472b6"/><circle cx="${f1(x - 2 * k)}" cy="${f1(c3)}" r="${f1(6 * k)}" fill="#f9a8d4"/>`;
+                    g += `<path d="M${f1(150 - R3 * 0.95)} ${f1(c3)}a${f1(R3 * 0.95)} ${f1(R3 * 0.95)} 0 0 1 ${f1(R3 * 1.9)} 0" stroke="#7c3aed" stroke-width="5" fill="none"/>${muff(150 - R3 * 0.98)}${muff(150 + R3 * 0.98)}`;
+                }
+                if (ok('santa')) {
+                    g += `<path d="M${f1(150 - R3 * 0.95)} ${f1(c3 - R3 * 0.55)}q${f1(R3 * 0.4)} ${f1(-R3 * 1.7)} ${f1(R3 * 1.5)} ${f1(-R3 * 1.2)} ${f1(R3 * 0.55)} ${f1(R3 * 0.3)} ${f1(R3 * 0.42)} ${f1(R3 * 1.2)}z" fill="url(#gScarf)"/>`
+                        + [-0.86, -0.43, 0, 0.43, 0.86].map((t) => `<circle cx="${f1(150 + t * R3)}" cy="${f1(c3 - R3 * 0.58 - (1 - Math.abs(t)) * R3 * 0.05)}" r="${f1(R3 * 0.2)}" fill="#fff"/>`).join('')
+                        + `<circle cx="${f1(150 + R3 * 0.98)}" cy="${f1(c3 - R3 * 1.7)}" r="${f1(R3 * 0.22)}" fill="#fff"/><circle cx="${f1(150 + R3 * 0.92)}" cy="${f1(c3 - R3 * 1.76)}" r="${f1(R3 * 0.08)}" fill="#e2e8f0"/>`;
+                } else if (has.hat) {
+                    // 살짝 기울어진 실크해트 + 호랑가시 장식
+                    const top = c3 - R3 * 0.9;
+                    g += `<g transform="rotate(-8 150 ${f1(top)})"><rect x="${f1(150 - R3 * 0.98)}" y="${f1(top - R3 * 0.08)}" width="${f1(R3 * 1.96)}" height="${f1(R3 * 0.22)}" rx="${f1(R3 * 0.1)}" fill="url(#gHat)"/><rect x="${f1(150 - R3 * 0.6)}" y="${f1(top - R3 * 0.9)}" width="${f1(R3 * 1.2)}" height="${f1(R3 * 0.86)}" rx="4" fill="url(#gHat)"/><rect x="${f1(150 - R3 * 0.6)}" y="${f1(top - R3 * 0.3)}" width="${f1(R3 * 1.2)}" height="${f1(R3 * 0.18)}" fill="#dc2626"/><ellipse cx="${f1(150 + R3 * 0.28)}" cy="${f1(top - R3 * 0.25)}" rx="${f1(R3 * 0.16)}" ry="${f1(R3 * 0.07)}" fill="#15803d" transform="rotate(-25 ${f1(150 + R3 * 0.28)} ${f1(top - R3 * 0.25)})"/><ellipse cx="${f1(150 + R3 * 0.48)}" cy="${f1(top - R3 * 0.25)}" rx="${f1(R3 * 0.16)}" ry="${f1(R3 * 0.07)}" fill="#16a34a" transform="rotate(25 ${f1(150 + R3 * 0.48)} ${f1(top - R3 * 0.25)})"/>${[[0.36, -0.2], [0.42, -0.14], [0.47, -0.22]].map(([x, y]) => `<circle cx="${f1(150 + R3 * x)}" cy="${f1(top + R3 * y)}" r="${f1(R3 * 0.06)}" fill="#ef4444"/>`).join('')}<path d="M${f1(150 - R3 * 0.48)} ${f1(top - R3 * 0.82)}v${f1(R3 * 0.42)}" stroke="#4b5563" stroke-width="2.5" stroke-linecap="round" opacity=".7"/></g>`;
+                }
             }
             let sign = null;
             if (m.wish) {
@@ -1009,7 +1139,16 @@
             return out;
         }
 
-        const DEFS = '<defs><radialGradient id="gSnow" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#eef2f7"/><stop offset="1" stop-color="#d5deea"/></radialGradient></defs>';
+        const DEFS = '<defs>'
+            + '<radialGradient id="gSnow" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#f3f6fb"/><stop offset=".85" stop-color="#d8e2f0"/><stop offset="1" stop-color="#bfcde1"/></radialGradient>'
+            + '<radialGradient id="gShadow"><stop offset="0" stop-color="#6f85a8" stop-opacity=".5"/><stop offset="1" stop-color="#6f85a8" stop-opacity="0"/></radialGradient>'
+            + '<radialGradient id="gCoal" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#6b7280"/><stop offset=".5" stop-color="#1f2937"/><stop offset="1" stop-color="#0b0f19"/></radialGradient>'
+            + '<linearGradient id="gCarrot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ea580c"/><stop offset="1" stop-color="#fdba74"/></linearGradient>'
+            + '<linearGradient id="gHat" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b0f19"/><stop offset=".4" stop-color="#374151"/><stop offset="1" stop-color="#111827"/></linearGradient>'
+            + '<linearGradient id="gScarf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef4444"/><stop offset="1" stop-color="#b91c1c"/></linearGradient>'
+            + '<linearGradient id="gHill" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#eef4fd" stop-opacity="0"/><stop offset=".14" stop-color="#eef4fd" stop-opacity=".92"/><stop offset=".86" stop-color="#eef4fd" stop-opacity=".92"/><stop offset="1" stop-color="#eef4fd" stop-opacity="0"/></linearGradient>'
+            + '<linearGradient id="gGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe8f5"/></linearGradient>'
+            + '</defs>';
         const manModel = (st) => ({ rec: recordedOf(st), size: sizeOf(st), wear: st.wear, wish: st.wish });
         const manSvg = (m, label = '눈사람') => `<svg viewBox="0 0 300 360" role="img" aria-label="${esc(label)}">${manInner(m).g}</svg>`;
 
@@ -1025,7 +1164,7 @@
             return { v: 1, year: Clock.season().year, name, days: {}, swaps: {}, wear: [], best: '', wish: '', picked: [] };
         }
 
-        // 쓸 수 있는 날: 오늘 + 비어 있는 어제·그제 (12월 안에서만)
+        // 쓸 수 있는 날: 오늘 + 비어 있는 어제·그제 (시즌 안에서만)
         function writableDays(st) {
             const se = Clock.season();
             if (se.phase !== 'diary' || st.year !== se.year) return [];
@@ -1033,7 +1172,7 @@
             const list = [today];
             [-1, -2].forEach((n) => {
                 const k = Clock.shift(today, n);
-                if (k.slice(5, 7) === '12' && k.startsWith(String(st.year)) && !st.days[k]) list.push(k);
+                if (dayNo(k, st.year) && !st.days[k]) list.push(k);
             });
             return list;
         }
@@ -1142,20 +1281,20 @@
         // ════════════════════════════════════════════════════════════
         //  화면
         // ════════════════════════════════════════════════════════════
-        const dayLabel = (k) => `12월 ${Number(k.slice(8))}일`;
+        const dayLabel = (k) => `${Number(k.slice(5, 7))}월 ${Number(k.slice(8))}일`;
         const relLabel = (k) => (k === Clock.today() ? '오늘' : k === Clock.shift(Clock.today(), -1) ? '어제' : '그제');
 
         function renderStart() {
             const se = Clock.season();
             const demo = { rec: 31, size: 30, wear: ['earmuff'], wish: '' };
             const when = se.phase === 'pre'
-                ? `12월 1일에 첫 줄을 쓸 수 있어요. <b>D-${Clock.daysUntil(se.year, 12, 1)}</b>`
+                ? `${START_LABEL}에 첫 줄을 쓸 수 있어요. <b>D-${Clock.daysUntil(se.year, START_M, START_D)}</b> 이름을 정해 두면 소품을 미리 입혀 볼 수 있어요.`
                 : se.phase === 'diary' ? '지금부터 하루 한 줄씩 써 보세요. 어제·그제 것도 늦게 쓸 수 있어요.'
-                    : '이번 12월은 끝났어요. 이름을 정해 두면 다음 12월에 바로 시작할 수 있어요.';
+                    : '이번 시즌은 끝났어요. 이름을 정해 두면 다음 시즌에 바로 시작할 수 있어요.';
             $('v-start').innerHTML = `<div class="yard sun"><div class="man-box demo">${manSvg(demo, '완성된 눈사람 예시')}</div></div>
                 <div class="panel" style="margin-top:12px">
-                    <h2>⛄ 12월, 하루 한 줄</h2>
-                    <p class="hint">오늘 먹은 것, 들은 노래, 창밖 풍경처럼 가볍게 한 줄만 쓰면 눈덩이가 굴러 커져요. 31일에는 내가 쓴 날만큼 자란 "나의 12월" 눈사람과 리포트가 완성돼요.<br>${when}</p>
+                    <h2>⛄ 연말, 하루 한 줄</h2>
+                    <p class="hint">${START_LABEL}부터 12월 31일까지, 오늘 먹은 것·들은 노래·창밖 풍경처럼 가볍게 한 줄만 쓰면 눈덩이가 굴러 커져요. 12월 31일에는 내가 쓴 날만큼 자란 "나의 12월" 눈사람과 리포트가 완성돼요.<br>${when}</p>
                     <label class="field" for="name">내 이름</label>
                     <input class="txt" id="name" maxlength="${MAX_NAME}" placeholder="예) 민수" autocomplete="off">
                     <p class="error" id="start-error"></p>
@@ -1175,25 +1314,30 @@
             const yardClass = { snow: 'snow', sleet: 'sleet', sun: 'sun', night: 'night' }[w];
             let meta;
             if (old) meta = `🗂️ ${S.year}년 12월의 눈사람`;
-            else if (se.phase === 'pre') meta = `12월 1일까지 D-${Clock.daysUntil(se.year, 12, 1)}`;
-            else if (se.phase === 'diary') meta = `12월 ${se.day}일 · 기록 ${rec}일 · ${stageName(rec)}`;
+            else if (se.phase === 'pre') meta = `${START_LABEL}까지 D-${Clock.daysUntil(se.year, START_M, START_D)} · 소품을 미리 입혀 보세요`;
+            else if (se.phase === 'diary') meta = `${dayLabel(today)} · ${se.day}일째 · 기록 ${rec}일 · ${stageName(rec)}`;
             else if (se.phase === 'wish') meta = '🎍 새해 첫날! 소원을 들려 주세요';
             else meta = `기록 ${rec}일 · ${stageName(rec)}`;
 
+            const pre = !old && se.phase === 'pre';
+            const model = pre ? { rec: 31, size: 30, wear: S.wear, wish: '' } : manModel(S);
             const yard = `<div class="yard ${yardClass}">
                 <div class="yard-head"><div><b>${esc(S.name)}의 눈사람</b><div class="meta">${meta}</div></div>
-                ${se.phase === 'diary' && !old ? `<span class="weather-tag">${WEATHER[w].e} ${WEATHER[w].name}</span>` : ''}</div>
-                <div class="man-box">${manSvg(manModel(S), `${S.name}의 눈사람`)}</div></div>`;
+                ${se.phase === 'diary' && !old ? `<span class="weather-tag">${WEATHER[w].e} ${WEATHER[w].name}</span>` : pre ? '<span class="weather-tag">👀 미리 보기</span>' : ''}</div>
+                <div class="man-box ${UI.bump ? 'bump' : ''}">${manSvg(model, pre ? '완성되면 이런 눈사람이 돼요' : `${S.name}의 눈사람`)}</div></div>`;
+            UI.bump = false;
 
             let body = '';
             if (old) {
                 body = `<div class="panel"><h3>🗂️ 지난 12월이에요</h3><p class="hint">${S.year}년 12월 기록은 리포트에서 다시 볼 수 있어요. 올해 12월에는 새 눈사람을 만들어요.</p>
                     <div class="btn-row"><button class="btn btn-ghost" data-act="report" type="button">📅 지난 리포트</button><button class="btn btn-primary" data-act="restart" type="button">⛄ 새로 시작</button></div></div>`;
             } else if (se.phase === 'pre') {
-                body = `<div class="panel"><h3>⏳ 12월 1일에 첫 줄을 써요</h3><p class="hint">매일 가벼운 질문이 하나씩 나와요. 쓰기 싫은 날은 패스해도 괜찮아요. D-${Clock.daysUntil(se.year, 12, 1)}</p></div>`;
+                const q = QUESTIONS[questionFor(S, startKey(se.year))];
+                body = `<div class="panel"><h3>⏳ ${START_LABEL}에 첫 줄을 써요 <span class="count">D-${Clock.daysUntil(se.year, START_M, START_D)}</span></h3><p class="hint">매일 가벼운 질문이 하나씩 나와요. 쓰기 싫은 날은 패스해도 괜찮아요. 위 눈사람은 다 만들면 이렇게 된다는 미리 보기예요.</p>
+                    <div class="q-peek"><small>첫날 질문 미리 보기</small><b>${esc(q[0])}</b><span>${esc(q[1])}</span></div></div>`;
             } else if (se.phase === 'diary') {
                 body = writableDays(S).map((k) => entryCard(k)).join('');
-                if (se.day === 31) body += '<div class="panel"><h3>🎉 12월 마지막 날이에요</h3><p class="hint">오늘 한 줄을 쓰고 "나의 12월" 리포트를 열어 보세요.</p><button class="btn btn-primary btn-block" data-act="report" type="button">📅 나의 12월 리포트</button></div>';
+                if (se.last) body += '<div class="panel"><h3>🎉 12월 마지막 날이에요</h3><p class="hint">오늘 한 줄을 쓰고 "나의 12월" 리포트를 열어 보세요.</p><button class="btn btn-primary btn-block" data-act="report" type="button">📅 나의 12월 리포트</button></div>';
             } else if (se.phase === 'wish') {
                 body = S.wish
                     ? `<div class="panel"><h3>🎍 새해 소원</h3><div class="saved-line">${esc(S.wish)}</div><div class="btn-row"><button class="btn btn-ghost" data-act="wish-edit" type="button">✏️ 고치기</button><button class="btn btn-primary" data-act="report" type="button">📅 나의 12월 리포트</button></div></div>`
@@ -1202,9 +1346,9 @@
                 body = `<div class="panel"><h3>📅 나의 12월</h3><p class="hint">12월 기록이 끝났어요. 리포트에서 카드를 만들어 보세요. (1월 말까지 볼 수 있어요)</p><button class="btn btn-primary btn-block" data-act="report" type="button">📅 나의 12월 리포트</button></div>`;
             }
 
-            const cal = old || se.phase === 'pre' ? '' : `<div class="panel"><h3>🗓️ 12월 달력 <span class="count">${rec}/31</span></h3>${calendarHtml(S, true)}</div>`;
+            const cal = old || se.phase === 'pre' ? '' : `<div class="panel"><h3>🗓️ 연말 달력 <span class="count">${rec}/${SEASON_LEN}</span></h3>${calendarHtml(S, true)}</div>`;
             $('v-main').innerHTML = `${yard}<div style="height:12px"></div>${body}${cal}${old ? '' : itemsPanel()}
-                <div class="tools">${!old && se.phase === 'diary' && se.day < 31 && rec ? '<button class="text-btn" data-act="report" type="button">📅 리포트 미리 보기</button>' : ''}<button class="text-btn" data-act="backup" type="button">💾 백업 코드</button><button class="text-btn" data-act="restart" type="button">🔄 처음부터</button></div>`;
+                <div class="tools">${!old && se.phase === 'diary' && !se.last && rec ? '<button class="text-btn" data-act="report" type="button">📅 리포트 미리 보기</button>' : ''}<button class="text-btn" data-act="backup" type="button">💾 백업 코드</button><button class="text-btn" data-act="restart" type="button">🔄 처음부터</button></div>`;
             $('v-main').querySelectorAll('input[data-line]').forEach((el) => el.addEventListener('input', () => {
                 const c = el.closest('.panel').querySelector('[data-counter]');
                 if (c) c.textContent = `${el.value.length}/${MAX_LINE}`;
@@ -1249,29 +1393,37 @@
                 <p class="error" id="wish-error"></p><button class="btn btn-primary btn-block" data-act="wish" type="button">🪧 팻말 세우기</button></div>`;
         }
 
+        // 달력 칸 숫자: 첫 칸과 달이 바뀌는 날은 '11/27', '12/1'처럼
+        const calNum = (k, i) => (i === 0 || k.endsWith('-01') ? `${Number(k.slice(5, 7))}/${Number(k.slice(8))}` : String(Number(k.slice(8))));
+
         function calendarHtml(st, interactive) {
-            const first = new Date(st.year, 11, 1).getDay();
+            const keys = seasonKeys(st.year);
+            const first = atNoon(keys[0]).getDay();
             const today = Clock.today();
             let h = '<div class="cal">' + ['일', '월', '화', '수', '목', '금', '토'].map((d) => `<div class="wd">${d}</div>`).join('');
             for (let i = 0; i < first; i++) h += '<div></div>';
-            for (let d = 1; d <= 31; d++) {
-                const k = `${st.year}-12-${String(d).padStart(2, '0')}`;
+            for (const [i, k] of keys.entries()) {
+                const d = calNum(k, i);
                 const e = st.days[k];
                 const past = k < today;
                 const icon = e ? (e.pass ? '💤' : e.mood || '✏️') : '';
                 const cls = `cell ${e ? 'done' : past ? 'miss' : ''} ${k === today ? 'today' : ''}`;
                 h += e && interactive && !e.pass
-                    ? `<button class="${cls}" data-act="peek" data-day="${k}" type="button" aria-label="12월 ${d}일 기록 보기"><small>${d}</small>${icon}</button>`
+                    ? `<button class="${cls}" data-act="peek" data-day="${k}" type="button" aria-label="${dayLabel(k)} 기록 보기"><small>${d}</small>${icon}</button>`
                     : `<div class="${cls}"><small>${d}</small>${icon}</div>`;
             }
             return `${h}</div>`;
         }
 
+        // 시즌 전(미리 보기)인지
+        const trying = () => S && Clock.season().phase === 'pre' && S.year === Clock.season().year;
+
         function itemsPanel() {
             const rec = recordedOf(S);
-            return `<div class="panel"><h3>🧣 소품함</h3><p class="hint" style="margin-bottom:8px">기록한 날이 쌓이면 소품이 열려요. 눌러서 입히고 벗겨요.</p><div class="items">${ITEMS.map((it) => {
-                const open = rec >= it.at;
-                return `<button class="item" data-act="wear" data-item="${it.id}" aria-pressed="${S.wear.includes(it.id)}" type="button" ${open ? '' : 'disabled'}>${open ? it.e : '🔒'}<span>${open ? it.name : `${it.at}일`}</span></button>`;
+            const pre = trying();
+            return `<div class="panel"><h3>🧣 소품함</h3><p class="hint" style="margin-bottom:8px">${pre ? '시즌 전에는 모든 소품을 미리 입혀 볼 수 있어요. 시즌이 시작되면 기록한 날이 쌓일 때 하나씩 열려요.' : '기록한 날이 쌓이면 소품이 열려요. 눌러서 입히고 벗겨요.'}</p><div class="items">${ITEMS.map((it) => {
+                const open = pre || rec >= it.at;
+                return `<button class="item" data-act="wear" data-item="${it.id}" aria-pressed="${open && S.wear.includes(it.id)}" type="button" ${open ? '' : 'disabled'}>${open ? it.e : '🔒'}<span>${open ? it.name : `${it.at}일`}</span></button>`;
             }).join('')}</div></div>`;
         }
 
@@ -1300,15 +1452,15 @@
 
         function renderReport() {
             const se = Clock.season();
-            const ready = S.year !== se.year || se.phase !== 'diary' || se.day === 31;
+            const ready = S.year !== se.year || se.phase !== 'diary' || se.last;
             const rec = recordedOf(S);
             const words = topWords(S);
             const lines = Object.keys(S.days).filter((k) => !S.days[k].pass).sort();
             $('v-report').innerHTML = `<div class="yard sun"><div class="yard-head"><div><b>📅 ${esc(S.name)}의 ${S.year}년 12월</b><div class="meta">기록 ${rec}일 · 쓴 줄 ${writtenOf(S)}개 · ${stageName(rec)}</div></div></div>
                 <div class="man-box">${manSvg(manModel(S))}</div></div>
                 <div style="height:12px"></div>
-                ${ready ? '' : '<div class="banner"><b>아직 12월이 남았어요</b>지금까지의 기록으로 미리 보는 리포트예요. 31일에 완성돼요.</div>'}
-                <div class="panel"><h3>🗓️ 31칸 달력</h3>${calendarHtml(S, true)}</div>
+                ${ready ? '' : '<div class="banner"><b>아직 시즌이 남았어요</b>지금까지의 기록으로 미리 보는 리포트예요. 12월 31일에 완성돼요.</div>'}
+                <div class="panel"><h3>🗓️ ${SEASON_LEN}칸 달력</h3>${calendarHtml(S, true)}</div>
                 <div class="panel"><h3>🔤 자주 쓴 단어 TOP 3</h3>${words.length ? `<div class="words">${words.map(([w, c]) => `<span class="word">${esc(w)} · ${c}번</span>`).join('')}</div>` : '<p class="hint">아직 단어가 모이지 않았어요.</p>'}</div>
                 <div class="panel"><h3>⭐ 올해의 한 줄</h3>${S.best && lineOf(S.best) ? `<div class="best">“${esc(lineOf(S.best))}”<br><small style="color:var(--muted)">${dayLabel(S.best)}</small></div>` : '<p class="hint">내가 쓴 줄 중에서 하나를 골라 주세요.</p>'}
                     <button class="btn btn-ghost btn-block" data-act="pick-best" type="button" style="margin-top:10px" ${lines.length ? '' : 'disabled'}>⭐ 올해의 한 줄 고르기</button></div>
@@ -1376,6 +1528,7 @@
                 const unlocked = ITEMS.find((it) => it.at === rec);
                 setTimeout(() => {
                     el.hidden = true;
+                    UI.bump = true;
                     renderMain();
                     toast(unlocked ? `🎁 새 소품이 열렸어요: ${unlocked.e} ${unlocked.name}` : STAGES.some(([at]) => at === rec && at > 1) ? `⛄ ${stageName(rec)}!` : '⛄ 눈덩이가 커졌어요');
                 }, 650);
@@ -1451,16 +1604,17 @@
             const cx0 = 620;
             const cy0 = 312;   // 위의 부제목과 겹치지 않게
             const cell = 58;
-            const first = new Date(S.year, 11, 1).getDay();
+            const keys = seasonKeys(S.year);
+            const first = atNoon(keys[0]).getDay();
             g.textAlign = 'left';
             g.fillStyle = '#1e293b';
             g.font = font(800, 30);
             g.fillText('🗓️ 나의 12월', cx0, cy0 - 18);
-            for (let d = 1; d <= 31; d++) {
-                const i = first + d - 1;
+            for (const [n, k] of keys.entries()) {
+                const i = first + n;
+                const d = calNum(k, n);
                 const x = cx0 + (i % 7) * cell;
                 const y = cy0 + Math.floor(i / 7) * cell;
-                const k = `${S.year}-12-${String(d).padStart(2, '0')}`;
                 const e = S.days[k];
                 g.fillStyle = e ? '#dbeafe' : 'rgba(255,255,255,.7)';
                 g.beginPath();
@@ -1623,11 +1777,12 @@
             wear(el) {
                 const id = el.dataset.item;
                 const it = ITEMS.find((x) => x.id === id);
-                if (!it || recordedOf(S) < it.at) return;
+                if (!it || (!trying() && recordedOf(S) < it.at)) return;
                 const on = S.wear.includes(id);
                 S.wear = on ? S.wear.filter((x) => x !== id) : [...S.wear, id];
                 save();
                 renderMain();
+                if (trying()) return;
                 const need = it.needs === 'head' ? recordedOf(S) >= 21 : recordedOf(S) >= 14;
                 if (!on && !need) toast(`${it.e} ${it.needs === 'head' ? '머리가 생기면(21일)' : '팔이 생기면(14일)'} 보여요`);
             },
@@ -1716,15 +1871,15 @@
     <script type="application/json" id="game-rules">
 {
  "title": "한 줄 눈사람",
- "goal": "12월 한 달 동안 하루 한 줄씩 써서 나의 12월 눈사람을 완성해요.",
+ "goal": "11월 27일부터 12월 31일까지 하루 한 줄씩 써서 나의 12월 눈사람을 완성해요.",
  "steps": [
-  "이름을 정하고 시작해요. 12월 전에 미리 정해 둘 수 있어요.",
-  "12월에는 매일 가벼운 질문이 하나 나와요. 🔄로 하루 두 번 바꾸거나 자유롭게 써도 돼요.",
+  "이름을 정하고 시작해요. 시즌 전에 미리 정해 두면 소품을 입혀 보고 첫날 질문도 미리 볼 수 있어요.",
+  "시즌에는 매일 가벼운 질문이 하나 나와요. 🔄로 하루 두 번 바꾸거나 자유롭게 써도 돼요.",
   "한 줄(40자)과 오늘의 기분 이모지를 고르고 ⛄ 굴리기를 누른 뒤, 눈 위를 옆으로 밀어 눈덩이를 굴려요.",
   "쓰기 싫은 날은 💤 패스해도 눈덩이가 조금 굴러가요. 어제·그제 것은 늦게 써도 돼요.",
   "기록한 날이 7·14·21·25·31일이 되면 몸통·팔·머리·얼굴·모자가 생기고, 소품도 하나씩 열려요.",
   "❄️ 함박눈이 오는 날 쓰면 눈덩이가 더 커져요.",
-  "31일에는 달력·자주 쓴 단어·올해의 한 줄이 담긴 리포트와 카드를 만들어요. 1월 1일에는 소원 팻말을 세울 수 있어요."
+  "12월 31일에는 달력·자주 쓴 단어·올해의 한 줄이 담긴 리포트와 카드를 만들어요. 1월 1일에는 소원 팻말을 세울 수 있어요."
  ],
  "tips": [
   "기록은 이 브라우저에만 저장되고 어디에도 보내지 않아요. 카드에는 내가 고른 줄만 들어가요.",

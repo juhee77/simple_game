@@ -48,7 +48,7 @@
             <!-- 연말 시즌 배너: 날짜에 맞춰 문구를 바꾸고, 시즌이 아니면 숨긴다 -->
             <nav class="season-banner" id="season-banner" aria-label="연말 시즌 콘텐츠" hidden>
                 <a class="tree" href="games/advent-tree.html"><span class="e" aria-hidden="true">🎄</span><span><b>어드벤트 트리</b><small id="season-tree">친구들이 장식을 달아 줘요</small></span></a>
-                <a class="snow" href="games/snowman-diary.html"><span class="e" aria-hidden="true">⛄</span><span><b>한 줄 눈사람</b><small id="season-snow">하루 한 줄 12월 챌린지</small></span></a>
+                <a class="snow" href="games/snowman-diary.html"><span class="e" aria-hidden="true">⛄</span><span><b>한 줄 눈사람</b><small id="season-snow">하루 한 줄 연말 챌린지</small></span></a>
                 <a class="bell" href="games/new-year-bell.html" id="season-bell" hidden><span class="e" aria-hidden="true">🔔</span><span><b>제야의 종 같이 치기</b><small id="season-bell-t">12월 31일 자정, 친구들과 각자 폰으로</small></span></a>
             </nav>
             <script>
@@ -58,13 +58,15 @@
                     if (!on) return;
                     var el = document.getElementById('season-banner');
                     var t = document.getElementById('season-tree'), s = document.getElementById('season-snow');
-                    if (m === 11) {
-                        var left = Math.round((new Date(y, 11, 1) - new Date(y, m - 1, d)) / 86400000);
+                    // 트리·눈사람 모두 11/27부터 시작
+                    var day = function (mm, dd) { return Math.round((new Date(y, mm - 1, dd) - new Date(y, 10, 27)) / 86400000) + 1; };
+                    if (m === 11 && d < 27) {
+                        var left = 27 - d;
                         t.textContent = 'D-' + left + ' · 지금 미리 심기';
-                        s.textContent = '12월 1일부터 하루 한 줄';
-                    } else if (m === 12 && d <= 24) {
-                        t.textContent = '오늘 물 주기 · D-' + (25 - d);
-                        s.textContent = '오늘의 한 줄 · ' + d + '일째';
+                        s.textContent = '11월 27일부터 하루 한 줄';
+                    } else if (m === 11 || (m === 12 && d <= 24)) {
+                        t.textContent = '오늘 물 주기 · D-' + (day(12, 25) - day(m, d));
+                        s.textContent = '오늘의 한 줄 · ' + day(m, d) + '일째';
                     } else if (m === 12 && d === 25) {
                         t.textContent = '🎅 오늘 편지가 열려요';
                         s.textContent = '오늘의 한 줄 쓰기';
@@ -252,14 +254,14 @@
             <a href="games/advent-tree.html" class="game-card" data-min-players="1" data-max-players="12" data-time="1" data-category="solo duo multi utility" data-date="2026-11-25">
                 <div class="game-icon">🌲</div>
                 <h2 class="game-title">어드벤트 트리</h2>
-                <p class="game-description">12월 매일 물 주고 장식을 뽑아 키우는 트리 · 친구가 보낸 장식은 크리스마스에 열려요</p>
+                <p class="game-description">11/27부터 매일 물 주고 장식을 뽑아 키우는 트리 · 친구가 보낸 장식은 크리스마스에 열려요</p>
                 <div class="game-badge">시즌 육성</div>
             </a>
 
             <a href="games/snowman-diary.html" class="game-card" data-min-players="1" data-max-players="1" data-time="1" data-category="solo utility" data-date="2026-11-25">
                 <div class="game-icon">⛄</div>
                 <h2 class="game-title">한 줄 눈사람</h2>
-                <p class="game-description">12월에 하루 한 줄 쓰면 눈덩이가 굴러 커지고, 31일에 나의 12월 눈사람이 완성돼요</p>
+                <p class="game-description">11/27부터 하루 한 줄 쓰면 눈덩이가 굴러 커지고, 12월 31일에 나의 12월 눈사람이 완성돼요</p>
                 <div class="game-badge">시즌 기록</div>
             </a>
 

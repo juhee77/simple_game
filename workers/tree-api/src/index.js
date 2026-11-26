@@ -14,8 +14,9 @@ const DAY = 24 * 3600 * 1000;
 const MAX_STATE = 64 * 1024;   // 선물 200개(장식 하나 약 120자)도 들어가게
 const MAX_FOREST = 12;
 const MAX_GIFTS = 200;
+const MAX_VISITS = 1500;   // 주인에게 내려주는 발자국 수 (한 시즌)
 const PAIR_TTL = 7 * DAY;
-const LIMITS = { tree: 20, gift: 30, forest: 10, pair: 20 };   // IP당 하루
+const LIMITS = { tree: 20, gift: 30, forest: 10, pair: 20, visit: 120 };   // IP당 하루
 const GIFT_TYPES = new Set(['g-present', 'g-letter', 'g-cocoa', 'g-cupcake', 'g-poinsettia', 'g-cat', 'g-dog', 'g-bunny', 'g-wand', 'g-candle', 'g-macaron', 'g-mistletoe']);
 // 이모지 장식: "e." + 꾸밈 번호(0~b) + 이모지 한 글자. 이모지 문자만 받는다(글자·기호·공백 X).
 const EMO_OK = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|\p{Emoji_Modifier}|\u200d|\ufe0f|[\u{e0020}-\u{e007f}])+$/u;
@@ -191,9 +192,10 @@ async function createTree(req, env) {
     return json({ id, token: tk, rev: 1 }, 201);
 }
 
-async function getTree(env, id) {
+async function getTree(req, env, id) {
     const row = await loadTree(env, id);
-    const extra = {};
+    const { n } = await env.DB.prepare('SELECT COUNT(*) AS n FROM visits WHERE tree_id = ?1 AND day = ?2').bind(id, kstDay(nowOf(req, env))).first();
+    const extra = { visitsToday: n };
     if (row.partner_id) {
         const p = await env.DB.prepare('SELECT owner FROM trees WHERE id = ?1').bind(row.partner_id).first();
         if (p) extra.partnerName = p.owner;
@@ -211,7 +213,9 @@ async function getPrivate(req, env, id) {
     const open = now >= unlockAt(row.year);
     const gifts = (await env.DB.prepare('SELECT id, type, sender, message, created_at FROM gifts WHERE tree_id = ?1 ORDER BY created_at').bind(id).all()).results
         .map((g) => ({ id: g.id, type: g.type, sender: g.sender, hasMessage: Boolean(g.message), createdAt: g.created_at, ...(open && g.message ? { message: g.message } : {}) }));
-    const out = { tree: { id: row.id, owner: row.owner, mode: row.mode, year: row.year, rev: row.rev, state: JSON.parse(row.state), partnerId: row.partner_id, forestId: row.forest_id }, gifts, unlockAt: unlockAt(row.year), now };
+    const visits = (await env.DB.prepare('SELECT day, nick FROM visits WHERE tree_id = ?1 ORDER BY created_at, rowid LIMIT ?2').bind(id, MAX_VISITS).all()).results
+        .map((v) => [v.day, v.nick]);
+    const out = { tree: { id: row.id, owner: row.owner, mode: row.mode, year: row.year, rev: row.rev, state: JSON.parse(row.state), partnerId: row.partner_id, forestId: row.forest_id }, gifts, visits, unlockAt: unlockAt(row.year), now };
     if (row.partner_id) {
         const p = await env.DB.prepare('SELECT * FROM trees WHERE id = ?1').bind(row.partner_id).first();
         if (p) out.partner = publicView(p);
@@ -255,6 +259,25 @@ async function addGift(req, env, id) {
     await env.DB.prepare('INSERT INTO gifts (id, tree_id, type, sender, message, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)')
         .bind(gid, row.id, b.type, sender, message, now).run();
     return json({ id: gid }, 201);
+}
+
+// ── 다녀간 발자국: 하루 한 번, 닉네임은 비워도 된다 ──
+async function addVisit(req, env, id) {
+    const now = nowOf(req, env);
+    const row = await loadTree(env, id);
+    const b = await body(req);
+    const nick = str(b.nick, 10, '이름', { required: false });
+    const vid = typeof b.vid === 'string' && /^[0-9a-z]{8,24}$/.test(b.vid) ? b.vid : '';
+    const ip = (devOn(env) && req.headers.get('X-Dev-Ip')) || req.headers.get('CF-Connecting-IP') || 'local';
+    const vkey = (await sha256(`${row.id}|${vid || `ip:${ip}`}`)).slice(0, 24);
+    const day = kstDay(now);
+    await limit(env, req, 'visit', now);
+    const res = await env.DB.prepare('INSERT OR IGNORE INTO visits (tree_id, day, vkey, nick, created_at) VALUES (?1, ?2, ?3, ?4, ?5)')
+        .bind(row.id, day, vkey, nick, now).run();
+    // 오늘 이미 남겼으면 닉네임만 고친다
+    if (!res.meta.changes) await env.DB.prepare('UPDATE visits SET nick = ?1 WHERE tree_id = ?2 AND day = ?3 AND vkey = ?4').bind(nick, row.id, day, vkey).run();
+    const { n } = await env.DB.prepare('SELECT COUNT(*) AS n FROM visits WHERE tree_id = ?1 AND day = ?2').bind(row.id, day).first();
+    return json({ visitsToday: n, day }, res.meta.changes ? 201 : 200);
 }
 
 // ── 짝꿍 ──
@@ -361,6 +384,7 @@ export async function cleanup(env, now) {
     const day = kstDay(now - 2 * DAY);
     await env.DB.batch([
         env.DB.prepare('DELETE FROM gifts WHERE tree_id IN (SELECT id FROM trees WHERE year <= ?1)').bind(lastYear),
+        env.DB.prepare('DELETE FROM visits WHERE tree_id IN (SELECT id FROM trees WHERE year <= ?1)').bind(lastYear),
         env.DB.prepare('DELETE FROM trees WHERE year <= ?1').bind(lastYear),
         env.DB.prepare('DELETE FROM forests WHERE year <= ?1').bind(lastYear),
         env.DB.prepare('DELETE FROM limits WHERE day < ?1').bind(day)
@@ -377,10 +401,11 @@ async function route(req, env) {
     if (p[0] === 'trees') {
         if (p.length === 1 && M === 'POST') return createTree(req, env);
         const id = idOf(p[1], '트리 아이디');
-        if (p.length === 2 && M === 'GET') return getTree(env, id);
+        if (p.length === 2 && M === 'GET') return getTree(req, env, id);
         if (p.length === 2 && M === 'PUT') return putTree(req, env, id);
         if (p.length === 3 && p[2] === 'private' && M === 'GET') return getPrivate(req, env, id);
         if (p.length === 3 && p[2] === 'gifts' && M === 'POST') return addGift(req, env, id);
+        if (p.length === 3 && p[2] === 'visits' && M === 'POST') return addVisit(req, env, id);
         if (p.length === 3 && p[2] === 'pair-code' && M === 'POST') return pairCode(req, env, id);
         if (p.length === 3 && p[2] === 'pair' && M === 'POST') return pair(req, env, id);
     }
