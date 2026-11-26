@@ -184,6 +184,7 @@ test('WebSocket: 인증 규칙과 welcome', async () => {
 
     const { c, welcome } = await authed(host.room.id, host.token);
     assert.equal(welcome.you.id, host.you.id);
+    assert.ok(Math.abs(welcome.now - Date.now()) < 5000, 'welcome에 서버 시각이 온다');
     assert.equal(welcome.you.online, true);
     assert.equal(welcome.state, null);
     assert.equal(welcome.room.members[0].online, true);

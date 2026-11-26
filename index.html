@@ -26,6 +26,7 @@
         .season-banner a { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; text-decoration: none; min-width: 0; }
         .season-banner .tree { background: linear-gradient(135deg, #0f1b3d, #1f3a2c); color: #fff; }
         .season-banner .snow { background: linear-gradient(135deg, #dbeafe, #f1f6ff); color: #0f172a; }
+        .season-banner .bell { grid-column: 1 / -1; background: linear-gradient(135deg, #070b1d, #2a3470); color: #fde68a; }
         .season-banner .e { font-size: 1.6rem; line-height: 1; flex: none; }
         .season-banner a > span:last-child { min-width: 0; }   /* 글이 길면 카드 밖으로 넘치지 않고 …로 줄인다 */
         .season-banner b { display: block; font-size: .95rem; }
@@ -48,6 +49,7 @@
             <nav class="season-banner" id="season-banner" aria-label="연말 시즌 콘텐츠" hidden>
                 <a class="tree" href="games/advent-tree.html"><span class="e" aria-hidden="true">🎄</span><span><b>어드벤트 트리</b><small id="season-tree">친구들이 장식을 달아 줘요</small></span></a>
                 <a class="snow" href="games/snowman-diary.html"><span class="e" aria-hidden="true">⛄</span><span><b>한 줄 눈사람</b><small id="season-snow">하루 한 줄 12월 챌린지</small></span></a>
+                <a class="bell" href="games/new-year-bell.html" id="season-bell" hidden><span class="e" aria-hidden="true">🔔</span><span><b>제야의 종 같이 치기</b><small id="season-bell-t">12월 31일 자정, 친구들과 각자 폰으로</small></span></a>
             </nav>
             <script>
                 (function () {
@@ -72,6 +74,11 @@
                     } else {
                         t.textContent = '올해 트리 다시 보기';
                         s.textContent = '나의 12월 리포트 보기';
+                    }
+                    // 12/26 ~ 1/1: 제야의 종 (자정에 같이 치기)
+                    if ((m === 12 && d >= 26) || (m === 1 && d === 1)) {
+                        document.getElementById('season-bell').hidden = false;
+                        document.getElementById('season-bell-t').textContent = m === 1 ? '방금 같이 친 종 결과 보기' : d === 31 ? '🔔 오늘 자정! 친구들과 방 만들기' : '12월 31일 자정 D-' + (31 - d) + ' · 미리 방 만들기';
                     }
                     el.hidden = false;
                 })();
@@ -233,6 +240,13 @@
                 <h2 class="game-title">송년회 진행 키트</h2>
                 <p class="game-description">올해의 상 투표 · 우리 모임 올해의 검색어 · 누구의 다짐 맞히기를 한 번에 진행</p>
                 <div class="game-badge">송년회</div>
+            </a>
+
+            <a href="games/new-year-bell.html" class="game-card" data-min-players="1" data-max-players="20" data-time="5" data-category="multi utility" data-date="2026-11-26">
+                <div class="game-icon">🔔</div>
+                <h2 class="game-title">제야의 종</h2>
+                <p class="game-description">12월 31일 자정, 친구들과 각자 폰으로 같이 종을 쳐서 33번을 채워요</p>
+                <div class="game-badge">시즌 이벤트</div>
             </a>
 
             <a href="games/advent-tree.html" class="game-card" data-min-players="1" data-max-players="12" data-time="1" data-category="solo duo multi utility" data-date="2026-11-25">

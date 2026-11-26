@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>제야의 종 같이 치기 - 미니게임 천국</title>
+    <meta name="description" content="12월 31일 자정, 친구들과 같은 방에 들어와 각자 폰으로 제야의 종을 같이 쳐요. 33번을 채우면 새해 불꽃이 터져요.">
+    <link rel="stylesheet" href="../styles/pretendard.css?v=c17883c9">
+    <link rel="stylesheet" href="../styles/design-system.css?v=d12c2b80">
+    <link rel="stylesheet" href="../styles/game-common.css?v=2187f848">
+    <script src="../scripts/game-common.js?v=a92208f4"></script>
+    <script src="../scripts/room-client.js?v=96b5c02a"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --night-1: #070b1d;
+            --night-2: #17204a;
+            --bronze: #c08b47;
+            --gold: #fcd34d;
+            --text-night: #f8fafc;
+            --muted-night: #aab4d4;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        body {
+            min-height: 100dvh;
+            margin: 0;
+            padding: max(1.25rem, env(safe-area-inset-top)) 16px max(5rem, env(safe-area-inset-bottom));
+            background: radial-gradient(ellipse 120% 60% at 50% 0%, #26326a, transparent 70%), linear-gradient(180deg, var(--night-1), var(--night-2));
+            color: var(--text-night);
+            font-family: var(--font);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: -40px 0 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(2px 2px at 10% 10%, #fff, transparent),
+                radial-gradient(2.5px 2.5px at 40% 30%, #fff, transparent),
+                radial-gradient(2px 2px at 70% 20%, #fff, transparent),
+                radial-gradient(3px 3px at 85% 50%, #fff, transparent),
+                radial-gradient(2px 2px at 25% 60%, #fff, transparent),
+                radial-gradient(2.5px 2.5px at 55% 75%, #fff, transparent);
+            background-size: 240px 240px;
+            animation: snow 9s linear infinite;
+            opacity: .5;
+        }
+
+        @keyframes snow {
+            to { background-position: 30px 240px; }
+        }
+
+        .wrap {
+            position: relative;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .game-header {
+            text-align: center;
+            margin: 10px 0 14px;
+        }
+
+        .game-title {
+            margin: 0;
+            font-size: 1.7rem;
+            color: var(--text-night);
+        }
+
+        .game-description {
+            margin: 6px 0 0;
+            color: var(--muted-night);
+        }
+
+        .panel {
+            margin-top: 12px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: var(--r-lg, 18px);
+            background: rgba(255, 255, 255, .06);
+        }
+
+        .panel h3 {
+            margin: 0 0 8px;
+            font-size: 1.02rem;
+        }
+
+        .hint {
+            margin: 0;
+            color: var(--muted-night);
+            font-size: .9rem;
+            line-height: 1.55;
+        }
+
+        .txt {
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 8px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, .25);
+            color: var(--text-night);
+            font: inherit;
+            font-size: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 48px;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 14px;
+            font: inherit;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .btn:disabled {
+            opacity: .5;
+            cursor: default;
+        }
+
+        .btn-gold {
+            background: linear-gradient(180deg, #fde68a, #f59e0b);
+            color: #3b2300;
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, .1);
+            color: var(--text-night);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-row .btn {
+            flex: 1;
+        }
+
+        .error {
+            min-height: 1.2em;
+            margin: 8px 0 0;
+            color: #fca5a5;
+            font-size: .9rem;
+        }
+
+        /* ── 무대 ── */
+        .bell-stage {
+            position: relative;
+            text-align: center;
+        }
+
+        .clock-label {
+            margin: 0;
+            color: var(--muted-night);
+            font-weight: 700;
+        }
+
+        .clock {
+            margin: 2px 0 0;
+            font-size: 2.6rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: .02em;
+        }
+
+        .clock.big {
+            font-size: 5.5rem;
+            line-height: 1;
+            color: var(--gold);
+            text-shadow: 0 0 24px rgba(252, 211, 77, .5);
+        }
+
+        .clock.pulse {
+            animation: pulse 1s ease-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1.18); }
+            100% { transform: scale(1); }
+        }
+
+        .bell-btn {
+            display: block;
+            width: min(92vw, 380px);
+            margin: 8px auto 0;
+            padding: 0;
+            border: 0;
+            background: none;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .bell-btn svg {
+            display: block;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        .bell-body {
+            transform-origin: 100px 34px;
+        }
+
+        .bell-btn.hit .bell-body {
+            animation: swing 1.4s cubic-bezier(.2, .7, .3, 1);
+        }
+
+        .bell-btn.hit .striker {
+            animation: strike .35s ease-out;
+        }
+
+        .bell-btn.hit .ripple {
+            animation: ripple 1.2s ease-out;
+        }
+
+        @keyframes swing {
+            0% { transform: rotate(0); }
+            15% { transform: rotate(4deg); }
+            40% { transform: rotate(-2.5deg); }
+            65% { transform: rotate(1.2deg); }
+            100% { transform: rotate(0); }
+        }
+
+        @keyframes strike {
+            0% { transform: translateX(0); }
+            40% { transform: translateX(26px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes ripple {
+            0% { opacity: .8; transform: scale(.6); }
+            100% { opacity: 0; transform: scale(2.2); }
+        }
+
+        .ripple {
+            opacity: 0;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        .tally {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tally span {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .1);
+            font-weight: 800;
+            font-size: .95rem;
+        }
+
+        .tally b {
+            color: var(--gold);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .meter {
+            height: 10px;
+            margin: 10px auto 0;
+            max-width: 320px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .12);
+            overflow: hidden;
+        }
+
+        .meter i {
+            display: block;
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #fbbf24, #fde68a);
+            transition: width .3s ease;
+        }
+
+        .msg {
+            min-height: 1.4em;
+            margin: 10px 0 0;
+            font-weight: 800;
+            font-size: 1.05rem;
+        }
+
+        .members {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .member {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .1);
+            font-size: .88rem;
+            font-weight: 700;
+        }
+
+        .member i {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #64748b;
+        }
+
+        .member.on i {
+            background: #4ade80;
+        }
+
+        .member small {
+            color: var(--gold);
+        }
+
+        .qr {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .qr img,
+        .qr canvas {
+            width: 180px !important;
+            height: 180px !important;
+        }
+
+        .warn {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(251, 191, 36, .15);
+            color: #fde68a;
+            font-size: .9rem;
+            line-height: 1.5;
+        }
+
+        .status {
+            text-align: right;
+            font-size: .8rem;
+            color: var(--muted-night);
+        }
+
+        #fx {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            width: 100vw;
+            height: 100dvh;
+            pointer-events: none;
+        }
+
+        .result {
+            text-align: center;
+        }
+
+        .result h2 {
+            margin: 4px 0 6px;
+            font-size: 1.4rem;
+        }
+
+        .result .names {
+            margin: 10px 0 0;
+            line-height: 1.8;
+            font-weight: 700;
+        }
+
+        .card-img {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            border-radius: 12px;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: max(24px, env(safe-area-inset-bottom));
+            z-index: 60;
+            max-width: calc(100vw - 32px);
+            padding: 12px 18px;
+            border-radius: 999px;
+            background: #f8fafc;
+            color: #0f172a;
+            font-weight: 700;
+            font-size: .92rem;
+            opacity: 0;
+            transform: translate(-50%, 20px);
+            pointer-events: none;
+            transition: opacity .2s, transform .2s;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body::before,
+            .bell-btn.hit .bell-body,
+            .bell-btn.hit .striker,
+            .clock.pulse {
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="fx" aria-hidden="true"></canvas>
+    <div class="wrap">
+        <a href="../index.html" class="back-button">← 메인</a>
+        <header class="game-header">
+            <h1 class="game-title">🔔 제야의 종</h1>
+            <p class="game-description">12월 31일 자정, 친구들과 각자 폰으로 같이 쳐요</p>
+        </header>
+
+        <!-- 처음 화면 -->
+        <section id="v-home">
+            <div class="panel">
+                <h3 id="home-title">🔔 우리 방 만들기</h3>
+                <p class="hint" id="home-hint">방을 만들고 링크를 보내면 친구들이 각자 폰으로 들어와요. 자정이 되면 모두의 폰에서 종이 울리고, 같이 친 횟수가 합쳐져요.</p>
+                <input class="txt" id="nick" maxlength="20" placeholder="내 이름" autocomplete="off">
+                <p class="error" id="home-error"></p>
+                <button class="btn btn-gold btn-block" id="home-go" type="button">🔔 방 만들기</button>
+            </div>
+            <div class="panel">
+                <h3>🧪 미리 해 보기</h3>
+                <p class="hint">혼자서 10초 뒤 자정처럼 연습해 볼 수 있어요. 방 안에서는 진행자가 "다 같이 연습"을 누르면 모두 같이 연습해요.</p>
+                <button class="btn btn-ghost btn-block" id="solo-go" type="button" style="margin-top:10px">혼자 연습해 보기</button>
+            </div>
+        </section>
+
+        <!-- 방 -->
+        <section id="v-room" hidden>
+            <div class="bell-stage">
+                <p class="status" id="status"></p>
+                <p class="clock-label" id="clock-label"></p>
+                <p class="clock" id="clock">--:--:--</p>
+                <button class="bell-btn" id="bell" type="button" aria-label="종 치기">
+                    <svg viewBox="-40 0 280 230" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="bronze" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0" stop-color="#6b4320" />
+                                <stop offset=".35" stop-color="#d6a15a" />
+                                <stop offset=".55" stop-color="#b47a3c" />
+                                <stop offset="1" stop-color="#5a3518" />
+                            </linearGradient>
+                            <radialGradient id="glow">
+                                <stop offset="0" stop-color="#fde68a" stop-opacity=".9" />
+                                <stop offset="1" stop-color="#fde68a" stop-opacity="0" />
+                            </radialGradient>
+                        </defs>
+                        <rect x="14" y="8" width="172" height="12" rx="4" fill="#6b3f22" />
+                        <rect x="14" y="8" width="172" height="4" rx="2" fill="#8a5734" />
+                        <rect x="20" y="20" width="8" height="40" fill="#5a3520" />
+                        <rect x="172" y="20" width="8" height="40" fill="#5a3520" />
+                        <circle class="ripple" cx="100" cy="150" r="60" fill="url(#glow)" />
+                        <g class="bell-body">
+                            <path d="M96 20h8v16h-8z" fill="#7a5128" />
+                            <path d="M88 26q12-12 24 0" stroke="#a87638" stroke-width="5" fill="none" />
+                            <path d="M62 50q0-16 38-16t38 16l6 118q2 16 14 22H42q12-6 14-22z" fill="url(#bronze)" />
+                            <path d="M60 64h80M57 104h86" stroke="#7a4b20" stroke-width="2.4" opacity=".7" />
+                            <path d="M52 176h96" stroke="#7a4b20" stroke-width="5" />
+                            <g opacity=".85">
+                                <rect x="66" y="70" width="20" height="26" rx="2" fill="none" stroke="#e8c27a" stroke-width="1.2" />
+                                <rect x="114" y="70" width="20" height="26" rx="2" fill="none" stroke="#e8c27a" stroke-width="1.2" />
+                                <g fill="#e8c27a">
+                                    <circle cx="71" cy="76" r="1.8" /><circle cx="76" cy="76" r="1.8" /><circle cx="81" cy="76" r="1.8" /><circle cx="71" cy="83" r="1.8" /><circle cx="76" cy="83" r="1.8" /><circle cx="81" cy="83" r="1.8" /><circle cx="71" cy="90" r="1.8" /><circle cx="76" cy="90" r="1.8" /><circle cx="81" cy="90" r="1.8" />
+                                    <circle cx="119" cy="76" r="1.8" /><circle cx="124" cy="76" r="1.8" /><circle cx="129" cy="76" r="1.8" /><circle cx="119" cy="83" r="1.8" /><circle cx="124" cy="83" r="1.8" /><circle cx="129" cy="83" r="1.8" /><circle cx="119" cy="90" r="1.8" /><circle cx="124" cy="90" r="1.8" /><circle cx="129" cy="90" r="1.8" />
+                                </g>
+                                <path d="M92 74q8 8 16 0M92 86q8 8 16 0" stroke="#e8c27a" stroke-width="1.2" fill="none" />
+                            </g>
+                            <circle cx="100" cy="146" r="13" fill="#9a6a33" stroke="#e8c27a" stroke-width="1.6" />
+                            <path d="M100 136q5 6 0 10q-5-4 0-10zM92 146q6-3 8 0q-2 3-8 0zM108 146q-6-3-8 0q2 3 8 0zM100 156q5-6 0-10q-5 4 0 10z" fill="#e8c27a" opacity=".85" />
+                            <path d="M70 60q3 50-6 110" stroke="#fff" stroke-width="3" opacity=".18" fill="none" />
+                        </g>
+                        <g class="striker">
+                            <path d="M-6 140h36" stroke="#5a3520" stroke-width="2" />
+                            <rect x="-34" y="132" width="56" height="16" rx="8" fill="#8a5a34" />
+                            <rect x="-34" y="132" width="56" height="5" rx="2.5" fill="#a8744a" />
+                            <path d="M-6 132V20M10 132V20" stroke="#c9a46a" stroke-width="1.2" />
+                        </g>
+                    </svg>
+                </button>
+                <div class="tally"><span>🔔 우리 방 <b id="total">0</b> / 33</span><span>내가 친 종 <b id="mine">0</b></span></div>
+                <div class="meter"><i id="meter"></i></div>
+                <p class="msg" id="msg"></p>
+            </div>
+
+            <div class="panel" id="room-panel">
+                <h3>👥 같이 있는 사람 <span id="m-count"></span></h3>
+                <div class="members" id="members"></div>
+                <div id="room-warn"></div>
+                <div class="btn-row" id="room-btns">
+                    <button class="btn btn-ghost" id="share" type="button">🔗 초대 링크</button>
+                    <button class="btn btn-ghost" id="qr-toggle" type="button">📱 QR</button>
+                </div>
+                <div class="qr" id="qr" hidden></div>
+                <button class="btn btn-ghost btn-block" id="practice" type="button" style="margin-top:8px" hidden>🧪 다 같이 연습 (15초 뒤 자정)</button>
+                <button class="btn btn-ghost btn-block" id="leave" type="button" style="margin-top:8px">나가기</button>
+            </div>
+
+            <div class="panel result" id="result" hidden></div>
+        </section>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        'use strict';
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const GOAL = 33;
+        const KST = 9 * 3600e3;
+        const RING_MS = 5 * 60e3;        // 자정부터 5분 동안 종을 칠 수 있다
+        const PRACTICE_RING_MS = 40e3;   // 연습은 40초
+        const COUNT_MS = 60e3;           // 마지막 1분은 큰 숫자
+
+        // ── 시계: 서버 시각에 맞춘다 (폰 시계가 틀려도 같은 순간에 울리게) ──
+        let offset = 0;
+        const now = () => Date.now() + offset;
+        // 다음 1월 1일 0시(KST). 자정이 지나고 종 치는 시간 동안은 방금 지난 자정을 가리킨다.
+        function newYearOf(ms) {
+            const d = new Date(ms + KST - RING_MS);
+            return Date.UTC(d.getUTCFullYear() + 1, 0, 1) - KST;
+        }
+        const yearOf = (target) => new Date(target + KST).getUTCFullYear();
+
+        // ── 소리: 범종처럼 낮고 길게 (배음이 어긋나는 금속 소리) ──
+        let audioCtx = null;
+        function audio() {
+            if (!audioCtx) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (!AC) return null;
+                audioCtx = new AC();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+        function bong(big = false) {
+            const ctx = audio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+            const f = big ? 82 : 131;
+            const master = ctx.createGain();
+            master.gain.value = big ? 0.55 : 0.35;
+            master.connect(ctx.destination);
+            [[1, 1, 1], [1.004, 0.6, 1], [2.0, 0.45, 0.7], [2.76, 0.32, 0.5], [5.4, 0.16, 0.3], [8.93, 0.06, 0.18]].forEach(([r, a, d]) => {
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.type = 'sine';
+                o.frequency.value = f * r;
+                const len = (big ? 9 : 4.5) * d;
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.exponentialRampToValueAtTime(a, t + 0.012);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+                o.connect(g).connect(master);
+                o.start(t);
+                o.stop(t + len + 0.1);
+            });
+            // 나무 당목이 부딪히는 소리
+            const n = ctx.createBufferSource();
+            const buf = ctx.createBuffer(1, ctx.sampleRate * 0.06, ctx.sampleRate);
+            const ch = buf.getChannelData(0);
+            for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / ch.length) ** 3;
+            n.buffer = buf;
+            const ng = ctx.createGain();
+            ng.gain.value = 0.25;
+            n.connect(ng).connect(master);
+            n.start(t);
+        }
+        function tick(hi = false) {
+            const ctx = audio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.frequency.value = hi ? 1320 : 880;
+            g.gain.setValueAtTime(0.12, t);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+            o.connect(g).connect(ctx.destination);
+            o.start(t);
+            o.stop(t + 0.15);
+        }
+        const buzz = (p) => { if ('vibrate' in navigator) { try { navigator.vibrate(p); } catch { /* 무시 */ } } };
+
+        // ── 불꽃 ──
+        const FX = (() => {
+            const cv = $('fx');
+            const ctx = cv.getContext('2d');
+            let parts = [];
+            let running = false;
+            const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+            function size() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
+            function burst(x, y, n = 70, hue = 45) {
+                for (let i = 0; i < n; i++) {
+                    const a = Math.random() * Math.PI * 2;
+                    const v = 1.5 + Math.random() * 4.5;
+                    parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, h: hue + Math.random() * 40 - 20 });
+                }
+                if (!running) { running = true; requestAnimationFrame(step); }
+            }
+            function step() {
+                const k = devicePixelRatio;
+                ctx.clearRect(0, 0, cv.width, cv.height);
+                parts = parts.filter((p) => p.life > 0);
+                parts.forEach((p) => {
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.vx *= 0.985; p.life -= 0.012;
+                    ctx.globalAlpha = Math.max(0, p.life);
+                    ctx.fillStyle = `hsl(${p.h} 95% 65%)`;
+                    ctx.beginPath(); ctx.arc(p.x * k, p.y * k, 2.2 * k, 0, Math.PI * 2); ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+                if (parts.length) requestAnimationFrame(step); else { running = false; ctx.clearRect(0, 0, cv.width, cv.height); }
+            }
+            function show(times = 5) {
+                if (reduce()) return;
+                size();
+                for (let i = 0; i < times; i++) setTimeout(() => burst(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.12 + Math.random() * 0.35), 70, [45, 0, 200, 300, 120][i % 5]), i * 380);
+            }
+            return { show };
+        })();
+
+        function toast(text) {
+            const el = $('toast');
+            el.textContent = text;
+            el.classList.add('show');
+            clearTimeout(toast.t);
+            toast.t = setTimeout(() => el.classList.remove('show'), 2200);
+        }
+
+        // ════════════════════════════════════════════════════════════
+        //  방 상태
+        // ════════════════════════════════════════════════════════════
+        // 판(round) = 그 판의 자정 시각(ms). 진짜 자정이거나, 연습이면 진행자가 정한 시각.
+        // 종 친 횟수는 각자 "누적값"을 보내고(늦게 온 값이 앞선 값을 덮지 않게 max), 진행자가 모아서 공유 상태로 남긴다.
+        const R = {
+            mode: 'solo',          // solo | room
+            conn: null,
+            roomId: '',
+            me: '',
+            host: false,
+            members: [],           // {id, nickname, host, online}
+            expiresAt: 0,
+            practice: 0,           // 연습 자정(ms), 없으면 0
+            counts: {},            // round → {memberId: n}
+            phase: '',
+            rungAuto: {},          // round → 자정 종을 이미 울렸는지
+            celebrated: {}         // round → 33번 축하했는지
+        };
+        const roundOf = () => {
+            if (R.practice && now() < R.practice + PRACTICE_RING_MS + 60e3) return R.practice;
+            return newYearOf(now());
+        };
+        const ringLen = (round) => (round === R.practice ? PRACTICE_RING_MS : RING_MS);
+        const countsOf = (round) => (R.counts[round] = R.counts[round] || {});
+        const totalOf = (round) => Object.values(countsOf(round)).reduce((a, b) => a + b, 0);
+        const myKey = (round) => `new-year-bell:${R.roomId || 'solo'}:${round}`;
+
+        function loadMine(round) {
+            try { return Number(localStorage.getItem(myKey(round))) || 0; } catch { return 0; }
+        }
+        function saveMine(round, n) {
+            try { localStorage.setItem(myKey(round), String(n)); } catch { /* 무시 */ }
+        }
+
+        // ── 화면 ──
+        function phaseOf(round) {
+            const t = now();
+            if (t < round - COUNT_MS) return 'wait';
+            if (t < round) return 'count';
+            if (t < round + ringLen(round)) return 'ring';
+            return 'done';
+        }
+
+        function fmtLeft(ms) {
+            const s = Math.max(0, Math.ceil(ms / 1000));
+            const d = Math.floor(s / 86400);
+            const hh = String(Math.floor((s % 86400) / 3600)).padStart(2, '0');
+            const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+            const ss = String(s % 60).padStart(2, '0');
+            return d ? `${d}일 ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+        }
+
+        let lastSec = -1;
+        function render() {
+            const round = roundOf();
+            const ph = phaseOf(round);
+            const t = now();
+            const year = yearOf(round);
+            const practice = round === R.practice;
+            const clock = $('clock');
+            const label = $('clock-label');
+            clock.classList.toggle('big', ph === 'count' && round - t <= 10e3);
+            clock.classList.toggle('pulse', ph === 'count' && round - t <= 10e3);
+            if (ph === 'wait') {
+                label.textContent = practice ? '🧪 연습 자정까지' : `${year}년 첫 종까지`;
+                clock.textContent = fmtLeft(round - t);
+            } else if (ph === 'count') {
+                const s = Math.ceil((round - t) / 1000);
+                label.textContent = practice ? '🧪 연습 · 곧 자정이에요' : '곧 자정이에요!';
+                clock.textContent = s <= 10 ? String(s) : fmtLeft(round - t);
+                if (s !== lastSec && s <= 10) { lastSec = s; tick(s <= 3); buzz(20); }
+            } else if (ph === 'ring') {
+                label.textContent = practice ? '🧪 연습 중 · 종을 눌러 치세요' : `🎉 ${year}년 새해 복 많이 받으세요!`;
+                clock.textContent = `${fmtLeft(round + ringLen(round) - t).slice(-5)} 남음`;
+                if (!R.rungAuto[round]) {
+                    R.rungAuto[round] = true;
+                    bong(true);
+                    buzz([80, 60, 160]);
+                    FX.show(6);
+                    hitAnim();
+                    $('msg').textContent = '🔔 종을 눌러 같이 쳐요! 33번을 채워 봐요';
+                }
+            } else {
+                label.textContent = practice ? '🧪 연습 끝' : `${year}년이 밝았어요`;
+                clock.textContent = '00:00';
+            }
+            if (ph !== R.phase) {
+                R.phase = ph;
+                if (ph === 'done') showResult(round);
+                else $('result').hidden = true;
+                if (ph === 'wait') $('msg').textContent = practice ? '' : '자정이 되면 모두의 폰에서 종이 울려요';
+            }
+            const total = totalOf(round);
+            $('total').textContent = total;
+            $('mine').textContent = countsOf(round)[R.me] || 0;
+            $('meter').style.width = `${Math.min(100, (total / GOAL) * 100)}%`;
+            if (total >= GOAL && !R.celebrated[round] && ph === 'ring') {
+                R.celebrated[round] = true;
+                FX.show(8);
+                bong(true);
+                $('msg').textContent = `✨ ${GOAL}번을 채웠어요! 올해 나쁜 일은 다 날아갔어요`;
+            }
+        }
+
+        function renderMembers() {
+            const round = roundOf();
+            const c = countsOf(round);
+            $('m-count').textContent = R.mode === 'room' ? `${R.members.filter((m) => m.online).length}/${R.members.length}` : '';
+            $('members').innerHTML = R.mode === 'room'
+                ? R.members.map((m) => `<span class="member ${m.online ? 'on' : ''}"><i></i>${esc(m.nickname)}${m.host ? ' 👑' : ''}${c[m.id] ? ` <small>🔔${c[m.id]}</small>` : ''}</span>`).join('')
+                : `<span class="member on"><i></i>나 (혼자 연습)</span>`;
+            $('practice').hidden = !(R.mode === 'room' && R.host);
+            $('room-btns').hidden = R.mode !== 'room';
+            const round2 = newYearOf(now());
+            $('room-warn').innerHTML = R.mode === 'room' && R.expiresAt && R.expiresAt < round2 + RING_MS
+                ? `<div class="warn">⚠️ 이 방은 ${new Date(R.expiresAt).toLocaleDateString('ko-KR')}에 닫혀서 자정까지 못 버텨요. 방은 만든 뒤 7일 동안 열려 있으니 12월 25일 이후에 다시 만들어 주세요.</div>`
+                : '';
+        }
+
+        function hitAnim() {
+            const b = $('bell');
+            b.classList.remove('hit');
+            void b.getBoundingClientRect();
+            b.classList.add('hit');
+        }
+
+        // ── 종 치기 ──
+        let sendTimer = null;
+        function ring() {
+            const round = roundOf();
+            const ph = phaseOf(round);
+            hitAnim();
+            if (ph !== 'ring') {
+                tick();
+                $('msg').textContent = ph === 'done' ? '종 치는 시간이 끝났어요' : '아직이에요! 자정이 되면 울려요 🤫';
+                return;
+            }
+            bong(false);
+            buzz(30);
+            const c = countsOf(round);
+            c[R.me] = (c[R.me] || 0) + 1;
+            saveMine(round, c[R.me]);
+            render();
+            renderMembers();
+            // 여러 번 빨리 쳐도 0.4초에 한 번만 보낸다 (도배 제한 안쪽)
+            if (R.conn && !sendTimer) {
+                sendTimer = setTimeout(() => {
+                    sendTimer = null;
+                    R.conn?.broadcast({ t: 'ring', r: round, c: countsOf(round)[R.me] || 0 });
+                    if (R.host) pushState();
+                }, 400);
+            }
+        }
+
+        // 진행자: 판마다 모은 횟수를 공유 상태로 남긴다 (늦게 들어온 사람·다시 붙은 사람용)
+        let stateTimer = null;
+        function pushState() {
+            if (!R.conn || !R.host) return;
+            clearTimeout(stateTimer);
+            stateTimer = setTimeout(() => {
+                const round = roundOf();
+                R.conn.setState({ practice: R.practice, round, counts: countsOf(round) });
+            }, 600);
+        }
+
+        function takeState(st) {
+            if (!st || typeof st !== 'object') return;
+            if (Number.isFinite(st.practice)) R.practice = st.practice;
+            if (Number.isFinite(st.round) && st.counts && typeof st.counts === 'object') {
+                const c = countsOf(st.round);
+                Object.entries(st.counts).forEach(([id, n]) => { if (Number.isFinite(n)) c[id] = Math.max(c[id] || 0, n); });
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════
+        //  방 만들기·들어가기·연결
+        // ════════════════════════════════════════════════════════════
+        function show(view) {
+            ['v-home', 'v-room'].forEach((v) => { $(v).hidden = v !== view; });
+        }
+
+        function startSolo() {
+            audio();
+            R.mode = 'solo';
+            R.me = 'me';
+            R.roomId = '';
+            R.practice = now() + 10e3;
+            show('v-room');
+            $('status').textContent = '혼자 연습 중';
+            renderMembers();
+            render();
+        }
+
+        function connectRoom(roomId) {
+            R.mode = 'room';
+            R.roomId = roomId;
+            R.conn = RoomClient.connect(roomId, {
+                onWelcome(msg) {
+                    if (Number.isFinite(msg.now)) offset = msg.now - Date.now();
+                    R.me = msg.you.id;
+                    R.host = Boolean(msg.you.host);
+                    R.members = msg.room.members;
+                    R.expiresAt = Date.parse(msg.room.expiresAt) || 0;
+                    takeState(msg.state);
+                    const round = roundOf();
+                    const mine = loadMine(round);
+                    if (mine) countsOf(round)[R.me] = Math.max(countsOf(round)[R.me] || 0, mine);
+                    if (mine) R.conn.broadcast({ t: 'ring', r: round, c: mine });
+                    renderMembers();
+                    render();
+                },
+                onMessage(data, from) {
+                    if (data?.t === 'ring' && Number.isFinite(data.r) && Number.isFinite(data.c)) {
+                        const c = countsOf(data.r);
+                        c[from] = Math.max(c[from] || 0, Math.min(data.c, 100000));
+                        renderMembers();
+                        if (R.host) pushState();
+                    }
+                },
+                onState(st) {
+                    const before = R.practice;
+                    takeState(st);
+                    if (R.practice !== before && R.practice > now()) { toast('🧪 15초 뒤에 연습 자정이에요!'); lastSec = -1; }
+                    renderMembers();
+                },
+                onMembers(msg) {
+                    if (msg.type === 'member_joined') R.members = [...R.members.filter((m) => m.id !== msg.member.id), msg.member];
+                    if (msg.type === 'member_left') R.members = R.members.filter((m) => m.id !== msg.memberId);
+                    if (msg.type === 'presence') R.members = R.members.map((m) => (m.id === msg.memberId ? { ...m, online: msg.online } : m));
+                    renderMembers();
+                },
+                onHostChanged(msg) {
+                    R.members = R.members.map((m) => ({ ...m, host: m.id === msg.to }));
+                    R.host = msg.to === R.me;
+                    renderMembers();
+                },
+                onStatus(status, reason) {
+                    $('status').textContent = { connecting: '연결 중…', online: '🟢 연결됨', offline: '🔴 끊김 · 다시 연결하는 중', ended: '방이 닫혔어요' }[status] || '';
+                    if (status === 'ended' && reason !== 'replaced') { toast('방이 닫혔어요'); }
+                }
+            });
+            show('v-room');
+        }
+
+        async function homeGo() {
+            audio();
+            const nick = $('nick').value.trim();
+            const err = (m) => { $('home-error').textContent = m; };
+            if (!nick) return err('이름을 적어 주세요.');
+            try { localStorage.setItem('new-year-bell:nick', nick); } catch { /* 무시 */ }
+            const btn = $('home-go');
+            btn.disabled = true;
+            try {
+                const hashRoom = RoomClient.roomIdFromHash();
+                if (hashRoom) {
+                    if (!RoomClient.hasJoined(hashRoom)) await RoomClient.join(hashRoom, nick);
+                    connectRoom(hashRoom);
+                } else {
+                    const { room } = await RoomClient.create('new-year-bell', nick, `${nick}의 제야의 종`);
+                    history.replaceState(null, '', `#room=${room.id}`);
+                    connectRoom(room.id);
+                }
+            } catch (e) {
+                err(e.message || '방에 들어가지 못했어요.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function showResult(round) {
+            const el = $('result');
+            const c = countsOf(round);
+            const total = totalOf(round);
+            const practice = round === R.practice;
+            const people = R.mode === 'room' ? R.members : [{ id: R.me, nickname: '나' }];
+            const top = people.map((m) => ({ ...m, n: c[m.id] || 0 })).sort((a, b) => b.n - a.n);
+            el.hidden = false;
+            el.innerHTML = `<div style="font-size:2.4rem">🎊</div>
+                <h2>${practice ? '연습 끝!' : `${yearOf(round)}년 첫 순간을 같이 보낸 사람들`}</h2>
+                <p class="hint">우리 방이 친 종 <b style="color:var(--gold)">${total}번</b>${total >= GOAL ? ' · 33번 성공 ✨' : ''}</p>
+                <p class="names">${top.map((m, i) => `${i === 0 && m.n ? '👑 ' : ''}${esc(m.nickname)} ${m.n}번`).join(' · ')}</p>
+                ${practice ? '<p class="hint" style="margin-top:8px">진짜는 12월 31일 자정이에요. 이 방에 그대로 다시 들어오면 돼요.</p>' : '<button class="btn btn-gold btn-block" id="card" type="button" style="margin-top:12px">🖼️ 기념 카드 만들기</button>'}`;
+            if (!practice) $('card').onclick = () => makeCard(round, top, total);
+        }
+
+        function makeCard(round, top, total) {
+            const W = 1080, H = 1350;
+            const cv = document.createElement('canvas');
+            cv.width = W; cv.height = H;
+            const g = cv.getContext('2d');
+            const bg = g.createLinearGradient(0, 0, 0, H);
+            bg.addColorStop(0, '#070b1d'); bg.addColorStop(1, '#1f2a5c');
+            g.fillStyle = bg; g.fillRect(0, 0, W, H);
+            for (let i = 0; i < 140; i++) { g.globalAlpha = Math.random() * 0.7; g.fillStyle = '#fff'; g.beginPath(); g.arc(Math.random() * W, Math.random() * H, Math.random() * 2.5, 0, 7); g.fill(); }
+            g.globalAlpha = 1;
+            g.textAlign = 'center';
+            g.fillStyle = '#fde68a';
+            g.font = '900 120px Pretendard, sans-serif';
+            g.fillText('🔔', W / 2, 300);
+            g.font = '900 96px Pretendard, sans-serif';
+            g.fillText(`${yearOf(round)}`, W / 2, 440);
+            g.fillStyle = '#f8fafc';
+            g.font = '800 54px Pretendard, sans-serif';
+            g.fillText('첫 순간을 같이 보낸 사람들', W / 2, 530);
+            g.font = '700 46px Pretendard, sans-serif';
+            const names = top.map((m) => `${m.nickname} ${m.n}번`);
+            for (let i = 0; i < Math.min(names.length, 10); i++) g.fillText(names[i], W / 2, 650 + i * 62);
+            g.fillStyle = '#fde68a';
+            g.font = '800 50px Pretendard, sans-serif';
+            g.fillText(`같이 친 종 ${total}번${total >= GOAL ? ' ✨' : ''}`, W / 2, H - 150);
+            g.fillStyle = '#aab4d4';
+            g.font = '600 32px Pretendard, sans-serif';
+            g.fillText('juhee77.github.io/simple_game', W / 2, H - 80);
+            const img = new Image();
+            img.className = 'card-img';
+            img.alt = '제야의 종 기념 카드';
+            img.src = cv.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = `new-year-bell-${yearOf(round)}.png`;
+            a.className = 'btn btn-ghost btn-block';
+            a.style.marginTop = '8px';
+            a.textContent = '💾 이미지 저장 (안 되면 길게 눌러 저장)';
+            $('result').append(img, a);
+            $('card').remove();
+        }
+
+        // ── 버튼 ──
+        $('home-go').addEventListener('click', homeGo);
+        $('solo-go').addEventListener('click', startSolo);
+        $('bell').addEventListener('click', () => { audio(); ring(); });
+        $('practice').addEventListener('click', () => {
+            if (!R.host || !R.conn) return;
+            R.practice = now() + 15e3;
+            lastSec = -1;
+            R.conn.setState({ practice: R.practice, round: R.practice, counts: {} });
+            toast('🧪 15초 뒤에 연습 자정이에요!');
+        });
+        $('share').addEventListener('click', async () => {
+            const url = RoomClient.shareUrl(R.roomId);
+            try {
+                if (navigator.share) await navigator.share({ title: '제야의 종 같이 치기', text: '12월 31일 자정에 같이 종 쳐요 🔔', url });
+                else { await navigator.clipboard.writeText(url); toast('🔗 링크를 복사했어요'); }
+            } catch { /* 취소 */ }
+        });
+        $('qr-toggle').addEventListener('click', () => {
+            const box = $('qr');
+            box.hidden = !box.hidden;
+            if (!box.hidden && !box.childElementCount && window.QRCode) new QRCode(box, { text: RoomClient.shareUrl(R.roomId), width: 360, height: 360 });
+        });
+        $('leave').addEventListener('click', () => {
+            R.conn?.close();
+            R.conn = null;
+            R.mode = 'solo';
+            R.practice = 0;
+            history.replaceState(null, '', location.pathname + location.search);
+            initHome();
+            show('v-home');
+        });
+
+        function initHome() {
+            const hashRoom = RoomClient.roomIdFromHash();
+            try { $('nick').value = localStorage.getItem('new-year-bell:nick') || ''; } catch { /* 무시 */ }
+            if (hashRoom) {
+                $('home-title').textContent = '🔔 제야의 종 방에 초대받았어요';
+                $('home-hint').textContent = '이름을 적고 들어가세요. 자정이 되면 모두의 폰에서 종이 울리고, 같이 친 횟수가 합쳐져요.';
+                $('home-go').textContent = '🔔 들어가기';
+            } else {
+                $('home-title').textContent = '🔔 우리 방 만들기';
+                $('home-go').textContent = '🔔 방 만들기';
+            }
+        }
+
+        initHome();
+        const hashRoom = RoomClient.roomIdFromHash();
+        if (hashRoom && RoomClient.hasJoined(hashRoom)) connectRoom(hashRoom);
+        setInterval(() => { if (!$('v-room').hidden) render(); }, 200);
+    </script>
+
+    <script type="application/json" id="game-rules">
+{
+ "title": "제야의 종 같이 치기",
+ "goal": "12월 31일 자정, 친구들과 각자 폰으로 종을 같이 쳐서 33번을 채워요.",
+ "steps": [
+  "한 명이 방을 만들고 링크나 QR을 보내요. 친구들은 이름을 적고 들어와요. (최대 20명)",
+  "방은 만든 뒤 7일 동안 열려 있어요. 12월 25일 이후에 만들면 자정까지 넉넉해요.",
+  "자정 1분 전부터 큰 카운트다운이 나오고, 마지막 10초는 숫자가 커져요.",
+  "0시가 되면 모두의 폰에서 종이 크게 울리고 불꽃이 터져요. 폰 시계가 조금 틀려도 서버 시각에 맞춰 같은 순간에 울려요.",
+  "자정부터 5분 동안 종을 눌러 치면 우리 방 합계가 올라가요. 33번을 채우면 한 번 더 축하해요.",
+  "끝나면 같이 있던 사람과 친 횟수가 담긴 기념 카드를 만들 수 있어요."
+ ],
+ "tips": [
+  "진행자는 \"다 같이 연습\"으로 15초 뒤를 자정처럼 미리 맞춰 볼 수 있어요.",
+  "소리가 안 나면 화면을 한 번 눌러 주세요. 무음 모드에서는 진동만 와요.",
+  "방이 없어도 \"혼자 연습해 보기\"로 미리 해 볼 수 있어요."
+ ],
+ "players": "1~20명 (각자 폰)",
+ "time": "자정 전후 몇 분"
+}
+    </script>
+</body>
+
+</html>
