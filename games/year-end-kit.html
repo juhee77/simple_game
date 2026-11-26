@@ -871,6 +871,118 @@
             }
         }
 
+        /* ── 리액션: 참가자 폰 → 무대 위로 둥실 ── */
+        .react-bar {
+            position: sticky;
+            bottom: max(12px, env(safe-area-inset-bottom));
+            z-index: 5;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+            margin-top: 12px;
+            padding: 8px;
+            border-radius: 999px;
+            background: var(--surface);
+            box-shadow: var(--shadow-md);
+        }
+
+        .react-bar button {
+            position: relative;
+            min-height: 48px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--surface-2);
+            font-size: 1.5rem;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .react-bar button:active {
+            transform: scale(.88);
+        }
+
+        .react-bar .pop {
+            position: absolute;
+            left: 50%;
+            bottom: 70%;
+            pointer-events: none;
+            animation: rxpop .7s ease-out forwards;
+        }
+
+        @keyframes rxpop {
+            from { transform: translate(-50%, 0) scale(.8); opacity: 1; }
+            to { transform: translate(-50%, -46px) scale(1.25); opacity: 0; }
+        }
+
+        .react-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 3;
+            overflow: hidden;
+            pointer-events: none;
+            border-radius: var(--r-lg);
+        }
+
+        .rx {
+            position: absolute;
+            bottom: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: rxup 3s cubic-bezier(.25, .7, .4, 1) forwards;
+        }
+
+        .rx .rx-e {
+            font-size: 2.6rem;
+            line-height: 1;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .35));
+        }
+
+        .rx b {
+            margin-top: -6px;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: #fde68a;
+            color: #3b2300;
+            font-size: .8rem;
+        }
+
+        .rx small {
+            margin-top: 2px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, .45);
+            color: #fff;
+            font-size: .72rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .rx.rain .rx-e {
+            font-size: 3.6rem;
+        }
+
+        @keyframes rxup {
+            0% { transform: translate(0, 0) scale(.5); opacity: 0; }
+            12% { transform: translate(calc(var(--dx) * .2), -30px) scale(1.1); opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translate(var(--dx), calc(var(--rise) * -1)) scale(1); opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .rx {
+                animation-duration: 1.4s;
+            }
+
+            .react-bar .pop {
+                animation: none;
+                display: none;
+            }
+        }
+
         .stage-controls {
             display: flex;
             gap: 10px;
@@ -1170,6 +1282,7 @@
             <p class="status-line" data-ol-status></p>
             <div class="stage-wrap" id="stage-wrap">
                 <div class="stage-screen" id="stage"></div>
+                <div class="react-layer" id="react-layer" aria-hidden="true"></div>
                 <div class="timer" id="timer" hidden>
                     <div>🎤 수상 소감</div>
                     <div class="num" id="timer-num">30</div>
@@ -1192,6 +1305,9 @@
         <section id="v-phone" hidden>
             <p class="status-line" data-ol-status></p>
             <div id="phone-body"></div>
+            <div class="react-bar" id="react-bar" role="group" aria-label="무대에 리액션 보내기">
+                <button type="button" data-react="👏" aria-label="박수">👏</button><button type="button" data-react="😂" aria-label="웃음">😂</button><button type="button" data-react="😭" aria-label="감동">😭</button><button type="button" data-react="🔥" aria-label="최고">🔥</button><button type="button" data-react="💗" aria-label="하트">💗</button><button type="button" data-react="🎉" aria-label="축하">🎉</button>
+            </div>
             <div class="room-foot"><button class="text-btn" data-ol-leave type="button"></button></div>
         </section>
     </div>
@@ -1237,6 +1353,44 @@
             return a;
         };
         // 한 번도 화면을 누르지 않은 탭에서는 브라우저가 진동을 막으므로 그때는 부르지 않는다
+        // ── 무대 리액션: 참가자 폰에서 누른 이모지가 무대 아래에서 둥실 떠오른다 ──
+        const REACTS = ['👏', '😂', '😭', '🔥', '💗', '🎉'];
+        const Reactions = (() => {
+            const recent = [];
+            const lastRain = {};
+            function add(layer, e, n, who, rain = false) {
+                if (layer.childElementCount > 70) return;
+                const el = document.createElement('div');
+                el.className = `rx${rain ? ' rain' : ''}`;
+                el.style.left = `${4 + Math.random() * 84}%`;
+                el.style.setProperty('--dx', `${Math.round(Math.random() * 60 - 30)}px`);
+                el.style.setProperty('--rise', `${Math.round(layer.clientHeight * (rain ? 0.95 : 0.6 + Math.random() * 0.25))}px`);
+                if (rain) el.style.animationDelay = `${Math.random() * 0.9}s`;
+                el.innerHTML = `<span class="rx-e">${e}</span>${n > 1 ? `<b>x${n}</b>` : ''}${who ? `<small>${esc(who)}</small>` : ''}`;
+                layer.append(el);
+                setTimeout(() => el.remove(), 4200);
+            }
+            function show(e, n, who) {
+                const layer = document.getElementById('react-layer');
+                if (!layer || document.getElementById('v-stage').hidden) return;
+                // 무대 화면 높이만큼만 (아래 진행 버튼은 가리지 않게)
+                const stage = document.getElementById('stage');
+                layer.style.top = `${stage.offsetTop}px`;
+                layer.style.height = `${stage.offsetHeight}px`;
+                add(layer, e, n, who);
+                // 같은 이모지가 2.5초 안에 10번 넘게 몰리면 화면 가득 이모지 비
+                const t = Date.now();
+                recent.push([t, e, n]);
+                while (recent.length && t - recent[0][0] > 2500) recent.shift();
+                const sum = recent.filter((r) => r[1] === e).reduce((a, r) => a + r[2], 0);
+                if (sum >= 10 && t - (lastRain[e] || 0) > 5000 && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    lastRain[e] = t;
+                    for (let i = 0; i < 18; i++) add(layer, e, 1, '', true);
+                }
+            }
+            return { show };
+        })();
+
         const buzz = (p = 30) => {
             if (!('vibrate' in navigator) || navigator.userActivation?.hasBeenActive === false) return;
             try { navigator.vibrate(p); } catch { /* 무시 */ }
@@ -2376,6 +2530,12 @@
                     data.answers[from] = sanitizeAnswers(msg.answers, { players: data.players, awards: data.awards, rounds: data.rounds, self: from });
                     publish();
                 }
+                if (msg.kind === 'react' && msg.r && typeof msg.r === 'object' && (data.phase === 'show' || data.phase === 'end')) {
+                    Object.entries(msg.r).slice(0, REACTS.length).forEach(([e, n]) => {
+                        if (REACTS.includes(e)) Reactions.show(e, Math.max(1, Math.min(20, Math.floor(Number(n)) || 1)), player.name);
+                    });
+                    return;
+                }
                 if (msg.kind === 'guess' && data.phase === 'show') {
                     const step = data.plan[data.at];
                     if (step?.t !== 'guess' || data.sub !== 'ask' || step.key !== msg.key || from === step.author) return;
@@ -2383,6 +2543,29 @@
                     data.guesses[step.key] = { ...(data.guesses[step.key] || {}), [from]: msg.guess };
                     publish();
                 }
+            }
+
+            // ── 리액션: 참가자는 0.5초씩 모아서 진행자에게 보낸다 (방 서버 도배 제한 안쪽) ──
+            let reactPend = {};
+            let reactTimer = null;
+            function sendReact(btn) {
+                const e = btn.dataset.react;
+                if (!REACTS.includes(e) || !state?.sid) return;
+                reactPend[e] = (reactPend[e] || 0) + 1;
+                const pop = document.createElement('span');
+                pop.className = 'pop';
+                pop.textContent = e;
+                btn.append(pop);
+                setTimeout(() => pop.remove(), 700);
+                buzz(8);
+                if (reactTimer) return;
+                reactTimer = setTimeout(() => {
+                    reactTimer = null;
+                    const r = reactPend;
+                    reactPend = {};
+                    const to = hostId();
+                    if (to && to !== me?.id) conn?.sendTo(to, { kind: 'react', sid: state.sid, r });
+                }, 500);
             }
 
             const STATUS = { connecting: '연결하는 중…', offline: '연결이 끊겼어요. 다시 연결하는 중…', online: '' };
@@ -2733,6 +2916,10 @@
                     const g = e.target.closest('[data-guess]')?.dataset.guess;
                     if (g) pick(g);
                 });
+                $('react-bar').addEventListener('click', (e) => {
+                    const b = e.target.closest('[data-react]');
+                    if (b) sendReact(b);
+                });
                 document.querySelectorAll('[data-ol-leave]').forEach((b) => b.addEventListener('click', leave));
                 document.querySelectorAll('[data-ol-transfer]').forEach((b) => b.addEventListener('click', openTransfer));
                 $('transfer-list').addEventListener('click', (e) => {
@@ -2827,7 +3014,8 @@
   "폰 한 대로 하면 정답 공개 뒤 맞힌 사람을 눌러 눈치왕 점수를 줄 수 있어요.",
   "입력한 답은 진행하는 기기에만 저장되고, 새로고침해도 이어서 할 수 있어요.",
   "각자 폰으로 할 때 진행자 폰이 꺼져도 괜찮아요. 1분이 지나면 다른 사람이 👑 이어서 진행할 수 있고, 진행자가 직접 👑 진행 넘기기로 넘길 수도 있어요.",
-  "끝나면 🔁 한 판 더 하기로 같은 사람·같은 상으로 다시 할 수 있어요."
+  "끝나면 🔁 한 판 더 하기로 같은 사람·같은 상으로 다시 할 수 있어요.",
+  "각자 폰으로 할 때 발표 중에 폰 아래 👏😂😭🔥💗🎉를 누르면 진행자 무대 위로 이모지가 떠올라요. 같은 이모지가 몰리면 이모지 비가 내려요."
  ],
  "players": "3~20인",
  "time": "약 30~60분"
