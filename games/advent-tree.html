@@ -732,6 +732,87 @@
             margin-top: 6px;
         }
 
+        .inbox-call {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .visit-row {
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: .88rem;
+            font-weight: 700;
+        }
+
+        .inbox-btn:disabled {
+            opacity: .7;
+            cursor: default;
+        }
+
+        /* 바닥 러그 옆 작은 발자국 (오늘 다녀간 수만큼, 최대 6쌍) */
+        .feet {
+            position: absolute;
+            left: 3%;
+            bottom: 1%;
+            display: flex;
+            gap: 2px;
+            pointer-events: none;
+            transform: rotate(-8deg);
+        }
+
+        .feet i {
+            width: 20px;
+            height: 22px;
+            opacity: .75;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 18'%3E%3Cg fill='%23f8efe3'%3E%3Cellipse cx='4.5' cy='12' rx='2.6' ry='3.6'/%3E%3Ccircle cx='2.6' cy='6.8' r='.9'/%3E%3Ccircle cx='4.6' cy='6.2' r='.9'/%3E%3Ccircle cx='6.4' cy='7' r='.8'/%3E%3Cellipse cx='11.5' cy='7' rx='2.6' ry='3.6'/%3E%3Ccircle cx='9.6' cy='1.8' r='.9'/%3E%3Ccircle cx='11.6' cy='1.2' r='.9'/%3E%3Ccircle cx='13.4' cy='2' r='.8'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+        }
+
+        .feet i:nth-child(even) {
+            transform: translateY(-5px);
+        }
+
+        .visit-h {
+            margin: 14px 0 6px;
+            font-size: .95rem;
+        }
+
+        .visit-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .visit-chip {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: var(--surface-2);
+            font-size: .88rem;
+            font-weight: 700;
+        }
+
+        .visit-chip.anon {
+            color: var(--muted, #64748b);
+        }
+
+        .visit-top {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 6px;
+        }
+
+        .visit-top li span {
+            color: var(--muted, #64748b);
+            font-size: .88rem;
+        }
+
+        .overlay p.lt-top {
+            color: #fde68a;
+            font-weight: 700;
+        }
+
         .inbox-btn {
             min-height: 40px;
             padding: 8px 16px;
@@ -2900,7 +2981,7 @@
 
         // 서버에 올릴 상태: 토큰·기기 전용 값과, 예전 링크 선물의 뒤섞인 메시지는 빼고 올린다
         function serverState(st) {
-            const { token, rev, dirty, msgs, ...rest } = st;
+            const { token, rev, dirty, msgs, visits, ...rest } = st;
             const strip = (list) => list.map(({ msg, ...o }) => o);
             const out = { ...rest, hung: strip(st.hung), tray: strip(st.tray) };
             if (st.couple) out.couple = { id: st.couple.id, name: st.couple.name, heartDays: st.couple.heartDays, b3: st.couple.b3, b7: st.couple.b7 };
@@ -3073,6 +3154,7 @@
                         fresh++;
                         changed = true;
                     });
+                    if (Array.isArray(r.visits)) S.visits = r.visits.filter((x) => Array.isArray(x) && /^\d{4}-\d{2}-\d{2}$/.test(x[0])).slice(-1500).map(([d, n]) => [d, typeof n === 'string' ? n.slice(0, MAX_NAME) : '']);
                     if (S.mode === 'couple') {
                         if (!S.couple) S.couple = { id: '', name: '', snap: '', waters: [], at: 0, heartDays: [], sentDrop: '', b3: false, b7: false };
                         if (r.partner) {
@@ -3367,15 +3449,16 @@
                         : '<div class="partner-wait"><span style="font-size:2rem">💌</span>짝꿍을 기다리는 중<br>아래에서 초대 링크를 보내 주세요</div>'}</div>
                 </div>${S.couple?.id ? `<div class="heart-line">💗 둘 다 물 준 날 ${S.couple.heartDays.length}일</div>` : ''}`;
             } else {
-                stageHtml = `<div class="tree-box">${ROOM}${mine}</div>`;
+                stageHtml = `<div class="tree-box">${ROOM}${linked() && !old ? FEET(visitStats(S).today) : ''}${mine}</div>`;
             }
 
             const xmasReady = !old && (se.phase === 'xmas' || se.phase === 'after') && !S.opened;
+            const vs = linked() && !old ? visitStats(S) : null;
             const sky = `<div class="sky ${S.forest?.goalDone || se.phase === 'xmas' || S.opened ? 'snowing' : ''}">
                 <div class="sky-head"><div><b>${esc(S.owner)}의 트리</b><div class="meta">${meta}</div></div><div style="text-align:right"><span class="mode-tag">${modeTag}</span>${linked() ? `<div class="meta" id="sync-tag" style="margin-top:6px">${Sync.label()}</div>` : ''}</div></div>
                 ${stageHtml}
                 ${pick ? `<div class="pick-bar"><span>✨ 트리에서 달 곳을 눌러 주세요 · 밀면 돌아가요</span><button class="text-btn" data-act="cancel-pick" type="button">취소</button></div>` : ''}
-                ${giftCount ? `<div class="inbox-call"><button class="inbox-btn" data-act="inbox" type="button">💌 받은 편지함 <b>${giftCount}</b></button></div>` : ''}
+                ${giftCount || vs ? `<div class="inbox-call">${giftCount ? `<button class="inbox-btn" data-act="inbox" type="button">💌 받은 편지함 <b>${giftCount}</b></button>` : ''}${vs ? `<button class="inbox-btn" data-act="visits" type="button" aria-label="오늘 다녀간 친구 ${vs.today}명">👣 오늘 <b>${vs.today}</b></button>` : ''}</div>` : ''}
                 ${xmasReady ? '<div class="xmas-call"><button class="btn btn-festive btn-block glow" data-act="xmas" type="button">🎅 산타가 다녀갔어요! 선물 열어 보기</button></div>' : ''}
             </div>`;
 
@@ -3576,7 +3659,10 @@
                     giftTarget.name = v.owner;
                     const view = unsnap(snapFromView(v));
                     box.innerHTML = `<div class="sky-head"><div><b>${esc(v.owner)}의 트리</b><div class="meta">💧 ${v.waters.length}번 · ${STAGE_NAME[view.stage]} · 장식 ${v.hung.length}개</div></div><span class="mode-tag">👀 지금 모습</span></div>
-                        <div class="tree-box view-box">${ROOM}<canvas class="tree-cv" id="gift-tree" tabindex="0" role="img" aria-label="${esc(v.owner)}의 트리 (좌우로 밀면 돌아가요)"></canvas></div>`;
+                        <div class="tree-box view-box">${ROOM}${FEET(v.visitsToday || 0)}<canvas class="tree-cv" id="gift-tree" tabindex="0" role="img" aria-label="${esc(v.owner)}의 트리 (좌우로 밀면 돌아가요)"></canvas></div>
+                        ${S?.id === target.id ? '' : `<div class="inbox-call visit-row"><span id="visit-n">👣 오늘 ${Number(v.visitsToday) || 0}명이 다녀갔어요</span>${Store.get(`visited:${target.id}`) === Clock.today()
+                            ? '<button class="inbox-btn" type="button" disabled>✓ 다녀갔어요</button>'
+                            : '<button class="inbox-btn" data-act="visit" type="button">👣 다녀갔어요 남기기</button>'}</div>`}`;
                     box.hidden = false;
                     mountViewer('gift-tree', view);
                 }).catch(() => {});
@@ -3879,6 +3965,56 @@
             }, reduce ? 50 : 1500);
         }
 
+        // 다녀간 발자국 (서버 트리만): S.visits = [[날짜, 닉네임], ...]. 닉네임이 없으면 눈사람으로 센다.
+        function visitStats(st) {
+            const list = Array.isArray(st?.visits) ? st.visits : [];
+            const today = Clock.today();
+            const todays = list.filter(([d]) => d === today);
+            const byName = new Map();
+            list.forEach(([d, n]) => { if (n) byName.set(n, (byName.get(n) || new Set()).add(d)); });
+            const top = [...byName].map(([n, days]) => ({ n, c: days.size })).sort((a, b) => b.c - a.c || a.n.localeCompare(b.n)).slice(0, 3);
+            return { today: todays.length, names: [...new Set(todays.map(([, n]) => n).filter(Boolean))], anon: todays.filter(([, n]) => !n).length, total: list.length, days: new Set(list.map(([d]) => d)).size, top };
+        }
+        const FEET = (n) => (n ? `<div class="feet" aria-hidden="true">${'<i></i>'.repeat(Math.min(n, 6))}</div>` : '');
+        const medal = (i) => ['🥇', '🥈', '🥉'][i] || '';
+
+        function openVisits() {
+            const v = visitStats(S);
+            const todayHtml = v.today
+                ? `<div class="visit-chips">${v.names.map((n) => `<span class="visit-chip">👣 ${esc(n)}</span>`).join('')}${v.anon ? `<span class="visit-chip anon">⛄ 눈사람 ${v.anon}명</span>` : ''}</div>`
+                : '<p class="hint center">오늘은 아직 아무도 안 왔어요.</p>';
+            openSheet(`<h2 class="center">👣 다녀간 친구</h2>
+                <p class="center hint">친구가 내 트리 링크로 들어와 "다녀갔어요"를 누르면 발자국이 남아요. 이름을 안 쓰면 눈사람으로 보여요.</p>
+                <h3 class="visit-h">오늘 ${v.today}명</h3>${todayHtml}
+                ${v.total ? `<h3 class="visit-h">12월 동안</h3><p class="hint">${v.days}일 동안 발자국 ${v.total}개가 남았어요.</p>` : ''}
+                ${v.top.length ? `<h3 class="visit-h">가장 자주 온 친구</h3><ol class="visit-top">${v.top.map((t, i) => `<li>${medal(i)} <b>${esc(t.n)}</b> <span>${t.c}일</span></li>`).join('')}</ol>` : ''}
+                <div class="btn-row" style="margin-top:14px"><button class="btn btn-ghost" data-act="sheet-close" type="button">닫기</button></div>`);
+        }
+
+        // 친구 트리에 발자국 남기기 (하루 한 번)
+        async function leaveVisit(btn) {
+            const id = giftTarget?.id;
+            if (!id || !Api.on()) return;
+            const nick = ($('gift-from')?.value || Store.get('nick') || '').trim().slice(0, MAX_NAME);
+            let vid = Store.get('vid');
+            if (!vid) { vid = rid(12); Store.set('vid', vid); }
+            btn.disabled = true;
+            try {
+                const r = await Api.call('POST', `/trees/${id}/visits`, { nick, vid });
+                Store.set(`visited:${id}`, Clock.today());
+                if (nick) Store.set('nick', nick);
+                if ($('visit-n')) $('visit-n').textContent = `👣 오늘 ${r.visitsToday}명이 다녀갔어요`;
+                const box = $('gift-tree')?.parentElement;
+                if (box) { box.querySelector('.feet')?.remove(); $('gift-tree').insertAdjacentHTML('beforebegin', FEET(r.visitsToday)); }
+                btn.textContent = '✓ 다녀갔어요';
+                Sound.pop();
+                toast(`👣 ${nick ? `${nick}님의 ` : ''}발자국을 남겼어요`);
+            } catch (e) {
+                btn.disabled = false;
+                toast(e.message || '발자국을 남기지 못했어요');
+            }
+        }
+
         // 받은 편지함: 받은 선물을 한 화면에. 25일 전엔 보낸 사람만, 25일부터는 메시지까지
         const giftsOf = () => [...S.hung, ...S.tray].filter((o) => o.src === 'gift');
         function openInbox(fetched = false) {
@@ -3948,7 +4084,9 @@
             letterAt += 1;
             const el = $('overlay');
             if (letterAt >= letters.length) {
+                const top = visitStats(S).top;
                 el.innerHTML = `<div style="font-size:3rem">🎄</div><h2>메리 크리스마스, ${esc(S.owner)}!</h2><p>올해 함께해 준 사람들과의 트리를 카드로 남겨 보세요.</p>
+                    ${top.length ? `<p class="lt-top">👣 가장 자주 온 친구<br>${top.map((t, i) => `${medal(i)} <b>${esc(t.n)}</b> ${t.c}일`).join(' · ')}</p>` : ''}
                     <button class="btn btn-festive" data-act="card" type="button">🖼️ 트리 카드 저장</button><button class="btn btn-ghost" data-act="overlay-close" type="button">트리 보기</button>`;
                 return;
             }
@@ -4136,6 +4274,8 @@
             'go-plant'() { renderPlant(); },
             'sheet-close': closeSheet,
             inbox() { openInbox(); },
+            visits() { openVisits(); },
+            visit(b) { leaveVisit(b); },
             'inbox-orn'(b) { openOrnSheet(b.dataset.uid); },
             'letters-replay'() { replayLetters(); },
             'overlay-close'() { $('overlay').hidden = true; renderTree(); },
