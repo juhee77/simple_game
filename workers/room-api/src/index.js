@@ -401,7 +401,8 @@ export class Room extends DurableObject {
         if (member.host) await this.ctx.storage.delete('hostOff');
         const online = this.online();
         const state = (await this.ctx.storage.get('state')) ?? null;
-        const welcome = { type: 'welcome', room: this.roomResponse(room, members, online), you: this.memberResponse(member, online), state, ...(await this.hostStatus(members, online)) };
+        // now: 서버 시각(ms). 폰 시계가 틀려도 모두 같은 순간에 맞추는 게임(제야의 종 등)이 쓴다.
+        const welcome = { type: 'welcome', room: this.roomResponse(room, members, online), you: this.memberResponse(member, online), state, now: Date.now(), ...(await this.hostStatus(members, online)) };
         if (member.host) welcome.vault = (await this.ctx.storage.get('vault')) ?? null;
         this.send(ws, welcome);
         this.broadcast({ type: 'presence', memberId: member.id, online: true }, member.id);
